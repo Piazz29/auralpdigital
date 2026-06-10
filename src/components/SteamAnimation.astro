@@ -1,0 +1,87 @@
+---
+import '../styles/steam-animation.css';
+---
+
+<div class="steam-container" id="steam-container">
+  <div class="steam-particle"></div>
+  <div class="steam-particle"></div>
+  <div class="steam-particle"></div>
+  <div class="steam-particle"></div>
+  <div class="steam-particle"></div>
+  <div class="steam-particle"></div>
+</div>
+
+<script>
+  function initSteam() {
+    const steamContainer = document.getElementById('steam-container');
+    const videoElement = document.querySelector('[data-anim="hero-video"]');
+
+    console.log('Steam init - container:', steamContainer);
+    console.log('Steam init - video:', videoElement);
+
+    if (!videoElement || !steamContainer) {
+      console.warn('Steam: video or container not found');
+      return;
+    }
+
+    console.log('Steam container styles:', window.getComputedStyle(steamContainer));
+    console.log('Steam container classList:', steamContainer.classList);
+
+    // Rispetta prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      console.log('Steam: prefers-reduced-motion is active');
+      steamContainer.style.display = 'none';
+      return;
+    }
+
+    let hasActivated = false;
+
+    // Metodo 1: Listener per evento 'ended'
+    const handleVideoEnded = () => {
+      if (!hasActivated) {
+        console.log('Steam: video ended event triggered');
+        steamContainer.classList.add('active');
+        console.log('Steam: added active class:', steamContainer.classList);
+        hasActivated = true;
+      }
+    };
+
+    videoElement.addEventListener('ended', handleVideoEnded);
+
+    // Metodo 2: Monitor periodico (fallback)
+    // Controlla se il video ha raggiunto la fine ogni 100ms
+    const monitorInterval = setInterval(() => {
+      if (videoElement && !hasActivated) {
+        const duration = videoElement.duration;
+        const currentTime = videoElement.currentTime;
+
+        // Se il video è praticamente finito (ultimi 0.5 secondi)
+        if (
+          Number.isFinite(duration) &&
+          duration > 0 &&
+          (duration - currentTime < 0.5)
+        ) {
+          console.log('Steam: video near end detected via monitor');
+          console.log('Duration:', duration, 'CurrentTime:', currentTime);
+          steamContainer.classList.add('active');
+          console.log('Steam: added active class:', steamContainer.classList);
+          hasActivated = true;
+          clearInterval(monitorInterval);
+        }
+      }
+    }, 100);
+
+    // Pulisci il monitor dopo 10 secondi dall'attivazione o dopo 120 secondi in generale
+    setTimeout(() => {
+      clearInterval(monitorInterval);
+    }, 120000);
+  }
+
+  // Esegui quando il DOM è pronto
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSteam);
+  } else {
+    initSteam();
+  }
+</script>

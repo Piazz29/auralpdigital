@@ -1,0 +1,593 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import "../styles/global.css";
+
+// PROGETTI — sorgente unica dei dati. Aggiungere un progetto = aggiungere un
+// oggetto qui. `status: 'live'` → riga cliccabile con anteprima; `'soon'` →
+// placeholder non interattivo. `preview` è il path di uno screenshot in
+// /public/projects/ (se vuoto, l'anteprima mostra un fondo brandizzato).
+// `title` + `titleEm` → la seconda parte del titolo va in corsivo (accento
+// editoriale). `desc` è la riga di descrizione nel pannello espanso.
+const projects = [
+  {
+    n: "01",
+    title: "Alessia",
+    titleEm: "PMU",
+    type: "Beauty · Permanent Make-up",
+    year: "2026",
+    desc: "Sito editoriale fotografia-first per studio di trucco permanente.",
+    url: "#", // TODO: URL live
+    preview: "", // TODO: /projects/alessia.jpg
+    status: "live" as const,
+  },
+  {
+    n: "02",
+    title: "Maria",
+    titleEm: "Egger",
+    type: "Tattoo Studio",
+    year: "2026",
+    desc: "Identità dark-luxe con motion legato allo scroll per studio tattoo.",
+    url: "#", // TODO: URL live
+    preview: "", // TODO: /projects/maria.jpg
+    status: "live" as const,
+  },
+  {
+    n: "03",
+    title: "In",
+    titleEm: "arrivo",
+    type: "Prossimamente",
+    year: "",
+    desc: "",
+    url: "",
+    preview: "",
+    status: "soon" as const,
+  },
+];
+
+// SERVIZI — sorgente unica dei dati della sezione "Cosa Facciamo".
+// `tags` sono le competenze mostrate come chip sotto la descrizione.
+const services = [
+  {
+    n: "01",
+    name: "Siti Web Premium",
+    desc: "Siti veloci ed eleganti, progettati per trasformare visitatori in clienti.",
+    tags: ["Design", "Sviluppo", "SEO"],
+  },
+  {
+    n: "02",
+    name: "Lead Generation",
+    desc: "Sistemi di acquisizione che portano richieste qualificate, ogni settimana.",
+    tags: ["Funnel", "Landing", "CRO"],
+  },
+  {
+    n: "03",
+    name: "Campagne Ads",
+    desc: "Meta e Google Ads gestite con metodo: budget che torna come crescita.",
+    tags: ["Meta", "Google", "Retargeting"],
+  },
+  {
+    n: "04",
+    name: "Brand & Social",
+    desc: "Identità e contenuti che fanno percepire il tuo valore prima del prezzo.",
+    tags: ["Identità", "Contenuti", "Direzione"],
+  },
+  {
+    n: "05",
+    name: "Automazioni",
+    desc: "Processi che lavorano mentre dormi: follow-up, prenotazioni, recensioni.",
+    tags: ["Email", "CRM", "Workflow"],
+  },
+  {
+    n: "06",
+    name: "AI Integration",
+    desc: "Intelligenza artificiale applicata al tuo business: risposte, analisi, velocità.",
+    tags: ["Chatbot", "Analisi", "Tooling"],
+  },
+];
+
+// STATEMENT — manifesto "Chi Siamo". I segmenti con `em` vengono resi in
+// corsivo accent. Ogni parola diventa uno <span> per il reveal in scroll.
+const statementSegs = [
+  { t: "Siamo Julian e Alice. Uniamo" },
+  { t: "strategia, design e tecnologia", em: true },
+  { t: "per trasformare l'attenzione in" },
+  { t: "clienti reali.", em: true },
+];
+const statementWords = statementSegs.flatMap((s) =>
+  s.t.split(" ").map((w) => ({ w, em: !!s.em }))
+);
+
+const founders = [
+  {
+    initial: "J",
+    name: "Julian",
+    role: "Co-founder — Strategia & Sviluppo",
+    grad: "grad-2",
+  },
+  {
+    initial: "A",
+    name: "Alice",
+    role: "Co-founder — Design & Contenuti",
+    grad: "grad-4",
+  },
+];
+
+// STATS — `value` è il numero che conta da 0 in scroll, `suffix` resta fisso.
+const stats = [
+  { value: 12, suffix: "+", label: "Progetti consegnati" },
+  { value: 24, suffix: "h", label: "Tempo massimo di risposta" },
+  { value: 100, suffix: "%", label: "Su misura, sempre" },
+];
+
+const marqueeItems = [
+  "Web Design",
+  "Lead Generation",
+  "Campagne Ads",
+  "Brand & Social",
+  "Automazioni",
+  "AI Integration",
+];
+---
+
+<BaseLayout>
+  <!-- NAVBAR -->
+  <nav
+    data-anim="nav"
+    class="fixed top-0 left-0 right-0 z-[60] flex items-center justify-between px-6 md:px-10 py-5"
+    style="opacity: 0;"
+  >
+    <div class="nav-blur-bg" aria-hidden="true"></div>
+    <a
+      href="/"
+      class="h-8 md:h-9 flex items-center transition-transform duration-300 hover:scale-[1.04]"
+    >
+      <img
+        src="/logo/wordmark.svg"
+        alt="AuralpDigital"
+        class="h-full"
+        style="filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.55)) drop-shadow(0 1px 4px rgba(13, 13, 13, 0.22));"
+      />
+    </a>
+
+    <div class="flex items-center gap-4">
+      <a
+        href="mailto:hello@auralpdigital.com"
+        class="pill text-[12px] px-5 py-[10px]"
+      >
+        Consulenza gratuita <span aria-hidden="true">↗</span>
+      </a>
+
+      <button id="burger-menu" class="w-6 h-6 flex flex-col items-center justify-center gap-1.5 cursor-pointer relative z-[60]" aria-label="Menu">
+        <span class="w-full h-0.5 bg-[#0D0D0D]"></span>
+        <span class="w-full h-0.5 bg-[#0D0D0D]"></span>
+        <span class="w-full h-0.5 bg-[#0D0D0D]"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div
+    id="mobile-menu"
+    class="fixed inset-0 bg-[#FAFAF8] z-[55] pointer-events-none"
+  >
+    <div class="h-full w-full max-w-[1180px] mx-auto px-8 md:px-16 flex items-center">
+      <div class="w-full flex flex-col gap-14 md:flex-row md:items-center md:justify-between md:gap-10">
+        <!-- Left — vertical label + nav list -->
+        <div class="flex items-center gap-5 md:gap-7">
+          <span class="menu-vertical-label">Menu</span>
+          <nav class="menu-list flex flex-col items-start w-max">
+            <a href="#projects" class="menu-link font-display w-full py-2 md:py-3">
+              <span class="menu-word-wrap">
+                <span class="menu-index">01</span>
+                <span class="menu-word">Progetti</span>
+              </span>
+            </a>
+            <a href="#cosa-facciamo" class="menu-link font-display w-full py-2 md:py-3">
+              <span class="menu-word-wrap">
+                <span class="menu-index">02</span>
+                <span class="menu-word">Cosa Facciamo</span>
+              </span>
+            </a>
+            <a href="#chi-siamo" class="menu-link font-display w-full py-2 md:py-3">
+              <span class="menu-word-wrap">
+                <span class="menu-index">03</span>
+                <span class="menu-word">Chi Siamo</span>
+              </span>
+            </a>
+            <a href="#info" class="menu-link font-display w-full py-2 md:py-3">
+              <span class="menu-word-wrap">
+                <span class="menu-index">04</span>
+                <span class="menu-word">Info</span>
+              </span>
+            </a>
+          </nav>
+        </div>
+
+        <!-- Right — contact info -->
+        <div data-menu="contact" class="flex flex-col gap-6 text-[14px] md:pb-2">
+          <a
+            href="mailto:hello@auralpdigital.com"
+            class="text-[#3B5BDB] underline underline-offset-4 decoration-1 hover:opacity-70 transition-opacity duration-200 w-fit"
+          >
+            hello@auralpdigital.com
+          </a>
+
+          <div class="text-[#4A4A4A] leading-[1.7]">
+            Alto Adige<br />
+            Italia, 39100
+          </div>
+
+          <div class="flex items-center gap-5 text-[#9AA3B2]">
+            <a href="#" aria-label="Instagram" class="hover:text-[#0D0D0D] transition-colors duration-200">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" />
+              </svg>
+            </a>
+            <a href="#" aria-label="LinkedIn" class="hover:text-[#0D0D0D] transition-colors duration-200">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4.98 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.6c0-1.33-.02-3.05-1.86-3.05-1.86 0-2.14 1.45-2.14 2.95V21H9z" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO — sezione a tutta schermo, scroll normale -->
+  <section class="hero-section relative h-screen w-full overflow-hidden" data-anim="hero">
+    <video
+      data-anim="hero-video"
+      autoplay
+      muted
+      playsinline
+      preload="auto"
+      class="hero-video absolute inset-0 w-full h-full object-cover"
+      style="opacity: 0;"
+    >
+      <source src="/videos/hf_20260530_204233_c0117512-9162-41ec-a063-b269b29ab4e7.mp4" type="video/mp4" />
+    </video>
+
+    <!-- Layer 1 — overlay caldo: scalda il grigio freddo del video verso il warm white -->
+    <div class="hero-warm-overlay absolute inset-0 z-[1] pointer-events-none"></div>
+
+    <!-- Layer 2 — fusione ai bordi: vignettatura calda che fa "emergere" il video dalla pagina -->
+    <div class="hero-edge-fade absolute inset-0 z-[2] pointer-events-none"></div>
+
+    <!-- Layer 3 — fade in fondo: il video sfuma nel warm white della sezione progetti -->
+    <div class="hero-bottom-fade absolute inset-x-0 bottom-0 z-[3] pointer-events-none"></div>
+
+    <div class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center" style="background: radial-gradient(ellipse 50% 38% at 50% 50%, rgba(250, 250, 248, 0.85) 0%, rgba(250, 250, 248, 0.7) 35%, rgba(250, 250, 248, 0.35) 65%, transparent 90%);">
+      <span
+        data-anim="hero-label"
+        class="hero-badge inline-block text-[11px] font-medium tracking-[0.15em] uppercase"
+        style="opacity: 0;"
+      >
+        Digital Growth Studio
+      </span>
+
+      <h1
+        class="font-display font-medium text-[#0D0D0D] mt-6"
+        style="font-size: clamp(38px, 5vw, 80px); line-height: 0.98; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);"
+      >
+        <span data-anim="hero-line-1" class="block" style="opacity: 0;">Sistemi digitali</span>
+        <span data-anim="hero-line-2" class="block" style="opacity: 0;">di <em style="font-style: italic; color: #3B5BDB;">prossima</em></span>
+        <span data-anim="hero-line-3" class="block" style="opacity: 0;">generazione.</span>
+      </h1>
+
+      <p
+        data-anim="hero-subline"
+        class="mt-5 text-[14px] tracking-[0.04em] text-[#4A4A4A]"
+        style="opacity: 0; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);"
+      >
+        Siti web e sistemi di crescita per professionisti.
+      </p>
+
+      <div
+        data-anim="hero-cta"
+        class="mt-8 flex flex-col sm:flex-row items-center gap-3"
+        style="opacity: 0;"
+      >
+        <a
+          href="#projects"
+          class="pill text-[13px] px-7 py-[14px]"
+        >
+          Esplora il nostro lavoro <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENUTO — flusso normale -->
+  <div class="post-reveal relative z-10">
+
+  <!-- SECTION — PROGETTI -->
+  <section id="projects" class="projects-section">
+    <div class="works-screen">
+      <div class="works-head" data-anim="works-head">
+        <div class="works-head-left">
+          <span class="works-kicker"><span class="works-dot" aria-hidden="true"></span>Lavori selezionati</span>
+          <h2 class="works-title">Cosa <em>abbiamo creato.</em></h2>
+        </div>
+        <a href="#projects" class="pill-outline works-head-cta">
+          Tutti i progetti <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+
+      <!-- Meta-strip — hairline editoriale tra titolo e rail -->
+      <div class="works-rule" data-anim="works-head">
+        <span class="works-rule-label">Selezione 2026</span>
+        <span class="works-rule-line" aria-hidden="true"></span>
+        <span class="works-rule-count">{projects.length} progetti</span>
+      </div>
+
+      <!-- RAIL — pannelli espandibili in hover. Il primo è aperto di default;
+           passando il mouse su un altro, quello si espande e gli altri si stringono. -->
+      <div class="works-rail">
+        {projects.map((p, i) => {
+          const Tag = p.status === "live" ? "a" : "div";
+          const props =
+            p.status === "live"
+              ? { href: p.url, target: "_blank", rel: "noopener noreferrer" }
+              : { "aria-disabled": "true" };
+          return (
+            <Tag
+              class={`work-panel grad-${(i % 4) + 1}${p.status === "soon" ? " work-panel--soon" : ""}`}
+              data-open={i === 0 ? "" : undefined}
+              data-anim="work-panel"
+              {...props}
+            >
+              {p.preview && (
+                <img class="work-panel-img" src={p.preview} alt={p.title} loading="lazy" />
+              )}
+              <span class="work-panel-scrim" aria-hidden="true"></span>
+
+              {/* Stato collassato — numero in alto, titolo verticale in basso */}
+              <div class="panel-vertical">
+                <span class="panel-vertical-num">{p.n}</span>
+                <span class="panel-vertical-title">{p.title} {p.titleEm}</span>
+              </div>
+
+              {/* Stato espanso — contenuto editoriale */}
+              <div class="panel-full">
+                <span class="panel-index" aria-hidden="true">{p.n}</span>
+                <div class="panel-body">
+                  <span class="panel-kicker">
+                    <span class="panel-tick" aria-hidden="true"></span>
+                    {p.type}{p.year ? ` · ${p.year}` : ""}
+                  </span>
+                  <h3 class="panel-title">
+                    {p.title} <em>{p.titleEm}</em>
+                  </h3>
+                  {p.desc && <p class="panel-desc">{p.desc}</p>}
+                  {p.status === "live" && (
+                    <span class="panel-cta">
+                      <span class="panel-cta-label">Vedi il caso studio</span>
+                      <span class="panel-cta-arrow" aria-hidden="true">↗</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </Tag>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION — COSA FACCIAMO -->
+  <section id="cosa-facciamo" class="services-section">
+    <div class="works-screen">
+      <div class="works-head" data-anim="services-head">
+        <div class="works-head-left">
+          <span class="works-kicker"><span class="works-dot" aria-hidden="true"></span>Cosa facciamo</span>
+          <h2 class="works-title">Servizi che <em>fanno crescere.</em></h2>
+        </div>
+        <a href="#contatti" class="pill-outline works-head-cta">
+          Parliamone <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+
+      <div class="works-rule" data-anim="services-head">
+        <span class="works-rule-label">Competenze</span>
+        <span class="works-rule-line" aria-hidden="true"></span>
+        <span class="works-rule-count">{services.length} servizi</span>
+      </div>
+
+      <!-- LISTA SERVIZI — righe editoriali con hairline. In hover su desktop
+           una card-anteprima flottante segue il cursore (vedi #service-float). -->
+      <div class="services-list" data-anim="services">
+        {services.map((s, i) => (
+          <a href="#contatti" class="service-row" data-anim="service-row" data-service={i}>
+            <span class="service-num">{s.n}</span>
+            <h3 class="service-name">{s.name}</h3>
+            <div class="service-info">
+              <p class="service-desc">{s.desc}</p>
+              <div class="service-tags">
+                {s.tags.map((t) => <span class="service-tag">{t}</span>)}
+              </div>
+            </div>
+            <span class="service-arrow" aria-hidden="true">↗</span>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <!-- ANTEPRIMA FLOTTANTE — una card per servizio, impilate; il JS attiva
+         quella del servizio in hover e fa seguire il cursore con lerp. -->
+    <div id="service-float" aria-hidden="true">
+      {services.map((s, i) => (
+        <div class={`service-float-card grain grad-${(i % 4) + 1}`} data-float={i}>
+          <span class="float-num">{s.n}</span>
+          <span class="float-name">{s.name}</span>
+          <span class="float-badge">Anteprima in arrivo</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- SECTION — CHI SIAMO -->
+  <section id="chi-siamo" class="about-section">
+    <div class="works-screen">
+      <div class="works-head" data-anim="about-head">
+        <div class="works-head-left">
+          <span class="works-kicker"><span class="works-dot" aria-hidden="true"></span>Chi siamo</span>
+          <h2 class="works-title">Due menti, <em>un obiettivo.</em></h2>
+        </div>
+      </div>
+
+      <div class="works-rule" data-anim="about-head">
+        <span class="works-rule-label">Julian & Alice</span>
+        <span class="works-rule-line" aria-hidden="true"></span>
+        <span class="works-rule-count">Alto Adige, IT</span>
+      </div>
+
+      <!-- STATEMENT — manifesto a tutta larghezza; le parole si "accendono"
+           una a una mentre si scrolla (scrub GSAP su opacity). -->
+      <p class="about-statement font-display">
+        {statementWords.map(({ w, em }) => (
+          <span class={`st-word${em ? " st-em" : ""}`}>{w + " "}</span>
+        ))}
+      </p>
+
+      <div class="about-grid">
+        {founders.map((f) => (
+          <div class="founder-card" data-anim="founder">
+            <div class={`founder-media grain ${f.grad}`}>
+              <span class="founder-initial font-display">{f.initial}</span>
+              <span class="founder-badge">Ritratto in arrivo</span>
+            </div>
+            <div class="founder-meta">
+              <span class="founder-name">{f.name}</span>
+              <span class="founder-role">{f.role}</span>
+            </div>
+          </div>
+        ))}
+
+        <div class="about-aside" data-anim="founder">
+          <p class="about-aside-text">
+            Niente agenzie gonfiate, niente intermediari. Lavori direttamente
+            con chi progetta e costruisce il tuo sistema digitale — dal primo
+            sketch al lancio.
+          </p>
+          <p class="about-aside-text">
+            Strategia e codice da una parte, design e contenuti dall'altra.
+            Due prospettive, un unico standard: fatto bene o rifatto.
+          </p>
+          <a href="#contatti" class="pill-outline about-aside-cta">
+            Conosciamoci <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- STATS — i numeri contano da 0 quando entrano in viewport. -->
+      <div class="about-stats" data-anim="stats">
+        {stats.map((s) => (
+          <div class="stat" data-anim="stat">
+            <span class="stat-value font-display">
+              <span data-count={s.value}>0</span>{s.suffix}
+            </span>
+            <span class="stat-label">{s.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE — nastro infinito di competenze, transizione verso la CTA. -->
+  <div class="marquee-section" aria-hidden="true">
+    <div class="marquee-track">
+      {[...marqueeItems, ...marqueeItems].map((item) => (
+        <span class="marquee-item font-display">
+          {item}<span class="marquee-star">✦</span>
+        </span>
+      ))}
+    </div>
+  </div>
+
+  <!-- SECTION — CTA FINALE -->
+  <section id="contatti" class="cta-section" data-anim="contact">
+    <div class="cta-panel grain">
+      <span class="works-kicker cta-kicker" data-anim="contact-kicker">
+        <span class="works-dot" aria-hidden="true"></span>Iniziamo
+      </span>
+
+      <h2 class="cta-title" data-anim="contact-headline">
+        Costruiamo il tuo<br />
+        <em>sistema di crescita.</em>
+      </h2>
+
+      <p class="cta-sub" data-anim="contact-sub">
+        Prenota una consulenza gratuita di 30 minuti. Nessun impegno —
+        solo idee chiare su come far crescere la tua attività online.
+      </p>
+
+      <div class="cta-actions" data-anim="contact-cta">
+        <a href="mailto:hello@auralpdigital.com" class="cta-pill magnetic">
+          Prenota la consulenza <span aria-hidden="true">↗</span>
+        </a>
+        <a href="mailto:hello@auralpdigital.com" class="cta-mail">
+          hello@auralpdigital.com
+        </a>
+      </div>
+
+      <div class="cta-foot" data-anim="contact-cta">
+        <span>Risposta entro 24 ore</span>
+        <span class="cta-foot-dot" aria-hidden="true"></span>
+        <span>Nessun impegno</span>
+        <span class="cta-foot-dot" aria-hidden="true"></span>
+        <span>Budget chiari da subito</span>
+      </div>
+
+      <span class="cta-star" aria-hidden="true">✦</span>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer id="info" class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img src="/logo/wordmark.svg" alt="AuralpDigital" class="footer-logo" />
+          <p class="footer-tagline">
+            Sistemi digitali di prossima generazione,<br />progettati in Alto Adige.
+          </p>
+        </div>
+
+        <nav class="footer-col" aria-label="Footer">
+          <span class="footer-col-label">Menu</span>
+          <a href="#projects" class="footer-link">Progetti</a>
+          <a href="#cosa-facciamo" class="footer-link">Cosa facciamo</a>
+          <a href="#chi-siamo" class="footer-link">Chi siamo</a>
+          <a href="#contatti" class="footer-link">Contatti</a>
+        </nav>
+
+        <div class="footer-col">
+          <span class="footer-col-label">Contatti</span>
+          <a href="mailto:hello@auralpdigital.com" class="footer-link">hello@auralpdigital.com</a>
+          <span class="footer-muted">Alto Adige, Italia · 39100</span>
+          <div class="footer-social">
+            <a href="#" class="footer-link" aria-label="Instagram">Instagram</a>
+            <a href="#" class="footer-link" aria-label="LinkedIn">LinkedIn</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-rule" aria-hidden="true"></div>
+
+      <div class="footer-bottom">
+        <span>© 2026 AuralpDigital</span>
+        <span>Alto Adige, Italia</span>
+        <span>Fatto con cura <span class="footer-star" aria-hidden="true">✦</span></span>
+      </div>
+    </div>
+
+    <!-- Ghost wordmark — gigante, sfuma verso il fondo pagina. -->
+    <div class="footer-ghost font-display" aria-hidden="true">AuralpDigital</div>
+  </footer>
+
+  </div>
+  <!-- /post-reveal -->
+</BaseLayout>

@@ -1,0 +1,44 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "AuralpDigital — Sistemi digitali che generano clienti",
+  description = "Studio di crescita digitale in Alto Adige. Siti web premium, lead generation, campagne ads, brand & social, automazioni, AI integration.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Sistema tipografico: Space Grotesk (display/tech) + Inter (body/UI).
+         display=swap evita il FOIT; solo i pesi effettivamente usati. -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+    />
+    <title>{title}</title>
+  </head>
+  <body class="bg-[#FAFAF8] text-[#0D0D0D] overflow-x-hidden">
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-ring" id="cursor-ring"><span class="cursor-ring-circle"></span></div>
+
+    <!-- Barra di avanzamento scroll — lato destro -->
+    <div id="scroll-track">
+      <div id="scroll-fill"></div>
+    </div>
+
+    <slot />
+
+    <script>
+      import "../scripts/main.ts";
+    </script>
+  </body>
+</html>
