@@ -86,7 +86,7 @@ if (dot && ring && window.matchMedia("(min-width: 769px)").matches) {
   };
   animateRing();
 
-  document.querySelectorAll("a, button, .service-row, .menu-link").forEach((el) => {
+  document.querySelectorAll("a, button, .menu-link").forEach((el) => {
     el.addEventListener("mouseenter", () => ring.classList.add("is-hover"));
     el.addEventListener("mouseleave", () => ring.classList.remove("is-hover"));
   });
@@ -202,12 +202,14 @@ gsap.fromTo(
 );
 
 // ---------- Navbar — inversione sulle superfici scure ----------
-// Mentre la nav fissa attraversa il pannello CTA scuro, un toggle aggiunge
-// .nav-on-dark: logo bianco, burger e pill invertiti. È contrasto
-// funzionale, quindi attivo anche con reduced motion. (Il blu chiaro di
-// Cosa Facciamo è una superficie chiara: lì la nav resta com'è.)
+// Mentre la nav fissa attraversa la banda navy di Cosa Facciamo o il
+// pannello CTA scuro, un toggle aggiunge .nav-on-dark: logo bianco, burger
+// e pill invertiti. È contrasto funzionale, quindi attivo anche con
+// reduced motion.
 const navEl = document.querySelector<HTMLElement>("[data-anim='nav']");
 if (navEl) {
+  // La banda navy di Cosa Facciamo è gestita a parte (vedi sotto), perché il
+  // suo pin sposta tutto ciò che segue e l'inversione va ancorata a chi-siamo.
   const darkZones: { sel: string; start: string; end: string }[] = [
     { sel: "[data-anim='contact']", start: "top 70", end: "bottom 130" },
   ];
@@ -413,22 +415,6 @@ if (!reduceMotion) {
     });
 }
 
-// ---------- Hairline — le linee meta si "disegnano" da sinistra ----------
-if (!reduceMotion) {
-  gsap.utils.toArray<HTMLElement>(".works-rule-line").forEach((line) => {
-    gsap.fromTo(
-      line,
-      { scaleX: 0, transformOrigin: "left center" },
-      {
-        scaleX: 1,
-        duration: 1.4,
-        ease: "power3.out",
-        scrollTrigger: { trigger: line, start: "top 90%" },
-      }
-    );
-  });
-}
-
 // ---------- Lavori selezionati — entrata header + pannelli ----------
 gsap.fromTo(
   "[data-anim='works-head']",
@@ -485,9 +471,9 @@ revealHead("[data-anim='about-head']", "#chi-siamo");
 
 // ---------- Canvas — lo schermo cambia colore tra le sezioni ----------
 // I colori di sezione non stanno sulle sezioni ma sul canvas .post-reveal:
-// tre scrub lo tingono in sequenza — warm → blu chiaro (entrando in Cosa
-// Facciamo), blu → warm-deeper (entrando in Chi Siamo), warm-deeper → warm
-// (verso marquee e CTA). L'intero schermo "si colora" sotto le dita.
+// tre scrub lo tingono in sequenza — warm white → navy (entrando in Cosa
+// Facciamo), navy → grigio bordo (entrando in Chi Siamo), poi di nuovo
+// warm white (verso marquee e CTA). Tutti valori della palette.
 // I background statici delle sezioni vengono resi trasparenti: restano solo
 // come fallback per reduced-motion / no-JS.
 if (!reduceMotion) {
@@ -514,143 +500,159 @@ if (!reduceMotion) {
       );
     };
 
-    morph("#cosa-facciamo", "top 85%", "top 25%", "#F7F5F0", "#8AA0FF");
-    morph("#chi-siamo", "top 70%", "top 20%", "#8AA0FF", "#E8E6E0");
-    morph(".marquee-section", "top 95%", "top 50%", "#E8E6E0", "#F7F5F0");
+    morph("#cosa-facciamo", "top 85%", "top 15%", "#FAFAF8", "#1A2340");
+    morph("#chi-siamo", "top 70%", "top 20%", "#1A2340", "#E8E8E5");
+    morph(".marquee-section", "top 95%", "top 50%", "#E8E8E5", "#FAFAF8");
   }
 }
 
-// ---------- Service rows — un trigger per riga, reveal coreografato ----------
-// Ogni servizio appare quando la SUA riga entra in viewport (uno dopo
-// l'altro scrollando): la hairline si disegna da sinistra, il numero sale,
-// il nome emerge dalla maschera, descrizione e tag chiudono in coda.
-if (!reduceMotion) {
-  document
-    .querySelectorAll<HTMLElement>("[data-anim='service-row']")
-    .forEach((row) => {
-      const line = row.querySelector(".service-line");
-      const num = row.querySelector(".service-num");
-      const name = row.querySelector(".sn");
-      const info = row.querySelectorAll(".service-desc, .service-tags");
+// ---------- Cosa Facciamo — scene a tutta schermata, una per servizio ----------
+// Su desktop la sezione si "blocca" (pin) e i servizi si avvicendano come
+// scene piene: l'indice sale, il titolo emerge dalla maschera, descrizione
+// e chip seguono, il placeholder immagine si solleva; la scena uscente
+// sfuma verso l'alto mentre entra la successiva. Su mobile (niente pin)
+// le scene scorrono in colonna e si rivelano entrando in viewport.
+const servicesStage = document.querySelector<HTMLElement>(".services-stage");
+const serviceSlides = gsap.utils.toArray<HTMLElement>(".service-slide");
 
-      const tl = gsap.timeline({
-        defaults: { ease: "power3.out" },
-        scrollTrigger: { trigger: row, start: "top 88%" },
-      });
-      if (line) {
-        tl.fromTo(
-          line,
-          { scaleX: 0, transformOrigin: "left center" },
-          { scaleX: 1, duration: 1.1 },
-          0
-        );
-      }
-      if (num) {
-        tl.fromTo(
-          num,
-          { opacity: 0, y: 14 },
-          { opacity: 1, y: 0, duration: 0.6 },
-          0.08
-        );
-      }
-      if (name) {
-        tl.fromTo(
-          name,
-          { yPercent: 115 },
-          { yPercent: 0, duration: 0.95, ease: "power4.out" },
-          0.12
-        );
-      }
-      if (info.length) {
-        tl.fromTo(
-          info,
-          { opacity: 0, y: 18 },
-          { opacity: 1, y: 0, duration: 0.7, stagger: 0.1 },
-          0.28
-        );
-      }
-    });
+// Pin attivo solo su desktop con motion abilitato.
+const servicesPinned =
+  !reduceMotion && window.matchMedia("(min-width: 1024px)").matches;
 
-  // La hairline di chiusura della lista si disegna per ultima.
-  const endLine = document.querySelector<HTMLElement>(".service-line--end");
-  if (endLine) {
-    gsap.fromTo(
-      endLine,
-      { scaleX: 0, transformOrigin: "left center" },
-      {
-        scaleX: 1,
-        duration: 1.1,
-        ease: "power3.out",
-        scrollTrigger: { trigger: endLine, start: "top 92%" },
-      }
+// Distanza di scroll della sezione pinnata: ~90vh per scena + coda finale.
+const servicesPinDistance = () =>
+  Math.round(window.innerHeight * (serviceSlides.length * 0.9 + 0.5));
+
+// ---------- Navbar — zona scura della banda navy ----------
+// Un solo trigger che attraversa la sezione pinnata si "accorcia" (lo span
+// non compensa il pin): l'inversione si chiuderebbe subito. Quindi due
+// trigger a elemento singolo con callback —
+//   • accendi quando il navy si forma (cosa-facciamo, PRIMA del pin);
+//   • spegni quando chi-siamo riporta il chiaro (stesso elemento-trigger dei
+//     morph del colore, quindi posizione corretta col pin).
+// onLeaveBack ripristina lo stato anche scrollando all'indietro.
+const servicesSection = document.querySelector<HTMLElement>("#cosa-facciamo");
+const aboutSection = document.querySelector<HTMLElement>("#chi-siamo");
+if (navEl && servicesSection && aboutSection && serviceSlides.length) {
+  const addDark = () => navEl.classList.add("nav-on-dark");
+  const removeDark = () => navEl.classList.remove("nav-on-dark");
+
+  ScrollTrigger.create({
+    trigger: servicesSection,
+    start: "top 40%",
+    onEnter: addDark,
+    onLeaveBack: removeDark,
+  });
+  ScrollTrigger.create({
+    trigger: aboutSection,
+    start: "top 40%",
+    onEnter: removeDark,
+    onLeaveBack: addDark,
+  });
+}
+
+// Coreografia d'ingresso di una scena, agganciata alla timeline `tl` a
+// partire da `at` (unità di timeline: con lo scrub diventano scroll).
+const slideReveal = (
+  tl: gsap.core.Timeline,
+  slide: HTMLElement,
+  at: number
+) => {
+  const index = slide.querySelector(".slide-index");
+  const name = slide.querySelector(".sn");
+  const info = slide.querySelectorAll(".slide-desc, .slide-tags");
+  const media = slide.querySelector(".slide-media");
+
+  tl.fromTo(
+    slide,
+    { autoAlpha: 0, y: 28 },
+    { autoAlpha: 1, y: 0, duration: 0.3 },
+    at
+  );
+  if (index) {
+    tl.fromTo(
+      index,
+      { autoAlpha: 0, y: 12 },
+      { autoAlpha: 1, y: 0, duration: 0.4 },
+      at + 0.06
     );
   }
-}
+  if (name) {
+    tl.fromTo(
+      name,
+      { yPercent: 115 },
+      { yPercent: 0, duration: 0.6, ease: "power4.out" },
+      at + 0.08
+    );
+  }
+  if (info.length) {
+    tl.fromTo(
+      info,
+      { autoAlpha: 0, y: 22 },
+      { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.1 },
+      at + 0.2
+    );
+  }
+  if (media) {
+    tl.fromTo(
+      media,
+      { autoAlpha: 0, y: 48, scale: 0.96 },
+      { autoAlpha: 1, y: 0, scale: 1, duration: 0.65 },
+      at + 0.1
+    );
+  }
+};
 
-// ---------- Servizi — anteprima flottante che segue il cursore ----------
-// Una sola wrapper fissa (#service-float) con dentro una card per servizio;
-// in hover sulla riga si attiva la card giusta e la wrapper insegue il mouse
-// con gsap.quickTo (lerp fluido). Una rotazione leggera legata alla velocità
-// orizzontale dà l'effetto "trascinato". Solo desktop, mai con reduced motion.
-const floatWrap = document.getElementById("service-float");
-const servicesList = document.querySelector<HTMLElement>(".services-list");
-if (
-  floatWrap &&
-  servicesList &&
-  !reduceMotion &&
-  window.matchMedia("(min-width: 1024px)").matches
-) {
-  const floatCards =
-    floatWrap.querySelectorAll<HTMLElement>(".service-float-card");
+if (servicesStage && serviceSlides.length && !reduceMotion) {
+  if (servicesPinned) {
+    // Le scene si impilano nello stesso spazio (vedi CSS .is-pinned).
+    servicesStage.classList.add("is-pinned");
 
-  const xTo = gsap.quickTo(floatWrap, "x", { duration: 0.5, ease: "power3" });
-  const yTo = gsap.quickTo(floatWrap, "y", { duration: 0.5, ease: "power3" });
-  const rTo = gsap.quickTo(floatWrap, "rotation", {
-    duration: 0.6,
-    ease: "power3",
-  });
-
-  let lastX = 0;
-  let settleRot: gsap.core.Tween | null = null;
-
-  servicesList.addEventListener("mousemove", (e) => {
-    xTo(e.clientX);
-    yTo(e.clientY);
-    // Inclinazione proporzionale alla velocità orizzontale, poi rientra a 0.
-    rTo(gsap.utils.clamp(-9, 9, (e.clientX - lastX) * 0.55));
-    lastX = e.clientX;
-    settleRot?.kill();
-    settleRot = gsap.delayedCall(0.12, () => rTo(0));
-  });
-
-  servicesList.querySelectorAll<HTMLElement>(".service-row").forEach((row) => {
-    row.addEventListener("mouseenter", () => {
-      const idx = row.dataset.service;
-      floatCards.forEach((c) =>
-        c.classList.toggle("is-active", c.dataset.float === idx)
-      );
+    // STEP = durata di una scena in unità di timeline (ingresso + sosta);
+    // l'end mappa il tutto sulla distanza calcolata sopra.
+    const STEP = 1.5;
+    const tl = gsap.timeline({
+      defaults: { ease: "power3.out" },
+      scrollTrigger: {
+        trigger: "#cosa-facciamo",
+        start: "top top",
+        end: () => "+=" + servicesPinDistance(),
+        pin: true,
+        scrub: 0.5,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        // Il pin sposta in basso tutto ciò che lo segue (chi-siamo, marquee,
+        // CTA…). I morph del colore e l'inversione nav sono creati PRIMA di
+        // questo pin nel codice: con priorità più alta il pin si ricalcola
+        // per primo, così quei trigger leggono le posizioni già spostate e
+        // il navy resta pieno per tutta la sezione, tornando chiaro solo
+        // entrando in chi-siamo.
+        refreshPriority: 1,
+      },
     });
-  });
 
-  servicesList.addEventListener("mouseenter", (e) => {
-    // Posiziona subito sul punto d'ingresso per evitare il volo dall'origine.
-    gsap.set(floatWrap, { x: e.clientX, y: e.clientY });
-    lastX = e.clientX;
-    gsap.to(floatWrap, {
-      opacity: 1,
-      scale: 1,
-      duration: 0.45,
-      ease: "back.out(1.6)",
+    serviceSlides.forEach((slide, i) => {
+      const at = i * STEP;
+      // La scena precedente esce appena prima che entri questa.
+      if (i > 0) {
+        tl.to(
+          serviceSlides[i - 1],
+          { autoAlpha: 0, y: -36, duration: 0.32, ease: "power2.in" },
+          at - 0.34
+        );
+      }
+      slideReveal(tl, slide, at);
     });
-  });
-  servicesList.addEventListener("mouseleave", () => {
-    gsap.to(floatWrap, {
-      opacity: 0,
-      scale: 0.7,
-      duration: 0.3,
-      ease: "power2.in",
+    tl.to({}, { duration: 0.7 }); // respiro finale: l'ultima scena resta ferma
+  } else {
+    serviceSlides.forEach((slide) => {
+      const tl = gsap.timeline({
+        defaults: { ease: "power3.out" },
+        scrollTrigger: { trigger: slide, start: "top 80%" },
+      });
+      slideReveal(tl, slide, 0);
     });
-  });
+  }
 }
 
 // ---------- Chi Siamo — statement parola-per-parola in scrub ----------

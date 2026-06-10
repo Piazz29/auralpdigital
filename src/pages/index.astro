@@ -45,43 +45,33 @@ const projects = [
 ];
 
 // SERVIZI — sorgente unica dei dati della sezione "Cosa Facciamo".
-// `tags` sono le competenze mostrate come chip sotto la descrizione.
+// Ogni servizio è una "scena" a tutta schermata nella sezione pinnata:
+// titolo con coda in corsivo (`nameEm`), descrizione, chip di competenze e
+// un placeholder immagine (`grad` è la cover brandizzata in attesa del visual).
 const services = [
   {
     n: "01",
-    name: "Siti Web Premium",
-    desc: "Siti veloci ed eleganti, progettati per trasformare visitatori in clienti.",
-    tags: ["Design", "Sviluppo", "SEO"],
+    name: "Siti web",
+    nameEm: "che convertono.",
+    desc: "Ultra-moderni, veloci e impeccabili su mobile. Ottimizzati per Google e per le ricerche AI (SEO + GEO), con intelligenza artificiale integrata e ogni dettaglio progettato per trasformare i visitatori in clienti.",
+    tags: ["SEO + GEO", "AI integrata", "Mobile-first", "Conversione"],
+    grad: "grad-2",
   },
   {
     n: "02",
-    name: "Lead Generation",
-    desc: "Sistemi di acquisizione che portano richieste qualificate, ogni settimana.",
-    tags: ["Funnel", "Landing", "CRO"],
+    name: "Gestionali",
+    nameEm: "su misura.",
+    desc: "Sistemi costruiti attorno ai tuoi processi: dati centralizzati e sempre sotto controllo, ogni lead seguito fino in fondo. Potenziati dall'AI, per completare più lavoro in meno tempo.",
+    tags: ["Dati centralizzati", "Lead management", "AI augmented"],
+    grad: "grad-1",
   },
   {
     n: "03",
-    name: "Campagne Ads",
-    desc: "Meta e Google Ads gestite con metodo: budget che torna come crescita.",
-    tags: ["Meta", "Google", "Retargeting"],
-  },
-  {
-    n: "04",
-    name: "Brand & Social",
-    desc: "Identità e contenuti che fanno percepire il tuo valore prima del prezzo.",
-    tags: ["Identità", "Contenuti", "Direzione"],
-  },
-  {
-    n: "05",
-    name: "Automazioni",
-    desc: "Processi che lavorano mentre dormi: follow-up, prenotazioni, recensioni.",
-    tags: ["Email", "CRM", "Workflow"],
-  },
-  {
-    n: "06",
-    name: "AI Integration",
-    desc: "Intelligenza artificiale applicata al tuo business: risposte, analisi, velocità.",
-    tags: ["Chatbot", "Analisi", "Tooling"],
+    name: "Social",
+    nameEm: "che vendono.",
+    desc: "Strategia e contenuti per far crescere il traffico organico, campagne ads mirate per trasformarlo in clienti: il tuo brand davanti alle persone giuste, al momento giusto.",
+    tags: ["Contenuti organici", "Meta & Google Ads", "Strategia"],
+    grad: "grad-3",
   },
 ];
 
@@ -120,12 +110,12 @@ const stats = [
 ];
 
 const marqueeItems = [
-  "Web Design",
-  "Lead Generation",
-  "Campagne Ads",
-  "Brand & Social",
-  "Automazioni",
+  "Siti Web",
+  "Gestionali su misura",
+  "Social & Ads",
+  "SEO + GEO",
   "AI Integration",
+  "Lead Generation",
 ];
 ---
 
@@ -137,14 +127,23 @@ const marqueeItems = [
     style="opacity: 0;"
   >
     <div class="nav-blur-bg" aria-hidden="true"></div>
+    <!-- Logo — due SVG reali sovrapposti (versione scura + reversed): sulle
+         superfici scure si incrociano in dissolvenza, niente filtri CSS che
+         appiattiscono i colori del wordmark. -->
     <a
       href="/"
-      class="h-8 md:h-9 flex items-center transition-transform duration-300 hover:scale-[1.04]"
+      class="relative h-8 md:h-9 flex items-center transition-transform duration-300 hover:scale-[1.04]"
     >
       <img
         src="/logo/wordmark.svg"
         alt="AuralpDigital"
         class="h-full nav-logo"
+      />
+      <img
+        src="/logo/wordmark-reversed.svg"
+        alt=""
+        aria-hidden="true"
+        class="absolute left-0 top-0 h-full nav-logo-reversed"
       />
     </a>
 
@@ -311,21 +310,15 @@ const marqueeItems = [
   <!-- SECTION — PROGETTI -->
   <section id="projects" class="projects-section">
     <div class="works-screen">
+      <!-- Header pulito: kicker con tick accent, titolo, link essenziale. -->
       <div class="works-head" data-anim="works-head">
         <div class="works-head-left">
-          <span class="works-kicker"><span class="works-dot" aria-hidden="true"></span>Lavori selezionati</span>
+          <span class="works-kicker">Lavori selezionati</span>
           <h2 class="works-title">Cosa <em>abbiamo creato.</em></h2>
         </div>
-        <a href="#projects" class="pill-outline works-head-cta">
+        <a href="#projects" class="works-head-link">
           Tutti i progetti <span aria-hidden="true">↗</span>
         </a>
-      </div>
-
-      <!-- Meta-strip — hairline editoriale tra titolo e rail -->
-      <div class="works-rule" data-anim="works-head">
-        <span class="works-rule-label">Selezione 2026</span>
-        <span class="works-rule-line" aria-hidden="true"></span>
-        <span class="works-rule-count">{projects.length} progetti</span>
       </div>
 
       <!-- RAIL — pannelli espandibili in hover. Il primo è aperto di default;
@@ -382,82 +375,60 @@ const marqueeItems = [
     </div>
   </section>
 
-  <!-- SECTION — COSA FACCIAMO — superficie blu chiara (#8AA0FF). Il colore
-       non sta sulla sezione ma sul canvas .post-reveal: uno scrub GSAP tinge
-       l'intero schermo di blu mentre si scrolla da "Lavori selezionati" a qui
-       (e poi verso il warm di "Chi Siamo"). Il bg statico della sezione resta
-       come fallback per reduced-motion / no-JS. -->
+  <!-- SECTION — COSA FACCIAMO — banda navy. Il colore non sta sulla sezione
+       ma sul canvas .post-reveal: uno scrub GSAP scurisce l'intero schermo
+       verso il navy mentre si scrolla da "Lavori selezionati" a qui (e poi
+       torna chiaro verso "Chi Siamo"). Il bg statico della sezione resta
+       come fallback per reduced-motion / no-JS. Su desktop la sezione viene
+       PINNATA e i servizi si rivelano uno a uno in scrub (vedi main.ts). -->
   <section id="cosa-facciamo" class="services-section">
     <div class="works-screen">
       <div class="works-head" data-anim="services-head">
         <div class="works-head-left">
-          <span class="works-kicker"><span class="works-dot" aria-hidden="true"></span>Cosa facciamo</span>
+          <span class="works-kicker">Cosa facciamo</span>
           <h2 class="works-title">Servizi che <em>fanno crescere.</em></h2>
         </div>
-        <a href="#contatti" class="pill-outline works-head-cta">
+        <a href="#contatti" class="works-head-link">
           Parliamone <span aria-hidden="true">↗</span>
         </a>
       </div>
 
-      <div class="works-rule" data-anim="services-head">
-        <span class="works-rule-label">Competenze</span>
-        <span class="works-rule-line" aria-hidden="true"></span>
-        <span class="works-rule-count">{services.length} servizi</span>
-      </div>
-
-      <!-- LISTA SERVIZI — righe editoriali. Ogni riga ha il PROPRIO scroll
-           trigger: hairline che si disegna, numero che sale, nome che emerge
-           da una maschera, descrizione e tag in coda (vedi main.ts). In hover
-           su desktop una card-anteprima flottante segue il cursore. -->
-      <div class="services-list" data-anim="services">
-        {services.map((s, i) => (
-          <a href="#contatti" class="service-row" data-anim="service-row" data-service={i}>
-            <span class="service-line" aria-hidden="true"></span>
-            <span class="service-num">{s.n}</span>
-            <h3 class="service-name"><span class="sn-mask"><span class="sn">{s.name}</span></span></h3>
-            <div class="service-info">
-              <p class="service-desc">{s.desc}</p>
-              <div class="service-tags">
-                {s.tags.map((t) => <span class="service-tag">{t}</span>)}
+      <!-- SCENE SERVIZIO — una per servizio, a tutta schermata: su desktop
+           la sezione è pinnata e le scene si avvicendano scrollando (titolo
+           dalla maschera, descrizione e chip in coda, placeholder immagine
+           che si solleva); su mobile scorrono in colonna e si rivelano
+           entrando in viewport (vedi main.ts). -->
+      <div class="services-stage">
+        {services.map((s) => (
+          <article class="service-slide">
+            <div class="slide-body">
+              <span class="slide-index">{s.n} / 0{services.length}</span>
+              <h3 class="slide-title">
+                <span class="sn-mask"><span class="sn">{s.name} <em>{s.nameEm}</em></span></span>
+              </h3>
+              <p class="slide-desc">{s.desc}</p>
+              <div class="slide-tags">
+                {s.tags.map((t) => <span class="slide-tag">{t}</span>)}
               </div>
             </div>
-            <span class="service-arrow" aria-hidden="true">↗</span>
-          </a>
+            <div class={`slide-media grain ${s.grad}`}>
+              <span class="slide-media-badge">Immagine in arrivo</span>
+            </div>
+          </article>
         ))}
-        <span class="service-line service-line--end" aria-hidden="true"></span>
       </div>
     </div>
 
   </section>
-
-  <!-- ANTEPRIMA FLOTTANTE — una card per servizio, impilate; il JS attiva
-       quella del servizio in hover e fa seguire il cursore con lerp.
-       Fuori dalla sezione così nessun antenato trasformato può rompere
-       il suo position: fixed. -->
-  <div id="service-float" aria-hidden="true">
-    {services.map((s, i) => (
-      <div class={`service-float-card grain grad-${(i % 4) + 1}`} data-float={i}>
-        <span class="float-num">{s.n}</span>
-        <span class="float-name">{s.name}</span>
-        <span class="float-badge">Anteprima in arrivo</span>
-      </div>
-    ))}
-  </div>
 
   <!-- SECTION — CHI SIAMO -->
   <section id="chi-siamo" class="about-section">
     <div class="works-screen">
       <div class="works-head" data-anim="about-head">
         <div class="works-head-left">
-          <span class="works-kicker"><span class="works-dot" aria-hidden="true"></span>Chi siamo</span>
+          <span class="works-kicker">Chi siamo</span>
           <h2 class="works-title">Due menti, <em>un obiettivo.</em></h2>
         </div>
-      </div>
-
-      <div class="works-rule" data-anim="about-head">
-        <span class="works-rule-label">Julian & Alice</span>
-        <span class="works-rule-line" aria-hidden="true"></span>
-        <span class="works-rule-count">Alto Adige, IT</span>
       </div>
 
       <!-- STATEMENT — manifesto a tutta larghezza; le parole si "accendono"
@@ -530,7 +501,7 @@ const marqueeItems = [
       <!-- Spotlight — alone accent che segue il cursore (vedi main.ts). -->
       <div class="cta-spotlight" aria-hidden="true"></div>
       <span class="works-kicker cta-kicker" data-anim="contact-kicker">
-        <span class="works-dot" aria-hidden="true"></span>Iniziamo
+        Iniziamo
       </span>
 
       <h2 class="cta-title" data-anim="contact-headline">

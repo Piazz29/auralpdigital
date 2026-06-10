@@ -1,15 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #F7F5F0;
+  /* Palette ufficiale — unica fonte dei colori del sito. */
+  --color-bg: #FAFAF8;
+  --color-text: #0D0D0D;
+  --color-text-secondary: #4A4A4A;
+  --color-text-muted: #9AA3B2;
+  --color-accent: #3B5BDB;
+  --color-navy: #1A2340;
+  --color-cta-bg: #0D0D0D;
+  --color-cta-text: #FAFAF8;
+  --color-border: #E8E8E5;
+  --shadow-premium: 0 4px 20px rgba(13, 13, 13, 0.06);
+
+  /* Alias storici — stessi valori della palette, nomi usati nel resto del CSS. */
   --color-ink: #0D0D0D;
   --color-secondary: #4A4A4A;
   --color-muted: #9AA3B2;
-  --color-navy: #1A2340;
-  --color-accent: #3B5BDB;
-  --color-warm: #F5F4F0;
-  --color-warm-deeper: #E8E6E0;
-  --color-border: #E8E8E5;
+  --color-warm: #FAFAF8;
+  --color-warm-deeper: #E8E8E5;
   --color-border-soft: #E8E8E5;
 
   /* Display/headline → Space Grotesk (tech, geometrico) · Body/UI → Inter */
@@ -75,15 +84,16 @@ html.lenis body {
 
 #mobile-menu {
   --menu-r: 0%;
-  /* Aurora boreale sulle Alpi — mesh di gradienti accent su warm white che
-     deriva lentamente. Resta chiaro: i testi scuri del menu restano leggibili. */
-  background-color: #FAFAF8;
+  /* Aurora boreale sulle Alpi — mesh di gradienti che deriva lentamente.
+     Tinte SOLO dalla palette (accent / navy / muted) su warm white:
+     i testi scuri del menu restano leggibili. */
+  background-color: var(--color-bg);
   background-image:
-    radial-gradient(58% 50% at 12% 16%, rgba(59, 91, 219, 0.22), transparent 70%),
-    radial-gradient(54% 46% at 88% 10%, rgba(26, 35, 64, 0.18), transparent 70%),
-    radial-gradient(66% 56% at 84% 90%, rgba(108, 79, 224, 0.20), transparent 70%),
-    radial-gradient(50% 44% at 20% 94%, rgba(224, 107, 140, 0.14), transparent 70%),
-    radial-gradient(46% 40% at 50% 52%, rgba(56, 189, 175, 0.12), transparent 70%);
+    radial-gradient(58% 50% at 12% 16%, rgba(59, 91, 219, 0.20), transparent 70%),
+    radial-gradient(54% 46% at 88% 10%, rgba(26, 35, 64, 0.16), transparent 70%),
+    radial-gradient(66% 56% at 84% 90%, rgba(59, 91, 219, 0.13), transparent 70%),
+    radial-gradient(50% 44% at 20% 94%, rgba(154, 163, 178, 0.18), transparent 70%),
+    radial-gradient(46% 40% at 50% 52%, rgba(26, 35, 64, 0.07), transparent 70%);
   background-repeat: no-repeat;
   background-size: 160% 160%, 150% 150%, 172% 172%, 150% 150%, 140% 140%;
   animation: menu-aurora 26s ease-in-out infinite alternate;
@@ -315,51 +325,6 @@ button {
   }
 }
 
-/* Service row — wipe orizzontale accent in hover (al posto del flat bg):
-   un layer dietro al contenuto si "disegna" da sinistra con easing morbido. */
-.service-row {
-  position: relative;
-}
-.service-row::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(
-    90deg,
-    rgba(59, 91, 219, 0.07),
-    rgba(59, 91, 219, 0) 75%
-  );
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.service-row:hover::before {
-  transform: scaleX(1);
-}
-.service-row .service-name {
-  transition: transform 0.3s ease;
-}
-.service-row .service-arrow {
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-.service-row:hover .service-name {
-  transform: translateX(8px);
-}
-.service-row:hover .service-arrow {
-  opacity: 1;
-  transform: translateX(0);
-  color: var(--color-accent);
-}
-.service-row .service-num {
-  transition: color 0.3s ease;
-}
-.service-row:hover .service-num {
-  color: var(--color-accent);
-}
-
 /* Pill buttons — primary (filled ink) + outline (secondary).
    Both share a lift-on-hover that mirrors the custom cursor ring, which
    scales up over hoverable elements: button + cursor "grow" together with
@@ -373,7 +338,7 @@ button {
   font-family: var(--font-body);
   border: 1px solid transparent;
   /* Micro-ombra premium a riposo per dare profondità (Punto 8) */
-  box-shadow: 0 4px 20px rgba(13, 13, 13, 0.06);
+  box-shadow: var(--shadow-premium);
   will-change: transform;
   transition:
     background-color 0.25s ease,
@@ -502,7 +467,7 @@ button {
   padding: 6px 16px;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
-  box-shadow: 0 4px 20px rgba(13, 13, 13, 0.06);
+  box-shadow: var(--shadow-premium);
 }
 
 /* Footer link */
@@ -544,30 +509,23 @@ button {
   flex-direction: column;
   gap: 12px;
 }
-/* Kicker → badge frosted, stesso linguaggio del badge hero. */
+/* Kicker — etichetta essenziale: tick accent + small caps, niente pill. */
 .works-kicker {
   display: inline-flex;
   align-items: center;
   align-self: flex-start;
-  gap: 9px;
+  gap: 12px;
   font-family: var(--font-body);
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--color-ink);
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(13, 13, 13, 0.1);
-  border-radius: 9999px;
-  padding: 6px 15px 6px 12px;
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 4px 20px rgba(13, 13, 13, 0.06);
+  color: var(--color-text-secondary);
 }
-.works-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
+.works-kicker::before {
+  content: "";
+  width: 26px;
+  height: 1px;
   background: var(--color-accent);
 }
 .works-title {
@@ -582,48 +540,35 @@ button {
   font-style: italic;
   color: var(--color-accent);
 }
-/* Bottone "Tutti i progetti" — usa il sistema .pill-outline (ghost → accent),
-   qui solo dimensioni e tracking coerenti col badge. */
-.works-head-cta {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  text-decoration: none;
-  padding: 11px 20px;
-  white-space: nowrap;
-}
-@media (max-width: 640px) {
-  .works-head-cta { display: none; }
-}
-
-/* Meta-strip — riga sottile con etichetta · hairline · conteggio. */
-.works-rule {
-  display: flex;
+/* Link di header — testo essenziale con hairline sotto, niente pill. */
+.works-head-link {
+  display: inline-flex;
   align-items: center;
-  gap: 18px;
-  margin-top: -14px;
-}
-.works-rule-label,
-.works-rule-count {
+  gap: 8px;
   font-family: var(--font-body);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  text-decoration: none;
   white-space: nowrap;
+  color: var(--color-text);
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--color-border);
+  transition: color 0.25s ease, border-color 0.25s ease;
 }
-.works-rule-count { color: var(--color-secondary); }
-.works-rule-line {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    var(--color-accent) 0,
-    var(--color-border) 18%,
-    var(--color-border) 100%
-  );
+.works-head-link > [aria-hidden] {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.works-head-link:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.works-head-link:hover > [aria-hidden] {
+  transform: translate(2px, -2px);
+}
+@media (max-width: 640px) {
+  .works-head-link { display: none; }
 }
 
 /* ---------- RAIL a pannelli espandibili ----------
@@ -693,29 +638,31 @@ button {
     0 40px 90px rgba(13, 13, 13, 0.20);
 }
 
-/* Cover jewel-tone — mesh di radiali su base profonda: splendide anche senza foto. */
+/* Cover — mesh di radiali su base profonda, solo tinte di palette
+   (accent / navy / muted su ink): splendide anche senza foto. */
 .grad-1 {
   background:
-    radial-gradient(130% 110% at 18% 0%, rgba(94, 116, 255, 0.55), transparent 56%),
-    radial-gradient(120% 120% at 100% 100%, rgba(224, 107, 140, 0.42), transparent 55%),
-    linear-gradient(155deg, #1c2548 0%, #0d0d0d 100%);
+    radial-gradient(130% 110% at 18% 0%, rgba(59, 91, 219, 0.55), transparent 56%),
+    radial-gradient(120% 120% at 100% 100%, rgba(154, 163, 178, 0.30), transparent 55%),
+    linear-gradient(155deg, #1A2340 0%, #0D0D0D 100%);
 }
 .grad-2 {
   background:
     radial-gradient(130% 110% at 82% 0%, rgba(59, 91, 219, 0.52), transparent 56%),
-    radial-gradient(120% 120% at 0% 100%, rgba(108, 79, 224, 0.40), transparent 55%),
-    linear-gradient(155deg, #0d0d0d 0%, #1a2340 100%);
+    radial-gradient(120% 120% at 0% 100%, rgba(59, 91, 219, 0.26), transparent 55%),
+    linear-gradient(155deg, #0D0D0D 0%, #1A2340 100%);
 }
 .grad-3 {
   background:
-    radial-gradient(130% 110% at 50% 0%, rgba(56, 189, 175, 0.34), transparent 56%),
+    radial-gradient(130% 110% at 50% 0%, rgba(154, 163, 178, 0.28), transparent 56%),
     radial-gradient(120% 120% at 100% 100%, rgba(59, 91, 219, 0.36), transparent 55%),
-    linear-gradient(155deg, #11182e 0%, #0d0d0d 100%);
+    linear-gradient(155deg, #1A2340 0%, #0D0D0D 100%);
 }
 .grad-4 {
   background:
-    radial-gradient(130% 110% at 22% 0%, rgba(108, 79, 224, 0.42), transparent 56%),
-    linear-gradient(155deg, #2a2440 0%, #1a2340 100%);
+    radial-gradient(130% 110% at 22% 0%, rgba(59, 91, 219, 0.42), transparent 56%),
+    radial-gradient(120% 120% at 88% 96%, rgba(154, 163, 178, 0.18), transparent 55%),
+    linear-gradient(155deg, #1A2340 0%, #0D0D0D 100%);
 }
 
 .work-panel-img {
@@ -762,7 +709,7 @@ button {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.12em;
-  color: #8aa0ff;
+  color: var(--color-text-muted);
 }
 .panel-vertical-title {
   writing-mode: vertical-rl;
@@ -826,7 +773,7 @@ button {
 .panel-tick {
   width: 24px;
   height: 1px;
-  background: #8aa0ff;
+  background: var(--color-text-muted);
 }
 .panel-title {
   font-family: var(--font-display);
@@ -976,272 +923,177 @@ button {
 }
 
 /* ----------------------------------------------------------------------
-   COSA FACCIAMO — lista servizi editoriale con hairline + anteprima
-   flottante che segue il cursore (desktop).
+   COSA FACCIAMO — banda NAVY pinnata: arrivati alla sezione lo scroll la
+   "blocca" a tutta schermata e i servizi si avvicendano come SCENE, uno
+   alla volta (vedi main.ts). Ogni scena: titolo dalla maschera,
+   descrizione, chip di competenze e placeholder immagine.
 -------------------------------------------------------------------------- */
-/* Superficie blu chiara — il colore "vero" lo porta il canvas .post-reveal,
-   tinto in scrub dal JS (lo schermo si colora di blu scrollando da Lavori
-   selezionati a qui). Il background statico qui sotto è il fallback per
-   reduced-motion e no-JS; con JS attivo viene reso trasparente. */
+/* Superficie navy — il colore "vero" lo porta il canvas .post-reveal,
+   tinto in scrub dal JS (lo schermo si scurisce verso il navy scrollando
+   da "Lavori selezionati" a qui). Il background statico qui sotto è il
+   fallback per reduced-motion e no-JS; con JS attivo viene reso trasparente. */
 .services-section {
   position: relative;
   padding: clamp(90px, 13vh, 170px) 0;
-  background-color: #8aa0ff;
+  background-color: var(--color-navy);
 }
 .services-section .works-screen {
   max-width: 110rem;
 }
 
-/* Palette sul blu chiaro: testi ink/navy, parole chiave in warm white. */
-.services-section .works-title em { color: #fafaf8; }
-.services-section .works-kicker {
-  background: rgba(255, 255, 255, 0.45);
-  border-color: rgba(13, 13, 13, 0.12);
-}
-.services-section .works-dot,
-.services-section .works-dot::after {
-  background: var(--color-navy);
-}
-.services-section .works-rule-label { color: rgba(26, 35, 64, 0.6); }
-.services-section .works-rule-count { color: var(--color-navy); }
-.services-section .works-rule-line {
-  background: linear-gradient(
-    to right,
-    var(--color-navy) 0,
-    rgba(26, 35, 64, 0.28) 18%,
-    rgba(26, 35, 64, 0.28) 100%
-  );
-}
-.services-section .pill-outline {
-  color: var(--color-navy);
-  border-color: rgba(26, 35, 64, 0.4);
-}
-.services-section .pill-outline:hover {
-  background: var(--color-navy);
-  border-color: var(--color-navy);
-  color: #fafaf8;
-}
-.services-section .service-row::before {
-  background: linear-gradient(
-    90deg,
-    rgba(250, 250, 248, 0.28),
-    rgba(250, 250, 248, 0) 80%
-  );
-}
-.services-section .service-num { color: rgba(26, 35, 64, 0.55); }
-.services-section .service-row:hover .service-num { color: #fafaf8; }
-.services-section .service-desc { color: rgba(26, 35, 64, 0.85); }
-.services-section .service-tag {
-  color: var(--color-navy);
-  border-color: rgba(26, 35, 64, 0.35);
-}
-.services-section .service-row:hover .service-tag {
-  color: var(--color-ink);
-  border-color: rgba(26, 35, 64, 0.7);
-}
-.services-section .service-arrow {
-  color: var(--color-navy);
-  border-color: rgba(26, 35, 64, 0.4);
-}
-.services-section .service-row:hover .service-arrow {
-  background: var(--color-navy);
-  border-color: var(--color-navy);
-  color: #fafaf8;
+/* Desktop — la sezione riempie esattamente lo schermo per il pin:
+   header in alto, palco delle scene sotto, tutto centrato in verticale. */
+@media (min-width: 1024px) {
+  .services-section {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    padding: clamp(40px, 6vh, 90px) 0;
+  }
+  .services-section .works-screen {
+    width: 100%;
+  }
 }
 
-.services-list {
+/* Palette sul navy: testi warm white, secondari muted, tick chiaro. */
+.services-section .works-kicker { color: rgba(250, 250, 248, 0.55); }
+.services-section .works-kicker::before { background: rgba(250, 250, 248, 0.45); }
+.services-section .works-title { color: var(--color-cta-text); }
+.services-section .works-title em { color: var(--color-text-muted); }
+.services-section .works-head-link {
+  color: var(--color-cta-text);
+  border-color: rgba(250, 250, 248, 0.3);
+}
+.services-section .works-head-link:hover {
+  color: var(--color-cta-text);
+  border-color: var(--color-cta-text);
+}
+
+/* ---- Palco delle scene ----
+   Flusso normale: colonna di scene distanziate (mobile / reduced motion /
+   no-JS). Con il pin attivo (classe .is-pinned aggiunta dal JS) le scene
+   si impilano nello stesso spazio e si avvicendano in dissolvenza. */
+.services-stage {
+  position: relative;
   display: flex;
   flex-direction: column;
+  gap: clamp(56px, 9vh, 110px);
 }
-
-.service-row {
-  display: grid;
-  grid-template-columns: 72px 1.1fr 1fr 56px;
-  align-items: center;
-  gap: clamp(16px, 2.5vw, 40px);
-  padding: clamp(26px, 3vh, 38px) clamp(8px, 1vw, 20px);
-  text-decoration: none;
-  color: var(--color-ink);
-}
-
-/* Hairline animabile — al posto del border-top: ogni riga ha una linea che
-   il JS "disegna" da sinistra (scaleX) quando la riga entra in viewport.
-   La variante --end chiude la lista in fondo. */
-.service-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: rgba(26, 35, 64, 0.3);
-  transform-origin: left center;
-}
-.service-line--end {
-  position: static;
+.services-stage.is-pinned {
   display: block;
-  width: 100%;
-  flex: none;
+  height: min(62vh, 640px);
+}
+.services-stage.is-pinned .service-slide {
+  position: absolute;
+  inset: 0;
 }
 
-/* Maschera del nome — il titolo del servizio "emerge" dal basso dentro un
-   overflow hidden (yPercent via GSAP); il padding evita il taglio dei
-   discendenti. */
+.service-slide {
+  display: grid;
+  gap: clamp(24px, 4vw, 72px);
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .service-slide { grid-template-columns: 1.05fr 1fr; }
+}
+
+.slide-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(14px, 2.4vh, 24px);
+}
+.slide-index {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--color-text-muted);
+}
+.slide-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(34px, 4.6vw, 72px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--color-cta-text);
+}
+.slide-title em {
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+.slide-desc {
+  font-family: var(--font-body);
+  font-size: clamp(14px, 1.15vw, 17px);
+  line-height: 1.65;
+  color: rgba(250, 250, 248, 0.75);
+  max-width: 46ch;
+}
+.slide-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.slide-tag {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border: 1px solid rgba(250, 250, 248, 0.2);
+  border-radius: 9999px;
+  padding: 5px 12px;
+}
+
+/* Maschera del titolo — il nome "emerge" dal basso dentro un overflow
+   hidden (yPercent via GSAP); il padding evita il taglio dei discendenti. */
 .sn-mask {
   display: inline-block;
   overflow: hidden;
   vertical-align: bottom;
-  padding-bottom: 0.1em;
-  margin-bottom: -0.1em;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
 }
 .sn {
   display: inline-block;
   will-change: transform;
 }
 
-.service-num {
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: var(--color-muted);
-}
-
-.service-name {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(24px, 2.8vw, 44px);
-  line-height: 1.05;
-  letter-spacing: -0.015em;
-}
-
-.service-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.service-desc {
-  font-family: var(--font-body);
-  font-size: clamp(13px, 1vw, 15px);
-  line-height: 1.55;
-  color: var(--color-secondary);
-  max-width: 42ch;
-}
-.service-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.service-tag {
-  font-family: var(--font-body);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-  border: 1px solid var(--color-border);
-  border-radius: 9999px;
-  padding: 4px 11px;
-  transition: color 0.3s ease, border-color 0.3s ease;
-}
-.service-row:hover .service-tag {
-  color: var(--color-secondary);
-  border-color: var(--color-muted);
-}
-
-.service-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 9999px;
-  border: 1px solid var(--color-border);
-  font-size: 15px;
-  justify-self: end;
-}
-
-@media (max-width: 767px) {
-  .service-row {
-    grid-template-columns: 40px 1fr 40px;
-    grid-template-areas:
-      "num name arrow"
-      ".   info info";
-    row-gap: 10px;
-    align-items: start;
-  }
-  .service-num { grid-area: num; padding-top: 6px; }
-  .service-name { grid-area: name; }
-  .service-info { grid-area: info; }
-  .service-arrow { grid-area: arrow; width: 36px; height: 36px; }
-}
-
-/* Anteprima flottante — fissa, centrata sul cursore via margini negativi;
-   il JS muove solo il transform (GSAP quickTo) → nessun layout per frame. */
-#service-float {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 300px;
-  height: 210px;
-  margin: -105px 0 0 -150px;
-  z-index: 40;
-  pointer-events: none;
-  opacity: 0;
-  transform: scale(0.7);
-  will-change: transform;
-}
-.service-float-card {
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
+/* Placeholder immagine — cover brandizzata con grana e badge, stesso
+   linguaggio dei ritratti founder in attesa dei visual definitivi. */
+.slide-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  border-radius: 24px;
   overflow: hidden;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  /* Bordo chiaro sottile: la card resta leggibile sulla banda scura. */
-  border: 1px solid rgba(250, 250, 248, 0.14);
+  border: 1px solid rgba(250, 250, 248, 0.1);
   box-shadow:
     0 2px 4px rgba(13, 13, 13, 0.08),
-    0 30px 60px rgba(13, 13, 13, 0.25);
+    0 30px 70px rgba(13, 13, 13, 0.3);
 }
-.service-float-card.is-active {
-  opacity: 1;
+.services-stage.is-pinned .slide-media {
+  height: 100%;
+  aspect-ratio: auto;
 }
-.float-num {
+.slide-media-badge {
   position: absolute;
-  top: 18px;
-  left: 22px;
+  left: 18px;
+  bottom: 16px;
+  z-index: 2;
   font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: #8aa0ff;
-}
-.float-name {
-  position: absolute;
-  left: 22px;
-  bottom: 18px;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 22px;
-  letter-spacing: -0.01em;
-  color: #fafaf8;
-}
-.float-badge {
-  position: absolute;
-  top: 16px;
-  right: 18px;
-  font-family: var(--font-body);
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.7);
-  border: 1px solid rgba(250, 250, 248, 0.22);
+  color: rgba(250, 250, 248, 0.75);
+  background: rgba(13, 13, 13, 0.3);
+  border: 1px solid rgba(250, 250, 248, 0.18);
   border-radius: 9999px;
-  padding: 4px 10px;
-}
-@media (max-width: 1023px) {
-  #service-float { display: none; }
+  padding: 5px 12px;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 /* ----------------------------------------------------------------------
@@ -1261,15 +1113,7 @@ button {
 .about-section .works-screen {
   max-width: 110rem;
 }
-/* Hairline più decise: --color-border sparisce sul fondo warm-deeper. */
-.about-section .works-rule-line {
-  background: linear-gradient(
-    to right,
-    var(--color-accent) 0,
-    rgba(13, 13, 13, 0.1) 18%,
-    rgba(13, 13, 13, 0.1) 100%
-  );
-}
+/* Hairline più decisa: --color-border sparisce sul fondo warm-deeper. */
 .about-section .about-stats {
   border-top-color: rgba(13, 13, 13, 0.1);
 }
@@ -1519,14 +1363,15 @@ button {
   box-shadow:
     0 2px 4px rgba(13, 13, 13, 0.08),
     0 40px 100px rgba(13, 13, 13, 0.28);
-  /* Aurora dark — mesh di radiali jewel-tone su base ink, deriva lenta. */
-  background-color: #0d0d0d;
+  /* Aurora dark — mesh di radiali su base ink, deriva lenta.
+     Tinte solo dalla palette: accent, navy e muted. */
+  background-color: var(--color-cta-bg);
   background-image:
-    radial-gradient(60% 52% at 14% 18%, rgba(59, 91, 219, 0.4), transparent 70%),
-    radial-gradient(56% 48% at 88% 8%, rgba(108, 79, 224, 0.3), transparent 70%),
-    radial-gradient(64% 56% at 82% 92%, rgba(138, 160, 255, 0.22), transparent 70%),
-    radial-gradient(48% 42% at 22% 96%, rgba(224, 107, 140, 0.18), transparent 70%),
-    radial-gradient(46% 40% at 52% 50%, rgba(56, 189, 175, 0.1), transparent 70%);
+    radial-gradient(60% 52% at 14% 18%, rgba(59, 91, 219, 0.40), transparent 70%),
+    radial-gradient(56% 48% at 88% 8%, rgba(26, 35, 64, 0.85), transparent 70%),
+    radial-gradient(64% 56% at 82% 92%, rgba(59, 91, 219, 0.22), transparent 70%),
+    radial-gradient(48% 42% at 22% 96%, rgba(154, 163, 178, 0.14), transparent 70%),
+    radial-gradient(46% 40% at 52% 50%, rgba(26, 35, 64, 0.45), transparent 70%);
   background-repeat: no-repeat;
   background-size: 165% 165%, 150% 150%, 172% 172%, 150% 150%, 140% 140%;
   animation: menu-aurora 30s ease-in-out infinite alternate;
@@ -1560,7 +1405,7 @@ button {
   pointer-events: none;
   background: radial-gradient(
     460px circle at var(--mx, 50%) var(--my, 40%),
-    rgba(138, 160, 255, 0.16),
+    rgba(59, 91, 219, 0.24),
     transparent 65%
   );
   transition: opacity 0.6s ease;
@@ -1569,12 +1414,12 @@ button {
   opacity: 1;
 }
 
-/* Kicker — variante frosted-dark del badge. */
+/* Kicker — variante chiara su pannello scuro. */
 .cta-kicker {
-  color: #fafaf8;
-  background: rgba(250, 250, 248, 0.08);
-  border-color: rgba(250, 250, 248, 0.16);
-  box-shadow: none;
+  color: rgba(250, 250, 248, 0.6);
+}
+.cta-kicker::before {
+  background: rgba(250, 250, 248, 0.45);
 }
 
 .cta-title {
@@ -1588,7 +1433,7 @@ button {
 }
 .cta-title em {
   font-style: italic;
-  color: #8aa0ff;
+  color: var(--color-text-muted);
 }
 
 .cta-sub {
@@ -1671,7 +1516,7 @@ button {
   width: 4px;
   height: 4px;
   border-radius: 9999px;
-  background: rgba(138, 160, 255, 0.7);
+  background: rgba(154, 163, 178, 0.7);
 }
 
 /* Stella decorativa — ruota lentamente in alto a destra. */
@@ -1681,7 +1526,7 @@ button {
   right: clamp(30px, 4.5vw, 70px);
   z-index: 2;
   font-size: clamp(26px, 2.6vw, 44px);
-  color: rgba(138, 160, 255, 0.85);
+  color: rgba(154, 163, 178, 0.85);
   animation: cta-star-spin 14s linear infinite;
 }
 @keyframes cta-star-spin {
@@ -1736,20 +1581,26 @@ button {
 }
 
 /* ----------------------------------------------------------------------
-   NAVBAR SU FONDO SCURO — mentre la nav fissa attraversa il pannello CTA
-   scuro un ScrollTrigger aggiunge .nav-on-dark: wordmark in bianco pieno,
-   burger e pill invertiti. Via dalla zona scura, tutto rientra con la
-   stessa transizione.
+   NAVBAR SU FONDO SCURO — mentre la nav fissa attraversa la banda navy o
+   il pannello CTA scuro un ScrollTrigger aggiunge .nav-on-dark: il
+   wordmark passa in dissolvenza alla versione reversed (SVG dedicato,
+   niente filtri che appiattiscono i colori), burger e pill invertiti.
 -------------------------------------------------------------------------- */
 .nav-logo {
   filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7))
     drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))
     drop-shadow(0 1px 4px rgba(13, 13, 13, 0.22));
-  transition: filter 0.35s ease;
 }
-nav.nav-on-dark .nav-logo {
-  filter: brightness(0) invert(1) drop-shadow(0 1px 6px rgba(13, 13, 13, 0.35));
+.nav-logo-reversed {
+  opacity: 0;
+  filter: drop-shadow(0 1px 6px rgba(13, 13, 13, 0.35));
 }
+.nav-logo,
+.nav-logo-reversed {
+  transition: opacity 0.35s ease;
+}
+nav.nav-on-dark .nav-logo { opacity: 0; }
+nav.nav-on-dark .nav-logo-reversed { opacity: 1; }
 nav.nav-on-dark #burger-menu span {
   background-color: #fafaf8;
 }
@@ -1765,11 +1616,8 @@ nav.nav-on-dark .pill:hover {
 }
 /* Con il menu mobile aperto la nav galleggia sul pannello CHIARO del menu:
    l'inversione va sospesa qualunque cosa ci sia dietro. */
-nav:has(#burger-menu.is-open) .nav-logo {
-  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7))
-    drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))
-    drop-shadow(0 1px 4px rgba(13, 13, 13, 0.22));
-}
+nav:has(#burger-menu.is-open) .nav-logo { opacity: 1; }
+nav:has(#burger-menu.is-open) .nav-logo-reversed { opacity: 0; }
 nav:has(#burger-menu.is-open) #burger-menu span {
   background-color: #0d0d0d;
 }
@@ -1996,26 +1844,6 @@ nav:has(#burger-menu.is-open) .pill {
   to { transform: translateY(46px); }
 }
 
-/* ----------------------------------------------------------------------
-   DOT PING — il pallino accent dei kicker emette un'onda che si dissolve,
-   come un segnale "live". Puro CSS, spento con reduced motion.
--------------------------------------------------------------------------- */
-.works-dot {
-  position: relative;
-}
-.works-dot::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  background: var(--color-accent);
-  animation: dot-ping 2.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-}
-@keyframes dot-ping {
-  0% { transform: scale(1); opacity: 0.7; }
-  70%, 100% { transform: scale(3.4); opacity: 0; }
-}
-
 /* Tilt 3D delle founder card — la prospettiva sta sul genitore, la rotazione
    (GSAP) sulla media. */
 .founder-card {
@@ -2023,12 +1851,8 @@ nav:has(#burger-menu.is-open) .pill {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-scroll-line::after,
-  .works-dot::after {
+  .hero-scroll-line::after {
     animation: none;
-  }
-  .works-dot::after {
-    opacity: 0;
   }
 }
 
