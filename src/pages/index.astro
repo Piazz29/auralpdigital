@@ -144,8 +144,7 @@ const marqueeItems = [
       <img
         src="/logo/wordmark.svg"
         alt="AuralpDigital"
-        class="h-full"
-        style="filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.55)) drop-shadow(0 1px 4px rgba(13, 13, 13, 0.22));"
+        class="h-full nav-logo"
       />
     </a>
 
@@ -259,7 +258,7 @@ const marqueeItems = [
     <!-- Layer 3 — fade in fondo: il video sfuma nel warm white della sezione progetti -->
     <div class="hero-bottom-fade absolute inset-x-0 bottom-0 z-[3] pointer-events-none"></div>
 
-    <div class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center" style="background: radial-gradient(ellipse 50% 38% at 50% 50%, rgba(250, 250, 248, 0.85) 0%, rgba(250, 250, 248, 0.7) 35%, rgba(250, 250, 248, 0.35) 65%, transparent 90%);">
+    <div data-anim="hero-content" class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center" style="background: radial-gradient(ellipse 50% 38% at 50% 50%, rgba(250, 250, 248, 0.85) 0%, rgba(250, 250, 248, 0.7) 35%, rgba(250, 250, 248, 0.35) 65%, transparent 90%);">
       <span
         data-anim="hero-label"
         class="hero-badge inline-block text-[11px] font-medium tracking-[0.15em] uppercase"
@@ -296,6 +295,12 @@ const marqueeItems = [
         >
           Esplora il nostro lavoro <span aria-hidden="true">↗</span>
         </a>
+      </div>
+
+      <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
+      <div class="hero-scroll-hint" data-anim="hero-hint" style="opacity: 0;" aria-hidden="true">
+        <span class="hero-scroll-label">Scroll</span>
+        <span class="hero-scroll-line"></span>
       </div>
     </div>
   </section>
@@ -377,7 +382,11 @@ const marqueeItems = [
     </div>
   </section>
 
-  <!-- SECTION — COSA FACCIAMO -->
+  <!-- SECTION — COSA FACCIAMO — superficie blu chiara (#8AA0FF). Il colore
+       non sta sulla sezione ma sul canvas .post-reveal: uno scrub GSAP tinge
+       l'intero schermo di blu mentre si scrolla da "Lavori selezionati" a qui
+       (e poi verso il warm di "Chi Siamo"). Il bg statico della sezione resta
+       come fallback per reduced-motion / no-JS. -->
   <section id="cosa-facciamo" class="services-section">
     <div class="works-screen">
       <div class="works-head" data-anim="services-head">
@@ -396,13 +405,16 @@ const marqueeItems = [
         <span class="works-rule-count">{services.length} servizi</span>
       </div>
 
-      <!-- LISTA SERVIZI — righe editoriali con hairline. In hover su desktop
-           una card-anteprima flottante segue il cursore (vedi #service-float). -->
+      <!-- LISTA SERVIZI — righe editoriali. Ogni riga ha il PROPRIO scroll
+           trigger: hairline che si disegna, numero che sale, nome che emerge
+           da una maschera, descrizione e tag in coda (vedi main.ts). In hover
+           su desktop una card-anteprima flottante segue il cursore. -->
       <div class="services-list" data-anim="services">
         {services.map((s, i) => (
           <a href="#contatti" class="service-row" data-anim="service-row" data-service={i}>
+            <span class="service-line" aria-hidden="true"></span>
             <span class="service-num">{s.n}</span>
-            <h3 class="service-name">{s.name}</h3>
+            <h3 class="service-name"><span class="sn-mask"><span class="sn">{s.name}</span></span></h3>
             <div class="service-info">
               <p class="service-desc">{s.desc}</p>
               <div class="service-tags">
@@ -412,21 +424,25 @@ const marqueeItems = [
             <span class="service-arrow" aria-hidden="true">↗</span>
           </a>
         ))}
+        <span class="service-line service-line--end" aria-hidden="true"></span>
       </div>
     </div>
 
-    <!-- ANTEPRIMA FLOTTANTE — una card per servizio, impilate; il JS attiva
-         quella del servizio in hover e fa seguire il cursore con lerp. -->
-    <div id="service-float" aria-hidden="true">
-      {services.map((s, i) => (
-        <div class={`service-float-card grain grad-${(i % 4) + 1}`} data-float={i}>
-          <span class="float-num">{s.n}</span>
-          <span class="float-name">{s.name}</span>
-          <span class="float-badge">Anteprima in arrivo</span>
-        </div>
-      ))}
-    </div>
   </section>
+
+  <!-- ANTEPRIMA FLOTTANTE — una card per servizio, impilate; il JS attiva
+       quella del servizio in hover e fa seguire il cursore con lerp.
+       Fuori dalla sezione così nessun antenato trasformato può rompere
+       il suo position: fixed. -->
+  <div id="service-float" aria-hidden="true">
+    {services.map((s, i) => (
+      <div class={`service-float-card grain grad-${(i % 4) + 1}`} data-float={i}>
+        <span class="float-num">{s.n}</span>
+        <span class="float-name">{s.name}</span>
+        <span class="float-badge">Anteprima in arrivo</span>
+      </div>
+    ))}
+  </div>
 
   <!-- SECTION — CHI SIAMO -->
   <section id="chi-siamo" class="about-section">
@@ -486,6 +502,7 @@ const marqueeItems = [
       <div class="about-stats" data-anim="stats">
         {stats.map((s) => (
           <div class="stat" data-anim="stat">
+            <span class="stat-tick" aria-hidden="true"></span>
             <span class="stat-value font-display">
               <span data-count={s.value}>0</span>{s.suffix}
             </span>
@@ -510,6 +527,8 @@ const marqueeItems = [
   <!-- SECTION — CTA FINALE -->
   <section id="contatti" class="cta-section" data-anim="contact">
     <div class="cta-panel grain">
+      <!-- Spotlight — alone accent che segue il cursore (vedi main.ts). -->
+      <div class="cta-spotlight" aria-hidden="true"></div>
       <span class="works-kicker cta-kicker" data-anim="contact-kicker">
         <span class="works-dot" aria-hidden="true"></span>Iniziamo
       </span>

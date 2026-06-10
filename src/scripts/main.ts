@@ -201,6 +201,27 @@ gsap.fromTo(
   { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", delay: 0.4 }
 );
 
+// ---------- Navbar — inversione sulle superfici scure ----------
+// Mentre la nav fissa attraversa il pannello CTA scuro, un toggle aggiunge
+// .nav-on-dark: logo bianco, burger e pill invertiti. È contrasto
+// funzionale, quindi attivo anche con reduced motion. (Il blu chiaro di
+// Cosa Facciamo è una superficie chiara: lì la nav resta com'è.)
+const navEl = document.querySelector<HTMLElement>("[data-anim='nav']");
+if (navEl) {
+  const darkZones: { sel: string; start: string; end: string }[] = [
+    { sel: "[data-anim='contact']", start: "top 70", end: "bottom 130" },
+  ];
+  darkZones.forEach(({ sel, start, end }) => {
+    if (!document.querySelector(sel)) return;
+    ScrollTrigger.create({
+      trigger: sel,
+      start,
+      end,
+      toggleClass: { targets: navEl, className: "nav-on-dark" },
+    });
+  });
+}
+
 // ---------- Hero video ----------
 const heroVideo = document.querySelector<HTMLVideoElement>(
   "[data-anim='hero-video']"
@@ -290,6 +311,124 @@ heroEls.forEach(({ sel, delay, y = 16 }) => {
   );
 });
 
+// Hint di scroll — solo opacity: il centraggio è un translateX CSS che non va
+// toccato dal transform di GSAP.
+gsap.fromTo(
+  "[data-anim='hero-hint']",
+  { opacity: 0 },
+  { opacity: 1, duration: 0.9, ease: "power2.out", delay: 1.35 }
+);
+
+// ---------- Hero — uscita in parallasse ----------
+// Scrollando via dalla hero il blocco testo sale più veloce del video e
+// sfuma: la pagina "consegna" la scena alla sezione successiva. L'hint sta
+// dentro al blocco, quindi sparisce gratis.
+if (!reduceMotion) {
+  gsap.to("[data-anim='hero-content']", {
+    yPercent: -28,
+    opacity: 0,
+    ease: "none",
+    scrollTrigger: {
+      trigger: ".hero-section",
+      start: "top top",
+      end: "70% top",
+      scrub: 0.6,
+    },
+  });
+}
+
+// ---------- Titoli di sezione — reveal parola per parola ----------
+// Ogni titolo viene diviso in parole; ognuna sale dentro una maschera
+// (overflow hidden) con una rotazione minima che si raddrizza: il classico
+// "line reveal" editoriale, qui a grana di parola. Gli <em> restano <em>
+// dentro lo span, così corsivo e colore accent si conservano.
+const splitTitleWords = (title: HTMLElement): HTMLElement[] => {
+  const words: HTMLElement[] = [];
+  const frag = document.createDocumentFragment();
+
+  const pushWord = (text: string, em: boolean) => {
+    const mask = document.createElement("span");
+    mask.className = "tw-mask";
+    const inner = document.createElement("span");
+    inner.className = "tw";
+    if (em) {
+      const e = document.createElement("em");
+      e.textContent = text;
+      inner.appendChild(e);
+    } else {
+      inner.textContent = text;
+    }
+    mask.appendChild(inner);
+    frag.appendChild(mask);
+    frag.appendChild(document.createTextNode(" "));
+    words.push(inner);
+  };
+
+  title.childNodes.forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      (node.textContent ?? "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .forEach((w) => pushWord(w, false));
+    } else if (node instanceof HTMLElement) {
+      if (node.tagName === "BR") {
+        frag.appendChild(document.createElement("br"));
+        return;
+      }
+      (node.textContent ?? "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .forEach((w) => pushWord(w, node.tagName === "EM"));
+    }
+  });
+
+  title.textContent = "";
+  title.appendChild(frag);
+  return words;
+};
+
+if (!reduceMotion) {
+  document
+    .querySelectorAll<HTMLElement>(".works-title, .cta-title")
+    .forEach((title) => {
+      const words = splitTitleWords(title);
+      const isCta = title.classList.contains("cta-title");
+      gsap.fromTo(
+        words,
+        { yPercent: 115, rotate: 5 },
+        {
+          yPercent: 0,
+          rotate: 0,
+          duration: 1.05,
+          ease: "power4.out",
+          stagger: 0.07,
+          // La CTA aspetta che il pannello scuro sia salito (vedi reveal sotto).
+          delay: isCta ? 0.35 : 0,
+          scrollTrigger: {
+            trigger: isCta ? "[data-anim='contact']" : title,
+            start: isCta ? "top 78%" : "top 88%",
+          },
+        }
+      );
+    });
+}
+
+// ---------- Hairline — le linee meta si "disegnano" da sinistra ----------
+if (!reduceMotion) {
+  gsap.utils.toArray<HTMLElement>(".works-rule-line").forEach((line) => {
+    gsap.fromTo(
+      line,
+      { scaleX: 0, transformOrigin: "left center" },
+      {
+        scaleX: 1,
+        duration: 1.4,
+        ease: "power3.out",
+        scrollTrigger: { trigger: line, start: "top 90%" },
+      }
+    );
+  });
+}
+
 // ---------- Lavori selezionati — entrata header + pannelli ----------
 gsap.fromTo(
   "[data-anim='works-head']",
@@ -344,22 +483,109 @@ const revealHead = (selector: string, trigger: string) => {
 revealHead("[data-anim='services-head']", "#cosa-facciamo");
 revealHead("[data-anim='about-head']", "#chi-siamo");
 
-// ---------- Service rows entrance ----------
-gsap.fromTo(
-  "[data-anim='service-row']",
-  { opacity: 0, y: 30 },
-  {
-    opacity: 1,
-    y: 0,
-    duration: 0.7,
-    ease: "power2.out",
-    stagger: 0.08,
-    scrollTrigger: {
-      trigger: "[data-anim='services']",
-      start: "top 80%",
-    },
+// ---------- Canvas — lo schermo cambia colore tra le sezioni ----------
+// I colori di sezione non stanno sulle sezioni ma sul canvas .post-reveal:
+// tre scrub lo tingono in sequenza — warm → blu chiaro (entrando in Cosa
+// Facciamo), blu → warm-deeper (entrando in Chi Siamo), warm-deeper → warm
+// (verso marquee e CTA). L'intero schermo "si colora" sotto le dita.
+// I background statici delle sezioni vengono resi trasparenti: restano solo
+// come fallback per reduced-motion / no-JS.
+if (!reduceMotion) {
+  const canvas = document.querySelector<HTMLElement>(".post-reveal");
+  if (canvas) {
+    gsap.set(["#cosa-facciamo", "#chi-siamo"], { backgroundColor: "transparent" });
+
+    const morph = (
+      trigger: string,
+      start: string,
+      end: string,
+      from: string,
+      to: string
+    ) => {
+      gsap.fromTo(
+        canvas,
+        { backgroundColor: from },
+        {
+          backgroundColor: to,
+          ease: "none",
+          immediateRender: false,
+          scrollTrigger: { trigger, start, end, scrub: 0.4 },
+        }
+      );
+    };
+
+    morph("#cosa-facciamo", "top 85%", "top 25%", "#F7F5F0", "#8AA0FF");
+    morph("#chi-siamo", "top 70%", "top 20%", "#8AA0FF", "#E8E6E0");
+    morph(".marquee-section", "top 95%", "top 50%", "#E8E6E0", "#F7F5F0");
   }
-);
+}
+
+// ---------- Service rows — un trigger per riga, reveal coreografato ----------
+// Ogni servizio appare quando la SUA riga entra in viewport (uno dopo
+// l'altro scrollando): la hairline si disegna da sinistra, il numero sale,
+// il nome emerge dalla maschera, descrizione e tag chiudono in coda.
+if (!reduceMotion) {
+  document
+    .querySelectorAll<HTMLElement>("[data-anim='service-row']")
+    .forEach((row) => {
+      const line = row.querySelector(".service-line");
+      const num = row.querySelector(".service-num");
+      const name = row.querySelector(".sn");
+      const info = row.querySelectorAll(".service-desc, .service-tags");
+
+      const tl = gsap.timeline({
+        defaults: { ease: "power3.out" },
+        scrollTrigger: { trigger: row, start: "top 88%" },
+      });
+      if (line) {
+        tl.fromTo(
+          line,
+          { scaleX: 0, transformOrigin: "left center" },
+          { scaleX: 1, duration: 1.1 },
+          0
+        );
+      }
+      if (num) {
+        tl.fromTo(
+          num,
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.6 },
+          0.08
+        );
+      }
+      if (name) {
+        tl.fromTo(
+          name,
+          { yPercent: 115 },
+          { yPercent: 0, duration: 0.95, ease: "power4.out" },
+          0.12
+        );
+      }
+      if (info.length) {
+        tl.fromTo(
+          info,
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.7, stagger: 0.1 },
+          0.28
+        );
+      }
+    });
+
+  // La hairline di chiusura della lista si disegna per ultima.
+  const endLine = document.querySelector<HTMLElement>(".service-line--end");
+  if (endLine) {
+    gsap.fromTo(
+      endLine,
+      { scaleX: 0, transformOrigin: "left center" },
+      {
+        scaleX: 1,
+        duration: 1.1,
+        ease: "power3.out",
+        scrollTrigger: { trigger: endLine, start: "top 92%" },
+      }
+    );
+  }
+}
 
 // ---------- Servizi — anteprima flottante che segue il cursore ----------
 // Una sola wrapper fissa (#service-float) con dentro una card per servizio;
@@ -453,6 +679,35 @@ if (stWords.length) {
   }
 }
 
+// ---------- Chi Siamo — tilt 3D delle founder card ----------
+// La media segue il cursore con una rotazione leggera (prospettiva sul
+// genitore, via CSS); quickTo lerpa il rientro senza scatti.
+if (!reduceMotion && window.matchMedia("(min-width: 1024px)").matches) {
+  document.querySelectorAll<HTMLElement>(".founder-card").forEach((card) => {
+    const media = card.querySelector<HTMLElement>(".founder-media");
+    if (!media) return;
+    const rx = gsap.quickTo(media, "rotationX", {
+      duration: 0.5,
+      ease: "power2.out",
+    });
+    const ry = gsap.quickTo(media, "rotationY", {
+      duration: 0.5,
+      ease: "power2.out",
+    });
+    card.addEventListener("mousemove", (e) => {
+      const r = media.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      ry(px * 10);
+      rx(py * -10);
+    });
+    card.addEventListener("mouseleave", () => {
+      rx(0);
+      ry(0);
+    });
+  });
+}
+
 // ---------- Chi Siamo — founder card + colonna testo ----------
 gsap.fromTo(
   "[data-anim='founder']",
@@ -486,6 +741,24 @@ gsap.fromTo(
     },
   }
 );
+
+// Tick accent sopra ogni numero — si disegna da sinistra, in cascata.
+if (!reduceMotion) {
+  gsap.fromTo(
+    ".stat-tick",
+    { scaleX: 0 },
+    {
+      scaleX: 1,
+      duration: 1,
+      ease: "power3.out",
+      stagger: 0.15,
+      scrollTrigger: {
+        trigger: "[data-anim='stats']",
+        start: "top 85%",
+      },
+    }
+  );
+}
 
 document.querySelectorAll<HTMLElement>("[data-count]").forEach((el) => {
   const target = Number(el.dataset.count ?? 0);
@@ -525,9 +798,10 @@ gsap.fromTo(
   }
 );
 
+// Il titolo (contact-headline) non è più in questa lista: lo rivela il
+// reveal parola-per-parola qui sopra, che ha già trigger e delay propri.
 const ctaInner: { sel: string; delay: number; y?: number }[] = [
   { sel: "[data-anim='contact-kicker']", delay: 0.2, y: 16 },
-  { sel: "[data-anim='contact-headline']", delay: 0.32, y: 40 },
   { sel: "[data-anim='contact-sub']", delay: 0.46, y: 20 },
   { sel: "[data-anim='contact-cta']", delay: 0.58, y: 18 },
 ];
@@ -571,4 +845,94 @@ if (!reduceMotion && window.matchMedia("(min-width: 769px)").matches) {
       gsap.to(el, { x: 0, y: 0, duration: 0.8, ease: "elastic.out(1, 0.45)" });
     });
   });
+}
+
+// ---------- CTA — spotlight che segue il cursore ----------
+// Il pannello scuro si "illumina" attorno al puntatore: solo due CSS custom
+// property aggiornate al mousemove, il gradient lo disegna la GPU.
+const ctaPanel = document.querySelector<HTMLElement>(".cta-panel");
+const ctaSpot = document.querySelector<HTMLElement>(".cta-spotlight");
+if (
+  ctaPanel &&
+  ctaSpot &&
+  !reduceMotion &&
+  window.matchMedia("(min-width: 769px)").matches
+) {
+  ctaPanel.addEventListener("mousemove", (e) => {
+    const r = ctaPanel.getBoundingClientRect();
+    ctaSpot.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    ctaSpot.style.setProperty("--my", `${e.clientY - r.top}px`);
+  });
+}
+
+// ---------- Effetti legati alla VELOCITÀ di scroll ----------
+// Un unico ScrollTrigger globale legge la velocità e la distribuisce:
+// 1. il marquee accelera quando si scrolla forte e decanta verso la velocità
+//    di crociera (il loop CSS viene sostituito da un tween GSAP equivalente);
+// 2. la rail dei progetti si inclina di qualche frazione di grado nel verso
+//    dello scroll e si raddrizza subito — l'inerzia di un oggetto fisico.
+if (!reduceMotion) {
+  const marqueeTrack = document.querySelector<HTMLElement>(".marquee-track");
+  let marqueeTween: gsap.core.Tween | null = null;
+  if (marqueeTrack) {
+    marqueeTrack.classList.add("is-js");
+    marqueeTween = gsap.to(marqueeTrack, {
+      xPercent: -50,
+      duration: 36,
+      ease: "none",
+      repeat: -1,
+    });
+  }
+
+  const rail = document.querySelector<HTMLElement>(".works-rail");
+  const railSkew = rail
+    ? gsap.quickTo(rail, "skewY", { duration: 0.4, ease: "power2.out" })
+    : null;
+
+  let marqueeDecay: gsap.core.Tween | null = null;
+  let skewReset: gsap.core.Tween | null = null;
+
+  ScrollTrigger.create({
+    start: 0,
+    end: "max",
+    onUpdate(self) {
+      const v = self.getVelocity();
+
+      if (marqueeTween) {
+        marqueeTween.timeScale(1 + Math.min(Math.abs(v) / 700, 4));
+        marqueeDecay?.kill();
+        marqueeDecay = gsap.to(marqueeTween, {
+          timeScale: 1,
+          duration: 1.6,
+          ease: "power2.out",
+        });
+      }
+
+      if (railSkew) {
+        railSkew(gsap.utils.clamp(-1.4, 1.4, v / 900));
+        skewReset?.kill();
+        skewReset = gsap.delayedCall(0.15, () => railSkew(0));
+      }
+    },
+  });
+}
+
+// ---------- Footer — il ghost wordmark emerge in parallasse ----------
+// Il wordmark gigante parte più in basso e risale a posto mentre il footer
+// entra: l'ultima riga della pagina è anche l'ultimo movimento.
+if (!reduceMotion) {
+  gsap.fromTo(
+    ".footer-ghost",
+    { yPercent: 36 },
+    {
+      yPercent: 0,
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".site-footer",
+        start: "top 95%",
+        end: "bottom bottom",
+        scrub: 0.6,
+      },
+    }
+  );
 }

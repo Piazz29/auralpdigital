@@ -315,9 +315,27 @@ button {
   }
 }
 
-/* Service row */
+/* Service row — wipe orizzontale accent in hover (al posto del flat bg):
+   un layer dietro al contenuto si "disegna" da sinistra con easing morbido. */
 .service-row {
-  transition: background-color 0.3s ease;
+  position: relative;
+}
+.service-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    rgba(59, 91, 219, 0.07),
+    rgba(59, 91, 219, 0) 75%
+  );
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.service-row:hover::before {
+  transform: scaleX(1);
 }
 .service-row .service-name {
   transition: transform 0.3s ease;
@@ -326,9 +344,6 @@ button {
   opacity: 0;
   transform: translateX(-10px);
   transition: opacity 0.3s ease, transform 0.3s ease;
-}
-.service-row:hover {
-  background-color: rgba(0, 0, 0, 0.02);
 }
 .service-row:hover .service-name {
   transform: translateX(8px);
@@ -964,11 +979,74 @@ button {
    COSA FACCIAMO — lista servizi editoriale con hairline + anteprima
    flottante che segue il cursore (desktop).
 -------------------------------------------------------------------------- */
+/* Superficie blu chiara — il colore "vero" lo porta il canvas .post-reveal,
+   tinto in scrub dal JS (lo schermo si colora di blu scrollando da Lavori
+   selezionati a qui). Il background statico qui sotto è il fallback per
+   reduced-motion e no-JS; con JS attivo viene reso trasparente. */
 .services-section {
+  position: relative;
   padding: clamp(90px, 13vh, 170px) 0;
+  background-color: #8aa0ff;
 }
 .services-section .works-screen {
   max-width: 110rem;
+}
+
+/* Palette sul blu chiaro: testi ink/navy, parole chiave in warm white. */
+.services-section .works-title em { color: #fafaf8; }
+.services-section .works-kicker {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(13, 13, 13, 0.12);
+}
+.services-section .works-dot,
+.services-section .works-dot::after {
+  background: var(--color-navy);
+}
+.services-section .works-rule-label { color: rgba(26, 35, 64, 0.6); }
+.services-section .works-rule-count { color: var(--color-navy); }
+.services-section .works-rule-line {
+  background: linear-gradient(
+    to right,
+    var(--color-navy) 0,
+    rgba(26, 35, 64, 0.28) 18%,
+    rgba(26, 35, 64, 0.28) 100%
+  );
+}
+.services-section .pill-outline {
+  color: var(--color-navy);
+  border-color: rgba(26, 35, 64, 0.4);
+}
+.services-section .pill-outline:hover {
+  background: var(--color-navy);
+  border-color: var(--color-navy);
+  color: #fafaf8;
+}
+.services-section .service-row::before {
+  background: linear-gradient(
+    90deg,
+    rgba(250, 250, 248, 0.28),
+    rgba(250, 250, 248, 0) 80%
+  );
+}
+.services-section .service-num { color: rgba(26, 35, 64, 0.55); }
+.services-section .service-row:hover .service-num { color: #fafaf8; }
+.services-section .service-desc { color: rgba(26, 35, 64, 0.85); }
+.services-section .service-tag {
+  color: var(--color-navy);
+  border-color: rgba(26, 35, 64, 0.35);
+}
+.services-section .service-row:hover .service-tag {
+  color: var(--color-ink);
+  border-color: rgba(26, 35, 64, 0.7);
+}
+.services-section .service-arrow {
+  color: var(--color-navy);
+  border-color: rgba(26, 35, 64, 0.4);
+}
+.services-section .service-row:hover .service-arrow {
+  background: var(--color-navy);
+  border-color: var(--color-navy);
+  color: #fafaf8;
 }
 
 .services-list {
@@ -982,12 +1060,42 @@ button {
   align-items: center;
   gap: clamp(16px, 2.5vw, 40px);
   padding: clamp(26px, 3vh, 38px) clamp(8px, 1vw, 20px);
-  border-top: 1px solid var(--color-border);
   text-decoration: none;
   color: var(--color-ink);
 }
-.service-row:last-child {
-  border-bottom: 1px solid var(--color-border);
+
+/* Hairline animabile — al posto del border-top: ogni riga ha una linea che
+   il JS "disegna" da sinistra (scaleX) quando la riga entra in viewport.
+   La variante --end chiude la lista in fondo. */
+.service-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(26, 35, 64, 0.3);
+  transform-origin: left center;
+}
+.service-line--end {
+  position: static;
+  display: block;
+  width: 100%;
+  flex: none;
+}
+
+/* Maschera del nome — il titolo del servizio "emerge" dal basso dentro un
+   overflow hidden (yPercent via GSAP); il padding evita il taglio dei
+   discendenti. */
+.sn-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.sn {
+  display: inline-block;
+  will-change: transform;
 }
 
 .service-num {
@@ -1089,6 +1197,8 @@ button {
   overflow: hidden;
   opacity: 0;
   transition: opacity 0.3s ease;
+  /* Bordo chiaro sottile: la card resta leggibile sulla banda scura. */
+  border: 1px solid rgba(250, 250, 248, 0.14);
   box-shadow:
     0 2px 4px rgba(13, 13, 13, 0.08),
     0 30px 60px rgba(13, 13, 13, 0.25);
@@ -1138,11 +1248,30 @@ button {
    CHI SIAMO — statement con reveal parola-per-parola, founder card,
    colonna testo e stats con count-up.
 -------------------------------------------------------------------------- */
+/* Banda warm-deeper — secondo cambio di tono della palette: dopo la banda
+   scura dei servizi, "Chi Siamo" respira su un beige caldo a tutta larghezza
+   con un velo accent appena percettibile in alto a destra. */
 .about-section {
   padding: clamp(90px, 13vh, 170px) 0;
+  background:
+    radial-gradient(70% 55% at 88% 0%, rgba(59, 91, 219, 0.06), transparent 70%)
+      no-repeat,
+    var(--color-warm-deeper);
 }
 .about-section .works-screen {
   max-width: 110rem;
+}
+/* Hairline più decise: --color-border sparisce sul fondo warm-deeper. */
+.about-section .works-rule-line {
+  background: linear-gradient(
+    to right,
+    var(--color-accent) 0,
+    rgba(13, 13, 13, 0.1) 18%,
+    rgba(13, 13, 13, 0.1) 100%
+  );
+}
+.about-section .about-stats {
+  border-top-color: rgba(13, 13, 13, 0.1);
 }
 
 .about-statement {
@@ -1289,6 +1418,14 @@ button {
   flex-direction: column;
   gap: 8px;
 }
+/* Tick accent sopra il numero — si "disegna" da sinistra in scroll (GSAP). */
+.stat-tick {
+  width: 30px;
+  height: 2px;
+  background: var(--color-accent);
+  margin-bottom: 6px;
+  transform-origin: left center;
+}
 .stat-value {
   font-weight: 500;
   font-size: clamp(44px, 5vw, 84px);
@@ -1326,6 +1463,11 @@ button {
   animation: marquee-scroll 36s linear infinite;
   will-change: transform;
 }
+/* Quando il loop passa a GSAP (velocità reattiva allo scroll) la keyframe
+   CSS viene spenta per non sommare due trasformazioni. */
+.marquee-track.is-js {
+  animation: none;
+}
 @keyframes marquee-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -1340,6 +1482,10 @@ button {
   color: transparent;
   -webkit-text-stroke: 1px rgba(13, 13, 13, 0.28);
   transition: color 0.4s ease;
+}
+/* Le parole in outline si "riempiono" di inchiostro al passaggio del mouse. */
+.marquee-item:hover {
+  color: rgba(13, 13, 13, 0.85);
 }
 .marquee-star {
   font-size: 0.42em;
@@ -1402,6 +1548,25 @@ button {
 .cta-panel > * {
   position: relative;
   z-index: 2;
+}
+
+/* Spotlight — alone accent che segue il cursore dentro al pannello (le
+   coordinate --mx/--my sono aggiornate dal JS). Sotto i contenuti (z 2). */
+.cta-spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    460px circle at var(--mx, 50%) var(--my, 40%),
+    rgba(138, 160, 255, 0.16),
+    transparent 65%
+  );
+  transition: opacity 0.6s ease;
+}
+.cta-panel:hover .cta-spotlight {
+  opacity: 1;
 }
 
 /* Kicker — variante frosted-dark del badge. */
@@ -1569,8 +1734,49 @@ button {
     opacity 0.25s ease,
     background-color 0.35s ease;
 }
-nav img {
+
+/* ----------------------------------------------------------------------
+   NAVBAR SU FONDO SCURO — mentre la nav fissa attraversa il pannello CTA
+   scuro un ScrollTrigger aggiunge .nav-on-dark: wordmark in bianco pieno,
+   burger e pill invertiti. Via dalla zona scura, tutto rientra con la
+   stessa transizione.
+-------------------------------------------------------------------------- */
+.nav-logo {
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7))
+    drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))
+    drop-shadow(0 1px 4px rgba(13, 13, 13, 0.22));
   transition: filter 0.35s ease;
+}
+nav.nav-on-dark .nav-logo {
+  filter: brightness(0) invert(1) drop-shadow(0 1px 6px rgba(13, 13, 13, 0.35));
+}
+nav.nav-on-dark #burger-menu span {
+  background-color: #fafaf8;
+}
+nav.nav-on-dark .pill {
+  background: #fafaf8;
+  border-color: #fafaf8;
+  color: #0d0d0d;
+}
+nav.nav-on-dark .pill:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fafaf8;
+}
+/* Con il menu mobile aperto la nav galleggia sul pannello CHIARO del menu:
+   l'inversione va sospesa qualunque cosa ci sia dietro. */
+nav:has(#burger-menu.is-open) .nav-logo {
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7))
+    drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))
+    drop-shadow(0 1px 4px rgba(13, 13, 13, 0.22));
+}
+nav:has(#burger-menu.is-open) #burger-menu span {
+  background-color: #0d0d0d;
+}
+nav:has(#burger-menu.is-open) .pill {
+  background: #0d0d0d;
+  border-color: #0d0d0d;
+  color: #fafaf8;
 }
 
 /* ----------------------------------------------------------------------
@@ -1726,5 +1932,103 @@ nav img {
     opacity: 0;
   }
   .panel-title { white-space: normal; }
+}
+
+/* ----------------------------------------------------------------------
+   TITLE REVEAL — i titoli di sezione vengono divisi in parole dal JS;
+   ogni parola sale dentro una maschera overflow:hidden (yPercent via GSAP).
+   Il padding/margin negativo evita che i discendenti ("g", "q") vengano
+   tagliati dalla maschera.
+-------------------------------------------------------------------------- */
+.tw-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.tw {
+  display: inline-block;
+  transform-origin: left bottom;
+  will-change: transform;
+}
+
+/* ----------------------------------------------------------------------
+   HERO SCROLL HINT — etichetta + hairline con tratto accent che scorre.
+-------------------------------------------------------------------------- */
+.hero-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.hero-scroll-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-secondary);
+}
+.hero-scroll-line {
+  position: relative;
+  width: 1px;
+  height: 44px;
+  background: rgba(13, 13, 13, 0.18);
+  overflow: hidden;
+}
+.hero-scroll-line::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 14px;
+  background: var(--color-accent);
+  animation: scroll-dash 1.9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes scroll-dash {
+  from { transform: translateY(-16px); }
+  to { transform: translateY(46px); }
+}
+
+/* ----------------------------------------------------------------------
+   DOT PING — il pallino accent dei kicker emette un'onda che si dissolve,
+   come un segnale "live". Puro CSS, spento con reduced motion.
+-------------------------------------------------------------------------- */
+.works-dot {
+  position: relative;
+}
+.works-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  animation: dot-ping 2.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@keyframes dot-ping {
+  0% { transform: scale(1); opacity: 0.7; }
+  70%, 100% { transform: scale(3.4); opacity: 0; }
+}
+
+/* Tilt 3D delle founder card — la prospettiva sta sul genitore, la rotazione
+   (GSAP) sulla media. */
+.founder-card {
+  perspective: 900px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-line::after,
+  .works-dot::after {
+    animation: none;
+  }
+  .works-dot::after {
+    opacity: 0;
+  }
 }
 
