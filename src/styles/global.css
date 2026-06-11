@@ -597,7 +597,11 @@ button {
   transition:
     flex-grow 0.7s cubic-bezier(0.65, 0, 0.35, 1),
     box-shadow 0.6s ease;
-  will-change: flex-grow;
+  /* transform (non flex-grow, che non è GPU-accelerabile): pre-promuove il
+     layer così la PRIMA salita non paga la creazione del layer sul primo
+     frame — è quel costo a freddo il "lag al primo caricamento". A reveal
+     finito il JS lo rilascia (will-change: auto). */
+  will-change: transform;
 }
 
 /* Grana finissima — tattilità "stampa" premium, sopra il fondo ma sotto i testi. */
@@ -612,6 +616,13 @@ button {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* Durante l'entrata (rail con .is-revealing) la grana in mix-blend viene
+   sospesa: senza il blend i pannelli restano su un layer GPU e la salita non
+   lagga. Niente transizione: torna in un solo paint a reveal finito (snap su
+   pannello già fermo = impercettibile), così non ci sono frame di blend
+   ridipinti dopo l'entrata. */
+.works-rail.is-revealing .work-panel::after { opacity: 0; }
+
 /* Bagliore interno in alto — fa sembrare il pannello "illuminato dall'alto". */
 .work-panel::before {
   content: "";
@@ -623,16 +634,20 @@ button {
   border-radius: inherit;
 }
 
-/* Stato espanso: di default il primo, altrimenti quello in hover.
-   Quando la rail è in hover, il default si annulla così solo il pannello
-   puntato resta espanso. */
+/* Stato espanso: di default il primo, altrimenti quello attivo.
+   L'attivo è pilotato da JS (pointerenter sul pannello): resta l'ULTIMO
+   pannello entrato finché il mouse non lascia l'intera rail — così
+   attraversare i 14px di gap fra due finestre non riapre/richiude più
+   l'aperto-di-default. I collassati restano immobili: si muove solo la
+   finestra su cui si passa. L'aperto-di-default cede solo quando un ALTRO
+   pannello diventa attivo. */
 .work-panel[data-open] { flex-grow: 7; }
-.works-rail:hover .work-panel { flex-grow: 1; }
-.works-rail:hover .work-panel:hover { flex-grow: 7; }
+.works-rail.is-engaged .work-panel[data-open]:not(.is-active) { flex-grow: 1; }
+.work-panel.is-active { flex-grow: 7; }
 
 /* Ombra più profonda sul pannello attivo. */
 .work-panel[data-open],
-.works-rail:hover .work-panel:hover {
+.work-panel.is-active {
   box-shadow:
     0 2px 4px rgba(13, 13, 13, 0.06),
     0 40px 90px rgba(13, 13, 13, 0.20);
@@ -674,7 +689,7 @@ button {
   transform: scale(1.04);
   transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.work-panel:hover .work-panel-img { transform: scale(1.08); }
+.work-panel.is-active .work-panel-img { transform: scale(1.08); }
 
 /* Scrim per leggibilità del testo bianco. */
 .work-panel-scrim {
@@ -828,8 +843,8 @@ button {
     border-color 0.4s ease,
     transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.work-panel:hover .panel-cta-label { border-color: #fafaf8; }
-.work-panel:hover .panel-cta-arrow {
+.work-panel.is-active .panel-cta-label { border-color: #fafaf8; }
+.work-panel.is-active .panel-cta-arrow {
   background: #fafaf8;
   color: #0d0d0d;
   border-color: #fafaf8;
@@ -855,31 +870,31 @@ button {
   transition: opacity 0.22s ease;
 }
 
-/* Tier 2 — rail in hover, ma questo è il default che si richiude: pieno via
-   subito, verticale che rientra dopo. */
-.works-rail:hover .work-panel[data-open] .panel-full {
+/* Tier 2 — un ALTRO pannello è attivo e questo è il default che si richiude:
+   pieno via subito, verticale che rientra dopo. */
+.works-rail.is-engaged .work-panel[data-open]:not(.is-active) .panel-full {
   opacity: 0;
   transition: opacity 0.24s ease;
 }
-.works-rail:hover .work-panel[data-open] .panel-body {
+.works-rail.is-engaged .work-panel[data-open]:not(.is-active) .panel-body {
   transform: translateY(16px);
   transition: transform 0.3s ease;
 }
-.works-rail:hover .work-panel[data-open] .panel-vertical {
+.works-rail.is-engaged .work-panel[data-open]:not(.is-active) .panel-vertical {
   opacity: 1;
   transition: opacity 0.5s ease 0.2s;
 }
 
-/* Tier 3 — il pannello effettivamente puntato si espande (vince sui Tier 1/2). */
-.works-rail:hover .work-panel:hover .panel-full {
+/* Tier 3 — il pannello attivo si espande (vince sui Tier 1/2). */
+.work-panel.is-active .panel-full {
   opacity: 1;
   transition: opacity 0.42s ease 0.1s;
 }
-.works-rail:hover .work-panel:hover .panel-body {
+.work-panel.is-active .panel-body {
   transform: translateY(0);
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.08s;
 }
-.works-rail:hover .work-panel:hover .panel-vertical {
+.work-panel.is-active .panel-vertical {
   opacity: 0;
   transition: opacity 0.22s ease;
 }
@@ -1097,18 +1112,17 @@ button {
 }
 
 /* ----------------------------------------------------------------------
-   CHI SIAMO — statement con reveal parola-per-parola, founder card,
-   colonna testo e stats con count-up.
+   CHI SIAMO — statement e capitoli con illuminazione lettera-per-lettera,
+   wordmark 3D che fluttua sullo sfondo, stats con count-up.
 -------------------------------------------------------------------------- */
 /* Banda warm-deeper — secondo cambio di tono della palette: dopo la banda
    scura dei servizi, "Chi Siamo" respira su un beige caldo a tutta larghezza
    con un velo accent appena percettibile in alto a destra. */
 .about-section {
+  position: relative;
   padding: clamp(90px, 13vh, 170px) 0;
-  background:
-    radial-gradient(70% 55% at 88% 0%, rgba(59, 91, 219, 0.06), transparent 70%)
-      no-repeat,
-    var(--color-warm-deeper);
+  background: var(--color-warm-deeper);
+  overflow: clip;
 }
 .about-section .works-screen {
   max-width: 110rem;
@@ -1117,7 +1131,106 @@ button {
 .about-section .about-stats {
   border-top-color: rgba(13, 13, 13, 0.1);
 }
+/* Il contenuto sta sopra il backdrop (immagine futura + logo 3D). */
+.about-content {
+  position: relative;
+  z-index: 2;
+}
 
+/* BACKDROP — layer dietro al contenuto: slot per l'immagine di sfondo
+   (about-bg-img, quando arriverà) e wordmark 3D. pointer-events: none,
+   è pura scenografia. */
+.about-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.about-bg-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.about-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* L'immagine resta un velo: il warm-deeper deve continuare a dominare. */
+  opacity: 0.14;
+}
+
+/* WORDMARK 3D — finta estrusione: 10 copie dell'SVG impilate lungo Z
+   (translateZ via --li); la prospettiva sta sul wrap, le rotazioni le
+   anima GSAP sul gruppo (.logo3d). sticky: il logo accompagna lo scroll
+   per tutta l'altezza della sezione. */
+.logo3d-wrap {
+  position: sticky;
+  top: 14vh;
+  height: 72vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1100px;
+}
+.logo3d {
+  position: relative;
+  width: min(82vw, 1080px);
+  transform-style: preserve-3d;
+  /* Watermark: presente ma mai in competizione con il testo. */
+  opacity: 0.15;
+}
+.logo3d-layer {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: translateZ(calc(var(--li) * -7px));
+  user-select: none;
+}
+/* I layer dietro al primo si impilano nello stesso box e si spengono
+   gradualmente: è questo gradiente di opacità a "scolpire" lo spessore. */
+.logo3d-layer:not(:first-child) {
+  position: absolute;
+  inset: 0;
+  opacity: calc(1 - var(--li) * 0.085);
+}
+@media (max-width: 768px) {
+  .logo3d { width: 120vw; opacity: 0.12; }
+}
+
+/* GLOW TEXT — testo spezzato in lettere da main.ts ([data-glow]): ogni
+   carattere è uno span che passa da quasi spento a pieno in scrub. Le
+   parole sono inline-block per non spezzarsi a metà riga. */
+.gw {
+  display: inline-block;
+  white-space: nowrap;
+}
+.gw-em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+.gc {
+  display: inline;
+}
+
+/* INTRO PINNATA — scena a tutta altezza: titolo + statement centrati come
+   gruppo. Mentre è pinnata (GSAP), lo scroll riempie le lettere dello
+   statement da grigio a colorato. Vive come figlia diretta della sezione
+   (genitore block): il pin-spacer di ScrollTrigger non spinge i fratelli
+   se il genitore è flex. */
+.about-intro {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Respiro sotto la navbar fissa quando la scena è bloccata. */
+  padding-top: 76px;
+}
+.about-intro .works-screen {
+  width: 100%;
+  gap: clamp(40px, 9vh, 110px);
+}
+
+/* Centrato nella sezione: blocco in mezzo e testo centrato. */
 .about-statement {
   font-weight: 500;
   font-size: clamp(28px, 4.2vw, 62px);
@@ -1126,13 +1239,139 @@ button {
   color: var(--color-ink);
   max-width: 24ch;
   margin-top: clamp(10px, 2vh, 26px);
+  margin-inline: auto;
+  text-align: center;
 }
-.st-word {
-  display: inline;
-}
-.st-em {
+.about-statement em {
   font-style: italic;
   color: var(--color-accent);
+}
+
+/* CAPITOLI — scene piene del metodo: hairline sopra, numero + titolo a
+   sinistra, testo grande a destra. Ogni riga respira come una scena. */
+.about-chapters {
+  display: flex;
+  flex-direction: column;
+  margin-top: clamp(40px, 8vh, 110px);
+}
+.about-chapter {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: clamp(16px, 2vw, 28px);
+  padding: clamp(38px, 7vh, 84px) 0;
+  border-top: 1px solid rgba(13, 13, 13, 0.1);
+}
+.chapter-head {
+  grid-column: span 5;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.chapter-num {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--color-accent);
+}
+.chapter-title {
+  font-weight: 500;
+  font-size: clamp(26px, 2.8vw, 46px);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.chapter-title em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+.chapter-body {
+  grid-column: 7 / -1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(18px, 3vh, 28px);
+}
+.chapter-text {
+  font-family: var(--font-body);
+  font-size: clamp(16px, 1.35vw, 21px);
+  line-height: 1.65;
+  color: var(--color-secondary);
+  max-width: 56ch;
+}
+.chapter-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.chapter-tool {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  border: 1px solid rgba(13, 13, 13, 0.16);
+  border-radius: 9999px;
+  padding: 8px 16px;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+.chapter-tool:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+@media (max-width: 900px) {
+  .chapter-head { grid-column: 1 / -1; }
+  .chapter-body { grid-column: 1 / -1; }
+}
+
+/* TEAM LINK — pannello navy che porta alla pagina /chi-siamo. */
+.about-teamlink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: clamp(28px, 5vh, 64px);
+  padding: clamp(30px, 4.5vw, 60px);
+  border-radius: 24px;
+  background: var(--color-navy);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease;
+  box-shadow: 0 24px 60px rgba(13, 13, 13, 0.14);
+}
+.about-teamlink:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 34px 80px rgba(13, 13, 13, 0.2);
+}
+.teamlink-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.teamlink-kicker {
+  color: rgba(250, 250, 248, 0.65);
+}
+.teamlink-title {
+  font-weight: 500;
+  font-size: clamp(24px, 3.2vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  color: var(--color-warm);
+  max-width: 18ch;
+}
+.teamlink-title em {
+  font-style: italic;
+  color: #8aa0ff;
+}
+.teamlink-arrow {
+  font-size: clamp(28px, 3vw, 46px);
+  color: #8aa0ff;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.about-teamlink:hover .teamlink-arrow {
+  transform: translate(7px, -7px);
 }
 
 .about-grid {
@@ -1806,9 +2045,8 @@ nav:has(#burger-menu.is-open) .pill {
 -------------------------------------------------------------------------- */
 .hero-scroll-hint {
   position: absolute;
-  left: 50%;
+  right: 34px;
   bottom: 34px;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1821,6 +2059,8 @@ nav:has(#burger-menu.is-open) .pill {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--color-secondary);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
 }
 .hero-scroll-line {
   position: relative;
@@ -1844,6 +2084,49 @@ nav:has(#burger-menu.is-open) .pill {
   to { transform: translateY(46px); }
 }
 
+.services-scroll-hint {
+  position: absolute;
+  right: 34px;
+  bottom: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.services-scroll-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(250, 250, 248, 0.65);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.services-scroll-line {
+  position: relative;
+  width: 1px;
+  height: 44px;
+  background: rgba(250, 250, 248, 0.18);
+  overflow: hidden;
+}
+.services-scroll-line::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 14px;
+  background: rgba(250, 250, 248, 0.7);
+  animation: scroll-dash 1.9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-scroll-line::after {
+    animation: none;
+  }
+}
+
 /* Tilt 3D delle founder card — la prospettiva sta sul genitore, la rotazione
    (GSAP) sulla media. */
 .founder-card {
@@ -1854,5 +2137,248 @@ nav:has(#burger-menu.is-open) .pill {
   .hero-scroll-line::after {
     animation: none;
   }
+}
+
+/* ----------------------------------------------------------------------
+   PAGINA CHI SIAMO (/chi-siamo) — racconto esteso del team: hero aurora,
+   manifesto, ritratti, percorso, workflow (riusa i capitoli della home),
+   marquee strumenti e CTA finale.
+-------------------------------------------------------------------------- */
+/* HERO — a tutta schermata sul mesh aurora del menu (stesso linguaggio). */
+.ap-hero {
+  position: relative;
+  min-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  overflow: clip;
+}
+.ap-hero-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(58% 50% at 12% 16%, rgba(59, 91, 219, 0.18), transparent 70%),
+    radial-gradient(54% 46% at 88% 10%, rgba(26, 35, 64, 0.14), transparent 70%),
+    radial-gradient(66% 56% at 84% 90%, rgba(59, 91, 219, 0.11), transparent 70%),
+    radial-gradient(50% 44% at 20% 94%, rgba(154, 163, 178, 0.16), transparent 70%);
+  background-repeat: no-repeat;
+  background-size: 160% 160%, 150% 150%, 172% 172%, 150% 150%;
+  animation: menu-aurora 26s ease-in-out infinite alternate;
+}
+/* L'aurora sfuma nel warm white prima della sezione successiva. */
+.ap-hero-aurora::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 30%;
+  background: linear-gradient(to bottom, transparent, var(--color-bg));
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap-hero-aurora { animation: none; }
+}
+.ap-hero > * {
+  position: relative;
+  z-index: 1;
+}
+.ap-hero-title {
+  font-weight: 500;
+  font-size: clamp(46px, 8vw, 118px);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+  margin-top: 26px;
+  max-width: 12ch;
+}
+.ap-hero-title em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+.ap-hero-sub {
+  font-family: var(--font-body);
+  font-size: clamp(14px, 1.1vw, 16px);
+  letter-spacing: 0.04em;
+  color: var(--color-secondary);
+  margin-top: 22px;
+  max-width: 44ch;
+}
+
+/* Sezioni interne — stesso ritmo verticale della home. */
+.ap-section {
+  padding: clamp(80px, 12vh, 150px) 0;
+}
+.ap-section--deeper {
+  background: var(--color-warm-deeper);
+}
+
+/* MANIFESTO — statement gigante con glow per lettera. */
+.ap-statement {
+  font-weight: 500;
+  font-size: clamp(30px, 4.6vw, 70px);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+  max-width: 22ch;
+}
+.ap-statement em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+
+/* DUO — un ritratto per riga, alternato: media da un lato, bio dall'altra.
+   Le card riusano founder-card/founder-media (tilt 3D incluso). */
+.ap-duo {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(56px, 10vh, 130px);
+}
+.ap-person {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: clamp(20px, 3vw, 44px);
+  align-items: center;
+}
+.ap-person .founder-card {
+  grid-column: 1 / span 5;
+}
+.ap-person--flip .founder-card {
+  grid-column: 8 / span 5;
+  order: 2;
+}
+.ap-bio {
+  grid-column: 7 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.ap-person--flip .ap-bio {
+  grid-column: 1 / span 6;
+  order: 1;
+}
+.ap-bio-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(34px, 4vw, 64px);
+  line-height: 1;
+  color: var(--color-ink);
+}
+.ap-bio-name em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+.ap-bio-role {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.ap-bio-text {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.2vw, 18px);
+  line-height: 1.7;
+  color: var(--color-secondary);
+  max-width: 52ch;
+}
+/* Aree di focus — righe hairline essenziali, non chip. */
+.ap-focus {
+  margin-top: 8px;
+  border-top: 1px solid rgba(13, 13, 13, 0.1);
+}
+.ap-focus li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(13, 13, 13, 0.1);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ap-focus li::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--color-accent);
+}
+@media (max-width: 900px) {
+  .ap-person .founder-card,
+  .ap-person--flip .founder-card {
+    grid-column: 1 / -1;
+    order: 0;
+    max-width: 440px;
+  }
+  .ap-bio,
+  .ap-person--flip .ap-bio {
+    grid-column: 1 / -1;
+    order: 1;
+  }
+}
+
+/* PERCORSO — timeline verticale: la linea si disegna in scrub, le tappe
+   entrano una a una. */
+.ap-timeline {
+  position: relative;
+  padding-left: clamp(30px, 4vw, 60px);
+  display: flex;
+  flex-direction: column;
+}
+.ap-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--color-accent),
+    rgba(59, 91, 219, 0.25)
+  );
+  transform-origin: top center;
+}
+.ap-step {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: clamp(30px, 5vh, 56px) 0;
+}
+.ap-step + .ap-step {
+  border-top: 1px solid rgba(13, 13, 13, 0.1);
+}
+.ap-step-kicker {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.ap-step-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(26px, 3vw, 48px);
+  line-height: 1.05;
+  color: var(--color-ink);
+}
+.ap-step-title em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+.ap-step-text {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.2vw, 18px);
+  line-height: 1.7;
+  color: var(--color-secondary);
+  max-width: 58ch;
 }
 

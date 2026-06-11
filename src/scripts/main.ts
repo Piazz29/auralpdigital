@@ -296,47 +296,50 @@ if (heroVideo) {
 }
 
 // ---------- Hero text entrance ----------
-const heroEls: { sel: string; delay: number; y?: number }[] = [
-  { sel: "[data-anim='hero-label']", delay: 0.5, y: 16 },
-  { sel: "[data-anim='hero-line-1']", delay: 0.65, y: 30 },
-  { sel: "[data-anim='hero-line-2']", delay: 0.78, y: 30 },
-  { sel: "[data-anim='hero-line-3']", delay: 0.91, y: 30 },
-  { sel: "[data-anim='hero-subline']", delay: 1.05, y: 16 },
-  { sel: "[data-anim='hero-cta']", delay: 1.18, y: 16 },
-];
+// Solo sulla homepage: la pagina /chi-siamo ha la propria hero (vedi sotto).
+if (document.querySelector(".hero-section")) {
+  const heroEls: { sel: string; delay: number; y?: number }[] = [
+    { sel: "[data-anim='hero-label']", delay: 0.5, y: 16 },
+    { sel: "[data-anim='hero-line-1']", delay: 0.65, y: 30 },
+    { sel: "[data-anim='hero-line-2']", delay: 0.78, y: 30 },
+    { sel: "[data-anim='hero-line-3']", delay: 0.91, y: 30 },
+    { sel: "[data-anim='hero-subline']", delay: 1.05, y: 16 },
+    { sel: "[data-anim='hero-cta']", delay: 1.18, y: 16 },
+  ];
 
-heroEls.forEach(({ sel, delay, y = 16 }) => {
-  gsap.fromTo(
-    sel,
-    { opacity: 0, y },
-    { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", delay }
-  );
-});
-
-// Hint di scroll — solo opacity: il centraggio è un translateX CSS che non va
-// toccato dal transform di GSAP.
-gsap.fromTo(
-  "[data-anim='hero-hint']",
-  { opacity: 0 },
-  { opacity: 1, duration: 0.9, ease: "power2.out", delay: 1.35 }
-);
-
-// ---------- Hero — uscita in parallasse ----------
-// Scrollando via dalla hero il blocco testo sale più veloce del video e
-// sfuma: la pagina "consegna" la scena alla sezione successiva. L'hint sta
-// dentro al blocco, quindi sparisce gratis.
-if (!reduceMotion) {
-  gsap.to("[data-anim='hero-content']", {
-    yPercent: -28,
-    opacity: 0,
-    ease: "none",
-    scrollTrigger: {
-      trigger: ".hero-section",
-      start: "top top",
-      end: "70% top",
-      scrub: 0.6,
-    },
+  heroEls.forEach(({ sel, delay, y = 16 }) => {
+    gsap.fromTo(
+      sel,
+      { opacity: 0, y },
+      { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", delay }
+    );
   });
+
+  // Hint di scroll — solo opacity: il centraggio è un translateX CSS che non
+  // va toccato dal transform di GSAP.
+  gsap.fromTo(
+    "[data-anim='hero-hint']",
+    { opacity: 0 },
+    { opacity: 1, duration: 0.9, ease: "power2.out", delay: 1.35 }
+  );
+
+  // ---------- Hero — uscita in parallasse ----------
+  // Scrollando via dalla hero il blocco testo sale più veloce del video e
+  // sfuma: la pagina "consegna" la scena alla sezione successiva. L'hint sta
+  // dentro al blocco, quindi sparisce gratis.
+  if (!reduceMotion) {
+    gsap.to("[data-anim='hero-content']", {
+      yPercent: -28,
+      opacity: 0,
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".hero-section",
+        start: "top top",
+        end: "70% top",
+        scrub: 0.6,
+      },
+    });
+  }
 }
 
 // ---------- Titoli di sezione — reveal parola per parola ----------
@@ -415,38 +418,76 @@ if (!reduceMotion) {
     });
 }
 
+// ---------- Reveal "rise" riusabile ----------
+// Salita morbida translate-only + fade, con stagger. NIENTE scale: lo scale
+// su pannelli con grana in mix-blend-mode spezza il compositing GPU e fa
+// laggare l'entrata. will-change viene acceso quando l'elemento entra in
+// vista e spento a fine corsa, così non restano layer pesanti appesi.
+type RiseOpts = {
+  trigger?: gsap.DOMTarget;
+  start?: string;
+  stagger?: number;
+  y?: number;
+  duration?: number;
+  onStart?: () => void;
+  onComplete?: () => void;
+};
+const revealRise = (targets: gsap.DOMTarget, opts: RiseOpts = {}) => {
+  const els = gsap.utils.toArray<HTMLElement>(targets);
+  if (!els.length) return;
+  const {
+    trigger,
+    start = "top 82%",
+    stagger = 0.1,
+    y = 48,
+    duration = 1,
+    onStart,
+    onComplete,
+  } = opts;
+  gsap.fromTo(
+    els,
+    { opacity: 0, y },
+    {
+      opacity: 1,
+      y: 0,
+      duration,
+      ease: "power3.out",
+      stagger,
+      force3D: true,
+      scrollTrigger: {
+        trigger: trigger ?? els[0],
+        start,
+        onEnter: () => gsap.set(els, { willChange: "transform, opacity" }),
+      },
+      onStart,
+      onComplete: () => {
+        gsap.set(els, { willChange: "auto" });
+        onComplete?.();
+      },
+    }
+  );
+};
+
 // ---------- Lavori selezionati — entrata header + pannelli ----------
-gsap.fromTo(
-  "[data-anim='works-head']",
-  { opacity: 0, y: 24 },
-  {
-    opacity: 1,
-    y: 0,
-    duration: 0.9,
-    ease: "power2.out",
-    stagger: 0.12,
-    scrollTrigger: {
-      trigger: ".works-rail",
-      start: "top 85%",
-    },
-  }
-);
-gsap.fromTo(
-  "[data-anim='work-panel']",
-  { opacity: 0, y: 72, scale: 0.96 },
-  {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    duration: 1.0,
-    ease: "power3.out",
-    stagger: 0.12,
-    scrollTrigger: {
-      trigger: ".works-rail",
-      start: "top 82%",
-    },
-  }
-);
+// I pannelli salgono in cascata; durante la salita la rail porta .is-revealing
+// che sospende la grana (mix-blend) così l'animazione resta sul layer GPU.
+const worksRail = document.querySelector<HTMLElement>(".works-rail");
+revealRise("[data-anim='works-head']", {
+  trigger: ".works-rail",
+  start: "top 85%",
+  stagger: 0.12,
+  y: 26,
+  duration: 0.9,
+});
+revealRise("[data-anim='work-panel']", {
+  trigger: ".works-rail",
+  start: "top 80%",
+  stagger: 0.1,
+  y: 56,
+  duration: 1,
+  onStart: () => worksRail?.classList.add("is-revealing"),
+  onComplete: () => worksRail?.classList.remove("is-revealing"),
+});
 
 // ---------- Header di sezione — stesso reveal per Servizi e Chi Siamo ----------
 // Riusa il linguaggio dell'header "Lavori selezionati": fade + rise con
@@ -514,6 +555,7 @@ if (!reduceMotion) {
 // le scene scorrono in colonna e si rivelano entrando in viewport.
 const servicesStage = document.querySelector<HTMLElement>(".services-stage");
 const serviceSlides = gsap.utils.toArray<HTMLElement>(".service-slide");
+const servicesScrollHint = document.querySelector<HTMLElement>(".services-scroll-hint");
 
 // Pin attivo solo su desktop con motion abilitato.
 const servicesPinned =
@@ -644,6 +686,21 @@ if (servicesStage && serviceSlides.length && !reduceMotion) {
       slideReveal(tl, slide, at);
     });
     tl.to({}, { duration: 0.7 }); // respiro finale: l'ultima scena resta ferma
+
+    if (servicesScrollHint) {
+      const totalDuration = serviceSlides.length * STEP + 0.7;
+      tl.fromTo(
+        servicesScrollHint,
+        { autoAlpha: 0, y: 24 },
+        { autoAlpha: 1, y: 0, duration: 0.3, ease: "power2.out" },
+        0
+      );
+      tl.to(
+        servicesScrollHint,
+        { autoAlpha: 0, y: -24, duration: 0.32, ease: "power2.in" },
+        totalDuration - 0.4
+      );
+    }
   } else {
     serviceSlides.forEach((slide) => {
       const tl = gsap.timeline({
@@ -652,34 +709,224 @@ if (servicesStage && serviceSlides.length && !reduceMotion) {
       });
       slideReveal(tl, slide, 0);
     });
+
+    if (servicesScrollHint) {
+      gsap.fromTo(
+        servicesScrollHint,
+        { opacity: 0, y: 24 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.9,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: "#cosa-facciamo",
+            start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play reverse play reverse",
+          },
+        }
+      );
+    }
   }
 }
 
-// ---------- Chi Siamo — statement parola-per-parola in scrub ----------
-// Le parole partono quasi spente e si "accendono" in sequenza mentre lo
-// statement attraversa il viewport. Con reduced motion restano piene.
-const stWords = gsap.utils.toArray<HTMLElement>(".st-word");
-if (stWords.length) {
-  if (reduceMotion) {
-    gsap.set(stWords, { opacity: 1 });
-  } else {
+// ---------- Glow text — illuminazione lettera per lettera in scrub ----------
+// Ogni elemento [data-glow] viene spezzato in lettere: le parole diventano
+// span inline-block (così non si spezzano a metà riga), ogni carattere uno
+// span che passa da quasi spento a pieno mentre l'elemento attraversa il
+// viewport. Gli <em> conservano corsivo + colore accent via .gw-em.
+// Con reduced motion il testo resta pieno (niente split, niente tween).
+const splitGlowChars = (el: HTMLElement): HTMLElement[] => {
+  const chars: HTMLElement[] = [];
+  const frag = document.createDocumentFragment();
+
+  const pushText = (text: string, em: boolean) => {
+    text.split(/(\s+)/).forEach((tok) => {
+      if (!tok) return;
+      if (/^\s+$/.test(tok)) {
+        frag.appendChild(document.createTextNode(" "));
+        return;
+      }
+      const word = document.createElement("span");
+      word.className = em ? "gw gw-em" : "gw";
+      for (const ch of tok) {
+        const c = document.createElement("span");
+        c.className = "gc";
+        c.textContent = ch;
+        word.appendChild(c);
+        chars.push(c);
+      }
+      frag.appendChild(word);
+    });
+  };
+
+  el.childNodes.forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      pushText(node.textContent ?? "", false);
+    } else if (node instanceof HTMLElement) {
+      if (node.tagName === "BR") {
+        frag.appendChild(document.createElement("br"));
+        return;
+      }
+      pushText(node.textContent ?? "", node.tagName === "EM");
+    }
+  });
+
+  el.textContent = "";
+  el.appendChild(frag);
+  return chars;
+};
+
+if (!reduceMotion) {
+  document.querySelectorAll<HTMLElement>("[data-glow]").forEach((el) => {
+    const chars = splitGlowChars(el);
+    if (!chars.length) return;
     gsap.fromTo(
-      stWords,
+      chars,
       { opacity: 0.12 },
       {
         opacity: 1,
+        duration: 1,
         ease: "none",
-        stagger: 0.06,
+        stagger: 0.05,
         scrollTrigger: {
-          trigger: ".about-statement",
-          start: "top 78%",
+          trigger: el,
+          start: "top 80%",
           end: "bottom 45%",
           scrub: 0.6,
         },
       }
     );
+  });
+}
+
+// ---------- Chi Siamo — intro pinnata con riempimento per lettera ----------
+// Quando l'intro (titolo + statement) raggiunge il viewport la sezione si
+// blocca (pin): lo scroll non muove più la pagina ma riempie le lettere
+// dello statement, da grigio "vuoto" a colorato (ink, accent per i corsivi),
+// una a una in ordine di lettura. Colorata l'ultima lettera, una breve coda
+// lascia leggere la frase piena e poi lo scroll riprende normale.
+// Con reduced motion niente pin: il testo resta pieno e statico.
+const pinStatement = document.querySelector<HTMLElement>("[data-glow-pin]");
+if (pinStatement && !reduceMotion) {
+  const chars = splitGlowChars(pinStatement);
+  if (chars.length) {
+    const GRAY = "rgba(13, 13, 13, 0.16)";
+    const INK = "#0D0D0D";
+    const ACCENT = "#3B5BDB";
+    gsap.set(chars, { color: GRAY });
+
+    const tl = gsap.timeline({
+      defaults: { ease: "none" },
+      scrollTrigger: {
+        trigger: ".about-intro",
+        start: "top top",
+        // Corsa proporzionale al numero di lettere: il riempimento resta
+        // "preciso" (≈12px di scroll a lettera) a qualsiasi viewport.
+        end: () => "+=" + Math.max(900, Math.round(chars.length * 12)),
+        pin: true,
+        scrub: 0.3,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        // Come il pin dei servizi: ricalcolato prima dei trigger a valle,
+        // così morph colore e marquee leggono le posizioni già spostate.
+        refreshPriority: 1,
+      },
+    });
+
+    // Un tween per lettera, in sequenza: 1 unità di timeline = 1 lettera.
+    // duration < 1 → ogni lettera "scatta" piena prima che parta la
+    // successiva, niente dissolvenze sovrapposte.
+    chars.forEach((c, i) => {
+      const isEm = c.parentElement?.classList.contains("gw-em");
+      tl.to(c, { color: isEm ? ACCENT : INK, duration: 0.6 }, i);
+    });
+    // Coda: la frase resta piena e ferma prima dello sblocco.
+    tl.to({}, { duration: chars.length * 0.14 });
   }
 }
+
+// ---------- Chi Siamo — wordmark 3D che fluttua sullo sfondo ----------
+// Lo "spessore" è dato dai layer impilati in CSS; qui il gruppo riceve
+// l'inclinazione base e tre movimenti sovrapposti: una deriva lenta di
+// rotazione (yoyo), un galleggiamento verticale e una rotazione Y legata
+// allo scroll della sezione. Con reduced motion resta un watermark statico
+// appena inclinato.
+const logo3d = document.querySelector<HTMLElement>("[data-logo3d]");
+if (logo3d) {
+  if (reduceMotion) {
+    gsap.set(logo3d, { rotationX: 35, rotationZ: -5 });
+  } else {
+    gsap.set(logo3d, { rotationX: 44, rotationZ: -7 });
+
+    gsap.to(logo3d, {
+      rotationX: 52,
+      rotationZ: 6,
+      duration: 12,
+      ease: "sine.inOut",
+      yoyo: true,
+      repeat: -1,
+    });
+    gsap.to(logo3d, {
+      y: 42,
+      duration: 7,
+      ease: "sine.inOut",
+      yoyo: true,
+      repeat: -1,
+    });
+    gsap.fromTo(
+      logo3d,
+      { rotationY: -16 },
+      {
+        rotationY: 16,
+        ease: "none",
+        scrollTrigger: {
+          trigger: "#chi-siamo",
+          start: "top bottom",
+          end: "bottom top",
+          scrub: 1,
+        },
+      }
+    );
+  }
+}
+
+// ---------- Chi Siamo — capitoli del metodo ----------
+// Ogni capitolo entra come scena propria (numero+titolo, poi il corpo);
+// i chip degli strumenti seguono in cascata fine.
+document.querySelectorAll<HTMLElement>(".about-chapter").forEach((ch) => {
+  revealRise(ch.querySelectorAll(":scope > *"), {
+    trigger: ch,
+    start: "top 82%",
+    stagger: 0.12,
+    y: 36,
+    duration: 0.9,
+  });
+  const chips = ch.querySelectorAll(".chapter-tool");
+  if (chips.length && !reduceMotion) {
+    gsap.fromTo(
+      chips,
+      { opacity: 0, y: 14 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: "power2.out",
+        stagger: 0.05,
+        delay: 0.25,
+        scrollTrigger: { trigger: ch, start: "top 82%" },
+      }
+    );
+  }
+});
+
+// ---------- Chi Siamo — pannello link verso /chi-siamo ----------
+revealRise("[data-anim='teamlink']", {
+  start: "top 84%",
+  y: 56,
+  duration: 1,
+});
 
 // ---------- Chi Siamo — tilt 3D delle founder card ----------
 // La media segue il cursore con una rotazione leggera (prospettiva sul
@@ -710,42 +957,17 @@ if (!reduceMotion && window.matchMedia("(min-width: 1024px)").matches) {
   });
 }
 
-// ---------- Chi Siamo — founder card + colonna testo ----------
-gsap.fromTo(
-  "[data-anim='founder']",
-  { opacity: 0, y: 50 },
-  {
-    opacity: 1,
-    y: 0,
-    duration: 0.9,
-    ease: "power3.out",
-    stagger: 0.14,
-    scrollTrigger: {
-      trigger: ".about-grid",
-      start: "top 80%",
-    },
-  }
-);
-
 // ---------- Stats — entrata + count-up ----------
-gsap.fromTo(
-  "[data-anim='stat']",
-  { opacity: 0, y: 40 },
-  {
-    opacity: 1,
-    y: 0,
-    duration: 0.8,
-    ease: "power2.out",
-    stagger: 0.15,
-    scrollTrigger: {
-      trigger: "[data-anim='stats']",
-      start: "top 85%",
-    },
-  }
-);
+revealRise("[data-anim='stat']", {
+  trigger: "[data-anim='stats']",
+  start: "top 85%",
+  stagger: 0.15,
+  y: 40,
+  duration: 0.9,
+});
 
 // Tick accent sopra ogni numero — si disegna da sinistra, in cascata.
-if (!reduceMotion) {
+if (!reduceMotion && document.querySelector(".stat-tick")) {
   gsap.fromTo(
     ".stat-tick",
     { scaleX: 0 },
@@ -784,21 +1006,15 @@ document.querySelectorAll<HTMLElement>("[data-count]").forEach((el) => {
 });
 
 // ---------- CTA finale — reveal del pannello + contenuti in cascata ----------
-gsap.fromTo(
-  ".cta-panel",
-  { opacity: 0, y: 90, scale: 0.96 },
-  {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    duration: 1.1,
-    ease: "power3.out",
-    scrollTrigger: {
-      trigger: "[data-anim='contact']",
-      start: "top 78%",
-    },
-  }
-);
+// Salita translate-only (niente scale: il pannello scuro ha grana/spotlight,
+// lo scale lo farebbe ridipingere per frame).
+revealRise(".cta-panel", {
+  trigger: "[data-anim='contact']",
+  start: "top 78%",
+  stagger: 0,
+  y: 80,
+  duration: 1.1,
+});
 
 // Il titolo (contact-headline) non è più in questa lista: lo rivela il
 // reveal parola-per-parola qui sopra, che ha già trigger e delay propri.
@@ -916,6 +1132,119 @@ if (!reduceMotion) {
         skewReset = gsap.delayedCall(0.15, () => railSkew(0));
       }
     },
+  });
+}
+
+// ---------- Rail dei lavori — espansione del pannello attivo ----------
+// Pilotiamo l'attivo da JS invece che con :hover, perché i 14px di gap fra
+// i pannelli sono una "zona morta": attraversandoli col solo CSS, l'aperto
+// di default si riapriva/richiudeva un istante (flicker). Con pointerenter
+// l'attivo resta l'ULTIMO pannello entrato finché il mouse non lascia la
+// rail intera: passare da una finestra all'altra non tocca più le altre.
+// Solo su dispositivi con hover reale — il touch usa il layout statico.
+if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+  const railEl = document.querySelector<HTMLElement>(".works-rail");
+  if (railEl) {
+    const panels = Array.from(
+      railEl.querySelectorAll<HTMLElement>(".work-panel")
+    );
+    panels.forEach((panel) => {
+      panel.addEventListener("pointerenter", () => {
+        railEl.classList.add("is-engaged");
+        panels.forEach((other) =>
+          other.classList.toggle("is-active", other === panel)
+        );
+      });
+    });
+    railEl.addEventListener("pointerleave", () => {
+      railEl.classList.remove("is-engaged");
+      panels.forEach((other) => other.classList.remove("is-active"));
+    });
+  }
+}
+
+// ---------- Pagina /chi-siamo ----------
+// Le coreografie condivise (glow, capitoli, tilt founder, marquee, CTA,
+// footer) si agganciano da sole alle stesse classi; qui vive solo ciò che
+// è esclusivo della pagina: l'entrata della hero, i ritratti del duo e la
+// timeline del percorso.
+const aboutPage = document.querySelector<HTMLElement>(".aboutpage");
+if (aboutPage) {
+  // Hero — badge, titolo dalla maschera parola per parola, sottotitolo, hint.
+  // Il titolo parte con opacity: 0 inline (anti-flash prima dello split);
+  // qui viene riacceso in entrambi i rami.
+  const apTitle = aboutPage.querySelector<HTMLElement>(".ap-hero-title");
+  if (apTitle) {
+    if (reduceMotion) {
+      gsap.set(apTitle, { opacity: 1 });
+    } else {
+      const words = splitTitleWords(apTitle);
+      gsap.set(apTitle, { opacity: 1 });
+      gsap.fromTo(
+        words,
+        { yPercent: 115, rotate: 5 },
+        {
+          yPercent: 0,
+          rotate: 0,
+          duration: 1.1,
+          ease: "power4.out",
+          stagger: 0.08,
+          delay: 0.55,
+        }
+      );
+    }
+  }
+  const apHeroBits: { sel: string; delay: number }[] = [
+    { sel: ".ap-hero .hero-badge", delay: 0.45 },
+    { sel: ".ap-hero-sub", delay: 1.0 },
+    { sel: ".ap-hero .hero-scroll-hint", delay: 1.25 },
+  ];
+  apHeroBits.forEach(({ sel, delay }) => {
+    if (!aboutPage.querySelector(sel)) return;
+    gsap.fromTo(
+      sel,
+      { opacity: 0, y: 14 },
+      { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", delay }
+    );
+  });
+
+  // Duo — ogni riga entra come scena: prima il ritratto, poi la bio a pezzi.
+  aboutPage.querySelectorAll<HTMLElement>(".ap-person").forEach((row) => {
+    revealRise(row.querySelectorAll(":scope > .founder-card, .ap-bio > *"), {
+      trigger: row,
+      start: "top 78%",
+      stagger: 0.1,
+      y: 44,
+      duration: 0.9,
+    });
+  });
+
+  // Percorso — la linea si disegna in scrub lungo la timeline, le tappe
+  // entrano una a una.
+  if (!reduceMotion && aboutPage.querySelector(".ap-line")) {
+    gsap.fromTo(
+      ".ap-line",
+      { scaleY: 0 },
+      {
+        scaleY: 1,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".ap-timeline",
+          start: "top 75%",
+          end: "bottom 55%",
+          scrub: 0.5,
+        },
+      }
+    );
+  }
+  aboutPage.querySelectorAll<HTMLElement>(".ap-step").forEach((step) => {
+    revealRise(step.querySelectorAll(":scope > *"), {
+      trigger: step,
+      start: "top 84%",
+      stagger: 0.1,
+      y: 30,
+      duration: 0.8,
+    });
   });
 }
 

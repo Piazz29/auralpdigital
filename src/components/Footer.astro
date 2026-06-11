@@ -1,0 +1,51 @@
+---
+// FOOTER — condiviso tra homepage e pagine interne. Come per la navbar,
+// `home` mantiene le ancore "#sezione" sulla home (smooth scroll Lenis).
+interface Props {
+  home?: boolean;
+}
+const { home = false } = Astro.props;
+const p = home ? "" : "/";
+---
+
+<footer id="info" class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="/logo/wordmark.svg" alt="AuralpDigital" class="footer-logo" />
+        <p class="footer-tagline">
+          Sistemi digitali di prossima generazione,<br />progettati in Alto Adige.
+        </p>
+      </div>
+
+      <nav class="footer-col" aria-label="Footer">
+        <span class="footer-col-label">Menu</span>
+        <a href={`${p}#projects`} class="footer-link">Progetti</a>
+        <a href={`${p}#cosa-facciamo`} class="footer-link">Cosa facciamo</a>
+        <a href="/chi-siamo" class="footer-link">Chi siamo</a>
+        <a href={`${p}#contatti`} class="footer-link">Contatti</a>
+      </nav>
+
+      <div class="footer-col">
+        <span class="footer-col-label">Contatti</span>
+        <a href="mailto:hello@auralpdigital.com" class="footer-link">hello@auralpdigital.com</a>
+        <span class="footer-muted">Alto Adige, Italia · 39100</span>
+        <div class="footer-social">
+          <a href="#" class="footer-link" aria-label="Instagram">Instagram</a>
+          <a href="#" class="footer-link" aria-label="LinkedIn">LinkedIn</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-rule" aria-hidden="true"></div>
+
+    <div class="footer-bottom">
+      <span>© 2026 AuralpDigital</span>
+      <span>Alto Adige, Italia</span>
+      <span>Fatto con cura <span class="footer-star" aria-hidden="true">✦</span></span>
+    </div>
+  </div>
+
+  <!-- Ghost wordmark — gigante, sfuma verso il fondo pagina. -->
+  <div class="footer-ghost font-display" aria-hidden="true">AuralpDigital</div>
+</footer>

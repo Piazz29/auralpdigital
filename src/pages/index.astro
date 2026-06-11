@@ -1,5 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 
 // PROGETTI — sorgente unica dei dati. Aggiungere un progetto = aggiungere un
@@ -75,31 +77,42 @@ const services = [
   },
 ];
 
-// STATEMENT — manifesto "Chi Siamo". I segmenti con `em` vengono resi in
-// corsivo accent. Ogni parola diventa uno <span> per il reveal in scroll.
-const statementSegs = [
-  { t: "Siamo Julian e Alice. Uniamo" },
-  { t: "strategia, design e tecnologia", em: true },
-  { t: "per trasformare l'attenzione in" },
-  { t: "clienti reali.", em: true },
+// CHI SIAMO — capitoli del metodo: workflow AI-augmented, strumenti,
+// formazione. I testi con `data-glow` si illuminano lettera per lettera in
+// scroll (vedi main.ts). I ritratti dei founder vivono in /chi-siamo.
+const chapters = [
+  {
+    n: "01",
+    title: "AI-augmented",
+    titleEm: "workflow.",
+    text: "Ricerca, design, sviluppo, contenuti: ogni fase del processo è potenziata dall'intelligenza artificiale. I modelli accelerano l'esplorazione e azzerano il lavoro ripetitivo — direzione, gusto e controllo qualità restano umani, sempre.",
+  },
+  {
+    n: "02",
+    title: "Strumenti di",
+    titleEm: "nuova generazione.",
+    text: "Uno stack moderno e leggero, scelto pezzo per pezzo: niente template comprati, niente page builder. Solo tecnologia che rende ogni progetto veloce, sicuro e pronto a crescere.",
+  },
+  {
+    n: "03",
+    title: "Formazione",
+    titleEm: "universitaria.",
+    text: "Il metodo nasce all'università: analisi, ricerca e pensiero critico applicati al digitale. Studiamo ciò che cambia, testiamo ciò che promette e portiamo nei progetti solo ciò che funziona davvero.",
+  },
 ];
-const statementWords = statementSegs.flatMap((s) =>
-  s.t.split(" ").map((w) => ({ w, em: !!s.em }))
-);
 
-const founders = [
-  {
-    initial: "J",
-    name: "Julian",
-    role: "Co-founder — Strategia & Sviluppo",
-    grad: "grad-2",
-  },
-  {
-    initial: "A",
-    name: "Alice",
-    role: "Co-founder — Design & Contenuti",
-    grad: "grad-4",
-  },
+// TODO: rifinire la lista degli strumenti reali dello studio.
+const tools = [
+  "Astro",
+  "TypeScript",
+  "GSAP",
+  "Tailwind",
+  "Figma",
+  "Claude",
+  "ChatGPT",
+  "Midjourney",
+  "Vercel",
+  "Google Analytics",
 ];
 
 // STATS — `value` è il numero che conta da 0 in scroll, `suffix` resta fisso.
@@ -120,119 +133,7 @@ const marqueeItems = [
 ---
 
 <BaseLayout>
-  <!-- NAVBAR -->
-  <nav
-    data-anim="nav"
-    class="fixed top-0 left-0 right-0 z-[60] flex items-center justify-between px-6 md:px-10 py-5"
-    style="opacity: 0;"
-  >
-    <div class="nav-blur-bg" aria-hidden="true"></div>
-    <!-- Logo — due SVG reali sovrapposti (versione scura + reversed): sulle
-         superfici scure si incrociano in dissolvenza, niente filtri CSS che
-         appiattiscono i colori del wordmark. -->
-    <a
-      href="/"
-      class="relative h-8 md:h-9 flex items-center transition-transform duration-300 hover:scale-[1.04]"
-    >
-      <img
-        src="/logo/wordmark.svg"
-        alt="AuralpDigital"
-        class="h-full nav-logo"
-      />
-      <img
-        src="/logo/wordmark-reversed.svg"
-        alt=""
-        aria-hidden="true"
-        class="absolute left-0 top-0 h-full nav-logo-reversed"
-      />
-    </a>
-
-    <div class="flex items-center gap-4">
-      <a
-        href="mailto:hello@auralpdigital.com"
-        class="pill text-[12px] px-5 py-[10px]"
-      >
-        Consulenza gratuita <span aria-hidden="true">↗</span>
-      </a>
-
-      <button id="burger-menu" class="w-6 h-6 flex flex-col items-center justify-center gap-1.5 cursor-pointer relative z-[60]" aria-label="Menu">
-        <span class="w-full h-0.5 bg-[#0D0D0D]"></span>
-        <span class="w-full h-0.5 bg-[#0D0D0D]"></span>
-        <span class="w-full h-0.5 bg-[#0D0D0D]"></span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- MOBILE MENU -->
-  <div
-    id="mobile-menu"
-    class="fixed inset-0 bg-[#FAFAF8] z-[55] pointer-events-none"
-  >
-    <div class="h-full w-full max-w-[1180px] mx-auto px-8 md:px-16 flex items-center">
-      <div class="w-full flex flex-col gap-14 md:flex-row md:items-center md:justify-between md:gap-10">
-        <!-- Left — vertical label + nav list -->
-        <div class="flex items-center gap-5 md:gap-7">
-          <span class="menu-vertical-label">Menu</span>
-          <nav class="menu-list flex flex-col items-start w-max">
-            <a href="#projects" class="menu-link font-display w-full py-2 md:py-3">
-              <span class="menu-word-wrap">
-                <span class="menu-index">01</span>
-                <span class="menu-word">Progetti</span>
-              </span>
-            </a>
-            <a href="#cosa-facciamo" class="menu-link font-display w-full py-2 md:py-3">
-              <span class="menu-word-wrap">
-                <span class="menu-index">02</span>
-                <span class="menu-word">Cosa Facciamo</span>
-              </span>
-            </a>
-            <a href="#chi-siamo" class="menu-link font-display w-full py-2 md:py-3">
-              <span class="menu-word-wrap">
-                <span class="menu-index">03</span>
-                <span class="menu-word">Chi Siamo</span>
-              </span>
-            </a>
-            <a href="#info" class="menu-link font-display w-full py-2 md:py-3">
-              <span class="menu-word-wrap">
-                <span class="menu-index">04</span>
-                <span class="menu-word">Info</span>
-              </span>
-            </a>
-          </nav>
-        </div>
-
-        <!-- Right — contact info -->
-        <div data-menu="contact" class="flex flex-col gap-6 text-[14px] md:pb-2">
-          <a
-            href="mailto:hello@auralpdigital.com"
-            class="text-[#3B5BDB] underline underline-offset-4 decoration-1 hover:opacity-70 transition-opacity duration-200 w-fit"
-          >
-            hello@auralpdigital.com
-          </a>
-
-          <div class="text-[#4A4A4A] leading-[1.7]">
-            Alto Adige<br />
-            Italia, 39100
-          </div>
-
-          <div class="flex items-center gap-5 text-[#9AA3B2]">
-            <a href="#" aria-label="Instagram" class="hover:text-[#0D0D0D] transition-colors duration-200">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="5" />
-                <circle cx="12" cy="12" r="4" />
-                <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" />
-              </svg>
-            </a>
-            <a href="#" aria-label="LinkedIn" class="hover:text-[#0D0D0D] transition-colors duration-200">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M4.98 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.6c0-1.33-.02-3.05-1.86-3.05-1.86 0-2.14 1.45-2.14 2.95V21H9z" />
-              </svg>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <Navbar home />
 
   <!-- HERO — sezione a tutta schermo, scroll normale -->
   <section class="hero-section relative h-screen w-full overflow-hidden" data-anim="hero">
@@ -298,7 +199,7 @@ const marqueeItems = [
 
       <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
       <div class="hero-scroll-hint" data-anim="hero-hint" style="opacity: 0;" aria-hidden="true">
-        <span class="hero-scroll-label">Scroll</span>
+        <span class="hero-scroll-label">Scorri</span>
         <span class="hero-scroll-line"></span>
       </div>
     </div>
@@ -419,55 +320,101 @@ const marqueeItems = [
       </div>
     </div>
 
+    <div class="services-scroll-hint" aria-hidden="true" style="opacity: 0;">
+      <span class="services-scroll-label">Scorri</span>
+      <span class="services-scroll-line"></span>
+    </div>
+
   </section>
 
-  <!-- SECTION — CHI SIAMO -->
+  <!-- SECTION — CHI SIAMO — il team come metodo: workflow AI-augmented,
+       strumenti, formazione. I testi marcati `data-glow` si illuminano
+       lettera per lettera in scrub. Sullo sfondo: slot per l'immagine
+       (TODO) e il wordmark estruso in 3D che fluttua (stack CSS, niente
+       WebGL — vedi .logo3d in global.css e [data-logo3d] in main.ts). -->
   <section id="chi-siamo" class="about-section">
-    <div class="works-screen">
-      <div class="works-head" data-anim="about-head">
-        <div class="works-head-left">
-          <span class="works-kicker">Chi siamo</span>
-          <h2 class="works-title">Due menti, <em>un obiettivo.</em></h2>
+    <div class="about-backdrop" aria-hidden="true">
+      <!-- TODO: immagine di sfondo della sezione —
+           <img src="/about/bg.jpg" alt="" class="about-bg-img" /> -->
+      <div class="about-bg-media"></div>
+      <div class="logo3d-wrap">
+        <div class="logo3d" data-logo3d>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <img
+              src="/logo/wordmark.svg"
+              alt=""
+              class="logo3d-layer"
+              style={`--li: ${i};`}
+              loading="lazy"
+              draggable="false"
+            />
+          ))}
         </div>
       </div>
+    </div>
 
-      <!-- STATEMENT — manifesto a tutta larghezza; le parole si "accendono"
-           una a una mentre si scrolla (scrub GSAP su opacity). -->
-      <p class="about-statement font-display">
-        {statementWords.map(({ w, em }) => (
-          <span class={`st-word${em ? " st-em" : ""}`}>{w + " "}</span>
-        ))}
-      </p>
-
-      <div class="about-grid">
-        {founders.map((f) => (
-          <div class="founder-card" data-anim="founder">
-            <div class={`founder-media grain ${f.grad}`}>
-              <span class="founder-initial font-display">{f.initial}</span>
-              <span class="founder-badge">Ritratto in arrivo</span>
-            </div>
-            <div class="founder-meta">
-              <span class="founder-name">{f.name}</span>
-              <span class="founder-role">{f.role}</span>
-            </div>
+    <!-- INTRO PINNATA — arrivati qui la pagina si blocca (pin GSAP) con
+         titolo e statement in scena; lo scroll riempie le lettere da
+         grigio a colorato una a una, poi lo scroll riprende normale
+         (vedi [data-glow-pin] in main.ts). Figlia diretta della sezione:
+         il pin-spacer di GSAP non convive con un genitore flex. -->
+    <div class="about-intro about-content">
+      <div class="works-screen">
+        <div class="works-head" data-anim="about-head">
+          <div class="works-head-left">
+            <span class="works-kicker">Chi siamo</span>
+            <h2 class="works-title">Uno studio, <em>un metodo.</em></h2>
           </div>
-        ))}
-
-        <div class="about-aside" data-anim="founder">
-          <p class="about-aside-text">
-            Niente agenzie gonfiate, niente intermediari. Lavori direttamente
-            con chi progetta e costruisce il tuo sistema digitale — dal primo
-            sketch al lancio.
-          </p>
-          <p class="about-aside-text">
-            Strategia e codice da una parte, design e contenuti dall'altra.
-            Due prospettive, un unico standard: fatto bene o rifatto.
-          </p>
-          <a href="#contatti" class="pill-outline about-aside-cta">
-            Conosciamoci <span aria-hidden="true">↗</span>
+          <a href="/chi-siamo" class="works-head-link">
+            La nostra storia <span aria-hidden="true">↗</span>
           </a>
         </div>
+
+        <!-- STATEMENT — manifesto centrato, un'unica frase fluida. -->
+        <p class="about-statement font-display" data-glow-pin>
+          Un piccolo team indipendente che unisce
+          <em>rigore universitario</em> e strumenti di nuova generazione
+          in un workflow <em>potenziato dall'AI</em> dal primo sketch al lancio
+        </p>
       </div>
+    </div>
+
+    <div class="works-screen about-content">
+
+      <!-- CAPITOLI — scene piene del metodo, una per riga. -->
+      <div class="about-chapters">
+        {chapters.map((c) => (
+          <article class="about-chapter" data-anim="chapter">
+            <div class="chapter-head">
+              <span class="chapter-num">{c.n}</span>
+              <h3 class="chapter-title font-display">
+                {c.title} <em>{c.titleEm}</em>
+              </h3>
+            </div>
+            <div class="chapter-body">
+              <p class="chapter-text" data-glow>{c.text}</p>
+              {c.n === "02" && (
+                <div class="chapter-tools">
+                  {tools.map((t) => (
+                    <span class="chapter-tool">{t}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <!-- TEAM LINK — ponte verso la pagina dedicata /chi-siamo. -->
+      <a href="/chi-siamo" class="about-teamlink grain" data-anim="teamlink">
+        <div class="teamlink-body">
+          <span class="works-kicker teamlink-kicker">Il team</span>
+          <span class="teamlink-title font-display">
+            Due persone, nessun intermediario. <em>Conosciamoci.</em>
+          </span>
+        </div>
+        <span class="teamlink-arrow" aria-hidden="true">↗</span>
+      </a>
 
       <!-- STATS — i numeri contano da 0 quando entrano in viewport. -->
       <div class="about-stats" data-anim="stats">
@@ -535,48 +482,7 @@ const marqueeItems = [
     </div>
   </section>
 
-  <!-- FOOTER -->
-  <footer id="info" class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-top">
-        <div class="footer-brand">
-          <img src="/logo/wordmark.svg" alt="AuralpDigital" class="footer-logo" />
-          <p class="footer-tagline">
-            Sistemi digitali di prossima generazione,<br />progettati in Alto Adige.
-          </p>
-        </div>
-
-        <nav class="footer-col" aria-label="Footer">
-          <span class="footer-col-label">Menu</span>
-          <a href="#projects" class="footer-link">Progetti</a>
-          <a href="#cosa-facciamo" class="footer-link">Cosa facciamo</a>
-          <a href="#chi-siamo" class="footer-link">Chi siamo</a>
-          <a href="#contatti" class="footer-link">Contatti</a>
-        </nav>
-
-        <div class="footer-col">
-          <span class="footer-col-label">Contatti</span>
-          <a href="mailto:hello@auralpdigital.com" class="footer-link">hello@auralpdigital.com</a>
-          <span class="footer-muted">Alto Adige, Italia · 39100</span>
-          <div class="footer-social">
-            <a href="#" class="footer-link" aria-label="Instagram">Instagram</a>
-            <a href="#" class="footer-link" aria-label="LinkedIn">LinkedIn</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="footer-rule" aria-hidden="true"></div>
-
-      <div class="footer-bottom">
-        <span>© 2026 AuralpDigital</span>
-        <span>Alto Adige, Italia</span>
-        <span>Fatto con cura <span class="footer-star" aria-hidden="true">✦</span></span>
-      </div>
-    </div>
-
-    <!-- Ghost wordmark — gigante, sfuma verso il fondo pagina. -->
-    <div class="footer-ghost font-display" aria-hidden="true">AuralpDigital</div>
-  </footer>
+  <Footer home />
 
   </div>
   <!-- /post-reveal -->

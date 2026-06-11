@@ -1,0 +1,293 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css";
+
+// IL DUO — ritratti e bio estese. `photo` è il path della foto reale in
+// /public/about/ (finché è vuoto, la card mostra la cover brandizzata con
+// l'iniziale, come sulla home).
+const people = [
+  {
+    initial: "J",
+    name: "Julian",
+    nameEm: "",
+    role: "Co-founder — Strategia & Sviluppo",
+    grad: "grad-2",
+    photo: "", // TODO: /about/julian.jpg
+    bio: "Strategia, codice e sistemi. Julian progetta l'architettura di ogni progetto — dal posizionamento al deploy — e costruisce siti e gestionali con uno stack moderno e un workflow potenziato dall'AI. Se una cosa si può misurare, lui la misura.",
+    focus: ["Strategia digitale", "Sviluppo web", "SEO + GEO", "AI & automazioni"],
+  },
+  {
+    initial: "A",
+    name: "Alice",
+    nameEm: "",
+    role: "Co-founder — Design & Contenuti",
+    grad: "grad-4",
+    photo: "", // TODO: /about/alice.jpg
+    bio: "Design, contenuti e direzione visiva. Alice dà forma all'identità dei brand: interfacce pulite, fotografia curata e contenuti che parlano alle persone giuste con il tono giusto. Se un dettaglio stona, lei lo vede.",
+    focus: ["Art direction", "UI & visual design", "Contenuti & social", "Fotografia"],
+  },
+];
+
+// IL PERCORSO — tappe della storia. TODO: inserire atenei/corsi reali.
+const steps = [
+  {
+    kicker: "Le basi",
+    title: "Università.",
+    text: "Il metodo nasce qui: analisi, ricerca e pensiero critico. Il percorso di studi universitario ci ha dato il rigore che oggi applichiamo a ogni progetto — e non abbiamo mai smesso di studiare.",
+  },
+  {
+    kicker: "La scintilla",
+    title: "I primi progetti.",
+    text: "I primi siti per attività locali dell'Alto Adige. È lì che capiamo una cosa semplice: ai professionisti non serve una vetrina, serve un sistema che porti clienti.",
+  },
+  {
+    kicker: "Oggi",
+    title: "AuralpDigital.",
+    text: "Uno studio digitale indipendente: strategia, design e tecnologia sotto lo stesso tetto, un workflow AI-augmented e un unico standard — fatto bene o rifatto.",
+  },
+  {
+    kicker: "Domani",
+    title: "Sempre un passo avanti.",
+    text: "Ogni nuova ondata tecnologica viene studiata, testata e — solo se funziona — portata nei progetti dei nostri clienti. Prima degli altri, mai a scapito della qualità.",
+  },
+];
+
+// COME LAVORIAMO — riusa il linguaggio dei capitoli della home: ogni fase
+// racconta anche dove l'AI entra nel processo.
+const workflow = [
+  {
+    n: "01",
+    title: "Ascolto",
+    titleEm: "e analisi.",
+    text: "Prima di disegnare qualsiasi cosa, capiamo il tuo mercato: chi cerca, cosa cerca, chi sono i concorrenti. L'AI accelera la ricerca e l'analisi dei dati — le conclusioni le tiriamo noi, insieme a te.",
+  },
+  {
+    n: "02",
+    title: "Design",
+    titleEm: "con intenzione.",
+    text: "Ogni scelta visiva ha uno scopo: guidare il visitatore verso un'azione. Con gli strumenti generativi esploriamo più direzioni in meno tempo, poi rifiniamo a mano quella giusta.",
+  },
+  {
+    n: "03",
+    title: "Sviluppo",
+    titleEm: "senza compromessi.",
+    text: "Codice moderno, veloce, accessibile. L'AI scrive con noi e rivede ogni riga — ma niente va online senza essere passato sotto occhi umani, su dispositivi reali.",
+  },
+  {
+    n: "04",
+    title: "Crescita",
+    titleEm: "misurabile.",
+    text: "Il lancio è l'inizio, non la fine: dati, test e ottimizzazioni continue. Ogni mese sai cosa è cambiato, perché, e cosa porta clienti.",
+  },
+];
+
+// TODO: rifinire la lista degli strumenti reali dello studio.
+const tools = [
+  "Astro",
+  "TypeScript",
+  "GSAP",
+  "Tailwind",
+  "Figma",
+  "Claude",
+  "ChatGPT",
+  "Midjourney",
+  "Vercel",
+  "Google Analytics",
+];
+---
+
+<BaseLayout
+  title="Chi siamo — AuralpDigital"
+  description="Le persone dietro AuralpDigital: un team indipendente in Alto Adige con formazione universitaria, strumenti di nuova generazione e un workflow potenziato dall'AI."
+>
+  <Navbar />
+
+  <main class="aboutpage">
+    <!-- HERO — aurora di palette, titolo dalla maschera parola per parola. -->
+    <section class="ap-hero">
+      <div class="ap-hero-aurora" aria-hidden="true"></div>
+
+      <span
+        class="hero-badge inline-block text-[11px] font-medium tracking-[0.15em] uppercase"
+        style="opacity: 0;"
+      >
+        Chi siamo
+      </span>
+
+      <h1 class="ap-hero-title font-display" style="opacity: 0;">
+        Le persone dietro <em>i pixel.</em>
+      </h1>
+
+      <p class="ap-hero-sub" style="opacity: 0;">
+        Uno studio indipendente di due persone, dall'Alto Adige.
+        Niente intermediari: chi ti risponde è chi progetta e costruisce.
+      </p>
+
+      <div class="hero-scroll-hint" style="opacity: 0;" aria-hidden="true">
+        <span class="hero-scroll-label">Scorri</span>
+        <span class="hero-scroll-line"></span>
+      </div>
+    </section>
+
+    <!-- MANIFESTO — statement gigante con glow per lettera. -->
+    <section class="ap-section">
+      <div class="works-screen">
+        <span class="works-kicker">Il manifesto</span>
+        <p class="ap-statement font-display" data-glow>
+          Crediamo che un piccolo team con <em>gli strumenti giusti</em> possa
+          battere un'agenzia intera: meno passaggi, più cura,
+          <em>tecnologia di frontiera</em> in ogni dettaglio.
+        </p>
+      </div>
+    </section>
+
+    <!-- IL DUO — un ritratto per riga, bio estesa e aree di focus. -->
+    <section class="ap-section ap-section--deeper">
+      <div class="works-screen">
+        <div class="works-head">
+          <div class="works-head-left">
+            <span class="works-kicker">Il duo</span>
+            <h2 class="works-title">Julian <em>&</em> Alice.</h2>
+          </div>
+        </div>
+
+        <div class="ap-duo">
+          {people.map((person, i) => (
+            <div class={`ap-person${i % 2 === 1 ? " ap-person--flip" : ""}`}>
+              <div class="founder-card">
+                <div class={`founder-media grain ${person.grad}`}>
+                  {person.photo ? (
+                    <img
+                      src={person.photo}
+                      alt={person.name}
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <>
+                      <span class="founder-initial font-display">{person.initial}</span>
+                      <span class="founder-badge">Ritratto in arrivo</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div class="ap-bio">
+                <span class="ap-bio-role">{person.role}</span>
+                <h3 class="ap-bio-name font-display">{person.name}<em>.</em></h3>
+                <p class="ap-bio-text">{person.bio}</p>
+                <ul class="ap-focus">
+                  {person.focus.map((f) => <li>{f}</li>)}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- IL PERCORSO — timeline verticale, la linea si disegna in scroll. -->
+    <section class="ap-section">
+      <div class="works-screen">
+        <div class="works-head">
+          <div class="works-head-left">
+            <span class="works-kicker">Il percorso</span>
+            <h2 class="works-title">Da studenti <em>a studio.</em></h2>
+          </div>
+        </div>
+
+        <div class="ap-timeline">
+          <span class="ap-line" aria-hidden="true"></span>
+          {steps.map((s) => (
+            <div class="ap-step">
+              <span class="ap-step-kicker">{s.kicker}</span>
+              <h3 class="ap-step-title">{s.title}</h3>
+              <p class="ap-step-text" data-glow>{s.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- COME LAVORIAMO — capitoli del metodo, con l'AI dentro ogni fase. -->
+    <section class="ap-section ap-section--deeper">
+      <div class="works-screen">
+        <div class="works-head">
+          <div class="works-head-left">
+            <span class="works-kicker">Come lavoriamo</span>
+            <h2 class="works-title">Umani al timone, <em>AI in sala macchine.</em></h2>
+          </div>
+        </div>
+
+        <div class="about-chapters">
+          {workflow.map((w) => (
+            <article class="about-chapter" data-anim="chapter">
+              <div class="chapter-head">
+                <span class="chapter-num">{w.n}</span>
+                <h3 class="chapter-title font-display">
+                  {w.title} <em>{w.titleEm}</em>
+                </h3>
+              </div>
+              <div class="chapter-body">
+                <p class="chapter-text" data-glow>{w.text}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- MARQUEE — gli strumenti dello studio, nastro infinito verso la CTA. -->
+    <div class="marquee-section" aria-hidden="true">
+      <div class="marquee-track">
+        {[...tools, ...tools].map((item) => (
+          <span class="marquee-item font-display">
+            {item}<span class="marquee-star">✦</span>
+          </span>
+        ))}
+      </div>
+    </div>
+
+    <!-- CTA FINALE — stesso climax scuro della home. -->
+    <section id="contatti" class="cta-section" data-anim="contact">
+      <div class="cta-panel grain">
+        <div class="cta-spotlight" aria-hidden="true"></div>
+        <span class="works-kicker cta-kicker" data-anim="contact-kicker">
+          Iniziamo
+        </span>
+
+        <h2 class="cta-title" data-anim="contact-headline">
+          Ora che ci conosci,<br />
+          <em>parliamo di te.</em>
+        </h2>
+
+        <p class="cta-sub" data-anim="contact-sub">
+          Prenota una consulenza gratuita di 30 minuti. Nessun impegno —
+          solo idee chiare su come far crescere la tua attività online.
+        </p>
+
+        <div class="cta-actions" data-anim="contact-cta">
+          <a href="mailto:hello@auralpdigital.com" class="cta-pill magnetic">
+            Prenota la consulenza <span aria-hidden="true">↗</span>
+          </a>
+          <a href="mailto:hello@auralpdigital.com" class="cta-mail">
+            hello@auralpdigital.com
+          </a>
+        </div>
+
+        <div class="cta-foot" data-anim="contact-cta">
+          <span>Risposta entro 24 ore</span>
+          <span class="cta-foot-dot" aria-hidden="true"></span>
+          <span>Nessun impegno</span>
+          <span class="cta-foot-dot" aria-hidden="true"></span>
+          <span>Budget chiari da subito</span>
+        </div>
+
+        <span class="cta-star" aria-hidden="true">✦</span>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>

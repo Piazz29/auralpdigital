@@ -1,0 +1,124 @@
+---
+// NAVBAR + MOBILE MENU — condivisi tra homepage e pagine interne.
+// `home` decide il prefisso dei link ancora: sulla home restano "#sezione"
+// (intercettati da Lenis per lo scroll fluido), altrove diventano "/#sezione"
+// e navigano alla home. "Chi Siamo" punta sempre alla pagina dedicata.
+interface Props {
+  home?: boolean;
+}
+const { home = false } = Astro.props;
+const p = home ? "" : "/";
+---
+
+<nav
+  data-anim="nav"
+  class="fixed top-0 left-0 right-0 z-[60] flex items-center justify-between px-6 md:px-10 py-5"
+  style="opacity: 0;"
+>
+  <div class="nav-blur-bg" aria-hidden="true"></div>
+  <!-- Logo — due SVG reali sovrapposti (versione scura + reversed): sulle
+       superfici scure si incrociano in dissolvenza, niente filtri CSS che
+       appiattiscono i colori del wordmark. -->
+  <a
+    href="/"
+    class="relative h-8 md:h-9 flex items-center transition-transform duration-300 hover:scale-[1.04]"
+  >
+    <img
+      src="/logo/wordmark.svg"
+      alt="AuralpDigital"
+      class="h-full nav-logo"
+    />
+    <img
+      src="/logo/wordmark-reversed.svg"
+      alt=""
+      aria-hidden="true"
+      class="absolute left-0 top-0 h-full nav-logo-reversed"
+    />
+  </a>
+
+  <div class="flex items-center gap-4">
+    <a
+      href="mailto:hello@auralpdigital.com"
+      class="pill text-[12px] px-5 py-[10px]"
+    >
+      Consulenza gratuita <span aria-hidden="true">↗</span>
+    </a>
+
+    <button id="burger-menu" class="w-6 h-6 flex flex-col items-center justify-center gap-1.5 cursor-pointer relative z-[60]" aria-label="Menu">
+      <span class="w-full h-0.5 bg-[#0D0D0D]"></span>
+      <span class="w-full h-0.5 bg-[#0D0D0D]"></span>
+      <span class="w-full h-0.5 bg-[#0D0D0D]"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div
+  id="mobile-menu"
+  class="fixed inset-0 bg-[#FAFAF8] z-[55] pointer-events-none"
+>
+  <div class="h-full w-full max-w-[1180px] mx-auto px-8 md:px-16 flex items-center">
+    <div class="w-full flex flex-col gap-14 md:flex-row md:items-center md:justify-between md:gap-10">
+      <!-- Left — vertical label + nav list -->
+      <div class="flex items-center gap-5 md:gap-7">
+        <span class="menu-vertical-label">Menu</span>
+        <nav class="menu-list flex flex-col items-start w-max">
+          <a href={`${p}#projects`} class="menu-link font-display w-full py-2 md:py-3">
+            <span class="menu-word-wrap">
+              <span class="menu-index">01</span>
+              <span class="menu-word">Progetti</span>
+            </span>
+          </a>
+          <a href={`${p}#cosa-facciamo`} class="menu-link font-display w-full py-2 md:py-3">
+            <span class="menu-word-wrap">
+              <span class="menu-index">02</span>
+              <span class="menu-word">Cosa Facciamo</span>
+            </span>
+          </a>
+          <a href="/chi-siamo" class="menu-link font-display w-full py-2 md:py-3">
+            <span class="menu-word-wrap">
+              <span class="menu-index">03</span>
+              <span class="menu-word">Chi Siamo</span>
+            </span>
+          </a>
+          <a href={`${p}#info`} class="menu-link font-display w-full py-2 md:py-3">
+            <span class="menu-word-wrap">
+              <span class="menu-index">04</span>
+              <span class="menu-word">Info</span>
+            </span>
+          </a>
+        </nav>
+      </div>
+
+      <!-- Right — contact info -->
+      <div data-menu="contact" class="flex flex-col gap-6 text-[14px] md:pb-2">
+        <a
+          href="mailto:hello@auralpdigital.com"
+          class="text-[#3B5BDB] underline underline-offset-4 decoration-1 hover:opacity-70 transition-opacity duration-200 w-fit"
+        >
+          hello@auralpdigital.com
+        </a>
+
+        <div class="text-[#4A4A4A] leading-[1.7]">
+          Alto Adige<br />
+          Italia, 39100
+        </div>
+
+        <div class="flex items-center gap-5 text-[#9AA3B2]">
+          <a href="#" aria-label="Instagram" class="hover:text-[#0D0D0D] transition-colors duration-200">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="5" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" />
+            </svg>
+          </a>
+          <a href="#" aria-label="LinkedIn" class="hover:text-[#0D0D0D] transition-colors duration-200">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M4.98 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.6c0-1.33-.02-3.05-1.86-3.05-1.86 0-2.14 1.45-2.14 2.95V21H9z" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
