@@ -508,7 +508,6 @@ const revealHead = (selector: string, trigger: string) => {
   );
 };
 revealHead("[data-anim='services-head']", "#cosa-facciamo");
-revealHead("[data-anim='about-head']", "#chi-siamo");
 
 // ---------- Canvas — lo schermo cambia colore tra le sezioni ----------
 // I colori di sezione non stanno sulle sezioni ma sul canvas .post-reveal:
@@ -842,45 +841,70 @@ if (pinStatement && !reduceMotion) {
       const isEm = c.parentElement?.classList.contains("gw-em");
       tl.to(c, { color: isEm ? ACCENT : INK, duration: 0.6 }, i);
     });
+    // La montagna emerge: mentre le lettere si riempiono, il velo radiale
+    // sul video si dirada — testo e fondale si "sviluppano" insieme.
+    const aboutVeil = document.querySelector<HTMLElement>("[data-about-veil]");
+    if (aboutVeil) {
+      tl.fromTo(
+        aboutVeil,
+        { opacity: 1 },
+        { opacity: 0.55, duration: chars.length },
+        0
+      );
+    }
     // Coda: la frase resta piena e ferma prima dello sblocco.
     tl.to({}, { duration: chars.length * 0.14 });
   }
 }
 
-// ---------- Chi Siamo — wordmark 3D che fluttua sullo sfondo ----------
-// Lo "spessore" è dato dai layer impilati in CSS; qui il gruppo riceve
-// l'inclinazione base e tre movimenti sovrapposti: una deriva lenta di
-// rotazione (yoyo), un galleggiamento verticale e una rotazione Y legata
-// allo scroll della sezione. Con reduced motion resta un watermark statico
-// appena inclinato.
-const logo3d = document.querySelector<HTMLElement>("[data-logo3d]");
-if (logo3d) {
-  if (reduceMotion) {
-    gsap.set(logo3d, { rotationX: 35, rotationZ: -5 });
-  } else {
-    gsap.set(logo3d, { rotationX: 44, rotationZ: -7 });
+// ---------- Chi Siamo — kicker dell'intro ----------
+if (document.querySelector("[data-anim='about-kicker']")) {
+  gsap.fromTo(
+    "[data-anim='about-kicker']",
+    { opacity: 0, y: 14 },
+    {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: "power2.out",
+      scrollTrigger: { trigger: ".about-intro", start: "top 70%" },
+    }
+  );
+}
 
-    gsap.to(logo3d, {
-      rotationX: 52,
-      rotationZ: 6,
-      duration: 12,
-      ease: "sine.inOut",
-      yoyo: true,
-      repeat: -1,
+// ---------- Chi Siamo — fondale video Sciliar ----------
+// Il bianco e nero e la fusione col canvas sono CSS (filter + mask + velo);
+// qui solo la regia:
+//   • play/pause legati alla visibilità della sezione (batteria, decode);
+//   • lenta zoomata-out in scrub: la montagna parte più "vicina" e si
+//     assesta mentre la sezione attraversa il viewport.
+// Con reduced motion il video resta fermo sul primo frame: un fondale
+// fotografico statico.
+const aboutVideo = document.querySelector<HTMLVideoElement>(
+  "[data-about-video]"
+);
+if (aboutVideo) {
+  if (reduceMotion) {
+    aboutVideo.removeAttribute("autoplay");
+    aboutVideo.pause();
+  } else {
+    ScrollTrigger.create({
+      trigger: "#chi-siamo",
+      start: "top bottom",
+      end: "bottom top",
+      onEnter: () => void aboutVideo.play(),
+      onEnterBack: () => void aboutVideo.play(),
+      onLeave: () => aboutVideo.pause(),
+      onLeaveBack: () => aboutVideo.pause(),
     });
-    gsap.to(logo3d, {
-      y: 42,
-      duration: 7,
-      ease: "sine.inOut",
-      yoyo: true,
-      repeat: -1,
-    });
+
     gsap.fromTo(
-      logo3d,
-      { rotationY: -16 },
+      aboutVideo,
+      { scale: 1.16 },
       {
-        rotationY: 16,
+        scale: 1,
         ease: "none",
+        transformOrigin: "center center",
         scrollTrigger: {
           trigger: "#chi-siamo",
           start: "top bottom",
@@ -921,12 +945,43 @@ document.querySelectorAll<HTMLElement>(".about-chapter").forEach((ch) => {
   }
 });
 
-// ---------- Chi Siamo — pannello link verso /chi-siamo ----------
-revealRise("[data-anim='teamlink']", {
-  start: "top 84%",
-  y: 56,
-  duration: 1,
-});
+// ---------- Chi Siamo — i nomi del duo ----------
+// I nomi entrano dalla maschera parola per parola — stesso linguaggio dei
+// titoli di sezione, ma in scala monumentale — poi la riga CTA segue.
+const duo = document.querySelector<HTMLElement>("[data-anim='duo']");
+if (duo) {
+  const duoNames = duo.querySelector<HTMLElement>(".duo-names");
+  const duoCta = duo.querySelector<HTMLElement>(".duo-cta");
+  if (duoNames && !reduceMotion) {
+    const words = splitTitleWords(duoNames);
+    gsap.fromTo(
+      words,
+      { yPercent: 115, rotate: 5 },
+      {
+        yPercent: 0,
+        rotate: 0,
+        duration: 1.15,
+        ease: "power4.out",
+        stagger: 0.09,
+        scrollTrigger: { trigger: duo, start: "top 80%" },
+      }
+    );
+  }
+  if (duoCta) {
+    gsap.fromTo(
+      duoCta,
+      { opacity: 0, y: 16 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power2.out",
+        delay: reduceMotion ? 0 : 0.45,
+        scrollTrigger: { trigger: duo, start: "top 80%" },
+      }
+    );
+  }
+}
 
 // ---------- Chi Siamo — tilt 3D delle founder card ----------
 // La media segue il cursore con una rotazione leggera (prospettiva sul
@@ -956,54 +1011,6 @@ if (!reduceMotion && window.matchMedia("(min-width: 1024px)").matches) {
     });
   });
 }
-
-// ---------- Stats — entrata + count-up ----------
-revealRise("[data-anim='stat']", {
-  trigger: "[data-anim='stats']",
-  start: "top 85%",
-  stagger: 0.15,
-  y: 40,
-  duration: 0.9,
-});
-
-// Tick accent sopra ogni numero — si disegna da sinistra, in cascata.
-if (!reduceMotion && document.querySelector(".stat-tick")) {
-  gsap.fromTo(
-    ".stat-tick",
-    { scaleX: 0 },
-    {
-      scaleX: 1,
-      duration: 1,
-      ease: "power3.out",
-      stagger: 0.15,
-      scrollTrigger: {
-        trigger: "[data-anim='stats']",
-        start: "top 85%",
-      },
-    }
-  );
-}
-
-document.querySelectorAll<HTMLElement>("[data-count]").forEach((el) => {
-  const target = Number(el.dataset.count ?? 0);
-  if (reduceMotion) {
-    el.textContent = String(target);
-    return;
-  }
-  const counter = { v: 0 };
-  gsap.to(counter, {
-    v: target,
-    duration: 1.8,
-    ease: "power3.out",
-    scrollTrigger: {
-      trigger: el,
-      start: "top 88%",
-    },
-    onUpdate: () => {
-      el.textContent = String(Math.round(counter.v));
-    },
-  });
-});
 
 // ---------- CTA finale — reveal del pannello + contenuti in cascata ----------
 // Salita translate-only (niente scale: il pannello scuro ha grana/spotlight,
@@ -1245,6 +1252,44 @@ if (aboutPage) {
       y: 30,
       duration: 0.8,
     });
+  });
+}
+
+// ---------- Deco — parallasse leggera dei segni decorativi ----------
+// Gli elementi [data-parallax] (curve di livello, segni di stampa) scorrono
+// a una frazione della velocità di scroll: il fattore è nel data-attribute.
+if (!reduceMotion) {
+  document.querySelectorAll<HTMLElement>("[data-parallax]").forEach((el) => {
+    const speed = parseFloat(el.dataset.parallax || "0.15");
+    gsap.fromTo(
+      el,
+      { y: speed * 240 },
+      {
+        y: speed * -240,
+        ease: "none",
+        scrollTrigger: {
+          trigger: el,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: 0.6,
+        },
+      }
+    );
+  });
+}
+
+// ---------- Hero — il cerchio sketch si disegna attorno a "prossima" ----------
+// Lo stroke parte "non disegnato" (dashoffset = lunghezza) e si traccia in
+// un solo gesto dopo l'entrata della riga. One-shot, non legato allo scroll.
+const sketchPath = document.querySelector<SVGPathElement>(".circle-sketch path");
+if (sketchPath && !reduceMotion) {
+  const len = sketchPath.getTotalLength();
+  gsap.set(sketchPath, { strokeDasharray: len, strokeDashoffset: len });
+  gsap.to(sketchPath, {
+    strokeDashoffset: 0,
+    duration: 1.1,
+    ease: "power2.inOut",
+    delay: 1.4,
   });
 }
 
