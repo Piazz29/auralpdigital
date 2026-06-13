@@ -888,6 +888,9 @@ if (aboutVideo) {
     aboutVideo.removeAttribute("autoplay");
     aboutVideo.pause();
   } else {
+    // Ping-pong fluido: il file -boomerang contiene già andata + ritorno
+    // concatenati, quindi basta il loop nativo (riproduzione liscia in
+    // entrambi i versi). Play/pause solo quando la sezione è a schermo.
     ScrollTrigger.create({
       trigger: "#chi-siamo",
       start: "top bottom",
@@ -1275,21 +1278,6 @@ if (!reduceMotion) {
         },
       }
     );
-  });
-}
-
-// ---------- Hero — il cerchio sketch si disegna attorno a "prossima" ----------
-// Lo stroke parte "non disegnato" (dashoffset = lunghezza) e si traccia in
-// un solo gesto dopo l'entrata della riga. One-shot, non legato allo scroll.
-const sketchPath = document.querySelector<SVGPathElement>(".circle-sketch path");
-if (sketchPath && !reduceMotion) {
-  const len = sketchPath.getTotalLength();
-  gsap.set(sketchPath, { strokeDasharray: len, strokeDashoffset: len });
-  gsap.to(sketchPath, {
-    strokeDashoffset: 0,
-    duration: 1.1,
-    ease: "power2.inOut",
-    delay: 1.4,
   });
 }
 
