@@ -101,17 +101,6 @@ const services = [
     art: "social",
   },
 ];
-
-// MARQUEE — nastro editoriale a riga unica, sfumato ai bordi. Registro
-// strategico (valore/crescita/risultato) della homepage; /chi-siamo usa un
-// taglio identitario. Le frasi si alternano piene/outline per ritmo.
-const marqueeItems = [
-  "Dal primo clic al cliente",
-  "Crescita che si misura",
-  "Visitatori oggi, clienti domani",
-  "Sistemi che lavorano per te",
-  "Più richieste, meno attriti",
-];
 ---
 
 <BaseLayout>
@@ -198,7 +187,182 @@ const marqueeItems = [
   <!-- CONTENUTO — flusso normale -->
   <div class="post-reveal relative z-10">
 
-  <!-- SECTION — PROGETTI -->
+  <!-- SECTION — PROBLEMA / VALORE — banda chiara: nomina il problema e lo
+       ribalta nel valore (tassello PAS, prima della soluzione). Lo statement
+       si riempie per lettera in scroll (data-glow). -->
+  <section id="problema" class="problem-section">
+    <span class="deco deco--plus deco-accent deco-float-2" style="right: 9%; top: 22%;" aria-hidden="true"></span>
+    <div class="works-screen">
+      <span class="works-kicker">Il punto</span>
+      <p class="problem-statement font-display" data-glow>
+        Un sito che non porta clienti è un costo, non un investimento.
+        <em>Costruiamo sistemi che trasformano chi cerca in chi prenota.</em>
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION — COSA FACCIAMO — banda navy: la SOLUZIONE. Il colore non sta
+       sulla sezione ma sul canvas .post-reveal: uno scrub GSAP scurisce
+       l'intero schermo verso il navy entrando qui, poi torna chiaro verso i
+       Lavori. Il bg statico resta come fallback reduced-motion / no-JS. Su
+       desktop la sezione viene PINNATA e i servizi si rivelano in scrub. -->
+  <section id="cosa-facciamo" class="services-section">
+    <!-- Aurora sul navy — due bagliori jewel-tone che derivano piano. -->
+    <div class="services-glow services-glow--1" aria-hidden="true"></div>
+    <div class="services-glow services-glow--2" aria-hidden="true"></div>
+    <!-- Crinale alpino — doppia linea di cresta in fondo alla banda. -->
+    <svg class="services-ridge" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 96 120 58l90 28 130-60 110 44 150-68 130 56 120-30 110 44 150-58 130 40 90-22" stroke="rgba(250, 250, 248, 0.13)" fill="none" stroke-width="1.5" />
+      <path d="M0 112 140 78l100 22 140-48 120 38 160-56 140 46 130-26 120 38 150-46 140 32 100-18" stroke="rgba(138, 160, 255, 0.25)" fill="none" stroke-width="1" />
+    </svg>
+    <div class="works-screen">
+      <div class="works-head" data-anim="services-head">
+        <div class="works-head-left">
+          <span class="works-kicker">Cosa facciamo</span>
+          <h2 class="works-title">Servizi che <em>fanno crescere.</em></h2>
+        </div>
+        <a href="#contatti" class="works-head-link">
+          Parliamone <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+
+      <!-- SCENE SERVIZIO — una per servizio, a tutta schermata: su desktop
+           la sezione è pinnata e le scene si avvicendano scrollando (titolo
+           dalla maschera, descrizione e chip in coda, l'animazione che si
+           solleva); su mobile scorrono in colonna e si rivelano entrando in
+           viewport (vedi main.ts). -->
+      <div class="services-stage">
+        {services.map((s) => (
+          <article class="service-slide">
+            <div class="slide-body">
+              <span class="slide-index">{s.n} / 0{services.length}</span>
+              <h3 class="slide-title">
+                <span class="sn-mask"><span class="sn">{s.name} <em>{s.nameEm}</em></span></span>
+              </h3>
+              <p class="slide-desc">{s.desc}</p>
+              <ul class="slide-ledger">
+                {s.points.map((p, i) => (
+                  <li class="slide-ledger-row">
+                    <span class="slide-ledger-num">{`0${i + 1}`}</span>
+                    <span class="slide-ledger-rule" aria-hidden="true"></span>
+                    <span class="slide-ledger-text">{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div class="slide-media slide-media--bare">
+              {s.art === "web" && (
+                <div class="media-art" aria-hidden="true">
+                  {/* SITI WEB — finestra browser hairline; hero + barre di testo
+                      compaiono in fade-in + slide-up sequenziale (caricamento
+                      pagina), poi sfumano e ricominciano. Loop gestito da CSS,
+                      avviato da .is-active (IntersectionObserver). */}
+                  <svg class="svg-art svg-web" viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="40" y="26" width="240" height="150" rx="11" stroke="rgba(255,255,255,0.5)" stroke-width="1.4" />
+                    <line x1="40" y1="50" x2="280" y2="50" stroke="rgba(255,255,255,0.28)" stroke-width="1" />
+                    <circle cx="55" cy="38" r="2.6" fill="rgba(255,255,255,0.6)" />
+                    <circle cx="65" cy="38" r="2.6" fill="rgba(255,255,255,0.42)" />
+                    <circle cx="75" cy="38" r="2.6" fill="rgba(255,255,255,0.42)" />
+                    <rect class="wf wf-hero" x="54" y="62" width="212" height="52" rx="6" fill="#8aa0ff" fill-opacity="0.92" />
+                    <rect class="wf wf-l1" x="54" y="126" width="150" height="8" rx="4" fill="rgba(255,255,255,0.88)" />
+                    <rect class="wf wf-l2" x="54" y="142" width="118" height="8" rx="4" fill="rgba(255,255,255,0.55)" />
+                    <rect class="wf wf-l3" x="54" y="158" width="78" height="8" rx="4" fill="rgba(255,255,255,0.38)" />
+                  </svg>
+                </div>
+              )}
+              {s.art === "ops" && (
+                <div class="media-art" aria-hidden="true">
+                  {/* GESTIONALI — dashboard hairline: sidebar a sinistra, area
+                      di lavoro a griglia. Due schede compaiono in sequenza; in
+                      una un grafico a linee (accento) si "disegna" da sinistra
+                      a destra. Loop CSS avviato da .is-active. */}
+                  <svg class="svg-art svg-ops" viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="30" y="28" width="260" height="144" rx="11" stroke="rgba(255,255,255,0.42)" stroke-width="1.4" />
+                    {/* sidebar */}
+                    <line x1="80" y1="28" x2="80" y2="172" stroke="rgba(255,255,255,0.22)" stroke-width="1" />
+                    <rect x="44" y="46" width="22" height="4" rx="2" fill="rgba(255,255,255,0.45)" />
+                    <rect x="44" y="60" width="16" height="4" rx="2" fill="rgba(255,255,255,0.25)" />
+                    <rect x="44" y="74" width="20" height="4" rx="2" fill="rgba(255,255,255,0.25)" />
+                    <rect x="44" y="88" width="14" height="4" rx="2" fill="rgba(255,255,255,0.25)" />
+                    {/* scheda 1 — grafico a linee accento */}
+                    <g class="op-card op-c1">
+                      <rect x="98" y="46" width="84" height="50" rx="7" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" />
+                      <rect x="106" y="54" width="30" height="4" rx="2" fill="rgba(255,255,255,0.55)" />
+                      <polyline class="op-chart" points="106,86 120,76 132,82 146,66 162,72 174,60" stroke="#8aa0ff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+                    </g>
+                    {/* scheda 2 — barre */}
+                    <g class="op-card op-c2">
+                      <rect x="192" y="46" width="76" height="50" rx="7" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" />
+                      <rect x="200" y="80" width="9" height="10" rx="2" fill="rgba(255,255,255,0.7)" />
+                      <rect x="214" y="72" width="9" height="18" rx="2" fill="rgba(255,255,255,0.5)" />
+                      <rect x="228" y="76" width="9" height="14" rx="2" fill="#8aa0ff" />
+                      <rect x="242" y="66" width="9" height="24" rx="2" fill="rgba(255,255,255,0.5)" />
+                    </g>
+                    {/* scheda 3 — riga larga in basso */}
+                    <g class="op-card op-c3">
+                      <rect x="98" y="106" width="170" height="50" rx="7" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" />
+                      <rect x="108" y="118" width="60" height="5" rx="2.5" fill="rgba(255,255,255,0.5)" />
+                      <rect x="108" y="132" width="120" height="5" rx="2.5" fill="rgba(255,255,255,0.28)" />
+                      <rect x="108" y="143" width="96" height="5" rx="2.5" fill="rgba(255,255,255,0.28)" />
+                    </g>
+                  </svg>
+                </div>
+              )}
+              {s.art === "social" && (
+                <div class="media-art" aria-hidden="true">
+                  {/* SOCIAL — smartphone verticale; nello schermo i post di un
+                      feed scorrono dal basso verso l'alto in loop continuo.
+                      Al centro un cuore (accento) si illumina e svanisce.
+                      Loop CSS avviato da .is-active. */}
+                  <svg class="svg-art svg-social" viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <clipPath id="phone-screen">
+                        <rect x="126" y="34" width="68" height="138" rx="7" />
+                      </clipPath>
+                    </defs>
+                    {/* corpo telefono */}
+                    <rect x="120" y="16" width="80" height="172" rx="15" stroke="rgba(255,255,255,0.5)" stroke-width="1.4" />
+                    <rect x="150" y="23" width="20" height="3" rx="1.5" fill="rgba(255,255,255,0.4)" />
+                    {/* feed in scorrimento, clippato dallo schermo */}
+                    <g clip-path="url(#phone-screen)">
+                      <g class="feed-track">
+                        {[0, 1].map((set) =>
+                          [0, 1, 2, 3].map((i) => {
+                            const y = set * 160 + 40 + i * 40;
+                            return (
+                              <g>
+                                <rect x="132" y={y} width="56" height="30" rx="5" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.26)" stroke-width="1" />
+                                <circle cx="139" cy={y + 8} r="3" fill={i % 2 === 0 ? "#8aa0ff" : "rgba(255,255,255,0.5)"} />
+                                <rect x="146" y={y + 6} width="22" height="3" rx="1.5" fill="rgba(255,255,255,0.4)" />
+                                <rect x="139" y={y + 17} width="42" height="3" rx="1.5" fill="rgba(255,255,255,0.22)" />
+                              </g>
+                            );
+                          })
+                        )}
+                      </g>
+                    </g>
+                    {/* like al centro dello schermo */}
+                    <path class="like-heart" d="M160 116c-6-5-14-9-14-17a7 7 0 0 1 14-3 7 7 0 0 1 14 3c0 8-8 12-14 17Z" fill="#8aa0ff" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+
+    <div class="services-scroll-hint" aria-hidden="true" style="opacity: 0;">
+      <span class="services-scroll-label">Scorri</span>
+      <span class="services-scroll-line"></span>
+    </div>
+
+  </section>
+
+  <!-- SECTION — LAVORI — la PROVA dopo la soluzione: i risultati concreti.
+       Il canvas torna warm white. Rail di pannelli espandibili in hover: il
+       primo è aperto di default; passando il mouse su un altro, quello si
+       espande e gli altri si stringono. -->
   <section id="projects" class="projects-section">
     <!-- Curve di livello — la "mappa" del territorio, in parallasse leggera. -->
     <div class="section-topo" aria-hidden="true" data-parallax="0.14">
@@ -215,7 +379,7 @@ const marqueeItems = [
       <!-- Header pulito: kicker con tick accent, titolo, link essenziale. -->
       <div class="works-head" data-anim="works-head">
         <div class="works-head-left">
-          <span class="works-kicker">Lavori selezionati<span class="kicker-index">01</span></span>
+          <span class="works-kicker">Risultati reali</span>
           <h2 class="works-title">Cosa <em>abbiamo creato.</em></h2>
         </div>
         <a href="#contatti" class="works-head-link">
@@ -304,117 +468,6 @@ const marqueeItems = [
     </div>
   </section>
 
-  <!-- SECTION — COSA FACCIAMO — banda navy. Il colore non sta sulla sezione
-       ma sul canvas .post-reveal: uno scrub GSAP scurisce l'intero schermo
-       verso il navy mentre si scrolla da "Lavori selezionati" a qui (e poi
-       torna chiaro verso "Chi Siamo"). Il bg statico della sezione resta
-       come fallback per reduced-motion / no-JS. Su desktop la sezione viene
-       PINNATA e i servizi si rivelano uno a uno in scrub (vedi main.ts). -->
-  <section id="cosa-facciamo" class="services-section">
-    <!-- Aurora sul navy — due bagliori jewel-tone che derivano piano. -->
-    <div class="services-glow services-glow--1" aria-hidden="true"></div>
-    <div class="services-glow services-glow--2" aria-hidden="true"></div>
-    <!-- Crinale alpino — doppia linea di cresta in fondo alla banda. -->
-    <svg class="services-ridge" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M0 96 120 58l90 28 130-60 110 44 150-68 130 56 120-30 110 44 150-58 130 40 90-22" stroke="rgba(250, 250, 248, 0.13)" fill="none" stroke-width="1.5" />
-      <path d="M0 112 140 78l100 22 140-48 120 38 160-56 140 46 130-26 120 38 150-46 140 32 100-18" stroke="rgba(138, 160, 255, 0.25)" fill="none" stroke-width="1" />
-    </svg>
-    <div class="works-screen">
-      <div class="works-head" data-anim="services-head">
-        <div class="works-head-left">
-          <span class="works-kicker">Cosa facciamo<span class="kicker-index">02</span></span>
-          <h2 class="works-title">Servizi che <em>fanno crescere.</em></h2>
-        </div>
-        <a href="#contatti" class="works-head-link">
-          Parliamone <span aria-hidden="true">↗</span>
-        </a>
-      </div>
-
-      <!-- SCENE SERVIZIO — una per servizio, a tutta schermata: su desktop
-           la sezione è pinnata e le scene si avvicendano scrollando (titolo
-           dalla maschera, descrizione e chip in coda, placeholder immagine
-           che si solleva); su mobile scorrono in colonna e si rivelano
-           entrando in viewport (vedi main.ts). -->
-      <div class="services-stage">
-        {services.map((s) => (
-          <article class="service-slide">
-            <div class="slide-body">
-              <span class="slide-index">{s.n} / 0{services.length}</span>
-              <h3 class="slide-title">
-                <span class="sn-mask"><span class="sn">{s.name} <em>{s.nameEm}</em></span></span>
-              </h3>
-              <p class="slide-desc">{s.desc}</p>
-              <ul class="slide-ledger">
-                {s.points.map((p, i) => (
-                  <li class="slide-ledger-row">
-                    <span class="slide-ledger-num">{`0${i + 1}`}</span>
-                    <span class="slide-ledger-rule" aria-hidden="true"></span>
-                    <span class="slide-ledger-text">{p}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div class={`slide-media grain ${s.grad}`}>
-              <span class="slide-media-num font-display" aria-hidden="true">{s.n}</span>
-              {s.art === "web" && (
-                <div class="media-art" aria-hidden="true">
-                  <span class="art-frame">
-                    <span class="art-frame-bar">
-                      <span class="art-dot"></span>
-                      <span class="art-dot"></span>
-                      <span class="art-dot"></span>
-                    </span>
-                    <span class="art-line art-line--lg"></span>
-                    <span class="art-line art-line--accent"></span>
-                    <span class="art-line art-line--sm"></span>
-                    <span class="art-chip"></span>
-                  </span>
-                </div>
-              )}
-              {s.art === "ops" && (
-                <div class="media-art media-art--ops" aria-hidden="true">
-                  <span class="art-row">
-                    <span class="art-cell art-cell--on"></span>
-                    <span class="art-bar art-bar--70"></span>
-                  </span>
-                  <span class="art-row">
-                    <span class="art-cell"></span>
-                    <span class="art-bar art-bar--50"></span>
-                  </span>
-                  <span class="art-row">
-                    <span class="art-cell art-cell--on"></span>
-                    <span class="art-bar art-bar--85"></span>
-                  </span>
-                  <span class="art-row">
-                    <span class="art-cell"></span>
-                    <span class="art-bar art-bar--40"></span>
-                  </span>
-                </div>
-              )}
-              {s.art === "social" && (
-                <div class="media-art" aria-hidden="true">
-                  <span class="art-orbit art-orbit--1"></span>
-                  <span class="art-orbit art-orbit--2"></span>
-                  <span class="art-orbit art-orbit--3"></span>
-                  <span class="art-core"></span>
-                  <span class="art-sat art-sat--1"></span>
-                  <span class="art-sat art-sat--2"></span>
-                  <span class="art-sat art-sat--3"></span>
-                </div>
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-
-    <div class="services-scroll-hint" aria-hidden="true" style="opacity: 0;">
-      <span class="services-scroll-label">Scorri</span>
-      <span class="services-scroll-line"></span>
-    </div>
-
-  </section>
-
   <!-- SECTION — CHI SIAMO — scena cinematografica: il video dello Sciliar
        in bianco e nero fa da fondale (sticky a tutta viewport, fuso nel
        canvas da una mask verticale + velo radiale — vedi .about-video-frame
@@ -449,7 +502,7 @@ const marqueeItems = [
       <span class="deco deco--star deco-peri deco-float-1" style="right: 13%; top: 26%;" aria-hidden="true">✦</span>
       <span class="deco deco--ring deco-accent deco-float-3" style="left: 11%; bottom: 27%;" aria-hidden="true"></span>
       <div class="works-screen about-intro-screen">
-        <span class="works-kicker about-kicker" data-anim="about-kicker">Chi siamo<span class="kicker-index">03</span></span>
+        <span class="works-kicker about-kicker" data-anim="about-kicker">Chi siamo</span>
         <p class="about-statement font-display" data-glow-pin>
           Uno studio indipendente che unisce
           <em>rigore universitario</em> e strumenti di nuova generazione:
@@ -459,34 +512,11 @@ const marqueeItems = [
       </div>
     </div>
 
-    <!-- FIRMA — chiusura di scena: lo statement-manifesto dello studio
-         in scala monumentale, ponte verso /chi-siamo. -->
-    <div class="about-outro about-content">
-      <span class="deco deco--plus deco-accent deco-float-2" style="left: 15%; top: 16%;" aria-hidden="true"></span>
-      <span class="deco deco--ring deco-peri deco-float-1" style="right: 13%; bottom: 32%;" aria-hidden="true"></span>
-      <a href="/chi-siamo" class="about-duo" data-anim="duo">
-        <span class="duo-names font-display">Persone, <em>non</em> agenzie.</span>
-        <span class="duo-cta">
-          Nessun intermediario · Conosci lo studio
-          <span aria-hidden="true">↗</span>
-        </span>
-      </a>
-    </div>
   </section>
 
-  <!-- MARQUEE — nastro a riga unica, sfumato ai bordi: separatore premium
-       verso la CTA. -->
-  <div class="marquee-section" aria-hidden="true">
-    <div class="marquee-row">
-      <div class="marquee-track" data-marquee-dir="-1">
-        {[...marqueeItems, ...marqueeItems].map((item) => (
-          <span class="marquee-item font-display">
-            {item}<span class="marquee-star">✦</span>
-          </span>
-        ))}
-      </div>
-    </div>
-  </div>
+  <!-- SEPARATORE — hairline minimale: accenna la divisione verso la CTA
+       senza pesare (sostituisce il vecchio marquee). -->
+  <hr class="section-rule" aria-hidden="true" />
 
   <!-- SECTION — CTA FINALE — il "form" di contatto vive dentro l'effetto
        scroll-tilt 3D (<ContainerScroll>): scrollando, la card si raddrizza
@@ -495,7 +525,7 @@ const marqueeItems = [
     <ContainerScroll>
       <div slot="title" class="cscroll-title">
         <span class="works-kicker cscroll-kicker" data-anim="contact-kicker">
-          Iniziamo<span class="kicker-index">04</span>
+          Iniziamo
         </span>
         <h2 class="cta-title cscroll-headline" data-anim="contact-headline">
           Costruiamo il tuo <em>sistema di crescita.</em>

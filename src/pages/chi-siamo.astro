@@ -82,16 +82,6 @@ const workflow = [
     text: "Il lancio è l'inizio, non la fine: dati, test e ottimizzazioni continue. Ogni mese sai cosa è cambiato, perché, e cosa porta clienti.",
   },
 ];
-
-// MARQUEE — nastro a riga unica, sfumato ai bordi. Registro IDENTITARIO
-// (metodo, visione, relazione), diverso da quello strategico della homepage.
-const marqueeItems = [
-  "Le stesse mani, dallo sketch al lancio",
-  "Niente intermediari",
-  "Rigore da ateneo, strumenti di frontiera",
-  "Persone, non agenzie",
-  "Fatto bene o rifatto",
-];
 ---
 
 <BaseLayout
@@ -234,16 +224,20 @@ const marqueeItems = [
       </div>
     </section>
 
-    <!-- MARQUEE — nastro a riga unica, sfumato ai bordi, registro identitario. -->
-    <div class="marquee-section" aria-hidden="true">
-      <div class="marquee-row">
-        <div class="marquee-track" data-marquee-dir="-1">
-          {[...marqueeItems, ...marqueeItems].map((item) => (
-            <span class="marquee-item font-display">
-              {item}<span class="marquee-star">✦</span>
-            </span>
-          ))}
-        </div>
+    <!-- SEPARATORE — hairline minimale (sostituisce il vecchio marquee). -->
+    <hr class="section-rule" aria-hidden="true" />
+
+    <!-- OUTRO — chiusura del manifesto: lo statement-firma dello studio in
+         scala monumentale, spostato qui dalla homepage. Non è una CTA (quella
+         vera è subito sotto): chiude la storia. -->
+    <div class="about-outro about-content about-outro--standalone">
+      <span class="deco deco--plus deco-accent deco-float-2" style="left: 15%; top: 16%;" aria-hidden="true"></span>
+      <span class="deco deco--ring deco-peri deco-float-1" style="right: 13%; bottom: 32%;" aria-hidden="true"></span>
+      <div class="about-duo" data-anim="duo">
+        <span class="duo-names font-display">Persone, <em>non</em> agenzie.</span>
+        <span class="duo-cta duo-cta--static">
+          Le stesse mani, dallo sketch al lancio
+        </span>
       </div>
     </div>
 
@@ -254,7 +248,7 @@ const marqueeItems = [
       <span class="deco deco--star deco-accent deco-float-2" style="left: 12%; top: 22%;" aria-hidden="true">✦</span>
       <span class="deco deco--ring deco-peri deco-float-1" style="right: 13%; bottom: 24%;" aria-hidden="true"></span>
 
-      <span class="works-kicker about-cta-kicker">Iniziamo<span class="kicker-index">05</span></span>
+      <span class="works-kicker about-cta-kicker">Iniziamo</span>
 
       <h2 class="about-cta-title font-display">
         Ora che ci conosci, <em>parliamo di te.</em>

@@ -522,6 +522,31 @@ button {
    Griglia 2 colonne su desktop, riga orizzontale swipe su mobile.
 -------------------------------------------------------------------------- */
 
+/* ----------------------------------------------------------------------
+   PROBLEMA / VALORE — banda chiara tra hero e servizi (tassello PAS): nomina
+   il problema e lo ribalta nella promessa. Statement editoriale grande, che
+   si riempie per lettera in scroll (data-glow). Sfondo trasparente: mostra il
+   canvas warm white.
+-------------------------------------------------------------------------- */
+.problem-section {
+  position: relative;
+  padding: clamp(96px, 18vh, 220px) 0;
+}
+.problem-statement {
+  margin-top: clamp(18px, 3vh, 32px);
+  max-width: 22ch;
+  font-weight: 500;
+  font-size: clamp(30px, 4.6vw, 64px);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+.problem-statement em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+
 .projects-section {
   position: relative;
   padding: clamp(90px, 13vh, 170px) 0;
@@ -554,24 +579,28 @@ button {
   flex-direction: column;
   gap: 12px;
 }
-/* Kicker — etichetta essenziale: tick accent + small caps, niente pill. */
+/* Kicker — etichetta editoriale: hairline accent d'accompagnamento + small
+   caps spaziato, niente numero progressivo (look sartoriale, non da template).
+   Il colore resta theme-aware (chiaro sulle sezioni scure via override). */
 .works-kicker {
   display: inline-flex;
   align-items: center;
   align-self: flex-start;
-  gap: 12px;
+  gap: 14px;
+  margin-bottom: 1rem;
   font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--color-text-secondary);
 }
 .works-kicker::before {
   content: "";
-  width: 26px;
+  width: 28px;
   height: 1px;
   background: var(--color-accent);
+  opacity: 0.85;
 }
 .works-title {
   font-family: var(--font-display);
@@ -1290,24 +1319,12 @@ button {
   height: 100%;
   aspect-ratio: auto;
 }
-/* Numero fantasma — il servizio "firma" la propria cover in outline. */
-.slide-media-num {
-  position: absolute;
-  right: 26px;
-  bottom: 8px;
-  z-index: 2;
-  font-weight: 500;
-  font-size: clamp(80px, 9vw, 150px);
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(250, 250, 248, 0.2);
-  user-select: none;
-}
-
-/* ---- ART — composizioni hairline per scena ----
-   Interfacce accennate al posto del placeholder: solo tinte warm/accent
-   sopra le cover di palette, transform/opacity-only, gate reduced-motion. */
+/* ---- ART — animazioni SVG hairline per scena ----
+   Interfacce accennate in SVG puro: bianco a varie opacità + accento #8aa0ff
+   sopra le cover di palette. Le @keyframes sono dichiarate ma in PAUSA: partono
+   solo quando .slide-media riceve .is-active (IntersectionObserver, vedi
+   main.ts), transform/opacity-only. Sotto reduced-motion restano sul
+   fotogramma statico. */
 .media-art {
   position: absolute;
   inset: 0;
@@ -1317,132 +1334,122 @@ button {
   justify-content: center;
   pointer-events: none;
 }
-
-/* 01 — Siti web: finestra browser accennata che fluttua piano. */
-.art-frame {
-  width: min(58%, 330px);
-  aspect-ratio: 16 / 10.5;
-  border: 1px solid rgba(250, 250, 248, 0.28);
-  border-radius: 12px;
-  background: rgba(13, 13, 13, 0.22);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 11px;
-  padding: 34px 24px 20px;
-  position: relative;
-  animation: art-float 7s ease-in-out infinite alternate;
+.svg-art {
+  width: min(78%, 360px);
+  height: auto;
+  overflow: visible;
 }
-.art-frame-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 22px;
-  border-bottom: 1px solid rgba(250, 250, 248, 0.18);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0 11px;
+/* Variante "nuda" — niente cover/box: resta solo l'elemento animato, che può
+   respirare e occupare più spazio (l'animazione È il visual della scena). */
+.slide-media--bare {
+  border: none;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
 }
-.art-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 9999px;
-  background: rgba(250, 250, 248, 0.35);
-}
-.art-line {
-  height: 8px;
-  border-radius: 9999px;
-  background: rgba(250, 250, 248, 0.3);
-}
-.art-line--lg { width: 72%; height: 12px; }
-.art-line--accent { width: 46%; background: #8aa0ff; }
-.art-line--sm { width: 58%; opacity: 0.55; }
-.art-chip {
-  width: 34%;
-  height: 22px;
-  margin-top: 5px;
-  border-radius: 9999px;
-  background: rgba(250, 250, 248, 0.92);
+.slide-media--bare .svg-art {
+  width: min(100%, 480px);
 }
 
-/* 02 — Gestionali: righe di un sistema, checkbox accese in accent. */
-.media-art--ops {
-  flex-direction: column;
-  gap: clamp(12px, 1.6vh, 18px);
+/* 01 — SITI WEB: hero image + barre di testo compaiono in fade-in + slide-up
+   sequenziale (effetto caricamento pagina), poi sfumano e ricominciano. */
+.svg-web .wf {
+  opacity: 0;
+  transform-box: fill-box;
+  animation: web-load 4.6s ease-in-out infinite;
+  animation-play-state: paused;
 }
-.art-row {
-  width: min(58%, 330px);
-  display: flex;
-  align-items: center;
-  gap: 13px;
+.svg-web .wf-hero { animation-delay: 0s; }
+.svg-web .wf-l1 { animation-delay: 0.22s; }
+.svg-web .wf-l2 { animation-delay: 0.4s; }
+.svg-web .wf-l3 { animation-delay: 0.58s; }
+@keyframes web-load {
+  0%   { opacity: 0; transform: translateY(12px); }
+  14%  { opacity: 1; transform: translateY(0); }
+  74%  { opacity: 1; transform: translateY(0); }
+  90%  { opacity: 0; transform: translateY(-6px); }
+  100% { opacity: 0; transform: translateY(-6px); }
 }
-.art-cell {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  border: 1px solid rgba(250, 250, 248, 0.4);
-  flex: none;
-}
-.art-cell--on {
-  background: #8aa0ff;
-  border-color: #8aa0ff;
-}
-.art-bar {
-  height: 9px;
-  border-radius: 9999px;
-  background: rgba(250, 250, 248, 0.24);
-}
-.art-bar--70 { width: 70%; }
-.art-bar--50 { width: 50%; }
-.art-bar--85 { width: 85%; }
-.art-bar--40 { width: 40%; }
 
-/* 03 — Social: orbite concentriche, satelliti in rotazione lenta. */
-.art-orbit {
-  position: absolute;
-  border: 1px solid rgba(250, 250, 248, 0.2);
-  border-radius: 9999px;
+/* 02 — GESTIONALI: due schede compaiono in sequenza; nel mezzo un grafico a
+   linee (accento) si "disegna" da sinistra a destra (stroke-dashoffset). */
+.svg-ops .op-card {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: op-card-in 4.8s ease-in-out infinite;
+  animation-play-state: paused;
 }
-.art-orbit--1 { width: 110px; height: 110px; }
-.art-orbit--2 { width: 200px; height: 200px; border-color: rgba(250, 250, 248, 0.13); }
-.art-orbit--3 { width: 290px; height: 290px; border-color: rgba(250, 250, 248, 0.08); }
-.art-core {
-  width: 14px;
-  height: 14px;
-  border-radius: 9999px;
-  background: #8aa0ff;
-  box-shadow: 0 0 26px rgba(138, 160, 255, 0.8);
+.svg-ops .op-c1 { animation-delay: 0.1s; }
+.svg-ops .op-c2 { animation-delay: 0.5s; }
+.svg-ops .op-c3 { animation-delay: 0.9s; }
+@keyframes op-card-in {
+  0%   { opacity: 0; transform: translateY(9px) scale(0.97); }
+  12%  { opacity: 1; transform: translateY(0) scale(1); }
+  84%  { opacity: 1; transform: translateY(0) scale(1); }
+  95%  { opacity: 0; transform: translateY(-4px) scale(0.99); }
+  100% { opacity: 0; }
 }
-.art-sat {
-  --r: 55px;
-  --a: 0deg;
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border-radius: 9999px;
-  background: rgba(250, 250, 248, 0.85);
-  transform: rotate(var(--a)) translateX(var(--r));
-  animation: art-orbit-spin 18s linear infinite;
+.svg-ops .op-chart {
+  stroke-dasharray: 130;
+  stroke-dashoffset: 130;
+  animation: op-draw 4.8s ease-in-out infinite;
+  animation-play-state: paused;
 }
-.art-sat--1 { --r: 55px; --a: 40deg; }
-.art-sat--2 { --r: 100px; --a: 200deg; animation-duration: 30s; }
-.art-sat--3 { --r: 145px; --a: 310deg; animation-duration: 46s; animation-direction: reverse; }
+@keyframes op-draw {
+  0%, 14%  { stroke-dashoffset: 130; opacity: 0; }
+  20%      { opacity: 1; }
+  55%      { stroke-dashoffset: 0; opacity: 1; }
+  84%      { stroke-dashoffset: 0; opacity: 1; }
+  94%      { stroke-dashoffset: 0; opacity: 0; }
+  100%     { stroke-dashoffset: 130; opacity: 0; }
+}
 
-@keyframes art-float {
-  from { transform: translateY(7px); }
-  to { transform: translateY(-7px); }
+/* 03 — SOCIAL: il feed scorre dal basso verso l'alto in loop; al centro un
+   cuore "like" (accento) si illumina e svanisce. */
+.svg-social .feed-track {
+  animation: feed-scroll 9s linear infinite;
+  animation-play-state: paused;
 }
-@keyframes art-orbit-spin {
-  from { transform: rotate(var(--a)) translateX(var(--r)); }
-  to { transform: rotate(calc(var(--a) + 360deg)) translateX(var(--r)); }
+@keyframes feed-scroll {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-160px); }
 }
+.svg-social .like-heart {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: like-pop 3s ease-in-out infinite;
+  animation-play-state: paused;
+  filter: drop-shadow(0 0 7px rgba(138, 160, 255, 0.85));
+}
+@keyframes like-pop {
+  0%, 58%   { opacity: 0; transform: scale(0.4); }
+  68%       { opacity: 1; transform: scale(1.18); }
+  80%       { opacity: 1; transform: scale(1); }
+  92%, 100% { opacity: 0; transform: scale(0.85); }
+}
+
+/* GATE — le animazioni partono solo a quadrato visibile (.is-active). */
+.slide-media.is-active .svg-web .wf,
+.slide-media.is-active .svg-ops .op-card,
+.slide-media.is-active .svg-ops .op-chart,
+.slide-media.is-active .svg-social .feed-track,
+.slide-media.is-active .svg-social .like-heart {
+  animation-play-state: running;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .art-frame,
-  .art-sat {
+  .svg-web .wf,
+  .svg-ops .op-card,
+  .svg-ops .op-chart,
+  .svg-social .feed-track,
+  .svg-social .like-heart {
     animation: none;
+    opacity: 1;
   }
+  .svg-ops .op-chart { stroke-dashoffset: 0; }
+  .svg-social .feed-track { transform: none; }
 }
 
 /* ----------------------------------------------------------------------
@@ -1647,6 +1654,18 @@ button {
 .about-duo:hover .duo-cta [aria-hidden] {
   transform: translate(3px, -3px);
 }
+/* Variante statica — l'outro spostato in /chi-siamo non è una CTA (sotto c'è
+   quella vera): la caption resta una firma, senza underline né hover. */
+.duo-cta--static {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+/* Outro come sezione autonoma su warm white (fuori dalla scena video). */
+.about-outro--standalone {
+  background: none;
+  padding: clamp(48px, 10vh, 130px) clamp(20px, 4vw, 48px)
+    clamp(40px, 8vh, 96px);
+}
 
 /* CAPITOLI — scene piene del metodo: hairline sopra, numero + titolo a
    sinistra, testo grande a destra. Ogni riga respira come una scena. */
@@ -1840,76 +1859,16 @@ button {
 }
 
 /* ----------------------------------------------------------------------
-   MARQUEE — nastro a RIGA UNICA, sfumato ai due bordi (edge fade): emerge
-   dal nulla e svanisce, così non sembra un nastro "tagliato". Frasi che si
-   alternano piene/outline per ritmo, ✦ accent che ruota come separatore.
-   .marquee-section e .marquee-track restano gli hook letti da main.ts
-   (morph colore di sezione + accoppiamento alla velocità di scroll).
+   SEPARATORE DI SEZIONE — hairline minimale al posto del vecchio marquee:
+   accenna soltanto la divisione tra le sezioni senza pesare. Resta l'hook
+   `.section-rule` letto da main.ts per il morph colore del canvas (homepage).
 -------------------------------------------------------------------------- */
-.marquee-section {
-  overflow: hidden;
-  padding: clamp(34px, 7vh, 86px) 0;
-  user-select: none;
+.section-rule {
+  width: min(100%, 110rem);
+  height: 0;
+  margin: 4rem auto;
+  border: 0;
   border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-}
-.marquee-row {
-  overflow: hidden;
-  display: flex;
-  /* Edge fade — il dettaglio che rende il nastro premium e intenzionale. */
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
-}
-.marquee-track {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  width: max-content;
-  will-change: transform;
-  animation: marquee-scroll 46s linear infinite;
-}
-/* Quando il loop passa a GSAP (velocità reattiva allo scroll) la keyframe
-   CSS viene spenta per non sommare due trasformazioni. */
-.marquee-track.is-js { animation: none; }
-@keyframes marquee-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-.marquee-item {
-  display: inline-flex;
-  align-items: center;
-  font-weight: 500;
-  font-size: clamp(34px, 4.8vw, 68px);
-  /* Generoso → italici e discendenti non vengono tagliati. */
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  color: rgba(13, 13, 13, 0.82);
-  transition: color 0.4s ease;
-}
-/* Ritmo: una frase su due in OUTLINE accent (pieno ⇄ contorno). */
-.marquee-item:nth-child(even) {
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(59, 91, 219, 0.5);
-}
-.marquee-item:hover { color: var(--color-accent); }
-.marquee-item:nth-child(even):hover {
-  color: rgba(59, 91, 219, 0.92);
-  -webkit-text-stroke-color: transparent;
-}
-.marquee-star {
-  display: inline-block;
-  font-size: 0.34em;
-  color: var(--color-accent);
-  -webkit-text-stroke: 0;
-  margin: 0 0.85em;
-  transform-origin: center;
-  animation: cta-star-spin 9s linear infinite;
-}
-.marquee-item:nth-child(even) .marquee-star { color: var(--color-muted); }
-@media (prefers-reduced-motion: reduce) {
-  .marquee-track { animation: none; }
-  .marquee-star { animation: none; }
 }
 
 /* ----------------------------------------------------------------------
@@ -2736,8 +2695,22 @@ nav:has(#burger-menu.is-open) .pill {
 }
 .footer-social {
   display: flex;
-  gap: 18px;
-  margin-top: 4px;
+  gap: 16px;
+  margin-top: 8px;
+}
+/* Icone social — vettoriali, ereditano il colore del footer (currentColor);
+   hover con leggero calo d'opacità e virata verso l'accento. */
+.footer-social-link {
+  display: inline-flex;
+  color: var(--color-muted);
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+.footer-social-link svg {
+  display: block;
+}
+.footer-social-link:hover {
+  color: var(--color-accent);
+  opacity: 0.7;
 }
 .footer-rule {
   height: 1px;
@@ -3286,21 +3259,6 @@ nav:has(#burger-menu.is-open) .pill {
     animation: none;
     opacity: 1;
   }
-}
-
-/* ---- Indice di sezione nel kicker — (01), apice editoriale ---- */
-.kicker-index {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--color-accent);
-  transform: translateY(-0.4em);
-}
-.kicker-index::before { content: "("; }
-.kicker-index::after { content: ")"; }
-.services-section .kicker-index,
-.cta-kicker .kicker-index {
-  color: #8aa0ff;
 }
 
 /* ---- Curve di livello — la mappa topografica dietro l'header progetti ---- */

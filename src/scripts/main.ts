@@ -516,15 +516,15 @@ revealHead("[data-anim='services-head']", "#cosa-facciamo");
 
 // ---------- Canvas — lo schermo cambia colore tra le sezioni ----------
 // I colori di sezione non stanno sulle sezioni ma sul canvas .post-reveal:
-// tre scrub lo tingono in sequenza — warm white → navy (entrando in Cosa
-// Facciamo), navy → grigio bordo (entrando in Chi Siamo), poi di nuovo
-// warm white (verso marquee e CTA). Tutti valori della palette.
-// I background statici delle sezioni vengono resi trasparenti: restano solo
-// come fallback per reduced-motion / no-JS.
+// quattro scrub lo tingono in sequenza — warm white → navy (entrando in Cosa
+// Facciamo), navy → warm white (entrando nei Lavori), warm → grigio bordo
+// (entrando in Chi Siamo), poi di nuovo warm white (verso il separatore e la
+// CTA). Tutti valori della palette. I background statici delle sezioni vengono
+// resi trasparenti: restano solo come fallback per reduced-motion / no-JS.
 if (!reduceMotion) {
   const canvas = document.querySelector<HTMLElement>(".post-reveal");
   if (canvas) {
-    gsap.set(["#cosa-facciamo", "#chi-siamo"], { backgroundColor: "transparent" });
+    gsap.set(["#cosa-facciamo", "#projects", "#chi-siamo"], { backgroundColor: "transparent" });
 
     const morph = (
       trigger: string,
@@ -545,9 +545,12 @@ if (!reduceMotion) {
       );
     };
 
+    // Nuovo ordine sezioni: Problema(warm) → Servizi(navy) → Lavori(warm) →
+    // Chi Siamo(grigio) → CTA(warm). Il canvas vira di conseguenza.
     morph("#cosa-facciamo", "top 85%", "top 15%", "#FAFAF8", "#1A2340");
-    morph("#chi-siamo", "top 70%", "top 20%", "#1A2340", "#E8E8E5");
-    morph(".marquee-section", "top 95%", "top 50%", "#E8E8E5", "#FAFAF8");
+    morph("#projects", "top 80%", "top 30%", "#1A2340", "#FAFAF8");
+    morph("#chi-siamo", "top 70%", "top 20%", "#FAFAF8", "#E8E8E5");
+    morph(".section-rule", "top 95%", "top 50%", "#E8E8E5", "#FAFAF8");
   }
 }
 
@@ -1182,68 +1185,28 @@ if (
 }
 
 // ---------- Effetti legati alla VELOCITÀ di scroll ----------
-// Un unico ScrollTrigger globale legge la velocità e la distribuisce:
-// 1. il marquee accelera quando si scrolla forte e decanta verso la velocità
-//    di crociera (il loop CSS viene sostituito da un tween GSAP equivalente);
-// 2. la rail dei progetti si inclina di qualche frazione di grado nel verso
-//    dello scroll e si raddrizza subito — l'inerzia di un oggetto fisico.
+// La rail dei progetti si inclina di qualche frazione di grado nel verso
+// dello scroll e si raddrizza subito — l'inerzia di un oggetto fisico.
 if (!reduceMotion) {
-  // Due tracce in versi opposti (dir -1 = verso sinistra, +1 = verso destra),
-  // velocità di crociera leggermente diverse → parallasse. Entrambe accelerano
-  // con la velocità di scroll e decantano insieme.
-  const marqueeTracks = Array.from(
-    document.querySelectorAll<HTMLElement>(".marquee-track")
-  );
-  const marqueeTweens: gsap.core.Tween[] = [];
-  marqueeTracks.forEach((track, i) => {
-    track.classList.add("is-js");
-    const dir = Number(track.dataset.marqueeDir ?? "-1");
-    marqueeTweens.push(
-      gsap.fromTo(
-        track,
-        { xPercent: dir < 0 ? 0 : -50 },
-        {
-          xPercent: dir < 0 ? -50 : 0,
-          duration: i === 0 ? 42 : 54,
-          ease: "none",
-          repeat: -1,
-        }
-      )
-    );
-  });
-
   const rail = document.querySelector<HTMLElement>(".works-rail");
   const railSkew = rail
     ? gsap.quickTo(rail, "skewY", { duration: 0.4, ease: "power2.out" })
     : null;
 
-  let marqueeDecay: gsap.core.Tween | null = null;
-  let skewReset: gsap.core.Tween | null = null;
+  if (railSkew) {
+    let skewReset: gsap.core.Tween | null = null;
 
-  ScrollTrigger.create({
-    start: 0,
-    end: "max",
-    onUpdate(self) {
-      const v = self.getVelocity();
-
-      if (marqueeTweens.length) {
-        const ts = 1 + Math.min(Math.abs(v) / 700, 4);
-        marqueeTweens.forEach((t) => t.timeScale(ts));
-        marqueeDecay?.kill();
-        marqueeDecay = gsap.to(marqueeTweens, {
-          timeScale: 1,
-          duration: 1.6,
-          ease: "power2.out",
-        });
-      }
-
-      if (railSkew) {
+    ScrollTrigger.create({
+      start: 0,
+      end: "max",
+      onUpdate(self) {
+        const v = self.getVelocity();
         railSkew(gsap.utils.clamp(-1.4, 1.4, v / 900));
         skewReset?.kill();
         skewReset = gsap.delayedCall(0.15, () => railSkew(0));
-      }
-    },
-  });
+      },
+    });
+  }
 }
 
 // ---------- Rail dei lavori — espansione del pannello attivo ----------
@@ -1377,7 +1340,7 @@ if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
 }
 
 // ---------- Pagina /chi-siamo ----------
-// Le coreografie condivise (glow, capitoli, tilt founder, marquee, CTA,
+// Le coreografie condivise (glow, capitoli, tilt founder, outro, CTA,
 // footer) si agganciano da sole alle stesse classi; qui vive solo ciò che
 // è esclusivo della pagina: l'entrata della hero, i ritratti del duo e la
 // timeline del percorso.
@@ -1482,6 +1445,26 @@ if (!reduceMotion) {
       }
     );
   });
+}
+
+// ---------- Service art — animazioni SVG gated da IntersectionObserver ----------
+// Ogni cover .slide-media parte spenta: le @keyframes degli SVG (browser,
+// dashboard, feed) sono dichiarate "paused" nel CSS. Quando il quadrato entra
+// in viewport riceve .is-active e le animazioni partono in loop; uscendo si
+// rimettono in pausa così non sprecano cicli fuori schermo. Gate reduced-motion
+// (sotto reduced-motion il CSS mostra il fotogramma statico, niente loop).
+if (!reduceMotion && "IntersectionObserver" in window) {
+  const artObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        entry.target.classList.toggle("is-active", entry.isIntersecting);
+      });
+    },
+    { threshold: 0.35 }
+  );
+  document
+    .querySelectorAll<HTMLElement>(".slide-media")
+    .forEach((el) => artObserver.observe(el));
 }
 
 // ---------- Footer — il ghost wordmark emerge in parallasse ----------
