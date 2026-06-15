@@ -2,6 +2,8 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
+import ContainerScroll from "../components/ContainerScroll.astro";
+import ContactForm from "../components/ContactForm.astro";
 import "../styles/global.css";
 
 // PROGETTI — sorgente unica dei dati. Aggiungere un progetto = aggiungere un
@@ -19,21 +21,23 @@ const projects = [
     type: "Beauty · Permanent Make-up",
     year: "2026",
     desc: "Sito editoriale fotografia-first per studio di trucco permanente.",
-    cta: "Vedi il caso studio",
-    url: "#", // TODO: URL live
-    preview: "", // TODO: /projects/alessia.jpg
+    cta: "Apri il sito",
+    url: "https://www.alessiapmu.de/",
+    embed: "https://www.alessiapmu.de/", // anteprima live in iframe
+    preview: "", // fallback screenshot in /public/projects/ se l'embed è bloccato
     status: "live" as const,
   },
   {
     n: "02",
-    title: "Maria",
-    titleEm: "Egger",
+    title: "Mary",
+    titleEm: "Poppinks",
     type: "Tattoo Studio",
     year: "2026",
     desc: "Identità dark-luxe con motion legato allo scroll per studio tattoo.",
-    cta: "Vedi il caso studio",
-    url: "#", // TODO: URL live
-    preview: "", // TODO: /projects/maria.jpg
+    cta: "Apri il sito",
+    url: "https://marypoppinks.vercel.app/",
+    embed: "https://marypoppinks.vercel.app/",
+    preview: "",
     status: "live" as const,
   },
   {
@@ -45,6 +49,7 @@ const projects = [
     desc: "Questo spazio è libero: il prossimo caso studio potrebbe essere il tuo.",
     cta: "Inizia da qui",
     url: "#contatti",
+    embed: "",
     preview: "",
     status: "soon" as const,
   },
@@ -52,15 +57,20 @@ const projects = [
 
 // SERVIZI — sorgente unica dei dati della sezione "Cosa Facciamo".
 // Ogni servizio è una "scena" a tutta schermata nella sezione pinnata:
-// titolo con coda in corsivo (`nameEm`), descrizione, chip di competenze e
-// un placeholder immagine (`grad` è la cover brandizzata in attesa del visual).
+// titolo con coda in corsivo (`nameEm`), descrizione, un "ledger" di esiti
+// concreti (`points`, non più chip generiche) e un placeholder immagine
+// (`grad` è la cover brandizzata in attesa del visual).
 const services = [
   {
     n: "01",
     name: "Siti web",
     nameEm: "che convertono.",
     desc: "Ultra-moderni, veloci e impeccabili su mobile. Ottimizzati per Google e per le ricerche AI (SEO + GEO), con intelligenza artificiale integrata e ogni dettaglio progettato per trasformare i visitatori in clienti.",
-    tags: ["SEO + GEO", "AI integrata", "Mobile-first", "Conversione"],
+    points: [
+      "Primo contatto in meno di 3 secondi",
+      "Trovato su Google e sulle AI",
+      "Ogni sezione spinge all'azione",
+    ],
     grad: "grad-2",
     art: "web",
   },
@@ -69,7 +79,11 @@ const services = [
     name: "Gestionali",
     nameEm: "su misura.",
     desc: "Sistemi costruiti attorno ai tuoi processi: dati centralizzati e sempre sotto controllo, ogni lead seguito fino in fondo. Potenziati dall'AI, per completare più lavoro in meno tempo.",
-    tags: ["Dati centralizzati", "Lead management", "AI augmented"],
+    points: [
+      "Un solo posto per tutti i dati",
+      "Nessun lead lasciato a metà",
+      "Ore di lavoro manuale in meno",
+    ],
     grad: "grad-1",
     art: "ops",
   },
@@ -78,19 +92,25 @@ const services = [
     name: "Social",
     nameEm: "che vendono.",
     desc: "Strategia e contenuti per far crescere il traffico organico, campagne ads mirate per trasformarlo in clienti: il tuo brand davanti alle persone giuste, al momento giusto.",
-    tags: ["Contenuti organici", "Meta & Google Ads", "Strategia"],
+    points: [
+      "Contenuti che fermano lo scroll",
+      "Ads puntate su chi compra",
+      "Numeri chiari, ogni mese",
+    ],
     grad: "grad-3",
     art: "social",
   },
 ];
 
+// MARQUEE — nastro editoriale a riga unica, sfumato ai bordi. Registro
+// strategico (valore/crescita/risultato) della homepage; /chi-siamo usa un
+// taglio identitario. Le frasi si alternano piene/outline per ritmo.
 const marqueeItems = [
-  "Siti Web",
-  "Gestionali su misura",
-  "Social & Ads",
-  "SEO + GEO",
-  "AI Integration",
-  "Lead Generation",
+  "Dal primo clic al cliente",
+  "Crescita che si misura",
+  "Visitatori oggi, clienti domani",
+  "Sistemi che lavorano per te",
+  "Più richieste, meno attriti",
 ];
 ---
 
@@ -220,8 +240,34 @@ const marqueeItems = [
               data-anim="work-panel"
               {...props}
             >
-              {p.preview && (
-                <img class="work-panel-img" src={p.preview} alt={p.title} loading="lazy" />
+              {/* Anteprima LIVE — il sito reale in un browser-frame. L'iframe
+                  carica `src` solo alla prima espansione del pannello (lazy,
+                  via data-src in main.ts) e fa auto-scroll con un translateY
+                  (lo scroll interno cross-origin non è pilotabile). Sotto lo
+                  scrim, così il testo editoriale resta leggibile in basso. */}
+              {p.embed ? (
+                <div class="panel-preview" aria-hidden="true">
+                  <div class="browser-bar">
+                    <span class="browser-dots"><i></i><i></i><i></i></span>
+                    <span class="browser-url">{p.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</span>
+                  </div>
+                  <div class="browser-viewport">
+                    <iframe
+                      class="browser-iframe"
+                      data-iframe
+                      data-src={p.embed}
+                      title={`Anteprima ${p.title} ${p.titleEm}`}
+                      loading="lazy"
+                      tabindex="-1"
+                      scrolling="no"
+                      sandbox="allow-scripts allow-same-origin allow-popups"
+                    ></iframe>
+                  </div>
+                </div>
+              ) : (
+                p.preview && (
+                  <img class="work-panel-img" src={p.preview} alt={p.title} loading="lazy" />
+                )
               )}
               <span class="work-panel-scrim" aria-hidden="true"></span>
 
@@ -298,9 +344,15 @@ const marqueeItems = [
                 <span class="sn-mask"><span class="sn">{s.name} <em>{s.nameEm}</em></span></span>
               </h3>
               <p class="slide-desc">{s.desc}</p>
-              <div class="slide-tags">
-                {s.tags.map((t) => <span class="slide-tag">{t}</span>)}
-              </div>
+              <ul class="slide-ledger">
+                {s.points.map((p, i) => (
+                  <li class="slide-ledger-row">
+                    <span class="slide-ledger-num">{`0${i + 1}`}</span>
+                    <span class="slide-ledger-rule" aria-hidden="true"></span>
+                    <span class="slide-ledger-text">{p}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
             <div class={`slide-media grain ${s.grad}`}>
               <span class="slide-media-num font-display" aria-hidden="true">{s.n}</span>
@@ -422,57 +474,40 @@ const marqueeItems = [
     </div>
   </section>
 
-  <!-- MARQUEE — nastro infinito di competenze, transizione verso la CTA. -->
+  <!-- MARQUEE — nastro a riga unica, sfumato ai bordi: separatore premium
+       verso la CTA. -->
   <div class="marquee-section" aria-hidden="true">
-    <div class="marquee-track">
-      {[...marqueeItems, ...marqueeItems].map((item) => (
-        <span class="marquee-item font-display">
-          {item}<span class="marquee-star">✦</span>
-        </span>
-      ))}
+    <div class="marquee-row">
+      <div class="marquee-track" data-marquee-dir="-1">
+        {[...marqueeItems, ...marqueeItems].map((item) => (
+          <span class="marquee-item font-display">
+            {item}<span class="marquee-star">✦</span>
+          </span>
+        ))}
+      </div>
     </div>
   </div>
 
-  <!-- SECTION — CTA FINALE -->
-  <section id="contatti" class="cta-section" data-anim="contact">
-    <div class="cta-panel grain">
-      <!-- Spotlight — alone accent che segue il cursore (vedi main.ts). -->
-      <div class="cta-spotlight" aria-hidden="true"></div>
-      <!-- Retino di punti — texture "stampa" periwinkle nell'angolo. -->
-      <div class="cta-dots" aria-hidden="true"></div>
-      <span class="works-kicker cta-kicker" data-anim="contact-kicker">
-        Iniziamo<span class="kicker-index">04</span>
-      </span>
-
-      <h2 class="cta-title" data-anim="contact-headline">
-        Costruiamo il tuo<br />
-        <em>sistema di crescita.</em>
-      </h2>
-
-      <p class="cta-sub" data-anim="contact-sub">
-        Prenota una consulenza gratuita di 30 minuti: nessun impegno,
-        solo idee chiare su come far crescere la tua attività online.
-      </p>
-
-      <div class="cta-actions" data-anim="contact-cta">
-        <a href="mailto:hello@auralpdigital.com" class="cta-pill magnetic">
-          Prenota la consulenza <span aria-hidden="true">↗</span>
-        </a>
-        <a href="mailto:hello@auralpdigital.com" class="cta-mail">
-          hello@auralpdigital.com
-        </a>
+  <!-- SECTION — CTA FINALE — il "form" di contatto vive dentro l'effetto
+       scroll-tilt 3D (<ContainerScroll>): scrollando, la card si raddrizza
+       verso il lettore e l'header si solleva. Niente più card statica. -->
+  <section id="contatti" class="contact-section" data-anim="contact">
+    <ContainerScroll>
+      <div slot="title" class="cscroll-title">
+        <span class="works-kicker cscroll-kicker" data-anim="contact-kicker">
+          Iniziamo<span class="kicker-index">04</span>
+        </span>
+        <h2 class="cta-title cscroll-headline" data-anim="contact-headline">
+          Costruiamo il tuo <em>sistema di crescita.</em>
+        </h2>
+        <p class="cta-sub cscroll-sub" data-anim="contact-sub">
+          Una consulenza gratuita di 30 minuti: nessun impegno,
+          solo idee chiare su come far crescere la tua attività.
+        </p>
       </div>
 
-      <div class="cta-foot" data-anim="contact-cta">
-        <span>Risposta entro 24 ore</span>
-        <span class="cta-foot-dot" aria-hidden="true"></span>
-        <span>Nessun impegno</span>
-        <span class="cta-foot-dot" aria-hidden="true"></span>
-        <span>Budget chiari da subito</span>
-      </div>
-
-      <span class="cta-star" aria-hidden="true">✦</span>
-    </div>
+      <ContactForm />
+    </ContainerScroll>
   </section>
 
   <Footer home />

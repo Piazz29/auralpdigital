@@ -210,9 +210,14 @@ const navEl = document.querySelector<HTMLElement>("[data-anim='nav']");
 if (navEl) {
   // La banda navy di Cosa Facciamo è gestita a parte (vedi sotto), perché il
   // suo pin sposta tutto ciò che segue e l'inversione va ancorata a chi-siamo.
-  const darkZones: { sel: string; start: string; end: string }[] = [
-    { sel: "[data-anim='contact']", start: "top 70", end: "bottom 130" },
-  ];
+  // In homepage la sezione contatti è chiara con una CARD scura al centro
+  // (ContainerScroll): l'inversione va ancorata alla card. In /chi-siamo la
+  // CTA finale è ora chiara (niente card), quindi NESSUNA zona scura: il logo
+  // bianco su fondo chiaro sparirebbe.
+  const darkZones: { sel: string; start: string; end: string }[] =
+    document.querySelector(".cscroll-card")
+      ? [{ sel: ".cscroll-card", start: "top 70", end: "bottom 130" }]
+      : [];
   darkZones.forEach(({ sel, start, end }) => {
     if (!document.querySelector(sel)) return;
     ScrollTrigger.create({
@@ -601,7 +606,7 @@ const slideReveal = (
 ) => {
   const index = slide.querySelector(".slide-index");
   const name = slide.querySelector(".sn");
-  const info = slide.querySelectorAll(".slide-desc, .slide-tags");
+  const info = slide.querySelectorAll(".slide-desc, .slide-ledger");
   const media = slide.querySelector(".slide-media");
 
   tl.fromTo(
@@ -1052,6 +1057,19 @@ ctaInner.forEach(({ sel, delay, y = 16 }) => {
   );
 });
 
+// ---------- CTA /chi-siamo — reveal dell'invito (non più card) ----------
+{
+  const aboutCta = document.querySelector<HTMLElement>(".about-cta");
+  if (aboutCta) {
+    revealRise(aboutCta.querySelectorAll(":scope > .works-kicker, :scope > .about-cta-title, :scope > .about-cta-sub, :scope > .about-cta-actions, :scope > .about-cta-foot"), {
+      trigger: ".about-cta",
+      start: "top 80%",
+      stagger: 0.09,
+      y: 24,
+    });
+  }
+}
+
 // ---------- Bottone magnetico ----------
 // Il bottone si lascia "attirare" dal cursore dentro la propria area e torna
 // al centro con una molla elastica all'uscita. Stesso linguaggio del cursor
@@ -1093,6 +1111,76 @@ if (
   });
 }
 
+// ---------- Container Scroll — la card del form si "alza in piedi" ----------
+// Reimplementazione GSAP del componente Aceternity/21st: scrollando attraverso
+// il contenitore la card passa da inclinata (rotateX 20°) e scalata a dritta
+// (rotateX 0°, scale finale), mentre l'header si solleva. Su mobile scala
+// 0.7→0.9, su desktop 1.05→1, come nell'originale. Stato CSS di default =
+// piatto/leggibile; lo stato iniziale inclinato lo impone GSAP solo quando può
+// animare, così no-JS e reduced-motion mostrano il form dritto e usabile.
+{
+  const cscroll = document.querySelector<HTMLElement>("[data-cscroll]");
+  const card = cscroll?.querySelector<HTMLElement>("[data-cscroll-card]");
+  const header = cscroll?.querySelector<HTMLElement>("[data-cscroll-header]");
+  if (cscroll && card && !reduceMotion) {
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    const startScale = isMobile ? 0.72 : 1.1;
+    const endScale = isMobile ? 0.94 : 1;
+    // Tilt più marcato e corsa di scroll più lunga → l'effetto "schermo che
+    // si alza in piedi" è molto più evidente.
+    gsap.set(card, { rotateX: 38, scale: startScale, transformPerspective: 720 });
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: cscroll,
+        start: "top 90%",
+        end: "center 48%",
+        scrub: 0.5,
+      },
+    })
+      .to(card, { rotateX: 0, scale: endScale, ease: "none" }, 0)
+      .to(header ?? card, { y: -120, ease: "none" }, 0);
+  }
+}
+
+// ---------- Form di contatto — submit → mailto precompilato ----------
+// Niente backend (sito statico): comporiamo un mailto verso lo studio con i
+// campi del form, preservando l'intento "manda sulla mail". Per passare a un
+// endpoint reale basterà togliere questo intercept e aggiungere action/method.
+{
+  const form = document.querySelector<HTMLFormElement>("[data-contact-form]");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      const fd = new FormData(form);
+      const get = (k: string) => (fd.get(k)?.toString() ?? "").trim();
+      const nome = get("nome");
+      const budget = get("budget");
+      const subject = `Nuova richiesta di consulenza — ${nome || "AuralpDigital"}`;
+      const body = [
+        `Nome: ${nome}`,
+        `Email: ${get("email")}`,
+        `Attività: ${get("attivita") || "—"}`,
+        `Budget indicativo: ${budget || "—"}`,
+        "",
+        "Progetto:",
+        get("messaggio"),
+      ].join("\n");
+      window.location.href = `mailto:hello@auralpdigital.com?subject=${encodeURIComponent(
+        subject
+      )}&body=${encodeURIComponent(body)}`;
+      const status = form.querySelector<HTMLElement>("[data-form-status]");
+      if (status) {
+        status.textContent =
+          "Apriamo la tua email… se non parte, scrivici a hello@auralpdigital.com";
+      }
+    });
+  }
+}
+
 // ---------- Effetti legati alla VELOCITÀ di scroll ----------
 // Un unico ScrollTrigger globale legge la velocità e la distribuisce:
 // 1. il marquee accelera quando si scrolla forte e decanta verso la velocità
@@ -1100,17 +1188,29 @@ if (
 // 2. la rail dei progetti si inclina di qualche frazione di grado nel verso
 //    dello scroll e si raddrizza subito — l'inerzia di un oggetto fisico.
 if (!reduceMotion) {
-  const marqueeTrack = document.querySelector<HTMLElement>(".marquee-track");
-  let marqueeTween: gsap.core.Tween | null = null;
-  if (marqueeTrack) {
-    marqueeTrack.classList.add("is-js");
-    marqueeTween = gsap.to(marqueeTrack, {
-      xPercent: -50,
-      duration: 36,
-      ease: "none",
-      repeat: -1,
-    });
-  }
+  // Due tracce in versi opposti (dir -1 = verso sinistra, +1 = verso destra),
+  // velocità di crociera leggermente diverse → parallasse. Entrambe accelerano
+  // con la velocità di scroll e decantano insieme.
+  const marqueeTracks = Array.from(
+    document.querySelectorAll<HTMLElement>(".marquee-track")
+  );
+  const marqueeTweens: gsap.core.Tween[] = [];
+  marqueeTracks.forEach((track, i) => {
+    track.classList.add("is-js");
+    const dir = Number(track.dataset.marqueeDir ?? "-1");
+    marqueeTweens.push(
+      gsap.fromTo(
+        track,
+        { xPercent: dir < 0 ? 0 : -50 },
+        {
+          xPercent: dir < 0 ? -50 : 0,
+          duration: i === 0 ? 42 : 54,
+          ease: "none",
+          repeat: -1,
+        }
+      )
+    );
+  });
 
   const rail = document.querySelector<HTMLElement>(".works-rail");
   const railSkew = rail
@@ -1126,10 +1226,11 @@ if (!reduceMotion) {
     onUpdate(self) {
       const v = self.getVelocity();
 
-      if (marqueeTween) {
-        marqueeTween.timeScale(1 + Math.min(Math.abs(v) / 700, 4));
+      if (marqueeTweens.length) {
+        const ts = 1 + Math.min(Math.abs(v) / 700, 4);
+        marqueeTweens.forEach((t) => t.timeScale(ts));
         marqueeDecay?.kill();
-        marqueeDecay = gsap.to(marqueeTween, {
+        marqueeDecay = gsap.to(marqueeTweens, {
           timeScale: 1,
           duration: 1.6,
           ease: "power2.out",
@@ -1170,6 +1271,108 @@ if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
       railEl.classList.remove("is-engaged");
       panels.forEach((other) => other.classList.remove("is-active"));
     });
+  }
+}
+
+// ---------- Anteprime live dei progetti — lazy load + auto-scroll ----------
+// L'iframe del sito reale carica `src` solo alla PRIMA espansione del pannello
+// (la home non scarica due siti esterni all'avvio). Lo scroll interno di un
+// iframe cross-origin non è pilotabile via JS, quindi simuliamo lo scorrimento
+// animando il translateY dell'iframe (alto 220%).
+//
+// PERFORMANCE: animare il transform di un iframe che renderizza un sito vivo è
+// costoso. Per evitare il lag "dopo un po'":
+//  • scorre UN SOLO iframe alla volta (quello aperto/attivo);
+//  • l'auto-scroll è in PAUSA quando la sezione progetti è fuori viewport
+//    (prima restava attivo all'infinito, ridipingendo un sito esterno per
+//    sempre — la causa del rallentamento);
+//  • will-change: transform è acceso solo mentre l'iframe scorre davvero.
+{
+  const section = document.querySelector<HTMLElement>("#projects");
+  const rail = document.querySelector<HTMLElement>(".works-rail");
+  if (section && rail) {
+    const panels = Array.from(rail.querySelectorAll<HTMLElement>(".work-panel"));
+    const tweens = new WeakMap<HTMLIFrameElement, gsap.core.Tween>();
+    const open = panels.find((p) => p.hasAttribute("data-open")) ?? null;
+    let current: HTMLElement | null = open;
+    let inView = false;
+
+    const iframeOf = (panel: HTMLElement) =>
+      panel.querySelector<HTMLIFrameElement>("[data-iframe]");
+
+    // Carica src la prima volta e crea (in pausa) il tween di auto-scroll.
+    const ensure = (panel: HTMLElement): gsap.core.Tween | null => {
+      const iframe = iframeOf(panel);
+      if (!iframe) return null;
+      if (!iframe.src && iframe.dataset.src) iframe.src = iframe.dataset.src;
+      if (reduceMotion) return null;
+      let tw = tweens.get(iframe);
+      if (!tw) {
+        tw = gsap.fromTo(
+          iframe,
+          { yPercent: 0 },
+          {
+            yPercent: -50,
+            duration: 9,
+            ease: "none",
+            repeat: -1,
+            yoyo: true,
+            paused: true,
+            delay: 0.8,
+          }
+        );
+        tweens.set(iframe, tw);
+      }
+      return tw;
+    };
+
+    const pause = (panel: HTMLElement) => {
+      const iframe = iframeOf(panel);
+      if (!iframe) return;
+      tweens.get(iframe)?.pause();
+      iframe.style.willChange = "auto";
+    };
+
+    // Stato unico: scorre `current` solo se la sezione è in vista; tutto il
+    // resto è in pausa.
+    const sync = () => {
+      panels.forEach((p) => p !== current && pause(p));
+      if (inView && current) {
+        const iframe = iframeOf(current);
+        const tw = ensure(current);
+        if (tw && iframe) {
+          iframe.style.willChange = "transform";
+          tw.play();
+        }
+      } else if (current) {
+        pause(current);
+      }
+    };
+
+    ScrollTrigger.create({
+      trigger: section,
+      start: "top bottom",
+      end: "bottom top",
+      onToggle: (self) => {
+        inView = self.isActive;
+        sync();
+      },
+    });
+
+    // Su dispositivi con hover: l'anteprima segue il pannello attivo.
+    if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      panels.forEach((panel) => {
+        if (!iframeOf(panel)) return;
+        panel.addEventListener("pointerenter", () => {
+          current = panel;
+          sync();
+        });
+      });
+      rail.addEventListener("pointerleave", () => {
+        current = open;
+        sync();
+      });
+    }
   }
 }
 

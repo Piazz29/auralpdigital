@@ -1,0 +1,26 @@
+---
+// ContainerScroll — reimplementazione GSAP del componente "Container Scroll
+// Animation" (Aceternity / 21st.dev). Lo scroll attraverso il contenitore
+// raddrizza e scala la card (rotateX 20°→0°, scale 1.05→1 su desktop /
+// 0.7→0.9 su mobile) mentre l'header trasla verso l'alto: il contenuto
+// "si alza in piedi" verso il lettore. La meccanica vive in main.ts
+// (ScrollTrigger scrub, [data-cscroll*]); qui solo markup + prospettiva.
+// Lo stato CSS di default è quello PIATTO/leggibile: con reduced-motion o
+// senza JS la card resta dritta e usabile, e GSAP imposta lo stato iniziale
+// inclinato solo quando può animare (anti-flash).
+---
+
+<div class="cscroll" data-cscroll>
+  <div class="cscroll-inner">
+    <div class="cscroll-header" data-cscroll-header>
+      <slot name="title" />
+    </div>
+
+    <div class="cscroll-card" data-cscroll-card>
+      <span class="cscroll-glow" aria-hidden="true"></span>
+      <div class="cscroll-card-inner">
+        <slot />
+      </div>
+    </div>
+  </div>
+</div>

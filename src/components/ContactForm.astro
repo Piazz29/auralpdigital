@@ -1,0 +1,114 @@
+---
+// ContactForm — vive DENTRO la card 3D di <ContainerScroll>. Layout a due
+// pannelli: a sinistra un aside accent (cosa succede dopo l'invio + contatti),
+// a destra il form vero. Niente backend: il submit (gestito in main.ts,
+// [data-contact-form]) compone un mailto precompilato. Per passare a un
+// endpoint reale (Web3Forms/Formspree) basterà aggiungere action/method e
+// togliere l'intercept JS.
+//
+// Budget: selettore di FASCIA opzionale (ricerca CRO → su un form ad alta
+// intenzione il budget qualifica il lead senza uccidere la conversione, a
+// patto che sia opzionale, a scelta rapida e con un'uscita "Non so ancora").
+const budgets = ["< 1.5k", "1.5–3k", "3–6k", "6k+", "Non so ancora"];
+const steps = [
+  "Ci scrivi due righe sul progetto",
+  "Ti rispondiamo entro 24 ore",
+  "Call gratuita di 30 min, zero impegno",
+];
+---
+
+<div class="cform-layout">
+  <!-- ASIDE — pannello accent: cosa succede dopo + contatti diretti. -->
+  <aside class="cform-aside">
+    <span class="cform-aside-star" aria-hidden="true">✦</span>
+    <span class="cform-aside-label">La consulenza</span>
+    <h3 class="cform-aside-title font-display">Da qui <em>parte tutto.</em></h3>
+
+    <ol class="cform-steps">
+      {steps.map((s, i) => (
+        <li class="cform-step">
+          <span class="cform-step-num">{`0${i + 1}`}</span>
+          <span class="cform-step-text">{s}</span>
+        </li>
+      ))}
+    </ol>
+
+    <div class="cform-aside-contact">
+      <a href="mailto:hello@auralpdigital.com" class="cform-aside-mail">hello@auralpdigital.com</a>
+      <span class="cform-aside-note">Budget chiari da subito · Nessun impegno</span>
+    </div>
+  </aside>
+
+  <!-- FORM -->
+  <form class="cform" data-contact-form novalidate>
+    <div class="cform-grid">
+      <label class="cform-field">
+        <span class="cform-label">Nome</span>
+        <input
+          class="cform-input"
+          type="text"
+          name="nome"
+          required
+          autocomplete="name"
+          placeholder="Come ti chiami"
+        />
+      </label>
+
+      <label class="cform-field">
+        <span class="cform-label">Email</span>
+        <input
+          class="cform-input"
+          type="email"
+          name="email"
+          required
+          autocomplete="email"
+          placeholder="Dove ti rispondiamo"
+        />
+      </label>
+
+      <label class="cform-field cform-field--full">
+        <span class="cform-label">La tua attività</span>
+        <input
+          class="cform-input"
+          type="text"
+          name="attivita"
+          autocomplete="organization"
+          placeholder="Studio, brand, settore…"
+        />
+      </label>
+
+      <label class="cform-field cform-field--full">
+        <span class="cform-label">Il progetto</span>
+        <textarea
+          class="cform-input cform-textarea"
+          name="messaggio"
+          rows="3"
+          required
+          placeholder="Due righe su cosa hai in mente."></textarea>
+      </label>
+    </div>
+
+    <fieldset class="cform-budget">
+      <legend class="cform-label">
+        Budget indicativo <span class="cform-optional">— opzionale, in €</span>
+      </legend>
+      <div class="cform-chips">
+        {budgets.map((b) => (
+          <label class="cform-chip">
+            <input type="radio" name="budget" value={b} />
+            <span>{b}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+
+    <div class="cform-actions">
+      <button class="cform-submit" type="submit">
+        Prenota la consulenza <span aria-hidden="true">↗</span>
+      </button>
+      <span class="cform-note">Risposta entro 24 ore</span>
+    </div>
+
+    <p class="cform-status" data-form-status aria-live="polite"></p>
+  </form>
+</div>

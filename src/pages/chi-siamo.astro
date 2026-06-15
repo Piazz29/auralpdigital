@@ -83,18 +83,14 @@ const workflow = [
   },
 ];
 
-// TODO: rifinire la lista degli strumenti reali dello studio.
-const tools = [
-  "Astro",
-  "TypeScript",
-  "GSAP",
-  "Tailwind",
-  "Figma",
-  "Claude",
-  "ChatGPT",
-  "Midjourney",
-  "Vercel",
-  "Google Analytics",
+// MARQUEE — nastro a riga unica, sfumato ai bordi. Registro IDENTITARIO
+// (metodo, visione, relazione), diverso da quello strategico della homepage.
+const marqueeItems = [
+  "Le stesse mani, dallo sketch al lancio",
+  "Niente intermediari",
+  "Rigore da ateneo, strumenti di frontiera",
+  "Persone, non agenzie",
+  "Fatto bene o rifatto",
 ];
 ---
 
@@ -238,53 +234,52 @@ const tools = [
       </div>
     </section>
 
-    <!-- MARQUEE — gli strumenti dello studio, nastro infinito verso la CTA. -->
+    <!-- MARQUEE — nastro a riga unica, sfumato ai bordi, registro identitario. -->
     <div class="marquee-section" aria-hidden="true">
-      <div class="marquee-track">
-        {[...tools, ...tools].map((item) => (
-          <span class="marquee-item font-display">
-            {item}<span class="marquee-star">✦</span>
-          </span>
-        ))}
+      <div class="marquee-row">
+        <div class="marquee-track" data-marquee-dir="-1">
+          {[...marqueeItems, ...marqueeItems].map((item) => (
+            <span class="marquee-item font-display">
+              {item}<span class="marquee-star">✦</span>
+            </span>
+          ))}
+        </div>
       </div>
     </div>
 
-    <!-- CTA FINALE — stesso climax scuro della home. -->
-    <section id="contatti" class="cta-section" data-anim="contact">
-      <div class="cta-panel grain">
-        <div class="cta-spotlight" aria-hidden="true"></div>
-        <span class="works-kicker cta-kicker" data-anim="contact-kicker">
-          Iniziamo
-        </span>
+    <!-- CTA FINALE — non più una card: un invito pulito su warm white che
+         rimanda al form vero, in homepage (#contatti). -->
+    <section id="contatti" class="about-cta" data-anim="contact">
+      <span class="about-cta-glow" aria-hidden="true"></span>
+      <span class="deco deco--star deco-accent deco-float-2" style="left: 12%; top: 22%;" aria-hidden="true">✦</span>
+      <span class="deco deco--ring deco-peri deco-float-1" style="right: 13%; bottom: 24%;" aria-hidden="true"></span>
 
-        <h2 class="cta-title" data-anim="contact-headline">
-          Ora che ci conosci,<br />
-          <em>parliamo di te.</em>
-        </h2>
+      <span class="works-kicker about-cta-kicker">Iniziamo<span class="kicker-index">05</span></span>
 
-        <p class="cta-sub" data-anim="contact-sub">
-          Prenota una consulenza gratuita di 30 minuti: nessun impegno,
-          solo idee chiare su come far crescere la tua attività online.
-        </p>
+      <h2 class="about-cta-title font-display">
+        Ora che ci conosci, <em>parliamo di te.</em>
+      </h2>
 
-        <div class="cta-actions" data-anim="contact-cta">
-          <a href="mailto:hello@auralpdigital.com" class="cta-pill magnetic">
-            Prenota la consulenza <span aria-hidden="true">↗</span>
-          </a>
-          <a href="mailto:hello@auralpdigital.com" class="cta-mail">
-            hello@auralpdigital.com
-          </a>
-        </div>
+      <p class="about-cta-sub">
+        Una consulenza gratuita di 30 minuti: nessun impegno,
+        solo idee chiare per far crescere la tua attività.
+      </p>
 
-        <div class="cta-foot" data-anim="contact-cta">
-          <span>Risposta entro 24 ore</span>
-          <span class="cta-foot-dot" aria-hidden="true"></span>
-          <span>Nessun impegno</span>
-          <span class="cta-foot-dot" aria-hidden="true"></span>
-          <span>Budget chiari da subito</span>
-        </div>
+      <div class="about-cta-actions">
+        <a href="/#contatti" class="about-cta-btn magnetic">
+          Compila il form <span aria-hidden="true">↗</span>
+        </a>
+        <a href="mailto:hello@auralpdigital.com" class="about-cta-mail">
+          oppure scrivici a hello@auralpdigital.com
+        </a>
+      </div>
 
-        <span class="cta-star" aria-hidden="true">✦</span>
+      <div class="about-cta-foot">
+        <span>Risposta entro 24 ore</span>
+        <span class="cta-foot-dot" aria-hidden="true"></span>
+        <span>Nessun impegno</span>
+        <span class="cta-foot-dot" aria-hidden="true"></span>
+        <span>Budget chiari da subito</span>
       </div>
     </section>
   </main>
