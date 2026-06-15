@@ -2931,13 +2931,13 @@ nav:has(#burger-menu.is-open) .pill {
 /* HERO — a tutta schermata sul mesh aurora del menu (stesso linguaggio). */
 .ap-hero {
   position: relative;
-  min-height: 92vh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 120px 24px 80px;
+  padding: clamp(130px, 17vh, 180px) clamp(24px, 5vw, 48px) clamp(104px, 13vh, 140px);
   overflow: clip;
 }
 .ap-hero-aurora {
@@ -2971,14 +2971,33 @@ nav:has(#burger-menu.is-open) .pill {
   position: relative;
   z-index: 1;
 }
+/* Wrapper centrale: la gerarchia respira via `gap` (niente margini sparsi
+   che si accavallano), con un ritmo crescente kicker → titolo → sub → meta. */
+.ap-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(22px, 3.4vh, 40px);
+  width: 100%;
+  max-width: 1100px;
+}
+.ap-hero-badge {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
 .ap-hero-title {
   font-weight: 500;
-  font-size: clamp(46px, 8vw, 118px);
-  line-height: 0.98;
-  letter-spacing: -0.015em;
+  font-size: clamp(44px, 8vw, 120px);
+  line-height: 0.96;
+  letter-spacing: -0.02em;
   color: var(--color-ink);
-  margin-top: 26px;
-  max-width: 12ch;
+  margin: 0;
+  max-width: 13ch;
+  text-wrap: balance;
 }
 .ap-hero-title em {
   font-style: italic;
@@ -2986,11 +3005,53 @@ nav:has(#burger-menu.is-open) .pill {
 }
 .ap-hero-sub {
   font-family: var(--font-body);
-  font-size: clamp(14px, 1.1vw, 16px);
-  letter-spacing: 0.04em;
+  font-size: clamp(15px, 1.25vw, 19px);
+  line-height: 1.65;
+  letter-spacing: 0.01em;
   color: var(--color-secondary);
-  margin-top: 22px;
-  max-width: 44ch;
+  margin: 0;
+  max-width: 50ch;
+}
+/* Riga di contesto — micro-dato editoriale: tre coppie etichetta/valore
+   separate da hairline, ancorate sotto al sub con spazio extra. */
+.ap-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(20px, 4vw, 56px);
+  margin-top: clamp(8px, 2vh, 22px);
+  padding-top: clamp(20px, 3vh, 30px);
+  border-top: 1px solid rgba(13, 13, 13, 0.1);
+}
+.ap-hero-meta li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.ap-hero-meta span {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.ap-hero-meta strong {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(15px, 1.3vw, 18px);
+  letter-spacing: -0.005em;
+  color: var(--color-ink);
+}
+/* Su viewport bassi (laptop corti) la hero è densa: lo scroll hint in basso
+   rischia di toccare la riga meta — lo togliamo, l'invito a scorrere resta
+   implicito. */
+@media (max-height: 860px) {
+  .ap-hero-scroll { display: none; }
+}
+@media (max-width: 600px) {
+  .ap-hero-meta { gap: 18px 26px; }
 }
 
 /* Sezioni interne — stesso ritmo verticale della home. */
@@ -3001,18 +3062,79 @@ nav:has(#burger-menu.is-open) .pill {
   background: var(--color-warm-deeper);
 }
 
-/* MANIFESTO — statement gigante con glow per lettera. */
+/* MANIFESTO — statement gigante su griglia editoriale: kicker + segno a
+   sinistra, frase che riempie lo spazio, nota di rinforzo offset a destra.
+   Lo spazio negativo è strutturale, non riempito. */
+.ap-manifesto-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: clamp(24px, 3vw, 48px) clamp(20px, 3vw, 40px);
+  align-items: start;
+}
+.ap-manifesto-lead {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ap-manifesto-mark {
+  font-size: clamp(20px, 2vw, 28px);
+  color: var(--color-accent);
+  opacity: 0.55;
+  animation: ap-mark-spin 22s linear infinite;
+}
 .ap-statement {
+  grid-column: 1 / span 9;
   font-weight: 500;
-  font-size: clamp(30px, 4.6vw, 70px);
-  line-height: 1.12;
-  letter-spacing: -0.015em;
+  font-size: clamp(32px, 5.2vw, 78px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
   color: var(--color-ink);
-  max-width: 22ch;
+  max-width: 17ch;
+  text-wrap: balance;
 }
 .ap-statement em {
   font-style: italic;
   color: var(--color-accent);
+}
+/* Nota di rinforzo — colonna stretta nello spazio negativo a destra, pesi
+   misti: lead-in in grassetto ink, resto in secondario, keyword in accento. */
+.ap-manifesto-aside {
+  grid-column: 10 / -1;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2vh, 24px);
+  padding-top: clamp(8px, 2vh, 20px);
+}
+.ap-manifesto-note {
+  font-family: var(--font-body);
+  font-size: clamp(14px, 1.05vw, 16px);
+  line-height: 1.55;
+  color: var(--color-secondary);
+  padding-left: 16px;
+  border-left: 1px solid rgba(13, 13, 13, 0.12);
+}
+.ap-manifesto-note strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.ap-manifesto-note em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+@media (max-width: 900px) {
+  .ap-statement { grid-column: 1 / -1; max-width: 20ch; }
+  .ap-manifesto-aside {
+    grid-column: 1 / -1;
+    max-width: 46ch;
+  }
+}
+@keyframes ap-mark-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap-manifesto-mark { animation: none; }
 }
 
 /* DUO — un ritratto per riga, alternato: media da un lato, bio dall'altra.
@@ -3109,49 +3231,132 @@ nav:has(#burger-menu.is-open) .pill {
   }
 }
 
-/* PERCORSO — timeline verticale: la linea si disegna in scrub, le tappe
-   entrano una a una. */
+/* PERCORSO — scrollytelling: timeline CENTRALE alternata. Una traccia
+   verticale al centro (`--spine`) fa da binario; `.ap-line` è il riempimento
+   accent che cresce in scrub (scaleY pilotato da GSAP) collegando le tappe.
+   Gli step si alternano specularmente, ciascuno con un badge-nodo SVG sulla
+   linea. Su mobile la spina si sposta a sinistra e tutto si incolonna. */
 .ap-timeline {
+  --spine: 50%;
   position: relative;
-  padding-left: clamp(30px, 4vw, 60px);
-  display: flex;
-  flex-direction: column;
+  list-style: none;
+  margin: clamp(44px, 9vh, 96px) 0 0;
+  padding: 0;
 }
-.ap-line {
+/* Traccia (binario) spenta sotto al riempimento. */
+.ap-timeline::before {
+  content: "";
   position: absolute;
-  left: 0;
+  left: var(--spine);
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(
-    to bottom,
-    var(--color-accent),
-    rgba(59, 91, 219, 0.25)
-  );
-  transform-origin: top center;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: rgba(13, 13, 13, 0.1);
+}
+/* Barra di progressione — accent → periwinkle, alone soft, cresce dall'alto
+   (scaleY 0→1 in scrub via main.ts). transform-origin top: parte dal vertice. */
+.ap-line {
+  position: absolute;
+  left: var(--spine);
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, var(--color-accent), #8aa0ff);
+  box-shadow: 0 0 18px rgba(59, 91, 219, 0.45);
+  transform-origin: top;
+  z-index: 1;
 }
 .ap-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: clamp(56px, 10vw, 150px);
+  padding: clamp(30px, 6.5vh, 78px) 0;
+}
+/* Badge-nodo SVG centrato sulla spina: cerchio scuro, linee bianche, halo
+   del colore di fondo che lo "stacca" dalla linea. */
+.ap-step-art {
+  position: absolute;
+  top: clamp(30px, 6.5vh, 78px);
+  left: var(--spine);
+  margin-left: -34px;
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  color: #fafaf8;
+  background:
+    radial-gradient(120% 120% at 30% 22%, rgba(59, 91, 219, 0.5), transparent 60%),
+    var(--color-navy);
+  border: 1px solid rgba(250, 250, 248, 0.16);
+  box-shadow:
+    0 12px 30px rgba(26, 35, 64, 0.32),
+    0 0 0 7px var(--color-bg);
+  z-index: 2;
+}
+.ap-step-art svg {
+  width: 34px;
+  height: 34px;
+  display: block;
+  overflow: visible;
+}
+/* Connettore hairline dal nodo verso la card. */
+.ap-step-art::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: clamp(24px, 4vw, 60px);
+  height: 1px;
+  background: rgba(13, 13, 13, 0.14);
+}
+.ap-step--left .ap-step-art::after { right: 100%; }
+.ap-step--right .ap-step-art::after { left: 100%; }
+
+.ap-step-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: clamp(30px, 5vh, 56px) 0;
+  max-width: 46ch;
 }
-.ap-step + .ap-step {
-  border-top: 1px solid rgba(13, 13, 13, 0.1);
+.ap-step--left .ap-step-body {
+  grid-column: 1;
+  align-items: flex-end;
+  text-align: right;
+  padding-right: clamp(22px, 2.5vw, 44px);
+  margin-left: auto;
+}
+.ap-step--right .ap-step-body {
+  grid-column: 2;
+  align-items: flex-start;
+  text-align: left;
+  padding-left: clamp(22px, 2.5vw, 44px);
+}
+.ap-step-year {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(13px, 1.1vw, 15px);
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
 }
 .ap-step-kicker {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: var(--color-muted);
 }
 .ap-step-title {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(26px, 3vw, 48px);
-  line-height: 1.05;
+  font-size: clamp(26px, 3.2vw, 50px);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
   color: var(--color-ink);
 }
 .ap-step-title em {
@@ -3160,10 +3365,267 @@ nav:has(#burger-menu.is-open) .pill {
 }
 .ap-step-text {
   font-family: var(--font-body);
-  font-size: clamp(15px, 1.2vw, 18px);
+  font-size: clamp(15px, 1.15vw, 17px);
   line-height: 1.7;
   color: var(--color-secondary);
-  max-width: 58ch;
+}
+
+/* Micro-SVG animati — loop CSS leggeri (transform/opacity/dashoffset). */
+.ap-art-scan {
+  transform-box: fill-box;
+  animation: ap-scan 3.4s ease-in-out infinite;
+}
+.ap-art-dot { animation: ap-blink 3.4s ease-in-out infinite; }
+.ap-art-spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ap-spark 2.6s ease-in-out infinite;
+}
+.ap-art-core { animation: ap-core 2.6s ease-in-out infinite; }
+.ap-art-net {
+  stroke-dasharray: 96;
+  stroke-dashoffset: 96;
+  animation: ap-draw 3.4s ease-in-out infinite;
+}
+.ap-art-n { animation: ap-blink 2.4s ease-in-out infinite; }
+.ap-art-n2 { animation-delay: 0.5s; }
+.ap-art-n3 { animation-delay: 1s; }
+.ap-art-ch {
+  transform-box: fill-box;
+  opacity: 0.35;
+  animation: ap-advance 1.8s ease-in-out infinite;
+}
+.ap-art-ch2 { animation-delay: 0.22s; }
+.ap-art-ch3 { animation-delay: 0.44s; }
+
+@keyframes ap-scan {
+  0%, 100% { transform: translateY(0); opacity: 0.9; }
+  50% { transform: translateY(17px); opacity: 0.4; }
+}
+@keyframes ap-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+@keyframes ap-spark {
+  0%, 100% { transform: scale(0.86); opacity: 0.55; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+@keyframes ap-core {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.6); }
+}
+@keyframes ap-draw {
+  0% { stroke-dashoffset: 96; }
+  55%, 100% { stroke-dashoffset: 0; }
+}
+@keyframes ap-advance {
+  0%, 100% { opacity: 0.3; transform: translateX(-3px); }
+  50% { opacity: 1; transform: translateX(2px); }
+}
+
+@media (max-width: 860px) {
+  .ap-timeline { --spine: 34px; }
+  .ap-step {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+    padding: clamp(26px, 5vh, 48px) 0;
+  }
+  .ap-step--left .ap-step-body,
+  .ap-step--right .ap-step-body {
+    grid-column: 1;
+    align-items: flex-start;
+    text-align: left;
+    padding-left: clamp(80px, 24vw, 104px);
+    padding-right: 0;
+    margin-left: 0;
+    max-width: none;
+  }
+  .ap-step-art {
+    left: 34px;
+    top: clamp(22px, 4vh, 40px);
+  }
+  .ap-step--left .ap-step-art::after,
+  .ap-step--right .ap-step-art::after {
+    left: 100%;
+    right: auto;
+    width: clamp(16px, 6vw, 28px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-art-scan, .ap-art-dot, .ap-art-spark, .ap-art-core,
+  .ap-art-net, .ap-art-n, .ap-art-ch {
+    animation: none;
+  }
+  .ap-art-net { stroke-dashoffset: 0; }
+  .ap-art-ch { opacity: 1; }
+}
+
+/* ----------------------------------------------------------------------
+   COME LAVORIAMO — pannello dark immersivo (aurora come la CTA), bento
+   asimmetrico di card interattive. Spotlight al cursore (var --mx/--my via
+   JS), bordo che si accende, numero-fantasma in filigrana. Sostituisce il
+   vecchio blocco statico di capitoli.
+-------------------------------------------------------------------------- */
+.ap-flow {
+  padding: clamp(20px, 5vh, 60px) clamp(14px, 3vw, 40px) clamp(70px, 12vh, 150px);
+}
+.ap-flow-panel {
+  position: relative;
+  max-width: 110rem;
+  margin: 0 auto;
+  border-radius: clamp(24px, 3vw, 40px);
+  overflow: hidden;
+  padding: clamp(56px, 8vw, 120px) clamp(24px, 5vw, 96px) clamp(60px, 9vw, 120px);
+  border: 1px solid rgba(250, 250, 248, 0.08);
+  box-shadow:
+    0 2px 4px rgba(13, 13, 13, 0.08),
+    0 40px 100px rgba(13, 13, 13, 0.28);
+  background-color: var(--color-cta-bg);
+  background-image:
+    radial-gradient(60% 52% at 14% 18%, rgba(59, 91, 219, 0.38), transparent 70%),
+    radial-gradient(56% 48% at 88% 8%, rgba(26, 35, 64, 0.85), transparent 70%),
+    radial-gradient(64% 56% at 82% 92%, rgba(59, 91, 219, 0.2), transparent 70%),
+    radial-gradient(46% 40% at 52% 50%, rgba(26, 35, 64, 0.45), transparent 70%);
+  background-repeat: no-repeat;
+  background-size: 165% 165%, 150% 150%, 172% 172%, 140% 140%;
+  animation: menu-aurora 30s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap-flow-panel { animation: none; }
+}
+/* Grana sottile in alto, stesso linguaggio della CTA. */
+.ap-flow-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(250, 250, 248, 0.05), transparent 30%);
+}
+.ap-flow-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(40px, 6vh, 72px);
+}
+.ap-flow-kicker { color: rgba(250, 250, 248, 0.6); }
+.ap-flow-kicker::before { background: #8aa0ff; }
+.ap-flow-title {
+  color: var(--color-cta-text);
+  max-width: 18ch;
+}
+.ap-flow-title em { color: #8aa0ff; }
+
+/* Bento asimmetrico: card larga / stretta alternate (7+5, 5+7). */
+.ap-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: clamp(16px, 1.6vw, 24px);
+}
+.flow-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: clamp(28px, 3vw, 48px);
+  border-radius: clamp(18px, 2vw, 26px);
+  border: 1px solid rgba(250, 250, 248, 0.1);
+  background: rgba(250, 250, 248, 0.035);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transition:
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.4s ease,
+    background-color 0.4s ease;
+}
+.flow-card--0 { grid-column: span 7; }
+.flow-card--1 { grid-column: span 5; }
+.flow-card--2 { grid-column: span 5; }
+.flow-card--3 { grid-column: span 7; }
+.flow-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(138, 160, 255, 0.45);
+  background: rgba(250, 250, 248, 0.06);
+}
+/* Spotlight che segue il cursore (var --mx/--my via JS). */
+.flow-card-spot {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(138, 160, 255, 0.18),
+    transparent 60%
+  );
+  transition: opacity 0.4s ease;
+}
+.flow-card:hover .flow-card-spot { opacity: 1; }
+/* Numero-fantasma in filigrana, dietro al contenuto. */
+.flow-card-ghost {
+  position: absolute;
+  top: clamp(-14px, -1vw, -8px);
+  right: clamp(12px, 2vw, 28px);
+  z-index: 0;
+  font-weight: 700;
+  font-size: clamp(90px, 11vw, 170px);
+  line-height: 1;
+  color: rgba(250, 250, 248, 0.04);
+  pointer-events: none;
+  user-select: none;
+}
+.flow-card > *:not(.flow-card-spot):not(.flow-card-ghost) {
+  position: relative;
+  z-index: 1;
+}
+.flow-card-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.flow-card-n {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: #8aa0ff;
+}
+.flow-card-tag {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(250, 250, 248, 0.55);
+  padding: 5px 12px;
+  border: 1px solid rgba(250, 250, 248, 0.14);
+  border-radius: 9999px;
+}
+.flow-card-title {
+  font-weight: 500;
+  font-size: clamp(26px, 2.8vw, 42px);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  color: var(--color-cta-text);
+}
+.flow-card-title em {
+  font-style: italic;
+  color: #8aa0ff;
+}
+.flow-card-text {
+  font-family: var(--font-body);
+  font-size: clamp(14px, 1.05vw, 16px);
+  line-height: 1.65;
+  color: rgba(250, 250, 248, 0.62);
+  max-width: 52ch;
+}
+@media (max-width: 900px) {
+  .flow-card--0, .flow-card--1, .flow-card--2, .flow-card--3 {
+    grid-column: 1 / -1;
+  }
 }
 
 /* ----------------------------------------------------------------------

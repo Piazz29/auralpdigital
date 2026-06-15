@@ -30,56 +30,109 @@ const people = [
   },
 ];
 
-// IL PERCORSO — tappe della storia. TODO: inserire atenei/corsi reali.
+// IL PERCORSO — tappe della storia. Ogni step porta un micro-SVG geometrico
+// (linee bianche su badge scuro) animato in loop CSS, inerente al suo tema.
+// `art` è la chiave che seleziona l'SVG; il lato (sx/dx) lo decide l'indice.
 const steps = [
   {
-    kicker: "Le basi",
+    art: "uni",
+    year: "Le basi",
+    kicker: "La formazione",
     title: "Università.",
-    text: "Il metodo nasce qui: analisi, ricerca e pensiero critico. Il percorso di studi universitario ci ha dato il rigore che oggi applichiamo a ogni progetto — e non abbiamo mai smesso di studiare.",
+    text: "Il metodo nasce qui: analisi, ricerca e pensiero critico. Il percorso universitario ci ha dato il rigore che oggi applichiamo a ogni progetto — e non abbiamo mai smesso di studiare.",
   },
   {
-    kicker: "La scintilla",
-    title: "I primi progetti.",
+    art: "spark",
+    year: "La scintilla",
+    kicker: "I primi progetti",
+    title: "La prima riga di codice.",
     text: "I primi siti per attività locali dell'Alto Adige. È lì che capiamo una cosa semplice: ai professionisti non serve una vetrina, serve un sistema che porti clienti.",
   },
   {
-    kicker: "Oggi",
+    art: "studio",
+    year: "Oggi",
+    kicker: "Lo studio",
     title: "AuralpDigital.",
     text: "Uno studio digitale indipendente: strategia, design e tecnologia sotto lo stesso tetto, un workflow AI-augmented e un unico standard — fatto bene o rifatto.",
   },
   {
-    kicker: "Domani",
+    art: "next",
+    year: "Domani",
+    kicker: "La direzione",
     title: "Sempre un passo avanti.",
     text: "Ogni nuova ondata tecnologica viene studiata, testata e — solo se funziona — portata nei progetti dei nostri clienti. Prima degli altri, mai a scapito della qualità.",
   },
 ];
 
-// COME LAVORIAMO — riusa il linguaggio dei capitoli della home: ogni fase
-// racconta anche dove l'AI entra nel processo.
+// Micro-SVG geometrici per gli step del percorso: linee bianche, viewBox 48,
+// animati in loop via CSS (classi .ap-art-*). Resi con set:html (statici e
+// fidati). Reduced-motion congela i loop (vedi global.css).
+const journeyArt: Record<string, string> = {
+  uni: `<svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <rect class="ap-art-frame" x="9" y="9" width="30" height="30" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+    <line x1="9" y1="30" x2="39" y2="30" stroke="currentColor" stroke-width="1.5"/>
+    <line x1="9" y1="21" x2="39" y2="21" stroke="currentColor" stroke-width="1.5"/>
+    <circle class="ap-art-dot" cx="24" cy="15" r="1.8" fill="currentColor"/>
+    <line class="ap-art-scan" x1="11" y1="13" x2="37" y2="13" stroke="currentColor" stroke-width="1.2"/>
+  </svg>`,
+  spark: `<svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <g class="ap-art-spark" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+      <line x1="24" y1="7" x2="24" y2="14"/>
+      <line x1="24" y1="34" x2="24" y2="41"/>
+      <line x1="7" y1="24" x2="14" y2="24"/>
+      <line x1="34" y1="24" x2="41" y2="24"/>
+      <line x1="13" y1="13" x2="17.5" y2="17.5"/>
+      <line x1="30.5" y1="30.5" x2="35" y2="35"/>
+      <line x1="35" y1="13" x2="30.5" y2="17.5"/>
+      <line x1="17.5" y1="30.5" x2="13" y2="35"/>
+    </g>
+    <circle class="ap-art-core" cx="24" cy="24" r="3.4" fill="currentColor"/>
+  </svg>`,
+  studio: `<svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <path class="ap-art-net" d="M24 9 L39 35 L9 35 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle class="ap-art-n ap-art-n1" cx="24" cy="9" r="2.4" fill="currentColor"/>
+    <circle class="ap-art-n ap-art-n2" cx="39" cy="35" r="2.4" fill="currentColor"/>
+    <circle class="ap-art-n ap-art-n3" cx="9" cy="35" r="2.4" fill="currentColor"/>
+  </svg>`,
+  next: `<svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <g stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path class="ap-art-ch ap-art-ch1" d="M13 16 L21 24 L13 32"/>
+      <path class="ap-art-ch ap-art-ch2" d="M21 16 L29 24 L21 32"/>
+      <path class="ap-art-ch ap-art-ch3" d="M29 16 L37 24 L29 32"/>
+    </g>
+  </svg>`,
+};
+
+// COME LAVORIAMO — quattro fasi del metodo, ridisegnate come bento dark
+// immersivo. Ogni card racconta anche dove l'AI entra nel processo.
 const workflow = [
   {
     n: "01",
     title: "Ascolto",
     titleEm: "e analisi.",
     text: "Prima di disegnare qualsiasi cosa, capiamo il tuo mercato: chi cerca, cosa cerca, chi sono i concorrenti. L'AI accelera la ricerca e l'analisi dei dati — le conclusioni le tiriamo noi, insieme a te.",
+    tag: "Ricerca",
   },
   {
     n: "02",
     title: "Design",
     titleEm: "con intenzione.",
     text: "Ogni scelta visiva ha uno scopo: guidare il visitatore verso un'azione. Con gli strumenti generativi esploriamo più direzioni in meno tempo, poi rifiniamo a mano quella giusta.",
+    tag: "Art direction",
   },
   {
     n: "03",
     title: "Sviluppo",
     titleEm: "senza compromessi.",
     text: "Codice moderno, veloce, accessibile. L'AI scrive con noi e rivede ogni riga — ma niente va online senza essere passato sotto occhi umani, su dispositivi reali.",
+    tag: "Build",
   },
   {
     n: "04",
     title: "Crescita",
     titleEm: "misurabile.",
     text: "Il lancio è l'inizio, non la fine: dati, test e ottimizzazioni continue. Ogni mese sai cosa è cambiato, perché, e cosa porta clienti.",
+    tag: "Ottimizzazione",
   },
 ];
 ---
@@ -91,41 +144,59 @@ const workflow = [
   <Navbar />
 
   <main class="aboutpage">
-    <!-- HERO — aurora di palette, titolo dalla maschera parola per parola. -->
+    <!-- HERO — aurora di palette, gerarchia centrata e arieggiata: badge,
+         titolo dalla maschera, sottotitolo, riga di contesto. -->
     <section class="ap-hero">
       <div class="ap-hero-aurora" aria-hidden="true"></div>
 
-      <span
-        class="hero-badge text-[11px] font-medium tracking-[0.15em] uppercase"
-        style="opacity: 0;"
-      >
-        Chi siamo
-      </span>
+      <div class="ap-hero-inner">
+        <span class="hero-badge ap-hero-badge" style="opacity: 0;">
+          Chi siamo
+        </span>
 
-      <h1 class="ap-hero-title font-display" style="opacity: 0;">
-        Le persone dietro <em>i pixel.</em>
-      </h1>
+        <h1 class="ap-hero-title font-display" style="opacity: 0;">
+          Le persone dietro <em>i pixel.</em>
+        </h1>
 
-      <p class="ap-hero-sub" style="opacity: 0;">
-        Uno studio indipendente di due persone, dall'Alto Adige.
-        Niente intermediari: chi ti risponde è chi progetta e costruisce.
-      </p>
+        <p class="ap-hero-sub" style="opacity: 0;">
+          Uno studio indipendente di due persone, dall'Alto Adige.
+          Niente intermediari: chi ti risponde è chi progetta e costruisce.
+        </p>
 
-      <div class="hero-scroll-hint" style="opacity: 0;" aria-hidden="true">
+        <ul class="ap-hero-meta" style="opacity: 0;">
+          <li><span>Base</span><strong>Alto Adige</strong></li>
+          <li><span>Team</span><strong>Due fondatori</strong></li>
+          <li><span>Metodo</span><strong>AI-augmented</strong></li>
+        </ul>
+      </div>
+
+      <div class="hero-scroll-hint ap-hero-scroll" style="opacity: 0;" aria-hidden="true">
         <span class="hero-scroll-label">Scorri</span>
         <span class="hero-scroll-line"></span>
       </div>
     </section>
 
-    <!-- MANIFESTO — statement gigante con glow per lettera. -->
-    <section class="ap-section">
+    <!-- MANIFESTO — statement gigante distribuito su griglia: kicker + segno,
+         frase con accenti, nota di rinforzo offset nello spazio negativo. -->
+    <section class="ap-section ap-manifesto">
       <div class="works-screen">
-        <span class="works-kicker">Il manifesto</span>
-        <p class="ap-statement font-display" data-glow>
-          Crediamo che un piccolo team con <em>gli strumenti giusti</em> possa
-          battere un'agenzia intera: meno passaggi, più cura,
-          <em>tecnologia di frontiera</em> in ogni dettaglio.
-        </p>
+        <div class="ap-manifesto-grid">
+          <div class="ap-manifesto-lead">
+            <span class="works-kicker">Il manifesto</span>
+            <span class="ap-manifesto-mark" aria-hidden="true">✦</span>
+          </div>
+
+          <p class="ap-statement font-display" data-glow>
+            Un piccolo team con <em>gli strumenti giusti</em>
+            batte un'agenzia intera.
+          </p>
+
+          <div class="ap-manifesto-aside" data-ap-reveal>
+            <p class="ap-manifesto-note"><strong>Meno passaggi.</strong> Una sola voce, dallo sketch al lancio.</p>
+            <p class="ap-manifesto-note"><strong>Più cura.</strong> Ogni dettaglio passa due volte sotto i nostri occhi.</p>
+            <p class="ap-manifesto-note"><em>Tecnologia di frontiera</em> in ogni riga, mai per moda — solo quando lavora per te.</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -173,8 +244,9 @@ const workflow = [
       </div>
     </section>
 
-    <!-- IL PERCORSO — timeline verticale, la linea si disegna in scroll. -->
-    <section class="ap-section">
+    <!-- IL PERCORSO — scrollytelling: timeline centrale alternata, barra di
+         progressione che si riempie in scroll, badge SVG animati per step. -->
+    <section class="ap-section ap-journey">
       <div class="works-screen">
         <div class="works-head">
           <div class="works-head-left">
@@ -183,43 +255,52 @@ const workflow = [
           </div>
         </div>
 
-        <div class="ap-timeline">
+        <ol class="ap-timeline">
           <span class="ap-line" aria-hidden="true"></span>
-          {steps.map((s) => (
-            <div class="ap-step">
-              <span class="ap-step-kicker">{s.kicker}</span>
-              <h3 class="ap-step-title">{s.title}</h3>
-              <p class="ap-step-text" data-glow>{s.text}</p>
-            </div>
+          {steps.map((s, i) => (
+            <li class={`ap-step ap-step--${i % 2 === 0 ? "left" : "right"}`}>
+              <div class="ap-step-art" set:html={journeyArt[s.art]}></div>
+              <div class="ap-step-body">
+                <span class="ap-step-year">{s.year}</span>
+                <span class="ap-step-kicker">{s.kicker}</span>
+                <h3 class="ap-step-title font-display">{s.title}</h3>
+                <p class="ap-step-text" data-glow>{s.text}</p>
+              </div>
+            </li>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
 
-    <!-- COME LAVORIAMO — capitoli del metodo, con l'AI dentro ogni fase. -->
-    <section class="ap-section ap-section--deeper">
-      <div class="works-screen">
-        <div class="works-head">
-          <div class="works-head-left">
-            <span class="works-kicker">Come lavoriamo</span>
-            <h2 class="works-title">Umani al timone, <em>AI in sala macchine.</em></h2>
-          </div>
-        </div>
+    <!-- COME LAVORIAMO — pannello dark immersivo, bento asimmetrico di card
+         interattive con spotlight al cursore e reveal in scroll. -->
+    <section class="ap-section ap-flow">
+      <div class="ap-flow-panel">
+        <span class="ap-flow-aurora" aria-hidden="true"></span>
+        <div class="ap-flow-inner">
+          <header class="ap-flow-head">
+            <span class="works-kicker ap-flow-kicker">Come lavoriamo</span>
+            <h2 class="works-title ap-flow-title">
+              Umani al timone, <em>AI in sala macchine.</em>
+            </h2>
+          </header>
 
-        <div class="about-chapters">
-          {workflow.map((w) => (
-            <article class="about-chapter" data-anim="chapter">
-              <div class="chapter-head">
-                <span class="chapter-num">{w.n}</span>
-                <h3 class="chapter-title font-display">
+          <div class="ap-flow-grid">
+            {workflow.map((w, i) => (
+              <article class={`flow-card flow-card--${i}`} data-flow-card>
+                <span class="flow-card-ghost font-display" aria-hidden="true">{w.n}</span>
+                <span class="flow-card-spot" aria-hidden="true"></span>
+                <div class="flow-card-top">
+                  <span class="flow-card-n">{w.n}</span>
+                  <span class="flow-card-tag">{w.tag}</span>
+                </div>
+                <h3 class="flow-card-title font-display">
                   {w.title} <em>{w.titleEm}</em>
                 </h3>
-              </div>
-              <div class="chapter-body">
-                <p class="chapter-text" data-glow>{w.text}</p>
-              </div>
-            </article>
-          ))}
+                <p class="flow-card-text" data-glow>{w.text}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </div>
     </section>

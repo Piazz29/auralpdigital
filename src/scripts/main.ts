@@ -1373,7 +1373,8 @@ if (aboutPage) {
   const apHeroBits: { sel: string; delay: number }[] = [
     { sel: ".ap-hero .hero-badge", delay: 0.45 },
     { sel: ".ap-hero-sub", delay: 1.0 },
-    { sel: ".ap-hero .hero-scroll-hint", delay: 1.25 },
+    { sel: ".ap-hero-meta", delay: 1.18 },
+    { sel: ".ap-hero .hero-scroll-hint", delay: 1.35 },
   ];
   apHeroBits.forEach(({ sel, delay }) => {
     if (!aboutPage.querySelector(sel)) return;
@@ -1414,14 +1415,54 @@ if (aboutPage) {
     );
   }
   aboutPage.querySelectorAll<HTMLElement>(".ap-step").forEach((step) => {
-    revealRise(step.querySelectorAll(":scope > *"), {
-      trigger: step,
-      start: "top 84%",
-      stagger: 0.1,
-      y: 30,
-      duration: 0.8,
+    // Il badge-nodo entra come unità; i pezzi della card salgono in cascata.
+    revealRise(
+      step.querySelectorAll(":scope > .ap-step-art, :scope > .ap-step-body > *"),
+      {
+        trigger: step,
+        start: "top 84%",
+        stagger: 0.08,
+        y: 30,
+        duration: 0.8,
+      }
+    );
+  });
+
+  // Manifesto — la nota di rinforzo entra riga per riga nello spazio negativo.
+  aboutPage.querySelectorAll<HTMLElement>("[data-ap-reveal]").forEach((el) => {
+    revealRise(el.querySelectorAll(":scope > *"), {
+      trigger: el,
+      start: "top 86%",
+      stagger: 0.12,
+      y: 22,
+      duration: 0.9,
     });
   });
+
+  // Come lavoriamo — le card bento salgono in cascata; lo spotlight segue il
+  // cursore aggiornando due var CSS (il gradient lo disegna la GPU).
+  const flowCards = aboutPage.querySelectorAll<HTMLElement>("[data-flow-card]");
+  if (flowCards.length) {
+    revealRise(flowCards, {
+      trigger: ".ap-flow-grid",
+      start: "top 82%",
+      stagger: 0.12,
+      y: 56,
+      duration: 1,
+    });
+
+    if (!reduceMotion && window.matchMedia("(min-width: 769px)").matches) {
+      flowCards.forEach((card) => {
+        const spot = card.querySelector<HTMLElement>(".flow-card-spot");
+        if (!spot) return;
+        card.addEventListener("mousemove", (e) => {
+          const r = card.getBoundingClientRect();
+          spot.style.setProperty("--mx", `${e.clientX - r.left}px`);
+          spot.style.setProperty("--my", `${e.clientY - r.top}px`);
+        });
+      });
+    }
+  }
 }
 
 // ---------- Deco — parallasse leggera dei segni decorativi ----------
