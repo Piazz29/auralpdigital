@@ -36,6 +36,7 @@ const CardSwap = ({
   onCardClick,
   skewAmount = 6,
   easing = 'elastic',
+  overlay,
   children
 }) => {
   const config =
@@ -148,7 +149,9 @@ const CardSwap = ({
       });
     };
 
-    swap();
+    // Nessuno swap immediato al mount: le card avanzano SOLO al click o dopo
+    // `delay` ms d'inattività (auto-advance). Il primo movimento è quindi
+    // l'autoplay dopo `delay`, oppure il click dell'utente.
     intervalRef.current = window.setInterval(swap, delay);
 
     // Espone swap + reset del timer per il click manuale sulle card.
@@ -200,6 +203,7 @@ const CardSwap = ({
   return (
     <div ref={container} className="card-swap-container" style={{ width, height }}>
       {rendered}
+      {overlay}
     </div>
   );
 };

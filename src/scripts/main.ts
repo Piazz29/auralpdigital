@@ -41,7 +41,16 @@ document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
     const target = document.querySelector<HTMLElement>(href);
     if (!target) return;
     e.preventDefault();
-    lenis.scrollTo(target, { duration: 1.5 });
+    // Salto dalla hero verso i progetti: deve essere diretto, non un lento
+    // crawl che attraversa (e "accende" in modo brutto) la sezione servizi
+    // pinnata. Scroll breve e bloccato → arriva netto all'inizio dei progetti,
+    // l'offset resta corretto perché il pin-spacer è già nel DOM.
+    const isHeroToProjects = href === "#projects" && !!a.closest(".hero-section");
+    if (isHeroToProjects) {
+      lenis.scrollTo(target, { duration: 0.7, lock: true });
+    } else {
+      lenis.scrollTo(target, { duration: 1.5 });
+    }
   });
 });
 
@@ -589,9 +598,12 @@ const servicesScrollHint = document.querySelector<HTMLElement>(".services-scroll
 const servicesPinned =
   !reduceMotion && window.matchMedia("(min-width: 1024px)").matches;
 
-// Distanza di scroll della sezione pinnata: ~90vh per scena + coda finale.
+// Distanza di scroll della sezione pinnata: ~140vh per scena + coda finale.
+// Più lunga della distanza "naturale" → lo scroll è meno sensibile, ogni
+// servizio ha il tempo di essere percepito e uno scroll veloce non salta più
+// scene insieme (in coppia con lo scrub morbido qui sotto).
 const servicesPinDistance = () =>
-  Math.round(window.innerHeight * (serviceSlides.length * 0.9 + 0.5));
+  Math.round(window.innerHeight * (serviceSlides.length * 1.4 + 0.6));
 
 // ---------- Navbar — zona scura della banda navy ----------
 // Un solo trigger che attraversa la sezione pinnata si "accorcia" (lo span
@@ -688,7 +700,10 @@ if (servicesStage && serviceSlides.length && !reduceMotion) {
         start: "top top",
         end: () => "+=" + servicesPinDistance(),
         pin: true,
-        scrub: 0.5,
+        // Scrub più morbido = più "resistenza/lag": il movimento delle scene
+        // insegue lo scroll con inerzia, così uno scatto veloce non fa avanzare
+        // di colpo più servizi.
+        scrub: 1,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         // Il pin sposta in basso tutto ciò che lo segue (chi-siamo, marquee,

@@ -145,7 +145,7 @@ const journeyArt: Record<string, string> = {
           </div>
 
           <BlurText
-            client:visible
+            client:load
             text={ta.manifesto.statement}
             animateBy="words"
             direction="top"
@@ -245,20 +245,9 @@ const journeyArt: Record<string, string> = {
       </div>
     </section>
 
-    <!-- SEPARATORE -->
-    <hr class="section-rule" aria-hidden="true" />
-
-    <!-- OUTRO -->
-    <div class="about-outro about-content about-outro--standalone">
-      <span class="deco deco--plus deco-accent deco-float-2" style="left: 15%; top: 16%;" aria-hidden="true"></span>
-      <span class="deco deco--ring deco-peri deco-float-1" style="right: 13%; bottom: 32%;" aria-hidden="true"></span>
-      <div class="about-duo" data-anim="duo">
-        <span class="duo-names font-display"><Rich text={ta.outro.names} /></span>
-        <span class="duo-cta duo-cta--static">
-          {ta.outro.cta}
-        </span>
-      </div>
-    </div>
+    <!-- SEPARATORE — linea sottile che introduce la CTA/form, con respiro
+         extra perché lo stack di card di "Come lavoriamo" deborda verso il basso. -->
+    <hr class="section-rule section-rule--airy" aria-hidden="true" />
 
     <!-- CTA FINALE -->
     <section id="contatti" class="about-cta" data-anim="contact">

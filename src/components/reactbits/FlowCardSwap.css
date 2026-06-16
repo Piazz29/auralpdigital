@@ -4,44 +4,48 @@
   inset: 0;
 }
 
-/* Hint "Clicca per scorrere" — visibile finché l'utente non interagisce.
-   Pulsa leggermente e si dissolve al primo click. */
+/* Hint "Clicca per scorrere" — NON un bottone: solo testo leggero e
+   trasparente. Renderizzato dentro al container CardSwap (overlay), quindi
+   ancorato alla prima card: centrato orizzontalmente e appena sopra il suo
+   bordo inferiore. Pulsa appena, sparisce al primo click e ricompare dopo 15s
+   d'inattività (gestito in FlowCardSwap). pointer-events:none → non intercetta
+   l'interazione con la card. */
 .flow-swap-hint {
   position: absolute;
-  top: 6px;
-  left: 0;
+  left: 50%;
+  bottom: 16px;
   z-index: 30;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 16px 9px 13px;
-  border-radius: 9999px;
+  gap: 7px;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
-  letter-spacing: 0.01em;
-  color: #0d0d0d;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #e8e8e5;
-  box-shadow: 0 10px 26px rgba(13, 13, 13, 0.12);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: rgba(250, 250, 248, 0.68);
+  text-shadow: 0 1px 6px rgba(13, 13, 13, 0.5);
   pointer-events: none;
-  animation: flow-hint-bob 2.2s ease-in-out infinite;
+  transform: translateX(-50%);
+  animation: flow-hint-bob 2.4s ease-in-out infinite;
   transition:
-    opacity 0.4s ease,
-    transform 0.4s ease;
+    opacity 0.5s ease,
+    transform 0.5s ease;
 }
 .flow-swap-hint svg {
-  width: 17px;
-  height: 17px;
-  color: var(--color-accent, #3b5bdb);
+  width: 16px;
+  height: 16px;
+  color: #8aa0ff;
+  opacity: 0.9;
 }
 .flow-swap-hint.is-hidden {
   opacity: 0;
-  transform: translateY(-6px) scale(0.96);
+  /* mantiene il centraggio orizzontale mentre si dissolve verso l'alto */
+  transform: translateX(-50%) translateY(-6px);
 }
 @keyframes flow-hint-bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-4px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .flow-swap-hint { animation: none; }

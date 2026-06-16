@@ -175,7 +175,7 @@ const services = servicesMeta.map((m, i) => ({
           <span class="works-kicker">{t.home.problem.kicker}</span>
           <div class="problem-statement font-display">
             <SplitText
-              client:visible
+              client:load
               tag="p"
               className="problem-line"
               text={t.home.problem.line1}
@@ -190,7 +190,7 @@ const services = servicesMeta.map((m, i) => ({
               textAlign="left"
             />
             <SplitText
-              client:visible
+              client:load
               tag="p"
               className="problem-line problem-line--accent"
               text={t.home.problem.line2}

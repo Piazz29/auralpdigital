@@ -696,7 +696,7 @@ button {
    L'espansione è CSS puro; GSAP gestisce solo l'entrata in scroll. */
 .works-rail {
   display: flex;
-  gap: 14px;
+  gap: 18px;
   height: clamp(520px, 76vh, 820px);
   perspective: 1600px;
 }
@@ -810,16 +810,26 @@ button {
 }
 .work-panel.is-active .work-panel-img { transform: scale(1.08); }
 
-/* Scrim per leggibilità del testo bianco. */
+/* Scrim per leggibilità del testo bianco. Due strati: una velatura dal basso
+   (gerarchia verticale) + un focus più scuro nell'angolo basso-sinistra, dove
+   vive il blocco editoriale: così l'anteprima live (col suo logo/hero) non si
+   sovrappone mai al testo, qualunque cosa mostri l'iframe. */
 .work-panel-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(13, 13, 13, 0.82) 0%,
-    rgba(13, 13, 13, 0.34) 44%,
-    rgba(13, 13, 13, 0.04) 72%
-  );
+  background:
+    radial-gradient(
+      120% 95% at 0% 100%,
+      rgba(13, 13, 13, 0.72) 0%,
+      rgba(13, 13, 13, 0.28) 42%,
+      transparent 68%
+    ),
+    linear-gradient(
+      to top,
+      rgba(13, 13, 13, 0.84) 0%,
+      rgba(13, 13, 13, 0.36) 46%,
+      rgba(13, 13, 13, 0.04) 74%
+    );
   pointer-events: none;
 }
 
@@ -1914,6 +1924,16 @@ button {
   margin: 4rem auto;
   border: 0;
   border-top: 1px solid var(--color-border);
+}
+/* Variante "ariosa": separatore corto e centrato che introduce la sezione
+   successiva con più respiro verticale. Usata in fondo a "Chi siamo" dopo lo
+   stack di card di "Come lavoriamo", che deborda/anima verso il basso: il
+   margine ampio garantisce che nessuna card in movimento copra la CTA. */
+.section-rule--airy {
+  width: min(72%, 40rem);
+  margin-top: clamp(5rem, 12vh, 9rem);
+  margin-bottom: clamp(4rem, 9vh, 7rem);
+  border-top-color: color-mix(in srgb, var(--color-border) 70%, transparent);
 }
 
 /* ----------------------------------------------------------------------
@@ -4024,9 +4044,9 @@ nav:has(#burger-menu.is-open) .pill {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 50%;
+  object-position: center 66%;
   transform: scale(1.18);
-  transform-origin: center 30%;
+  transform-origin: center 24%;
 }
 .hang-initial {
   font-family: var(--font-display);
@@ -4123,7 +4143,9 @@ nav:has(#burger-menu.is-open) .pill {
 /* COME LAVORIAMO senza contenitore: vive sul plain background, quindi i testi
    tornano scuri (ink/secondary) invece dei chiari pensati per il pannello. */
 .ap-flow--plain {
-  padding-block: clamp(40px, 9vh, 110px);
+  /* Più aria sotto: lo stack CardSwap deborda (translate 20%) e in swap una
+     card scende ~500px; questo padding evita che invada il separatore/CTA. */
+  padding-block: clamp(40px, 9vh, 110px) clamp(90px, 16vh, 180px);
 }
 .ap-flow--plain .ap-flow-kicker {
   color: var(--color-muted);
