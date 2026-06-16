@@ -1,0 +1,523 @@
+---
+// HomePage — corpo della homepage, parametrizzato per lingua. Le pagine di
+// rotta (/, /de/, /en/) sono semplici wrapper che passano `lang`. Tutti i testi
+// vengono dal dizionario; i dati strutturali (URL, embed, gradienti, chiavi
+// animazione) restano qui, indipendenti dalla lingua, e si fondono per indice
+// con le stringhe tradotte.
+import type { Lang } from "../../i18n";
+import { defaultLang, getDict } from "../../i18n";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Navbar from "../Navbar.astro";
+import Footer from "../Footer.astro";
+import ContainerScroll from "../ContainerScroll.astro";
+import ContactForm from "../ContactForm.astro";
+import Rich from "../Rich.astro";
+import SplitText from "../reactbits/SplitText.jsx";
+// Animazione SVG (SMIL) accanto allo statement "Il punto". Importata ?raw e
+// iniettata inline: in <img> la SMIL non parte, inline sì.
+import animation1 from "../../svg/animation1.svg?raw";
+import "../../styles/global.css";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = getDict(lang);
+const tp = t.home.projects;
+const ts = t.home.services;
+
+// PROGETTI — dati strutturali (lingua-indipendenti) fusi con le stringhe
+// tradotte. Titoli 01/02 sono nomi di brand (non si traducono); il 03 sì.
+const projectsMeta = [
+  {
+    n: "01",
+    title: "Alessia",
+    titleEm: "PMU",
+    year: "2026",
+    url: "https://www.alessiapmu.de/",
+    embed: "https://www.alessiapmu.de/",
+    preview: "",
+    status: "live" as const,
+  },
+  {
+    n: "02",
+    title: "Mary",
+    titleEm: "Poppinks",
+    year: "2026",
+    url: "https://marypoppinks.vercel.app/",
+    embed: "https://marypoppinks.vercel.app/",
+    preview: "",
+    status: "live" as const,
+  },
+  {
+    n: "03",
+    title: tp.items[2].title,
+    titleEm: tp.items[2].titleEm,
+    year: "",
+    url: "#contatti",
+    embed: "",
+    preview: "",
+    status: "soon" as const,
+  },
+];
+const projects = projectsMeta.map((m, i) => ({
+  ...m,
+  type: tp.items[i].type,
+  desc: tp.items[i].desc,
+  cta: tp.items[i].cta,
+}));
+
+// SERVIZI — stessa logica: gradiente e chiave animazione qui, testo tradotto.
+const servicesMeta = [
+  { n: "01", grad: "grad-2", art: "web" },
+  { n: "02", grad: "grad-1", art: "ops" },
+  { n: "03", grad: "grad-3", art: "social" },
+];
+const services = servicesMeta.map((m, i) => ({
+  ...m,
+  name: ts.items[i].name,
+  nameEm: ts.items[i].nameEm,
+  desc: ts.items[i].desc,
+  points: ts.items[i].points,
+}));
+---
+
+<BaseLayout lang={lang} title={t.meta.home.title} description={t.meta.home.description}>
+  <Navbar home lang={lang} route="/" />
+
+  <!-- HERO — sezione a tutta schermo, scroll normale -->
+  <section class="hero-section relative h-screen w-full overflow-hidden" data-anim="hero">
+    <video
+      data-anim="hero-video"
+      autoplay
+      muted
+      playsinline
+      preload="auto"
+      class="hero-video absolute inset-0 w-full h-full object-cover"
+      style="opacity: 0;"
+    >
+      <source src="/videos/hf_20260530_204233_c0117512-9162-41ec-a063-b269b29ab4e7.mp4" type="video/mp4" />
+    </video>
+
+    <!-- Layer 1 — overlay caldo: scalda il grigio freddo del video verso il warm white -->
+    <div class="hero-warm-overlay absolute inset-0 z-[1] pointer-events-none"></div>
+
+    <!-- Layer 2 — fusione ai bordi: vignettatura calda che fa "emergere" il video dalla pagina -->
+    <div class="hero-edge-fade absolute inset-0 z-[2] pointer-events-none"></div>
+
+    <!-- Layer 3 — fade in fondo: il video sfuma nel warm white della sezione progetti -->
+    <div class="hero-bottom-fade absolute inset-x-0 bottom-0 z-[3] pointer-events-none"></div>
+
+    <!-- Segni di stampa — forme di palette che fluttuano ai margini della scena -->
+    <div class="hero-deco absolute inset-0 z-[4] pointer-events-none" aria-hidden="true">
+      <span class="deco deco--ring deco-peri deco-float-1" style="left: 11%; top: 26%;"></span>
+      <span class="deco deco--plus deco-accent deco-float-2" style="right: 13%; top: 32%;"></span>
+      <span class="deco deco--dot deco-navy deco-float-3" style="left: 17%; bottom: 24%;"></span>
+      <span class="deco deco--star deco-muted deco-float-2" style="right: 19%; bottom: 30%;">✦</span>
+    </div>
+
+    <div data-anim="hero-content" class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center" style="background: radial-gradient(ellipse 50% 38% at 50% 50%, rgba(250, 250, 248, 0.85) 0%, rgba(250, 250, 248, 0.7) 35%, rgba(250, 250, 248, 0.35) 65%, transparent 90%);">
+      <span
+        data-anim="hero-label"
+        class="hero-badge text-[11px] font-medium tracking-[0.15em] uppercase"
+        style="opacity: 0;"
+      >
+        {t.home.hero.badge}
+      </span>
+
+      <h1
+        class="font-display font-medium text-[#0D0D0D] mt-6"
+        style="font-size: clamp(38px, 5vw, 80px); line-height: 0.98; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);"
+      >
+        <span data-anim="hero-line-1" class="block" style="opacity: 0;">{t.home.hero.l1}</span>
+        <span data-anim="hero-line-2" class="block" style="opacity: 0;"><Rich text={t.home.hero.l2} /></span>
+        <span data-anim="hero-line-3" class="block" style="opacity: 0;">{t.home.hero.l3}</span>
+      </h1>
+
+      <p
+        data-anim="hero-subline"
+        class="mt-5 text-[14px] tracking-[0.04em] text-[#4A4A4A]"
+        style="opacity: 0; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);"
+      >
+        {t.home.hero.sub}
+      </p>
+
+      <div
+        data-anim="hero-cta"
+        class="mt-8 flex justify-center"
+        style="opacity: 0;"
+      >
+        <a
+          href="#projects"
+          class="pill text-[13px] px-7 py-[14px]"
+        >
+          {t.home.hero.cta} <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+
+      <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
+      <div class="hero-scroll-hint" data-anim="hero-hint" style="opacity: 0;" aria-hidden="true">
+        <span class="hero-scroll-label">{t.home.hero.scroll}</span>
+        <span class="hero-scroll-line"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENUTO — flusso normale -->
+  <div class="post-reveal relative z-10">
+
+  <!-- SECTION — PROBLEMA / VALORE -->
+  <section id="problema" class="problem-section">
+    <span class="deco deco--plus deco-accent deco-float-2" style="right: 9%; top: 22%;" aria-hidden="true"></span>
+    <div class="works-screen">
+      <div class="problem-grid">
+        <div class="problem-copy">
+          <span class="works-kicker">{t.home.problem.kicker}</span>
+          <div class="problem-statement font-display">
+            <SplitText
+              client:visible
+              tag="p"
+              className="problem-line"
+              text={t.home.problem.line1}
+              splitType="words"
+              delay={45}
+              duration={0.8}
+              ease="power3.out"
+              from={{ opacity: 0, y: 40 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.3}
+              rootMargin="-80px"
+              textAlign="left"
+            />
+            <SplitText
+              client:visible
+              tag="p"
+              className="problem-line problem-line--accent"
+              text={t.home.problem.line2}
+              splitType="words"
+              delay={45}
+              duration={0.8}
+              ease="power3.out"
+              from={{ opacity: 0, y: 40 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.3}
+              rootMargin="-80px"
+              textAlign="left"
+            />
+          </div>
+        </div>
+        <div class="problem-visual" data-problem-art aria-hidden="true" set:html={animation1}></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION — COSA FACCIAMO -->
+  <section id="cosa-facciamo" class="services-section">
+    <div class="services-glow services-glow--1" aria-hidden="true"></div>
+    <div class="services-glow services-glow--2" aria-hidden="true"></div>
+    <svg class="services-ridge" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 96 120 58l90 28 130-60 110 44 150-68 130 56 120-30 110 44 150-58 130 40 90-22" stroke="rgba(250, 250, 248, 0.13)" fill="none" stroke-width="1.5" />
+      <path d="M0 112 140 78l100 22 140-48 120 38 160-56 140 46 130-26 120 38 150-46 140 32 100-18" stroke="rgba(138, 160, 255, 0.25)" fill="none" stroke-width="1" />
+    </svg>
+    <div class="works-screen">
+      <div class="works-head" data-anim="services-head">
+        <div class="works-head-left">
+          <span class="works-kicker">{ts.kicker}</span>
+          <SplitText
+            client:visible
+            tag="h2"
+            className="works-title"
+            text={ts.title}
+            splitType="chars"
+            delay={28}
+            duration={0.9}
+            ease="power3.out"
+            from={{ opacity: 0, y: 40 }}
+            to={{ opacity: 1, y: 0 }}
+            threshold={0.2}
+            rootMargin="-80px"
+            textAlign="left"
+          />
+        </div>
+        <a href="#contatti" class="works-head-link">
+          {ts.link} <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+
+      <div class="services-stage">
+        {services.map((s) => (
+          <article class="service-slide">
+            <div class="slide-body">
+              <span class="slide-index">{s.n} / 0{services.length}</span>
+              <h3 class="slide-title">
+                <span class="sn-mask"><span class="sn">{s.name} <em>{s.nameEm}</em></span></span>
+              </h3>
+              <p class="slide-desc">{s.desc}</p>
+              <ul class="slide-ledger">
+                {s.points.map((p, i) => (
+                  <li class="slide-ledger-row">
+                    <span class="slide-ledger-num">{`0${i + 1}`}</span>
+                    <span class="slide-ledger-rule" aria-hidden="true"></span>
+                    <span class="slide-ledger-text">{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div class="slide-media slide-media--bare">
+              {s.art === "web" && (
+                <div class="media-art" aria-hidden="true">
+                  <svg class="svg-art svg-web" viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="40" y="26" width="240" height="150" rx="11" stroke="rgba(255,255,255,0.5)" stroke-width="1.4" />
+                    <line x1="40" y1="50" x2="280" y2="50" stroke="rgba(255,255,255,0.28)" stroke-width="1" />
+                    <circle cx="55" cy="38" r="2.6" fill="rgba(255,255,255,0.6)" />
+                    <circle cx="65" cy="38" r="2.6" fill="rgba(255,255,255,0.42)" />
+                    <circle cx="75" cy="38" r="2.6" fill="rgba(255,255,255,0.42)" />
+                    <rect class="wf wf-hero" x="54" y="62" width="212" height="52" rx="6" fill="#8aa0ff" fill-opacity="0.92" />
+                    <rect class="wf wf-l1" x="54" y="126" width="150" height="8" rx="4" fill="rgba(255,255,255,0.88)" />
+                    <rect class="wf wf-l2" x="54" y="142" width="118" height="8" rx="4" fill="rgba(255,255,255,0.55)" />
+                    <rect class="wf wf-l3" x="54" y="158" width="78" height="8" rx="4" fill="rgba(255,255,255,0.38)" />
+                  </svg>
+                </div>
+              )}
+              {s.art === "ops" && (
+                <div class="media-art" aria-hidden="true">
+                  <svg class="svg-art svg-ops" viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="30" y="28" width="260" height="144" rx="11" stroke="rgba(255,255,255,0.42)" stroke-width="1.4" />
+                    <line x1="80" y1="28" x2="80" y2="172" stroke="rgba(255,255,255,0.22)" stroke-width="1" />
+                    <rect x="44" y="46" width="22" height="4" rx="2" fill="rgba(255,255,255,0.45)" />
+                    <rect x="44" y="60" width="16" height="4" rx="2" fill="rgba(255,255,255,0.25)" />
+                    <rect x="44" y="74" width="20" height="4" rx="2" fill="rgba(255,255,255,0.25)" />
+                    <rect x="44" y="88" width="14" height="4" rx="2" fill="rgba(255,255,255,0.25)" />
+                    <g class="op-card op-c1">
+                      <rect x="98" y="46" width="84" height="50" rx="7" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" />
+                      <rect x="106" y="54" width="30" height="4" rx="2" fill="rgba(255,255,255,0.55)" />
+                      <polyline class="op-chart" points="106,86 120,76 132,82 146,66 162,72 174,60" stroke="#8aa0ff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+                    </g>
+                    <g class="op-card op-c2">
+                      <rect x="192" y="46" width="76" height="50" rx="7" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" />
+                      <rect x="200" y="80" width="9" height="10" rx="2" fill="rgba(255,255,255,0.7)" />
+                      <rect x="214" y="72" width="9" height="18" rx="2" fill="rgba(255,255,255,0.5)" />
+                      <rect x="228" y="76" width="9" height="14" rx="2" fill="#8aa0ff" />
+                      <rect x="242" y="66" width="9" height="24" rx="2" fill="rgba(255,255,255,0.5)" />
+                    </g>
+                    <g class="op-card op-c3">
+                      <rect x="98" y="106" width="170" height="50" rx="7" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" />
+                      <rect x="108" y="118" width="60" height="5" rx="2.5" fill="rgba(255,255,255,0.5)" />
+                      <rect x="108" y="132" width="120" height="5" rx="2.5" fill="rgba(255,255,255,0.28)" />
+                      <rect x="108" y="143" width="96" height="5" rx="2.5" fill="rgba(255,255,255,0.28)" />
+                    </g>
+                  </svg>
+                </div>
+              )}
+              {s.art === "social" && (
+                <div class="media-art" aria-hidden="true">
+                  <svg class="svg-art svg-social" viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <clipPath id="phone-screen">
+                        <rect x="126" y="34" width="68" height="138" rx="7" />
+                      </clipPath>
+                    </defs>
+                    <rect x="120" y="16" width="80" height="172" rx="15" stroke="rgba(255,255,255,0.5)" stroke-width="1.4" />
+                    <rect x="150" y="23" width="20" height="3" rx="1.5" fill="rgba(255,255,255,0.4)" />
+                    <g clip-path="url(#phone-screen)">
+                      <g class="feed-track">
+                        {[0, 1].map((set) =>
+                          [0, 1, 2, 3].map((i) => {
+                            const y = set * 160 + 40 + i * 40;
+                            return (
+                              <g>
+                                <rect x="132" y={y} width="56" height="30" rx="5" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.26)" stroke-width="1" />
+                                <circle cx="139" cy={y + 8} r="3" fill={i % 2 === 0 ? "#8aa0ff" : "rgba(255,255,255,0.5)"} />
+                                <rect x="146" y={y + 6} width="22" height="3" rx="1.5" fill="rgba(255,255,255,0.4)" />
+                                <rect x="139" y={y + 17} width="42" height="3" rx="1.5" fill="rgba(255,255,255,0.22)" />
+                              </g>
+                            );
+                          })
+                        )}
+                      </g>
+                    </g>
+                    <path class="like-heart" d="M160 116c-6-5-14-9-14-17a7 7 0 0 1 14-3 7 7 0 0 1 14 3c0 8-8 12-14 17Z" fill="#8aa0ff" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+
+    <div class="services-scroll-hint" aria-hidden="true" style="opacity: 0;">
+      <span class="services-scroll-label">{ts.scroll}</span>
+      <span class="services-scroll-line"></span>
+    </div>
+
+  </section>
+
+  <!-- SECTION — LAVORI -->
+  <section id="projects" class="projects-section">
+    <div class="section-topo" aria-hidden="true" data-parallax="0.14">
+      <svg viewBox="0 0 420 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M210 18c104-4 190 60 188 144-2 82-90 142-190 140S20 242 22 158C24 76 112 22 210 18Z" stroke="rgba(154, 163, 178, 0.5)" />
+        <path d="M212 52c80-3 152 46 152 108 0 64-72 112-154 110S58 222 60 160C62 100 134 55 212 52Z" stroke="rgba(59, 91, 219, 0.32)" />
+        <path d="M214 88c56-2 116 30 118 72 2 44-54 80-120 78-66-2-120-34-118-78 2-42 64-70 120-72Z" stroke="rgba(138, 160, 255, 0.5)" />
+        <path d="M210 126c36-2 66 16 66 36s-30 38-66 36c-34-2-62-16-62-36s28-34 62-36Z" stroke="rgba(26, 35, 64, 0.4)" />
+        <circle cx="211" cy="162" r="3" fill="#3B5BDB" />
+      </svg>
+    </div>
+    <span class="deco deco--star deco-accent deco-float-2" style="left: 4.5%; bottom: 5%;" aria-hidden="true">✦</span>
+    <div class="works-screen">
+      <div class="works-head" data-anim="works-head">
+        <div class="works-head-left">
+          <span class="works-kicker">{tp.kicker}</span>
+          <SplitText
+            client:visible
+            tag="h2"
+            className="works-title"
+            text={tp.title}
+            splitType="chars"
+            delay={28}
+            duration={0.9}
+            ease="power3.out"
+            from={{ opacity: 0, y: 40 }}
+            to={{ opacity: 1, y: 0 }}
+            threshold={0.2}
+            rootMargin="-80px"
+            textAlign="left"
+          />
+        </div>
+        <a href="#contatti" class="works-head-link">
+          {tp.link} <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+
+      <div class="works-rail">
+        {projects.map((p, i) => {
+          const Tag = p.url ? "a" : "div";
+          const props = !p.url
+            ? { "aria-disabled": "true" }
+            : p.url.startsWith("#")
+              ? { href: p.url }
+              : { href: p.url, target: "_blank", rel: "noopener noreferrer" };
+          return (
+            <Tag
+              class={`work-panel grad-${(i % 4) + 1}${p.status === "soon" ? " work-panel--soon" : ""}`}
+              data-open={i === 0 ? "" : undefined}
+              data-anim="work-panel"
+              {...props}
+            >
+              {p.embed ? (
+                <div class="panel-preview" aria-hidden="true">
+                  <div class="browser-bar">
+                    <span class="browser-dots"><i></i><i></i><i></i></span>
+                    <span class="browser-url">{p.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</span>
+                  </div>
+                  <div class="browser-viewport">
+                    <iframe
+                      class="browser-iframe"
+                      data-iframe
+                      data-src={p.embed}
+                      title={`${tp.previewLabel} ${p.title} ${p.titleEm}`}
+                      loading="lazy"
+                      tabindex="-1"
+                      scrolling="no"
+                      sandbox="allow-scripts allow-same-origin allow-popups"
+                    ></iframe>
+                  </div>
+                </div>
+              ) : (
+                p.preview && (
+                  <img class="work-panel-img" src={p.preview} alt={p.title} loading="lazy" />
+                )
+              )}
+              <span class="work-panel-scrim" aria-hidden="true"></span>
+
+              <div class="panel-vertical">
+                <span class="panel-vertical-num">{p.n}</span>
+                <span class="panel-vertical-title">{p.title} {p.titleEm}</span>
+              </div>
+
+              <div class="panel-full">
+                <span class="panel-index" aria-hidden="true">{p.n}</span>
+                <div class="panel-body">
+                  <span class="panel-kicker">
+                    <span class="panel-tick" aria-hidden="true"></span>
+                    {p.type}{p.year ? ` · ${p.year}` : ""}
+                  </span>
+                  <h3 class="panel-title">
+                    {p.title} <em>{p.titleEm}</em>
+                  </h3>
+                  {p.desc && <p class="panel-desc">{p.desc}</p>}
+                  {p.url && p.cta && (
+                    <span class="panel-cta">
+                      <span class="panel-cta-label">{p.cta}</span>
+                      <span class="panel-cta-arrow" aria-hidden="true">↗</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </Tag>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION — CHI SIAMO (teaser) -->
+  <section id="chi-siamo" class="about-section">
+    <div class="about-backdrop" aria-hidden="true">
+      <div class="about-video-frame">
+        <video
+          class="about-video"
+          data-about-video
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+        >
+          <source src="/videos/sciliar-boomerang.mp4" type="video/mp4" />
+        </video>
+        <div class="about-video-veil" data-about-veil></div>
+      </div>
+    </div>
+
+    <div class="about-intro about-content">
+      <span class="deco deco--star deco-peri deco-float-1" style="right: 13%; top: 26%;" aria-hidden="true">✦</span>
+      <span class="deco deco--ring deco-accent deco-float-3" style="left: 11%; bottom: 27%;" aria-hidden="true"></span>
+      <div class="works-screen about-intro-screen">
+        <span class="works-kicker about-kicker" data-anim="about-kicker">{t.home.aboutTeaser.kicker}</span>
+        <p class="about-statement font-display" data-glow-pin>
+          <Rich text={t.home.aboutTeaser.statement} />
+        </p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- SEPARATORE -->
+  <hr class="section-rule" aria-hidden="true" />
+
+  <!-- SECTION — CTA FINALE -->
+  <section id="contatti" class="contact-section" data-anim="contact">
+    <ContainerScroll>
+      <div slot="title" class="cscroll-title">
+        <span class="works-kicker cscroll-kicker" data-anim="contact-kicker">
+          {t.home.contact.kicker}
+        </span>
+        <h2 class="cta-title cscroll-headline" data-anim="contact-headline">
+          <Rich text={t.home.contact.headline} />
+        </h2>
+        <p class="cta-sub cscroll-sub" data-anim="contact-sub">
+          {t.home.contact.sub}
+        </p>
+      </div>
+
+      <ContactForm lang={lang} />
+    </ContainerScroll>
+  </section>
+
+  <Footer home lang={lang} />
+
+  </div>
+  <!-- /post-reveal -->
+</BaseLayout>

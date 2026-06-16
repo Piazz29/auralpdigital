@@ -1,17 +1,22 @@
 ---
+import type { Lang } from "../i18n";
+import { defaultLang } from "../i18n";
+
 interface Props {
+  lang?: Lang;
   title?: string;
   description?: string;
 }
 
 const {
+  lang = defaultLang,
   title = "AuralpDigital — Sistemi digitali che generano clienti",
   description = "Studio di crescita digitale in Alto Adige. Siti web premium, lead generation, campagne ads, brand & social, automazioni, AI integration.",
 } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="it">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

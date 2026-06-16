@@ -63,6 +63,67 @@
   object-fit: contain;
 }
 
+/* Lato destro dell'header: switcher di lingua + bottone menu, raggruppati. */
+.sm-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  pointer-events: auto;
+}
+
+/* Switcher di lingua — segmenti compatti IT · DE · EN nell'header fisso. */
+.sm-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  pointer-events: auto;
+}
+
+.sm-lang-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.9em;
+  padding: 0.32em 0.42em;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: #0d0d0d;
+  opacity: 0.5;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: opacity 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+
+.sm-lang-link:hover {
+  opacity: 1;
+}
+
+.sm-lang-link.is-active {
+  opacity: 1;
+  color: var(--sm-accent, #3b5bdb);
+  background: rgba(59, 91, 219, 0.1);
+}
+
+.sm-lang-link:focus-visible {
+  outline: 2px solid var(--sm-accent, #3b5bdb);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .sm-header-right {
+    gap: 0.7rem;
+  }
+  .sm-lang-link {
+    min-width: 1.7em;
+    padding: 0.3em 0.34em;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+}
+
 .sm-toggle {
   position: relative;
   display: inline-flex;

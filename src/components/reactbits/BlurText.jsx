@@ -30,18 +30,34 @@ const BlurText = ({
   const ref = useRef(null);
 
   useEffect(() => {
+    // Reduced motion: niente animazione, testo subito leggibile.
+    const reduce =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (reduce) {
+      setInView(true);
+      return;
+    }
     if (!ref.current) return;
+    const el = ref.current;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setInView(true);
-          observer.unobserve(ref.current);
+          observer.unobserve(el);
         }
       },
       { threshold, rootMargin }
     );
-    observer.observe(ref.current);
-    return () => observer.disconnect();
+    observer.observe(el);
+    // Failsafe: se per qualunque motivo l'observer non scatta (es. hydration
+    // tardiva con elemento già in viewport), riproduci comunque l'animazione
+    // così il testo non resta mai nascosto.
+    const fallback = window.setTimeout(() => setInView(true), 1200);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, [threshold, rootMargin]);
 
   const defaultFrom = useMemo(

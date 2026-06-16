@@ -1,31 +1,29 @@
 ---
-// ContactForm — vive DENTRO la card 3D di <ContainerScroll>. Layout a due
-// pannelli: a sinistra un aside accent (cosa succede dopo l'invio + contatti),
-// a destra il form vero. Niente backend: il submit (gestito in main.ts,
-// [data-contact-form]) compone un mailto precompilato. Per passare a un
-// endpoint reale (Web3Forms/Formspree) basterà aggiungere action/method e
-// togliere l'intercept JS.
-//
-// Budget: selettore di FASCIA opzionale (ricerca CRO → su un form ad alta
-// intenzione il budget qualifica il lead senza uccidere la conversione, a
-// patto che sia opzionale, a scelta rapida e con un'uscita "Non so ancora").
-const budgets = ["< 1.5k", "1.5–3k", "3–6k", "6k+", "Non so ancora"];
-const steps = [
-  "Ci scrivi due righe sul progetto",
-  "Ti rispondiamo entro 24 ore",
-  "Call gratuita di 30 min, zero impegno",
-];
+// ContactForm — vive DENTRO la card 3D di <ContainerScroll>. Multilingua: i
+// testi vengono dal dizionario; le stringhe usate da main.ts per comporre il
+// mailto e il messaggio di stato sono esposte come data-* sul <form>, così la
+// logica JS resta una sola e parla la lingua della pagina.
+import type { Lang } from "../i18n";
+import { defaultLang, getDict } from "../i18n";
+import Rich from "./Rich.astro";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = getDict(lang);
+const cf = t.contactForm;
 ---
 
 <div class="cform-layout">
   <!-- ASIDE — pannello accent: cosa succede dopo + contatti diretti. -->
   <aside class="cform-aside">
     <span class="cform-aside-star" aria-hidden="true">✦</span>
-    <span class="cform-aside-label">La consulenza</span>
-    <h3 class="cform-aside-title font-display">Da qui <em>parte tutto.</em></h3>
+    <span class="cform-aside-label">{cf.asideLabel}</span>
+    <h3 class="cform-aside-title font-display"><Rich text={cf.asideTitle} /></h3>
 
     <ol class="cform-steps">
-      {steps.map((s, i) => (
+      {cf.steps.map((s, i) => (
         <li class="cform-step">
           <span class="cform-step-num">{`0${i + 1}`}</span>
           <span class="cform-step-text">{s}</span>
@@ -35,65 +33,77 @@ const steps = [
 
     <div class="cform-aside-contact">
       <a href="mailto:hello@auralpdigital.com" class="cform-aside-mail">hello@auralpdigital.com</a>
-      <span class="cform-aside-note">Budget chiari da subito · Nessun impegno</span>
+      <span class="cform-aside-note">{cf.asideNote}</span>
     </div>
   </aside>
 
   <!-- FORM -->
-  <form class="cform" data-contact-form novalidate>
+  <form
+    class="cform"
+    data-contact-form
+    novalidate
+    data-status-opening={cf.statusOpening}
+    data-mail-subject={cf.mail.subject}
+    data-mail-name={cf.mail.name}
+    data-mail-email={cf.mail.email}
+    data-mail-business={cf.mail.business}
+    data-mail-budget={cf.mail.budget}
+    data-mail-project={cf.mail.projectHeading}
+    data-mail-empty={cf.mail.empty}
+  >
     <div class="cform-grid">
       <label class="cform-field">
-        <span class="cform-label">Nome</span>
+        <span class="cform-label">{cf.fields.name}</span>
         <input
           class="cform-input"
           type="text"
           name="nome"
           required
           autocomplete="name"
-          placeholder="Come ti chiami"
+          placeholder={cf.placeholders.name}
         />
       </label>
 
       <label class="cform-field">
-        <span class="cform-label">Email</span>
+        <span class="cform-label">{cf.fields.email}</span>
         <input
           class="cform-input"
           type="email"
           name="email"
           required
           autocomplete="email"
-          placeholder="Dove ti rispondiamo"
+          placeholder={cf.placeholders.email}
         />
       </label>
 
       <label class="cform-field cform-field--full">
-        <span class="cform-label">La tua attività</span>
+        <span class="cform-label">{cf.fields.business}</span>
         <input
           class="cform-input"
           type="text"
           name="attivita"
           autocomplete="organization"
-          placeholder="Studio, brand, settore…"
+          placeholder={cf.placeholders.business}
         />
       </label>
 
       <label class="cform-field cform-field--full">
-        <span class="cform-label">Il progetto</span>
+        <span class="cform-label">{cf.fields.project}</span>
         <textarea
           class="cform-input cform-textarea"
           name="messaggio"
           rows="3"
           required
-          placeholder="Due righe su cosa hai in mente."></textarea>
+          placeholder={cf.placeholders.project}></textarea>
       </label>
     </div>
 
     <fieldset class="cform-budget">
       <legend class="cform-label">
-        Budget indicativo <span class="cform-optional">— opzionale, in €</span>
+        {cf.budgetLegend} <span class="cform-optional">{cf.budgetOptional}</span>
       </legend>
       <div class="cform-chips">
-        {budgets.map((b) => (
+        {cf.budgets.map((b) => (
           <label class="cform-chip">
             <input type="radio" name="budget" value={b} />
             <span>{b}</span>
@@ -104,9 +114,9 @@ const steps = [
 
     <div class="cform-actions">
       <button class="cform-submit" type="submit">
-        Prenota la consulenza <span aria-hidden="true">↗</span>
+        {cf.submit} <span aria-hidden="true">↗</span>
       </button>
-      <span class="cform-note">Risposta entro 24 ore</span>
+      <span class="cform-note">{cf.submitNote}</span>
     </div>
 
     <p class="cform-status" data-form-status aria-live="polite"></p>

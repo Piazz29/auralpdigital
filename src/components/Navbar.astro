@@ -1,13 +1,19 @@
 ---
-// NAVBAR — ora basata sul componente StaggeredMenu (React Bits), adattato al
-// brand: stesse voci, stessa palette, e gli stessi contatti (mail + luogo +
-// social) del vecchio menu. `home` decide il prefisso dei link ancora.
+// NAVBAR — basata sul componente StaggeredMenu (React Bits), adattato al
+// brand: stesse voci, palette e contatti, ora multilingua. `home` decide il
+// prefisso dei link ancora; `lang` localizza voci/contatti e lo switcher di
+// lingua; `route` è la rotta base ('/' o '/chi-siamo') usata dallo switcher
+// per costruire l'equivalente nelle altre lingue.
+import type { Lang } from "../i18n";
+import { defaultLang } from "../i18n";
 import SiteMenu from "./reactbits/SiteMenu.jsx";
 
 interface Props {
   home?: boolean;
+  lang?: Lang;
+  route?: string;
 }
-const { home = false } = Astro.props;
+const { home = false, lang = defaultLang, route = "/" } = Astro.props;
 ---
 
-<SiteMenu client:load home={home} />
+<SiteMenu client:load home={home} lang={lang} route={route} />

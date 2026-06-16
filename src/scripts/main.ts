@@ -1188,16 +1188,23 @@ if (
       }
       const fd = new FormData(form);
       const get = (k: string) => (fd.get(k)?.toString() ?? "").trim();
+      // Etichette localizzate del mailto, esposte come data-* dal componente
+      // (fallback italiano se assenti).
+      const L = (k: string, fallback: string) =>
+        form.getAttribute(k) || fallback;
+      const empty = L("data-mail-empty", "—");
       const nome = get("nome");
       const budget = get("budget");
-      const subject = `Nuova richiesta di consulenza — ${nome || "AuralpDigital"}`;
+      const subject = `${L("data-mail-subject", "Nuova richiesta di consulenza")} — ${
+        nome || "AuralpDigital"
+      }`;
       const body = [
-        `Nome: ${nome}`,
-        `Email: ${get("email")}`,
-        `Attività: ${get("attivita") || "—"}`,
-        `Budget indicativo: ${budget || "—"}`,
+        `${L("data-mail-name", "Nome")}: ${nome}`,
+        `${L("data-mail-email", "Email")}: ${get("email")}`,
+        `${L("data-mail-business", "Attività")}: ${get("attivita") || empty}`,
+        `${L("data-mail-budget", "Budget indicativo")}: ${budget || empty}`,
         "",
-        "Progetto:",
+        L("data-mail-project", "Progetto:"),
         get("messaggio"),
       ].join("\n");
       window.location.href = `mailto:hello@auralpdigital.com?subject=${encodeURIComponent(
@@ -1205,8 +1212,10 @@ if (
       )}&body=${encodeURIComponent(body)}`;
       const status = form.querySelector<HTMLElement>("[data-form-status]");
       if (status) {
-        status.textContent =
-          "Apriamo la tua email… se non parte, scrivici a hello@auralpdigital.com";
+        status.textContent = L(
+          "data-status-opening",
+          "Apriamo la tua email… se non parte, scrivici a hello@auralpdigital.com"
+        );
       }
     });
   }

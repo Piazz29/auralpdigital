@@ -1,0 +1,300 @@
+---
+// AboutPage — corpo della pagina "Chi siamo", parametrizzato per lingua. I dati
+// strutturali (iniziali, gradienti, chiavi SVG, foto) restano qui; i testi
+// vengono dal dizionario e si fondono per indice.
+import type { Lang } from "../../i18n";
+import { defaultLang, getDict, localePath } from "../../i18n";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Navbar from "../Navbar.astro";
+import Footer from "../Footer.astro";
+import Rich from "../Rich.astro";
+import LiquidEther from "../reactbits/LiquidEther.jsx";
+import BlurText from "../reactbits/BlurText.jsx";
+import HangBadge from "../HangBadge.astro";
+import FlowCardSwap from "../reactbits/FlowCardSwap.jsx";
+import "../../styles/global.css";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = getDict(lang);
+const ta = t.about;
+
+// IL DUO — dati strutturali fusi con bio/ruoli/focus tradotti.
+const peopleMeta = [
+  { initial: "J", name: "Julian", grad: "grad-2", photo: "" },
+  { initial: "A", name: "Alice", grad: "grad-4", photo: "" },
+];
+const people = peopleMeta.map((m, i) => ({
+  ...m,
+  role: ta.people[i].role,
+  bio: ta.people[i].bio,
+  focus: ta.people[i].focus,
+}));
+
+// IL PERCORSO — `art` seleziona l'SVG; il resto è tradotto.
+const stepsMeta = ["uni", "spark", "studio", "next"];
+const steps = stepsMeta.map((art, i) => ({
+  art,
+  year: ta.journey.steps[i].year,
+  kicker: ta.journey.steps[i].kicker,
+  title: ta.journey.steps[i].title,
+  text: ta.journey.steps[i].text,
+}));
+
+// COME LAVORIAMO — numero strutturale + testi tradotti.
+const workflow = ta.flow.items.map((it, i) => ({
+  n: `0${i + 1}`,
+  title: it.title,
+  titleEm: it.titleEm,
+  text: it.text,
+  tag: it.tag,
+}));
+
+// Icone-firma per gli step del percorso (statiche, lingua-indipendenti).
+const journeyArt: Record<string, string> = {
+  uni: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true" class="ap-ico ap-ico--uni">
+    <path class="ap-ico-line ap-ico-mortar" d="M6 25 L32 14 L58 25 L32 36 Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+    <path class="ap-ico-line" d="M17 29.5 V41 C17 45.4 24 48.5 32 48.5 C40 48.5 47 45.4 47 41 V29.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="ap-ico-tassel">
+      <line x1="58" y1="25" x2="58" y2="37" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="58" cy="40" r="2.8" fill="currentColor"/>
+    </g>
+  </svg>`,
+  spark: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true" class="ap-ico ap-ico--spark">
+    <rect x="9" y="14" width="46" height="36" rx="5" stroke="currentColor" stroke-width="2.4"/>
+    <line x1="9" y1="25" x2="55" y2="25" stroke="currentColor" stroke-width="2.4"/>
+    <circle cx="15.5" cy="19.5" r="1.6" fill="currentColor"/>
+    <circle cx="21.5" cy="19.5" r="1.6" fill="currentColor"/>
+    <path class="ap-ico-line ap-ico-bk ap-ico-bk-l" d="M28 32 L22 38 L28 44" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="ap-ico-line ap-ico-bk ap-ico-bk-r" d="M40 32 L46 38 L40 44" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <line class="ap-ico-caret" x1="33.5" y1="31" x2="31" y2="45" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <path class="ap-ico-sparkle" d="M50 8 L51.4 12 L55.4 13.4 L51.4 14.8 L50 18.8 L48.6 14.8 L44.6 13.4 L48.6 12 Z" fill="currentColor"/>
+  </svg>`,
+  studio: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true" class="ap-ico ap-ico--studio">
+    <path class="ap-ico-line ap-ico-layer ap-ico-layer-1" d="M32 11 L54 23 L32 35 L10 23 Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+    <path class="ap-ico-line ap-ico-layer ap-ico-layer-2" d="M10 31 L32 43 L54 31" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="ap-ico-line ap-ico-layer ap-ico-layer-3" d="M10 39 L32 51 L54 39" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`,
+  next: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true" class="ap-ico ap-ico--next">
+    <circle class="ap-ico-orbit-track" cx="32" cy="32" r="22" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 6" opacity="0.5"/>
+    <path class="ap-ico-arrow" d="M20 44 L42 22 M30 21 L43 21 L43 34" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="ap-ico-orbit"><circle cx="32" cy="10" r="2.8" fill="currentColor"/></g>
+  </svg>`,
+};
+---
+
+<BaseLayout lang={lang} title={t.meta.about.title} description={t.meta.about.description}>
+  <Navbar lang={lang} route="/chi-siamo" />
+
+  <main class="aboutpage">
+    <!-- HERO -->
+    <section class="ap-hero">
+      <div class="ap-hero-aurora" aria-hidden="true"></div>
+      <div class="ap-hero-fluid" aria-hidden="true">
+        <LiquidEther
+          client:load
+          colors={["#f0f2f9", "#061657", "#3b5bdb"]}
+          mouseForce={24}
+          cursorSize={90}
+          isViscous={false}
+          resolution={0.5}
+          autoDemo={true}
+          autoSpeed={0.3}
+          autoIntensity={2.2}
+          takeoverDuration={0.25}
+          autoResumeDelay={3000}
+          autoRampDuration={0.6}
+        />
+      </div>
+
+      <div class="ap-hero-inner">
+        <span class="hero-badge ap-hero-badge" style="opacity: 0;">
+          {ta.hero.badge}
+        </span>
+
+        <h1 class="ap-hero-title font-display" style="opacity: 0;">
+          <Rich text={ta.hero.title} />
+        </h1>
+
+        <p class="ap-hero-sub" style="opacity: 0;">
+          {ta.hero.sub}
+        </p>
+
+        <ul class="ap-hero-meta" style="opacity: 0;">
+          {ta.hero.meta.map((m) => (
+            <li><span>{m.label}</span><strong>{m.value}</strong></li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="hero-scroll-hint ap-hero-scroll" style="opacity: 0;" aria-hidden="true">
+        <span class="hero-scroll-label">{t.home.hero.scroll}</span>
+        <span class="hero-scroll-line"></span>
+      </div>
+    </section>
+
+    <!-- MANIFESTO -->
+    <section class="ap-section ap-manifesto">
+      <div class="works-screen">
+        <div class="ap-manifesto-grid">
+          <div class="ap-manifesto-lead">
+            <span class="works-kicker">{ta.manifesto.kicker}</span>
+            <span class="ap-manifesto-mark" aria-hidden="true">✦</span>
+          </div>
+
+          <BlurText
+            client:visible
+            text={ta.manifesto.statement}
+            animateBy="words"
+            direction="top"
+            delay={120}
+            stepDuration={0.4}
+            className="ap-statement font-display ap-statement--blur"
+          />
+
+          <div class="ap-manifesto-aside" data-ap-reveal>
+            {ta.manifesto.notes.map((note) => (
+              <p class="ap-manifesto-note"><Rich text={note} /></p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- IL DUO -->
+    <section class="ap-section ap-section--deeper">
+      <div class="works-screen">
+        <div class="works-head">
+          <div class="works-head-left">
+            <span class="works-kicker">{ta.duo.kicker}</span>
+            <h2 class="works-title"><Rich text={ta.duo.title} /></h2>
+          </div>
+        </div>
+
+        <div class="ap-duo">
+          {people.map((person, i) => (
+            <div class={`ap-person${i % 2 === 1 ? " ap-person--flip" : ""}`}>
+              <HangBadge
+                initial={person.initial}
+                name={person.name}
+                role={person.role}
+                grad={person.grad}
+                photo={person.photo || undefined}
+              />
+              <div class="ap-bio">
+                <span class="ap-bio-role">{person.role}</span>
+                <h3 class="ap-bio-name font-display">{person.name}<em>.</em></h3>
+                <p class="ap-bio-text">{person.bio}</p>
+                <ul class="ap-focus">
+                  {person.focus.map((f) => <li>{f}</li>)}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- IL PERCORSO -->
+    <section class="ap-section ap-journey">
+      <div class="works-screen">
+        <div class="works-head">
+          <div class="works-head-left">
+            <span class="works-kicker">{ta.journey.kicker}</span>
+            <h2 class="works-title"><Rich text={ta.journey.title} /></h2>
+          </div>
+        </div>
+
+        <ol class="ap-timeline">
+          <span class="ap-line" aria-hidden="true"></span>
+          {steps.map((s, i) => (
+            <li class={`ap-step ap-step--${i % 2 === 0 ? "left" : "right"}`}>
+              <div class="ap-step-art" set:html={journeyArt[s.art]}></div>
+              <div class="ap-step-body">
+                <span class="ap-step-year">{s.year}</span>
+                <span class="ap-step-kicker">{s.kicker}</span>
+                <h3 class="ap-step-title font-display">{s.title}</h3>
+                <p class="ap-step-text" data-glow>{s.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <!-- COME LAVORIAMO -->
+    <section class="ap-section ap-flow ap-flow--plain">
+      <div class="works-screen">
+        <div class="ap-flow-inner ap-flow-inner--swap">
+          <div class="ap-flow-copy">
+            <span class="works-kicker ap-flow-kicker">{ta.flow.kicker}</span>
+            <h2 class="works-title ap-flow-title">
+              <Rich text={ta.flow.title} />
+            </h2>
+            <p class="ap-flow-lead">
+              {ta.flow.lead}
+            </p>
+          </div>
+
+          <div class="ap-flow-stage">
+            <FlowCardSwap client:visible items={workflow} />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEPARATORE -->
+    <hr class="section-rule" aria-hidden="true" />
+
+    <!-- OUTRO -->
+    <div class="about-outro about-content about-outro--standalone">
+      <span class="deco deco--plus deco-accent deco-float-2" style="left: 15%; top: 16%;" aria-hidden="true"></span>
+      <span class="deco deco--ring deco-peri deco-float-1" style="right: 13%; bottom: 32%;" aria-hidden="true"></span>
+      <div class="about-duo" data-anim="duo">
+        <span class="duo-names font-display"><Rich text={ta.outro.names} /></span>
+        <span class="duo-cta duo-cta--static">
+          {ta.outro.cta}
+        </span>
+      </div>
+    </div>
+
+    <!-- CTA FINALE -->
+    <section id="contatti" class="about-cta" data-anim="contact">
+      <span class="about-cta-glow" aria-hidden="true"></span>
+      <span class="deco deco--star deco-accent deco-float-2" style="left: 12%; top: 22%;" aria-hidden="true">✦</span>
+      <span class="deco deco--ring deco-peri deco-float-1" style="right: 13%; bottom: 24%;" aria-hidden="true"></span>
+
+      <span class="works-kicker about-cta-kicker">{ta.cta.kicker}</span>
+
+      <h2 class="about-cta-title font-display">
+        <Rich text={ta.cta.title} />
+      </h2>
+
+      <p class="about-cta-sub">
+        {ta.cta.sub}
+      </p>
+
+      <div class="about-cta-actions">
+        <a href={`${localePath(lang, "/")}#contatti`} class="about-cta-btn magnetic">
+          {ta.cta.btn} <span aria-hidden="true">↗</span>
+        </a>
+        <a href="mailto:hello@auralpdigital.com" class="about-cta-mail">
+          {ta.cta.mail}
+        </a>
+      </div>
+
+      <div class="about-cta-foot">
+        {ta.cta.foot.map((f, i) => (
+          <Fragment>
+            {i > 0 && <span class="cta-foot-dot" aria-hidden="true"></span>}
+            <span>{f}</span>
+          </Fragment>
+        ))}
+      </div>
+    </section>
+  </main>
+
+  <Footer lang={lang} />
+</BaseLayout>

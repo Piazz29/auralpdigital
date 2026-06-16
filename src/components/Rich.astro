@@ -1,0 +1,52 @@
+---
+// Rich — rende una stringa del dizionario interpretando una micro-sintassi:
+//   *corsivo*   → <em>
+//   **grassetto** → <strong>
+//   \n          → <br>
+// Serve a tenere i dizionari come stringhe leggibili pur preservando gli
+// accenti tipografici (em in corsivo, ecc.) del markup originale. Il contenuto
+// è statico e fidato (file di traduzione del progetto).
+interface Props {
+  text: string;
+}
+const { text } = Astro.props;
+
+type Token = { kind: "text" | "em" | "strong" | "br"; value: string };
+
+function tokenize(input: string): Token[] {
+  const tokens: Token[] = [];
+  const re = /\*\*([^*]+)\*\*|\*([^*]+)\*/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  const pushText = (chunk: string) => {
+    const parts = chunk.split("\n");
+    parts.forEach((p, i) => {
+      if (p) tokens.push({ kind: "text", value: p });
+      if (i < parts.length - 1) tokens.push({ kind: "br", value: "" });
+    });
+  };
+  while ((m = re.exec(input))) {
+    if (m.index > last) pushText(input.slice(last, m.index));
+    if (m[1] !== undefined) tokens.push({ kind: "strong", value: m[1] });
+    else tokens.push({ kind: "em", value: m[2] });
+    last = m.index + m[0].length;
+  }
+  if (last < input.length) pushText(input.slice(last));
+  return tokens;
+}
+
+const tokens = tokenize(text);
+---
+{
+  tokens.map((t) =>
+    t.kind === "em" ? (
+      <em>{t.value}</em>
+    ) : t.kind === "strong" ? (
+      <strong>{t.value}</strong>
+    ) : t.kind === "br" ? (
+      <br />
+    ) : (
+      <Fragment>{t.value}</Fragment>
+    )
+  )
+}

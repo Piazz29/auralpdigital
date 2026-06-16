@@ -1,11 +1,19 @@
 ---
-// FOOTER — condiviso tra homepage e pagine interne. Come per la navbar,
-// `home` mantiene le ancore "#sezione" sulla home (smooth scroll Lenis).
+// FOOTER — condiviso tra homepage e pagine interne, multilingua. `home`
+// mantiene le ancore "#sezione" sulla home; `lang` localizza testi e link.
+import type { Lang } from "../i18n";
+import { defaultLang, getDict, localePath } from "../i18n";
+import Rich from "./Rich.astro";
+
 interface Props {
   home?: boolean;
+  lang?: Lang;
 }
-const { home = false } = Astro.props;
-const p = home ? "" : "/";
+const { home = false, lang = defaultLang } = Astro.props;
+const t = getDict(lang);
+const homeHref = localePath(lang, "/");
+const anchor = (id: string) => (home ? `#${id}` : `${homeHref}#${id}`);
+const aboutHref = localePath(lang, "/chi-siamo");
 ---
 
 <footer id="info" class="site-footer">
@@ -14,22 +22,22 @@ const p = home ? "" : "/";
       <div class="footer-brand">
         <img src="/logo/wordmark.svg" alt="AuralpDigital" class="footer-logo" />
         <p class="footer-tagline">
-          Sistemi digitali di prossima generazione,<br />progettati in Alto Adige.
+          <Rich text={t.footer.tagline} />
         </p>
       </div>
 
       <nav class="footer-col" aria-label="Footer">
-        <span class="footer-col-label">Menu</span>
-        <a href={`${p}#projects`} class="footer-link">Progetti</a>
-        <a href={`${p}#cosa-facciamo`} class="footer-link">Cosa facciamo</a>
-        <a href="/chi-siamo" class="footer-link">Chi siamo</a>
-        <a href={`${p}#contatti`} class="footer-link">Contatti</a>
+        <span class="footer-col-label">{t.footer.menuLabel}</span>
+        <a href={anchor("projects")} class="footer-link">{t.footer.links.projects}</a>
+        <a href={anchor("cosa-facciamo")} class="footer-link">{t.footer.links.services}</a>
+        <a href={aboutHref} class="footer-link">{t.footer.links.about}</a>
+        <a href={anchor("contatti")} class="footer-link">{t.footer.links.contact}</a>
       </nav>
 
       <div class="footer-col">
-        <span class="footer-col-label">Contatti</span>
+        <span class="footer-col-label">{t.footer.contactLabel}</span>
         <a href="mailto:hello@auralpdigital.com" class="footer-link">hello@auralpdigital.com</a>
-        <span class="footer-muted">Alto Adige, Italia · 39100</span>
+        <span class="footer-muted">{t.footer.muted}</span>
         <div class="footer-social">
           <a href="#" class="footer-social-link" aria-label="Instagram">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -55,8 +63,8 @@ const p = home ? "" : "/";
 
     <div class="footer-bottom">
       <span>© 2026 AuralpDigital</span>
-      <span>Alto Adige, Italia</span>
-      <span>Fatto con cura <span class="footer-star" aria-hidden="true">✦</span></span>
+      <span>{t.footer.location}</span>
+      <span>{t.footer.madeWith} <span class="footer-star" aria-hidden="true">✦</span></span>
     </div>
   </div>
 

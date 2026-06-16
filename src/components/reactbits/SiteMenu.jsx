@@ -1,22 +1,35 @@
 import StaggeredMenu from './StaggeredMenu.jsx';
+import { getDict, localePath, languages, langLabels, langNames, defaultLang } from '../../i18n';
 
 /**
- * Menu del sito basato su StaggeredMenu (React Bits), adattato al brand:
- * stesse voci, palette, e gli stessi contatti del menu originale
- * (mail + luogo + social Instagram/LinkedIn).
+ * Menu del sito basato su StaggeredMenu (React Bits), adattato al brand e ora
+ * multilingua. Voci, contatti e label del toggle vengono dal dizionario della
+ * lingua corrente; lo switcher di lingua è costruito dalla rotta base `route`
+ * ('/' o '/chi-siamo'), così ogni lingua punta alla pagina equivalente.
  *
- * `home` decide il prefisso dei link ancora (come nel vecchio Navbar):
- * sulla home restano "#sezione", altrove diventano "/#sezione".
+ * `home` decide il prefisso dei link ancora (sulla home "#sezione", altrove
+ * "/#sezione", localizzato per lingua).
  */
-export default function SiteMenu({ home = false }) {
-  const p = home ? '' : '/';
+export default function SiteMenu({ home = false, lang = defaultLang, route = '/' }) {
+  const t = getDict(lang);
+  const homeHref = localePath(lang, '/');
+  const anchor = (id) => (home ? `#${id}` : `${homeHref}#${id}`);
 
   const items = [
-    { label: 'Progetti', ariaLabel: 'Vai ai progetti', link: `${p}#projects` },
-    { label: 'Cosa Facciamo', ariaLabel: 'Scopri cosa facciamo', link: `${p}#cosa-facciamo` },
-    { label: 'Chi Siamo', ariaLabel: 'Scopri chi siamo', link: '/chi-siamo' },
-    { label: 'Info', ariaLabel: 'Informazioni e contatti', link: `${p}#info` }
+    { label: t.nav.items.projects, ariaLabel: t.nav.aria.projects, link: anchor('projects') },
+    { label: t.nav.items.services, ariaLabel: t.nav.aria.services, link: anchor('cosa-facciamo') },
+    { label: t.nav.items.about, ariaLabel: t.nav.aria.about, link: localePath(lang, '/chi-siamo') },
+    { label: t.nav.items.info, ariaLabel: t.nav.aria.info, link: anchor('info') }
   ];
+
+  // Switcher: una voce per lingua, ognuna verso la stessa pagina nell'altra lingua.
+  const languageLinks = languages.map((code) => ({
+    code,
+    label: langLabels[code],
+    name: langNames[code],
+    href: localePath(code, route),
+    active: code === lang
+  }));
 
   // Social come icone (non più testo): SVG inline, currentColor per ereditare
   // il colore del brand e l'hover accent.
@@ -50,15 +63,16 @@ export default function SiteMenu({ home = false }) {
     }
   ];
 
-  // Mail + luogo: stessi dati e stessa gerarchia del menu originale.
+  // Mail + luogo: stessa gerarchia del menu originale, ora localizzati.
+  const [place1, place2] = t.nav.place.split('\n');
   const extraPanelContent = (
     <>
-      <span className="sm-panel-extra-label">Scrivici</span>
+      <span className="sm-panel-extra-label">{t.nav.write}</span>
       <a href="mailto:hello@auralpdigital.com">hello@auralpdigital.com</a>
       <span className="sm-panel-place">
-        Alto Adige
+        {place1}
         <br />
-        Italia, 39100
+        {place2}
       </span>
     </>
   );
@@ -71,7 +85,7 @@ export default function SiteMenu({ home = false }) {
       socialItems={socialItems}
       displaySocials
       displayItemNumbering
-      socialsLabel="Social"
+      socialsLabel={t.nav.socialsLabel}
       extraPanelContent={extraPanelContent}
       colors={['#3B5BDB', '#1A2340']}
       logoUrl="/logo/wordmark.svg"
@@ -79,6 +93,13 @@ export default function SiteMenu({ home = false }) {
       menuButtonColor="#0D0D0D"
       openMenuButtonColor="#0D0D0D"
       changeMenuColorOnOpen={false}
+      homeUrl={homeHref}
+      menuLabel={t.nav.toggleOpen}
+      closeLabel={t.nav.toggleClose}
+      openMenuLabel={t.nav.openMenu}
+      closeMenuLabel={t.nav.closeMenu}
+      languageLinks={languageLinks}
+      languageLabel={t.nav.langLabel}
     />
   );
 }

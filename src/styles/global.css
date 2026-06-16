@@ -4137,3 +4137,67 @@ nav:has(#burger-menu.is-open) .pill {
 .ap-flow--plain .ap-flow-lead {
   color: var(--color-secondary);
 }
+
+/* ============================================================
+   i18n — guardie per testi più lunghi (es. tedesco)
+   Il sito è multilingua: le stesse frasi in tedesco/inglese possono
+   essere sensibilmente più lunghe dell'italiano. Queste regole evitano
+   overflow e mantengono i blocchi bilanciati senza ridisegnare nulla.
+   La sillabazione automatica sfrutta l'attributo lang su <html>.
+   ============================================================ */
+
+/* Ripristina l'accento corsivo dell'em nel titolo hero (prima era inline). */
+.hero-section h1 em {
+  font-style: italic;
+  color: #3b5bdb;
+}
+
+/* Titoli e display: spezzano le parole troppo lunghe invece di sfondare. */
+.works-title,
+.slide-title,
+.panel-title,
+.ap-hero-title,
+.ap-bio-name,
+.ap-step-title,
+.about-cta-title,
+.cta-title,
+.duo-names,
+.ap-statement,
+.problem-line,
+.about-statement {
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* La pill/CTA e i link dell'header del menu possono avere etichette più
+   lunghe: niente troncamenti, vanno a capo in modo pulito e restano centrati. */
+.pill,
+.pill-outline,
+.about-cta-btn,
+.cform-submit,
+.works-head-link {
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+/* Le voci del menu (numerate) e i punti dei servizi: wrapping controllato. */
+.sm-panel-itemLabel,
+.slide-ledger-text,
+.ap-focus li,
+.footer-link {
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Hero: la sottolinea descrittiva non deve creare scroll orizzontale. */
+.hero-section p[data-anim="hero-subline"] {
+  max-width: min(92vw, 540px);
+  text-wrap: balance;
+}
+
+/* Meta del duo (Sitz/Team/Methode…): la label può crescere, evita overflow. */
+.ap-hero-meta li span,
+.ap-hero-meta li strong {
+  overflow-wrap: break-word;
+}

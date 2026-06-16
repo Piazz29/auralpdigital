@@ -16,9 +16,16 @@ export const StaggeredMenu = ({
   accentColor = '#5227FF',
   changeMenuColorOnOpen = true,
   isFixed = false,
+  homeUrl = '/',
   closeOnClickAway = true,
   socialsLabel = 'Socials',
   extraPanelContent = null,
+  menuLabel = 'Menu',
+  closeLabel = 'Close',
+  openMenuLabel = 'Open menu',
+  closeMenuLabel = 'Close menu',
+  languageLinks = [],
+  languageLabel = 'Language',
   onMenuOpen,
   onMenuClose
 }) => {
@@ -32,7 +39,7 @@ export const StaggeredMenu = ({
   const iconRef = useRef(null);
   const textInnerRef = useRef(null);
   const textWrapRef = useRef(null);
-  const [textLines, setTextLines] = useState(['Menu', 'Close']);
+  const [textLines, setTextLines] = useState(() => [menuLabel, closeLabel]);
 
   const openTlRef = useRef(null);
   const closeTweenRef = useRef(null);
@@ -295,13 +302,13 @@ export const StaggeredMenu = ({
     if (!inner) return;
     textCycleAnimRef.current?.kill();
 
-    const currentLabel = opening ? 'Menu' : 'Close';
-    const targetLabel = opening ? 'Close' : 'Menu';
+    const currentLabel = opening ? menuLabel : closeLabel;
+    const targetLabel = opening ? closeLabel : menuLabel;
     const cycles = 3;
     const seq = [currentLabel];
     let last = currentLabel;
     for (let i = 0; i < cycles; i++) {
-      last = last === 'Menu' ? 'Close' : 'Menu';
+      last = last === menuLabel ? closeLabel : menuLabel;
       seq.push(last);
     }
     if (last !== targetLabel) seq.push(targetLabel);
@@ -316,7 +323,7 @@ export const StaggeredMenu = ({
       duration: 0.5 + lineCount * 0.07,
       ease: 'power4.out'
     });
-  }, []);
+  }, [menuLabel, closeLabel]);
 
   const toggleMenu = useCallback(() => {
     const target = !openRef.current;
@@ -386,7 +393,7 @@ export const StaggeredMenu = ({
       </div>
       <header className="staggered-menu-header" aria-label="Main navigation header">
         <div className="sm-logo" aria-label="Logo">
-          <a href="/" className="sm-logo-link" aria-label="Home">
+          <a href={homeUrl} className="sm-logo-link" aria-label="Home">
             <img
               src={logoUrl || '/src/assets/logos/reactbits-gh-white.svg'}
               alt="Logo"
@@ -397,15 +404,32 @@ export const StaggeredMenu = ({
             />
           </a>
         </div>
-        <button
-          ref={toggleBtnRef}
-          className="sm-toggle"
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          aria-expanded={open}
-          aria-controls="staggered-menu-panel"
-          onClick={toggleMenu}
-          type="button"
-        >
+        <div className="sm-header-right">
+          {languageLinks && languageLinks.length > 0 && (
+            <nav className="sm-lang" aria-label={languageLabel}>
+              {languageLinks.map(l => (
+                <a
+                  key={l.code}
+                  href={l.href}
+                  className={'sm-lang-link' + (l.active ? ' is-active' : '')}
+                  aria-current={l.active ? 'true' : undefined}
+                  aria-label={l.name}
+                  hrefLang={l.code}
+                >
+                  {l.label}
+                </a>
+              ))}
+            </nav>
+          )}
+          <button
+            ref={toggleBtnRef}
+            className="sm-toggle"
+            aria-label={open ? closeMenuLabel : openMenuLabel}
+            aria-expanded={open}
+            aria-controls="staggered-menu-panel"
+            onClick={toggleMenu}
+            type="button"
+          >
           <span ref={textWrapRef} className="sm-toggle-textWrap" aria-hidden="true">
             <span ref={textInnerRef} className="sm-toggle-textInner">
               {textLines.map((l, i) => (
@@ -415,11 +439,12 @@ export const StaggeredMenu = ({
               ))}
             </span>
           </span>
-          <span ref={iconRef} className="sm-icon" aria-hidden="true">
-            <span ref={plusHRef} className="sm-icon-line" />
-            <span ref={plusVRef} className="sm-icon-line sm-icon-line-v" />
-          </span>
-        </button>
+            <span ref={iconRef} className="sm-icon" aria-hidden="true">
+              <span ref={plusHRef} className="sm-icon-line" />
+              <span ref={plusVRef} className="sm-icon-line sm-icon-line-v" />
+            </span>
+          </button>
+        </div>
       </header>
 
       <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" aria-hidden={!open}>
