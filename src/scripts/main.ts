@@ -1,12 +1,22 @@
 import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Draggable } from "gsap/Draggable";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, Draggable);
 
 const reduceMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 ).matches;
+
+// Reduced motion: ferma la SMIL dell'animazione SVG "Il punto" (le animazioni
+// SMIL non rispettano prefers-reduced-motion da sé). pauseAnimations() congela
+// l'SVG sul fotogramma corrente, lasciandolo come grafica statica.
+if (reduceMotion) {
+  document
+    .querySelectorAll<SVGSVGElement>("[data-problem-art] svg")
+    .forEach((svg) => svg.pauseAnimations?.());
+}
 
 // ---------- Lenis smooth scroll ----------
 const lenis = new Lenis({
@@ -399,7 +409,9 @@ const splitTitleWords = (title: HTMLElement): HTMLElement[] => {
 
 if (!reduceMotion) {
   document
-    .querySelectorAll<HTMLElement>(".works-title, .cta-title")
+    .querySelectorAll<HTMLElement>(
+      ".works-title:not(.split-parent), .cta-title:not(.split-parent)"
+    )
     .forEach((title) => {
       const words = splitTitleWords(title);
       const isCta = title.classList.contains("cta-title");
@@ -417,6 +429,7 @@ if (!reduceMotion) {
           scrollTrigger: {
             trigger: isCta ? "[data-anim='contact']" : title,
             start: isCta ? "top 78%" : "top 88%",
+            once: true,
           },
         }
       );
@@ -462,6 +475,11 @@ const revealRise = (targets: gsap.DOMTarget, opts: RiseOpts = {}) => {
       scrollTrigger: {
         trigger: trigger ?? els[0],
         start,
+        // once: il reveal è uno-shot. Senza questo, un ScrollTrigger.refresh()
+        // (idratazione tardiva delle isole client:visible, fonts, ricalcolo
+        // dei pin a monte) ri-renderizza la fromTo riportando gli elementi
+        // allo stato "from" → la sezione "rientra"/scatta una seconda volta.
+        once: true,
         onEnter: () => gsap.set(els, { willChange: "transform, opacity" }),
       },
       onStart,
@@ -508,7 +526,7 @@ const revealHead = (selector: string, trigger: string) => {
       duration: 0.9,
       ease: "power2.out",
       stagger: 0.12,
-      scrollTrigger: { trigger, start: "top 80%" },
+      scrollTrigger: { trigger, start: "top 80%", once: true },
     }
   );
 };
@@ -547,7 +565,10 @@ if (!reduceMotion) {
 
     // Nuovo ordine sezioni: Problema(warm) → Servizi(navy) → Lavori(warm) →
     // Chi Siamo(grigio) → CTA(warm). Il canvas vira di conseguenza.
-    morph("#cosa-facciamo", "top 85%", "top 15%", "#FAFAF8", "#1A2340");
+    // Start ritardato (top 50%): mentre "Il punto" è centrato lo sfondo resta
+    // warm white; il blu inizia solo quando Servizi è già ben dentro lo
+    // schermo (e "Il punto" è scrollato via), completando prima del pin.
+    morph("#cosa-facciamo", "top 50%", "top 12%", "#FAFAF8", "#1A2340");
     morph("#projects", "top 80%", "top 30%", "#1A2340", "#FAFAF8");
     morph("#chi-siamo", "top 70%", "top 20%", "#FAFAF8", "#E8E8E5");
     morph(".section-rule", "top 95%", "top 50%", "#E8E8E5", "#FAFAF8");
@@ -712,7 +733,7 @@ if (servicesStage && serviceSlides.length && !reduceMotion) {
     serviceSlides.forEach((slide) => {
       const tl = gsap.timeline({
         defaults: { ease: "power3.out" },
-        scrollTrigger: { trigger: slide, start: "top 80%" },
+        scrollTrigger: { trigger: slide, start: "top 80%", once: true },
       });
       slideReveal(tl, slide, 0);
     });
@@ -875,7 +896,7 @@ if (document.querySelector("[data-anim='about-kicker']")) {
       y: 0,
       duration: 0.8,
       ease: "power2.out",
-      scrollTrigger: { trigger: ".about-intro", start: "top 70%" },
+      scrollTrigger: { trigger: ".about-intro", start: "top 70%", once: true },
     }
   );
 }
@@ -950,7 +971,7 @@ document.querySelectorAll<HTMLElement>(".about-chapter").forEach((ch) => {
         ease: "power2.out",
         stagger: 0.05,
         delay: 0.25,
-        scrollTrigger: { trigger: ch, start: "top 82%" },
+        scrollTrigger: { trigger: ch, start: "top 82%", once: true },
       }
     );
   }
@@ -974,7 +995,7 @@ if (duo) {
         duration: 1.15,
         ease: "power4.out",
         stagger: 0.09,
-        scrollTrigger: { trigger: duo, start: "top 80%" },
+        scrollTrigger: { trigger: duo, start: "top 80%", once: true },
       }
     );
   }
@@ -988,7 +1009,7 @@ if (duo) {
         duration: 0.8,
         ease: "power2.out",
         delay: reduceMotion ? 0 : 0.45,
-        scrollTrigger: { trigger: duo, start: "top 80%" },
+        scrollTrigger: { trigger: duo, start: "top 80%", once: true },
       }
     );
   }
@@ -1055,6 +1076,7 @@ ctaInner.forEach(({ sel, delay, y = 16 }) => {
       scrollTrigger: {
         trigger: "[data-anim='contact']",
         start: "top 78%",
+        once: true,
       },
     }
   );
@@ -1134,9 +1156,15 @@ if (
     gsap.set(card, { rotateX: 38, scale: startScale, transformPerspective: 720 });
     gsap.timeline({
       scrollTrigger: {
-        trigger: cscroll,
-        start: "top 90%",
-        end: "center 48%",
+        // Ancorato alla CARD e concluso sul suo BORDO SUPERIORE: "top 42%"
+        // significa che la card è dritta (rotateX 0) quando il suo bordo alto
+        // arriva al 42% del viewport — cioè mentre la card è ben incorniciata
+        // e visibile, NON dopo averla superata. La card è alta (può eccedere il
+        // viewport): legare la fine al centro la raddrizzava troppo tardi,
+        // quando il bordo alto era già tagliato fuori in cima.
+        trigger: card,
+        start: "top 92%",
+        end: "top 42%",
         scrub: 0.5,
       },
     })
@@ -1385,15 +1413,143 @@ if (aboutPage) {
     );
   });
 
-  // Duo — ogni riga entra come scena: prima il ritratto, poi la bio a pezzi.
+  // Duo — ogni riga è una scena indipendente: il badge cala dall'alto come da
+  // un filo (corda che cresce + badge che scende, assestamento a pendolo),
+  // mentre la bio sale a pezzi. L'animazione parte solo quando IL blocco di
+  // QUELLA persona entra in viewport (trigger per riga), una volta sola, e il
+  // badge resta poi fisso. Solo transform/opacity. Reduced-motion → stato
+  // finale immediato (lo stato iniziale nascosto è inline nel componente).
   aboutPage.querySelectorAll<HTMLElement>(".ap-person").forEach((row) => {
-    revealRise(row.querySelectorAll(":scope > .founder-card, .ap-bio > *"), {
+    revealRise(row.querySelectorAll(".ap-bio > *"), {
       trigger: row,
       start: "top 78%",
       stagger: 0.1,
       y: 44,
       duration: 0.9,
     });
+
+    const swing = row.querySelector<HTMLElement>("[data-hang-swing]");
+    const badge = row.querySelector<HTMLElement>("[data-hang-badge]");
+    const cord = row.querySelector<HTMLElement>("[data-hang-cord]");
+    if (!swing || !badge || !cord) return;
+
+    if (reduceMotion) {
+      gsap.set(cord, { scaleY: 1 });
+      gsap.set(badge, { opacity: 1, y: 0 });
+      gsap.set(swing, { rotation: 0 });
+      return;
+    }
+
+    // Distanza di caduta = lunghezza della corda: badge e corda restano
+    // agganciati per tutta la discesa (stesso ease, stessa durata). Il pendolo
+    // di assestamento ruota il WRAPPER (.hang-swing) attorno all'aggancio in
+    // cima, così corda e badge oscillano insieme — pendolo fisicamente corretto.
+    const drop = cord.offsetHeight || 180;
+
+    // --- Pendolo interattivo: peso a riposo (sway) + trascinamento ---
+    // Creato dopo la caduta. Lo sway dà "vita/peso" senza costare nulla (un
+    // solo transform su layer GPU) e va in pausa fuori viewport. Su desktop
+    // (pointer fine) il badge si trascina e torna alla verticale con un
+    // rimbalzo elastico; su touch resta non-draggable per non rubare lo scroll.
+    let idle: gsap.core.Tween | null = null;
+    let dragging = false;
+    const canDrag = window.matchMedia(
+      "(hover: hover) and (pointer: fine)"
+    ).matches;
+
+    const makeIdle = () =>
+      gsap.fromTo(
+        swing,
+        { rotation: 0 },
+        {
+          rotation: 1.6,
+          duration: 3.2,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+          paused: true,
+        }
+      );
+
+    const enablePendulum = () => {
+      gsap.set([swing, badge], { willChange: "auto" });
+      idle = makeIdle();
+      idle.play();
+
+      // Pausa lo sway quando il badge esce dallo schermo (niente loop sprecati).
+      ScrollTrigger.create({
+        trigger: row,
+        start: "top bottom",
+        end: "bottom top",
+        onToggle: (self) => {
+          if (dragging) return;
+          self.isActive ? idle?.play() : idle?.pause();
+        },
+      });
+
+      if (!canDrag) return;
+      swing.classList.add("is-draggable");
+
+      Draggable.create(swing, {
+        type: "rotation",
+        // Limiti: oscilla come un pendolo, non gira a vuoto.
+        bounds: { minRotation: -34, maxRotation: 34 },
+        dragResistance: 0.32, // "peso": il badge non schizza dietro al cursore
+        onPress() {
+          dragging = true;
+          idle?.pause();
+          gsap.killTweensOf(swing); // ferma un eventuale ritorno elastico
+          gsap.set(swing, { willChange: "transform" });
+        },
+        onDragStart() {
+          swing.classList.add("is-dragging");
+        },
+        onRelease() {
+          dragging = false;
+          swing.classList.remove("is-dragging");
+          // Ricade alla verticale e oscilla: molla smorzata (effetto gravità).
+          gsap.to(swing, {
+            rotation: 0,
+            duration: 1.3,
+            ease: "elastic.out(1, 0.4)",
+            onComplete: () => {
+              gsap.set(swing, { willChange: "auto" });
+              idle = makeIdle();
+              idle.play();
+            },
+          });
+        },
+      });
+    };
+
+    const tl = gsap.timeline({
+      scrollTrigger: { trigger: row, start: "top 68%", once: true },
+      defaults: { force3D: true },
+      onComplete: enablePendulum,
+    });
+    tl.set([swing, badge], { willChange: "transform, opacity" })
+      .fromTo(
+        cord,
+        { scaleY: 0 },
+        { scaleY: 1, duration: 0.9, ease: "power3.out" },
+        0,
+      )
+      .fromTo(
+        badge,
+        { opacity: 0, y: -drop },
+        { opacity: 1, y: 0, duration: 0.9, ease: "power3.out" },
+        0,
+      )
+      // Pendolo di assestamento attorno all'aggancio (transform-origin: top).
+      .fromTo(
+        swing,
+        { rotation: 0 },
+        { rotation: 3, duration: 0.5, ease: "sine.inOut" },
+        0.6,
+      )
+      .to(swing, { rotation: -2, duration: 0.55, ease: "sine.inOut" })
+      .to(swing, { rotation: 1, duration: 0.5, ease: "sine.inOut" })
+      .to(swing, { rotation: 0, duration: 0.6, ease: "sine.out" });
   });
 
   // Percorso — la linea si disegna in scrub lungo la timeline, le tappe

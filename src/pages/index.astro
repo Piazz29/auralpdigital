@@ -4,6 +4,11 @@ import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import ContainerScroll from "../components/ContainerScroll.astro";
 import ContactForm from "../components/ContactForm.astro";
+import SplitText from "../components/reactbits/SplitText.jsx";
+// Animazione SVG (SMIL) accanto allo statement "Il punto". Importata ?raw e
+// iniettata inline: in <img> la SMIL non parte, inline sì. Con reduced-motion
+// viene messa in pausa via svg.pauseAnimations() in main.ts.
+import animation1 from "../svg/animation1.svg?raw";
 import "../styles/global.css";
 
 // PROGETTI — sorgente unica dei dati. Aggiungere un progetto = aggiungere un
@@ -193,11 +198,50 @@ const services = [
   <section id="problema" class="problem-section">
     <span class="deco deco--plus deco-accent deco-float-2" style="right: 9%; top: 22%;" aria-hidden="true"></span>
     <div class="works-screen">
-      <span class="works-kicker">Il punto</span>
-      <p class="problem-statement font-display" data-glow>
-        Un sito che non porta clienti è un costo, non un investimento.
-        <em>Costruiamo sistemi che trasformano chi cerca in chi prenota.</em>
-      </p>
+      <!-- Due colonne su desktop: a sinistra lo statement editoriale, a destra
+           l'animazione SVG. Su mobile si impila (testo sopra, animazione sotto). -->
+      <div class="problem-grid">
+        <div class="problem-copy">
+          <span class="works-kicker">Il punto</span>
+          <!-- Statement spezzato in due righe animate (SplitText / GSAP): la
+               prima (il problema) in ink, la seconda (la promessa) in corsivo
+               accent. Le parole entrano in sequenza quando il blocco entra in
+               viewport. -->
+          <div class="problem-statement font-display">
+            <SplitText
+              client:visible
+              tag="p"
+              className="problem-line"
+              text="Un sito che non porta clienti è un costo, non un investimento."
+              splitType="words"
+              delay={45}
+              duration={0.8}
+              ease="power3.out"
+              from={{ opacity: 0, y: 40 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.3}
+              rootMargin="-80px"
+              textAlign="left"
+            />
+            <SplitText
+              client:visible
+              tag="p"
+              className="problem-line problem-line--accent"
+              text="Costruiamo sistemi che trasformano chi cerca in chi prenota."
+              splitType="words"
+              delay={45}
+              duration={0.8}
+              ease="power3.out"
+              from={{ opacity: 0, y: 40 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.3}
+              rootMargin="-80px"
+              textAlign="left"
+            />
+          </div>
+        </div>
+        <div class="problem-visual" data-problem-art aria-hidden="true" set:html={animation1}></div>
+      </div>
     </div>
   </section>
 
@@ -219,7 +263,21 @@ const services = [
       <div class="works-head" data-anim="services-head">
         <div class="works-head-left">
           <span class="works-kicker">Cosa facciamo</span>
-          <h2 class="works-title">Servizi che <em>fanno crescere.</em></h2>
+          <SplitText
+            client:visible
+            tag="h2"
+            className="works-title"
+            text="Servizi che fanno crescere."
+            splitType="chars"
+            delay={28}
+            duration={0.9}
+            ease="power3.out"
+            from={{ opacity: 0, y: 40 }}
+            to={{ opacity: 1, y: 0 }}
+            threshold={0.2}
+            rootMargin="-80px"
+            textAlign="left"
+          />
         </div>
         <a href="#contatti" class="works-head-link">
           Parliamone <span aria-hidden="true">↗</span>
@@ -380,7 +438,21 @@ const services = [
       <div class="works-head" data-anim="works-head">
         <div class="works-head-left">
           <span class="works-kicker">Risultati reali</span>
-          <h2 class="works-title">Cosa <em>abbiamo creato.</em></h2>
+          <SplitText
+            client:visible
+            tag="h2"
+            className="works-title"
+            text="Cosa abbiamo creato."
+            splitType="chars"
+            delay={28}
+            duration={0.9}
+            ease="power3.out"
+            from={{ opacity: 0, y: 40 }}
+            to={{ opacity: 1, y: 0 }}
+            threshold={0.2}
+            rootMargin="-80px"
+            textAlign="left"
+          />
         </div>
         <a href="#contatti" class="works-head-link">
           Il prossimo è il tuo <span aria-hidden="true">↗</span>

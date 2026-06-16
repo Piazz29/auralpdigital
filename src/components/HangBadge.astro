@@ -1,0 +1,44 @@
+---
+// HANG BADGE — badge "da pass" appeso a una corda, condiviso da Julian e Alice.
+// Stesso concept del vecchio Lanyard 3D ma in 2D: la corda nasce in cima al
+// blocco e il badge cala dall'alto quando la persona entra in viewport
+// (animazione scroll-driven in main.ts, solo transform/opacity). Lo stato
+// iniziale è nascosto inline (opacity:0 / scaleY:0) per evitare il flash prima
+// che GSAP prenda il controllo; con reduced-motion main.ts lo rende visibile.
+interface Props {
+  initial: string;
+  name: string;
+  role: string;
+  grad: string;
+  photo?: string;
+}
+const { initial, name, role, grad, photo } = Astro.props;
+---
+
+<div class="hang" data-hang>
+  <!-- Pendolo: wrapper che ruota attorno all'aggancio in cima (transform-origin
+       top center). Corda + badge sono solidali, così trascinandolo oscilla come
+       un vero pendant appeso. Il drop e il drag agiscono sulla sua rotazione. -->
+  <div class="hang-swing" data-hang-swing>
+    <!-- Corda: cresce dall'alto del blocco fino alla clip del badge. -->
+    <span class="hang-cord" data-hang-cord aria-hidden="true" style="transform: scaleY(0);"></span>
+
+    <!-- Badge: cala dall'alto e si assesta a pendolo. -->
+    <div class="hang-badge" data-hang-badge style="opacity: 0;">
+      <span class="hang-clip" aria-hidden="true"></span>
+      <div class={`hang-card ${grad}`}>
+        <span class="hang-hole" aria-hidden="true"></span>
+        <div class="hang-photo">
+          {photo
+            ? <img src={photo} alt={`Ritratto di ${name}`} loading="lazy" decoding="async" />
+            : <span class="hang-initial" aria-hidden="true">{initial}</span>}
+        </div>
+        <div class="hang-id">
+          <span class="hang-id-name">{name}</span>
+          <span class="hang-id-role">{role}</span>
+          <span class="hang-id-brand">AuralpDigital</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -532,24 +532,69 @@ button {
   position: relative;
   padding: clamp(96px, 18vh, 220px) 0;
 }
+/* Griglia a due colonne: copy a sinistra, animazione SVG a destra. minmax(0,…)
+   evita che il contenuto forzi overflow; su schermi stretti si impila. */
+.problem-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: clamp(32px, 5vw, 80px);
+  align-items: center;
+}
+.problem-copy {
+  display: flex;
+  flex-direction: column;
+}
 .problem-statement {
   margin-top: clamp(18px, 3vh, 32px);
-  max-width: 22ch;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12em;
+}
+/* Animazione SVG (animation1): riempie la colonna, mantiene il quadrato del
+   viewBox e resta contenuta. Niente layout shift (aspect-ratio fisso). */
+.problem-visual {
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+  aspect-ratio: 1 / 1;
+}
+.problem-visual svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@media (max-width: 860px) {
+  .problem-grid {
+    grid-template-columns: 1fr;
+    gap: clamp(24px, 5vw, 40px);
+  }
+  .problem-visual {
+    max-width: 360px;
+    order: 2;
+  }
+}
+/* Ogni riga è un SplitText (.split-parent): l'overflow:hidden del componente
+   maschera le parole che salgono. Sizing e colore qui, font-family ereditato
+   da .font-display sul wrapper. */
+.problem-line {
   font-weight: 500;
   font-size: clamp(30px, 4.6vw, 64px);
   line-height: 1.12;
   letter-spacing: -0.015em;
   color: var(--color-ink);
-  text-wrap: balance;
 }
-.problem-statement em {
+.problem-line--accent {
   font-style: italic;
   color: var(--color-accent);
 }
 
 .projects-section {
   position: relative;
-  padding: clamp(90px, 13vh, 170px) 0;
+  /* Più aria in cima: l'header "Risultati reali" resta sotto la fascia della
+     nav fissa (logo in alto a sinistra) invece di sovrapporsi — la sezione
+     respira, niente collisione, lettura pulita. */
+  padding: clamp(150px, 20vh, 240px) 0 clamp(90px, 13vh, 170px);
   /* Velature jewel-tone agli angoli: il warm white respira, non è piatto. */
   background:
     radial-gradient(46% 38% at 94% 2%, rgba(59, 91, 219, 0.05), transparent 70%),
@@ -3150,10 +3195,10 @@ nav:has(#burger-menu.is-open) .pill {
   gap: clamp(20px, 3vw, 44px);
   align-items: center;
 }
-.ap-person .founder-card {
+.ap-person > .hang {
   grid-column: 1 / span 5;
 }
-.ap-person--flip .founder-card {
+.ap-person--flip > .hang {
   grid-column: 8 / span 5;
   order: 2;
 }
@@ -3218,11 +3263,10 @@ nav:has(#burger-menu.is-open) .pill {
   background: var(--color-accent);
 }
 @media (max-width: 900px) {
-  .ap-person .founder-card,
-  .ap-person--flip .founder-card {
+  .ap-person > .hang,
+  .ap-person--flip > .hang {
     grid-column: 1 / -1;
     order: 0;
-    max-width: 440px;
   }
   .ap-bio,
   .ap-person--flip .ap-bio {
@@ -3277,33 +3321,51 @@ nav:has(#burger-menu.is-open) .pill {
   column-gap: clamp(56px, 10vw, 150px);
   padding: clamp(30px, 6.5vh, 78px) 0;
 }
-/* Badge-nodo SVG centrato sulla spina: cerchio scuro, linee bianche, halo
-   del colore di fondo che lo "stacca" dalla linea. */
+/* Badge-nodo centrato sulla spina: anello a gradiente conico rotante attorno a
+   un disco scuro vetroso; icona line-art bianca al centro. Più grande e con
+   "effetto wow" rispetto ai vecchi pallini geometrici. */
 .ap-step-art {
   position: absolute;
-  top: clamp(30px, 6.5vh, 78px);
+  top: clamp(26px, 6vh, 70px);
   left: var(--spine);
-  margin-left: -34px;
-  width: 68px;
-  height: 68px;
+  margin-left: -54px;
+  width: 108px;
+  height: 108px;
   display: grid;
   place-items: center;
   border-radius: 9999px;
   color: #fafaf8;
   background:
-    radial-gradient(120% 120% at 30% 22%, rgba(59, 91, 219, 0.5), transparent 60%),
+    radial-gradient(125% 125% at 30% 20%, rgba(59, 91, 219, 0.55), transparent 62%),
     var(--color-navy);
-  border: 1px solid rgba(250, 250, 248, 0.16);
   box-shadow:
-    0 12px 30px rgba(26, 35, 64, 0.32),
-    0 0 0 7px var(--color-bg);
+    0 18px 44px rgba(26, 35, 64, 0.36),
+    0 0 0 8px var(--color-bg);
   z-index: 2;
 }
+/* Anello a gradiente conico rotante: conic full-circle mascherato al solo
+   bordo esterno (~3px). Gira di continuo per l'effetto "alone vivo". */
+.ap-step-art::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, var(--color-accent), #8aa0ff, #1a2340, var(--color-accent));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  z-index: 1;
+  animation: ap-ico-ring 8s linear infinite;
+}
 .ap-step-art svg {
-  width: 34px;
-  height: 34px;
+  position: relative;
+  z-index: 2;
+  width: 56px;
+  height: 56px;
   display: block;
   overflow: visible;
+}
+@keyframes ap-ico-ring {
+  to { transform: rotate(360deg); }
 }
 /* Connettore hairline dal nodo verso la card. */
 .ap-step-art::after {
@@ -3370,61 +3432,89 @@ nav:has(#burger-menu.is-open) .pill {
   color: var(--color-secondary);
 }
 
-/* Micro-SVG animati — loop CSS leggeri (transform/opacity/dashoffset). */
-.ap-art-scan {
+/* Icone-firma animate — loop CSS leggeri, una "personalità" per tema. */
+
+/* UNI — la nappa del tocco accademico oscilla come un pendolo. */
+.ap-ico-tassel {
   transform-box: fill-box;
-  animation: ap-scan 3.4s ease-in-out infinite;
+  transform-origin: 50% 0%;
+  animation: ap-tassel 3.2s ease-in-out infinite;
 }
-.ap-art-dot { animation: ap-blink 3.4s ease-in-out infinite; }
-.ap-art-spark {
+
+/* SPARK — cursore che lampeggia, parentesi che respirano, scintilla che brilla. */
+.ap-ico-caret { animation: ap-caret 1.1s steps(1, end) infinite; }
+.ap-ico-bk {
   transform-box: fill-box;
   transform-origin: center;
-  animation: ap-spark 2.6s ease-in-out infinite;
+  animation: ap-bracket 2.6s ease-in-out infinite;
 }
-.ap-art-core { animation: ap-core 2.6s ease-in-out infinite; }
-.ap-art-net {
-  stroke-dasharray: 96;
-  stroke-dashoffset: 96;
-  animation: ap-draw 3.4s ease-in-out infinite;
-}
-.ap-art-n { animation: ap-blink 2.4s ease-in-out infinite; }
-.ap-art-n2 { animation-delay: 0.5s; }
-.ap-art-n3 { animation-delay: 1s; }
-.ap-art-ch {
+.ap-ico-bk-r { animation-name: ap-bracket-r; }
+.ap-ico-sparkle {
   transform-box: fill-box;
-  opacity: 0.35;
-  animation: ap-advance 1.8s ease-in-out infinite;
+  transform-origin: center;
+  animation: ap-sparkle 2.8s ease-in-out infinite;
 }
-.ap-art-ch2 { animation-delay: 0.22s; }
-.ap-art-ch3 { animation-delay: 0.44s; }
 
-@keyframes ap-scan {
-  0%, 100% { transform: translateY(0); opacity: 0.9; }
-  50% { transform: translateY(17px); opacity: 0.4; }
+/* STUDIO — gli strati fluttuano in sequenza (sotto lo stesso tetto). */
+.ap-ico-layer {
+  transform-box: fill-box;
+  animation: ap-layer 3.6s ease-in-out infinite;
 }
-@keyframes ap-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.25; }
+.ap-ico-layer-2 { animation-delay: 0.25s; }
+.ap-ico-layer-3 { animation-delay: 0.5s; }
+
+/* NEXT — satellite in orbita attorno alla freccia + spinta in avanti. */
+.ap-ico-orbit {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: ap-orbit 4.5s linear infinite;
 }
-@keyframes ap-spark {
-  0%, 100% { transform: scale(0.86); opacity: 0.55; }
-  50% { transform: scale(1.12); opacity: 1; }
+.ap-ico-arrow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ap-nudge 2.4s ease-in-out infinite;
 }
-@keyframes ap-core {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(0.6); }
+
+@keyframes ap-tassel {
+  0%, 100% { transform: rotate(13deg); }
+  50% { transform: rotate(-13deg); }
 }
-@keyframes ap-draw {
-  0% { stroke-dashoffset: 96; }
-  55%, 100% { stroke-dashoffset: 0; }
+@keyframes ap-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
-@keyframes ap-advance {
-  0%, 100% { opacity: 0.3; transform: translateX(-3px); }
-  50% { opacity: 1; transform: translateX(2px); }
+@keyframes ap-bracket {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-1.6px); }
+}
+@keyframes ap-bracket-r {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(1.6px); }
+}
+@keyframes ap-sparkle {
+  0%, 100% { transform: scale(0.7) rotate(0deg); opacity: 0.4; }
+  50% { transform: scale(1.1) rotate(90deg); opacity: 1; }
+}
+@keyframes ap-layer {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.4px); }
+}
+@keyframes ap-orbit {
+  to { transform: rotate(360deg); }
+}
+@keyframes ap-nudge {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(1.6px, -1.6px); }
 }
 
 @media (max-width: 860px) {
-  .ap-timeline { --spine: 34px; }
+  .ap-timeline { --spine: 42px; }
+  .ap-step-art {
+    width: 84px;
+    height: 84px;
+    margin-left: -42px;
+  }
+  .ap-step-art svg { width: 44px; height: 44px; }
   .ap-step {
     grid-template-columns: 1fr;
     column-gap: 0;
@@ -3435,13 +3525,13 @@ nav:has(#burger-menu.is-open) .pill {
     grid-column: 1;
     align-items: flex-start;
     text-align: left;
-    padding-left: clamp(80px, 24vw, 104px);
+    padding-left: clamp(104px, 30vw, 128px);
     padding-right: 0;
     margin-left: 0;
     max-width: none;
   }
   .ap-step-art {
-    left: 34px;
+    left: 42px;
     top: clamp(22px, 4vh, 40px);
   }
   .ap-step--left .ap-step-art::after,
@@ -3453,12 +3543,14 @@ nav:has(#burger-menu.is-open) .pill {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ap-art-scan, .ap-art-dot, .ap-art-spark, .ap-art-core,
-  .ap-art-net, .ap-art-n, .ap-art-ch {
+  .ap-step-art,
+  .ap-step-art::before,
+  .ap-ico-tassel, .ap-ico-caret, .ap-ico-bk, .ap-ico-sparkle,
+  .ap-ico-layer, .ap-ico-orbit, .ap-ico-arrow {
     animation: none;
   }
-  .ap-art-net { stroke-dashoffset: 0; }
-  .ap-art-ch { opacity: 1; }
+  .ap-ico-caret { opacity: 1; }
+  .ap-ico-sparkle { opacity: 0.8; }
 }
 
 /* ----------------------------------------------------------------------
@@ -3803,3 +3895,245 @@ nav:has(#burger-menu.is-open) .pill {
   mask-image: radial-gradient(closest-side, #000, transparent);
 }
 
+
+/* ======================================================================
+   REACT BITS — integrazioni (chi-siamo): sfondo fluido hero, statement
+   blur, badge appesi (Lanyard), stage CardSwap del metodo.
+   ====================================================================== */
+
+/* HERO — il LiquidEther e l'aurora stanno entrambi dietro al testo. Higher
+   specificity per battere `.ap-hero > *` (che porterebbe i figli a z-index:1). */
+.ap-hero .ap-hero-aurora,
+.ap-hero .ap-hero-fluid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.ap-hero .ap-hero-fluid {
+  /* sopra l'aurora soft, sotto il contenuto */
+  z-index: 0;
+}
+.ap-hero-fluid .liquid-ether-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* MANIFESTO — BlurText rende un <p> flex; manteniamo la resa dello statement
+   e un'interlinea coerente tra le parole animate. */
+.ap-statement--blur {
+  align-content: start;
+  gap: 0;
+}
+.ap-statement--blur .inline-block {
+  display: inline-block;
+}
+
+/* DUO — badge "da pass" appeso a una corda (2D, scroll-driven). Sostituisce il
+   vecchio Canvas 3D: stesso concept, ma performante (solo transform/opacity),
+   con stato finale fisso e caduta indipendente per persona. La corda
+   (.hang-cord) nasce in cima al blocco; il badge (.hang-badge) cala dall'alto.
+   --cord-len è insieme l'altezza della corda E la distanza di caduta del badge
+   (vedi main.ts): tenerli identici fa sì che la corda resti agganciata al
+   badge per tutta la discesa. */
+.hang {
+  --cord-len: clamp(120px, 20vh, 240px);
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+/* Pendolo: corda + badge ruotano insieme attorno all'aggancio in cima. Il
+   padding-top riserva lo spazio della corda; il pivot è il punto più alto. */
+.hang-swing {
+  position: relative;
+  width: min(100%, 360px);
+  padding-top: var(--cord-len);
+  transform-origin: top center;
+  /* Su touch lo scroll verticale della pagina resta libero (il drag è attivo
+     solo su desktop pointer:fine; questo è una rete di sicurezza). */
+  touch-action: pan-y;
+}
+.hang-swing.is-draggable { cursor: grab; }
+.hang-swing.is-dragging { cursor: grabbing; }
+/* Corda/lanyard: hairline a gradiente, pivot in alto, cresce verso il basso. */
+.hang-cord {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 1.5px);
+  width: 3px;
+  height: var(--cord-len);
+  transform-origin: top center;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--color-navy), var(--color-accent));
+}
+.hang-badge {
+  position: relative;
+  width: 100%;
+  transform-origin: top center;
+}
+/* Clip metallica che unisce corda e badge. */
+.hang-clip {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: 22px;
+  height: 30px;
+  transform: translateX(-50%);
+  border: 3px solid #cfd3dd;
+  border-radius: 7px;
+  background: linear-gradient(160deg, #f2f3f7 0%, #aeb4c2 100%);
+  box-shadow: 0 4px 10px rgba(13, 13, 13, 0.18);
+  z-index: 2;
+}
+.hang-card {
+  position: relative;
+  aspect-ratio: 5 / 6;
+  border-radius: 22px;
+  padding: clamp(16px, 2vw, 22px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 2px 6px rgba(13, 13, 13, 0.12),
+    0 34px 80px rgba(13, 13, 13, 0.32);
+}
+/* Foro punzonato in alto, dove "passa" la clip. */
+.hang-hole {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 52px;
+  height: 9px;
+  transform: translateX(-50%);
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.hang-photo {
+  margin-top: 26px;
+  flex: 1;
+  border-radius: 14px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.05);
+}
+.hang-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hang-initial {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(72px, 11vw, 120px);
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.92);
+}
+.hang-id {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 16px;
+}
+.hang-id-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(20px, 1.6vw, 24px);
+  color: #fff;
+}
+.hang-id-role {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+.hang-id-brand {
+  margin-top: 8px;
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(138, 160, 255, 0.85);
+}
+@media (max-width: 900px) {
+  .hang {
+    --cord-len: clamp(96px, 14vh, 170px);
+  }
+  .hang-swing {
+    width: min(82vw, 340px);
+  }
+}
+/* Reduced motion: corda e badge già nello stato finale (main.ts non anima). */
+@media (prefers-reduced-motion: reduce) {
+  .hang-cord {
+    transform: scaleY(1) !important;
+  }
+  .hang-badge {
+    opacity: 1 !important;
+  }
+  .hang-swing {
+    transform: none !important;
+  }
+}
+
+/* COME LAVORIAMO — layout a due colonne: copy a sinistra, stage CardSwap a
+   destra. Lo stage è il contesto posizionato in cui le card si impilano. */
+.ap-flow-inner--swap {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: clamp(36px, 5vw, 88px);
+  align-items: center;
+}
+.ap-flow-copy {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 2.6vh, 30px);
+}
+.ap-flow-lead {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.2vw, 18px);
+  line-height: 1.7;
+  color: rgba(250, 250, 248, 0.66);
+  max-width: 44ch;
+  margin: 0;
+}
+.ap-flow-stage {
+  position: relative;
+  min-height: 460px;
+}
+@media (max-width: 900px) {
+  .ap-flow-inner--swap {
+    grid-template-columns: 1fr;
+    gap: clamp(48px, 8vh, 96px);
+  }
+  .ap-flow-stage {
+    min-height: 520px;
+  }
+}
+
+/* COME LAVORIAMO senza contenitore: vive sul plain background, quindi i testi
+   tornano scuri (ink/secondary) invece dei chiari pensati per il pannello. */
+.ap-flow--plain {
+  padding-block: clamp(40px, 9vh, 110px);
+}
+.ap-flow--plain .ap-flow-kicker {
+  color: var(--color-muted);
+}
+.ap-flow--plain .ap-flow-kicker::before {
+  background: var(--color-accent);
+}
+.ap-flow--plain .ap-flow-title {
+  color: var(--color-ink);
+}
+.ap-flow--plain .ap-flow-title em {
+  color: var(--color-accent);
+}
+.ap-flow--plain .ap-flow-lead {
+  color: var(--color-secondary);
+}
