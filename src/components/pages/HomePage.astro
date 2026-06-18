@@ -35,8 +35,8 @@ const projectsMeta = [
     titleEm: "PMU",
     year: "2026",
     url: "https://www.alessiapmu.de/",
-    embed: "https://www.alessiapmu.de/",
     preview: "",
+    video: "/videos/projects/dimitricavazzana_vid.mp4",
     status: "live" as const,
   },
   {
@@ -45,8 +45,8 @@ const projectsMeta = [
     titleEm: "Poppinks",
     year: "2026",
     url: "https://marypoppinks.vercel.app/",
-    embed: "https://marypoppinks.vercel.app/",
     preview: "",
+    video: "/videos/projects/alessiapmu_vid.mp4",
     status: "live" as const,
   },
   {
@@ -55,7 +55,6 @@ const projectsMeta = [
     titleEm: tp.items[2].titleEm,
     year: "",
     url: "#contatti",
-    embed: "",
     preview: "",
     status: "soon" as const,
   },
@@ -179,30 +178,32 @@ const services = servicesMeta.map((m, i) => ({
               tag="p"
               className="problem-line"
               text={t.home.problem.line1}
-              splitType="words"
-              delay={45}
-              duration={0.8}
+              splitType="chars"
+              delay={22}
+              duration={0.9}
               ease="power3.out"
-              from={{ opacity: 0, y: 40 }}
+              from={{ opacity: 0, y: 24 }}
               to={{ opacity: 1, y: 0 }}
               threshold={0.3}
               rootMargin="-80px"
               textAlign="left"
+              repeat={false}
             />
             <SplitText
               client:load
               tag="p"
               className="problem-line problem-line--accent"
               text={t.home.problem.line2}
-              splitType="words"
-              delay={45}
-              duration={0.8}
+              splitType="chars"
+              delay={22}
+              duration={0.9}
               ease="power3.out"
-              from={{ opacity: 0, y: 40 }}
+              from={{ opacity: 0, y: 24 }}
               to={{ opacity: 1, y: 0 }}
               threshold={0.3}
               rootMargin="-80px"
               textAlign="left"
+              repeat={false}
             />
           </div>
         </div>
@@ -224,7 +225,7 @@ const services = servicesMeta.map((m, i) => ({
         <div class="works-head-left">
           <span class="works-kicker">{ts.kicker}</span>
           <SplitText
-            client:visible
+            client:load
             tag="h2"
             className="works-title"
             text={ts.title}
@@ -355,22 +356,13 @@ const services = servicesMeta.map((m, i) => ({
 
   <!-- SECTION — LAVORI -->
   <section id="projects" class="projects-section">
-    <div class="section-topo" aria-hidden="true" data-parallax="0.14">
-      <svg viewBox="0 0 420 320" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M210 18c104-4 190 60 188 144-2 82-90 142-190 140S20 242 22 158C24 76 112 22 210 18Z" stroke="rgba(154, 163, 178, 0.5)" />
-        <path d="M212 52c80-3 152 46 152 108 0 64-72 112-154 110S58 222 60 160C62 100 134 55 212 52Z" stroke="rgba(59, 91, 219, 0.32)" />
-        <path d="M214 88c56-2 116 30 118 72 2 44-54 80-120 78-66-2-120-34-118-78 2-42 64-70 120-72Z" stroke="rgba(138, 160, 255, 0.5)" />
-        <path d="M210 126c36-2 66 16 66 36s-30 38-66 36c-34-2-62-16-62-36s28-34 62-36Z" stroke="rgba(26, 35, 64, 0.4)" />
-        <circle cx="211" cy="162" r="3" fill="#3B5BDB" />
-      </svg>
-    </div>
     <span class="deco deco--star deco-accent deco-float-2" style="left: 4.5%; bottom: 5%;" aria-hidden="true">✦</span>
     <div class="works-screen">
       <div class="works-head" data-anim="works-head">
         <div class="works-head-left">
           <span class="works-kicker">{tp.kicker}</span>
           <SplitText
-            client:visible
+            client:load
             tag="h2"
             className="works-title"
             text={tp.title}
@@ -405,29 +397,11 @@ const services = servicesMeta.map((m, i) => ({
               data-anim="work-panel"
               {...props}
             >
-              {p.embed ? (
-                <div class="panel-preview" aria-hidden="true">
-                  <div class="browser-bar">
-                    <span class="browser-dots"><i></i><i></i><i></i></span>
-                    <span class="browser-url">{p.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</span>
-                  </div>
-                  <div class="browser-viewport">
-                    <iframe
-                      class="browser-iframe"
-                      data-iframe
-                      data-src={p.embed}
-                      title={`${tp.previewLabel} ${p.title} ${p.titleEm}`}
-                      loading="lazy"
-                      tabindex="-1"
-                      scrolling="no"
-                      sandbox="allow-scripts allow-same-origin allow-popups"
-                    ></iframe>
-                  </div>
-                </div>
-              ) : (
-                p.preview && (
-                  <img class="work-panel-img" src={p.preview} alt={p.title} loading="lazy" />
-                )
+              {p.video && (
+                <video class="work-panel-img" src={p.video} loop muted playsinline preload="metadata" />
+              )}
+              {p.preview && !p.video && (
+                <img class="work-panel-img" src={p.preview} alt={p.title} loading="lazy" />
               )}
               <span class="work-panel-scrim" aria-hidden="true"></span>
 

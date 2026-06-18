@@ -40,6 +40,13 @@
   pointer-events: auto;
 }
 
+/* Il layer blur è puramente decorativo: non deve intercettare i click. Selettore
+   più specifico della regola `> *` qui sopra, così vince a prescindere
+   dall'ordine di caricamento dei fogli di stile. */
+.staggered-menu-header > .nav-blur-bg {
+  pointer-events: none;
+}
+
 .sm-logo {
   display: flex;
   align-items: center;
@@ -47,6 +54,7 @@
 }
 
 .sm-logo-link {
+  position: relative;
   display: inline-flex;
   align-items: center;
   transition: transform 0.3s ease;
@@ -61,6 +69,14 @@
   height: 32px;
   width: auto;
   object-fit: contain;
+}
+
+/* Wordmark reversed (chiaro) sovrapposto a quello scuro: si scambiano in
+   cross-fade via opacity quando la nav passa sopra una banda scura. */
+.sm-logo-img--reversed {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
 }
 
 /* Lato destro dell'header: switcher di lingua + bottone menu, raggruppati. */
@@ -204,6 +220,42 @@
 
 .sm-line {
   display: none !important;
+}
+
+/* ---------- Inversione su superfici scure ----------
+   Mentre la nav fissa attraversa una banda scura (il navy di "Cosa facciamo" o
+   la card CTA scura), uno ScrollTrigger aggiunge .is-on-dark al wrapper:
+   wordmark, switcher di lingua e bottone menu passano al chiaro per restare
+   leggibili, poi tornano normali quando lo sfondo ridiventa chiaro. Cross-fade
+   morbido via transition. Sospeso a menu aperto ([data-open]): il pannello
+   chiaro copre lo schermo, quindi l'header resta scuro. */
+.sm-logo-img,
+.sm-toggle,
+.sm-lang-link {
+  transition: color 0.45s ease, opacity 0.45s ease, background 0.25s ease;
+}
+
+/* Sul fondo scuro: svanisce il wordmark scuro, compare quello reversed. */
+.staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-logo-img:not(.sm-logo-img--reversed) {
+  opacity: 0;
+}
+
+.staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-logo-img--reversed {
+  opacity: 1;
+}
+
+.staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-toggle {
+  /* Vince sul color inline impostato da GSAP sul bottone. */
+  color: #fafaf8 !important;
+}
+
+.staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-lang-link {
+  color: #fafaf8;
+}
+
+.staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-lang-link.is-active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
 }
 
 .staggered-menu-panel {

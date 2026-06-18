@@ -46,10 +46,27 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scrollbar-width: none;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
 }
 
+/* Clip dell'overflow orizzontale alla radice. Il body ha già overflow-x:hidden,
+   ma l'<html> no: gli elementi che vivono fuori dal bordo destro (il pannello
+   menu chiuso, l'animazione "Il punto" parcheggiata a destra prima di entrare,
+   i segni decorativi) rendevano la pagina scrollabile in orizzontale su una
+   fascia bianca vuota. `clip` la elimina senza creare uno scroll-container
+   (lo scroll verticale resta intatto). */
+html {
+  overflow-x: clip;
+}
+
+/* La scrollbar nativa del documento (in WebKit appartiene alla root, non al
+   body): va nascosta anche su html, altrimenti resta una banda chiara sul
+   lato destro accanto alla barra di scroll personalizzata (#scroll-track). */
+html::-webkit-scrollbar,
 body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
   display: none;
 }
 
@@ -312,10 +329,13 @@ body {
 
 #scroll-fill {
   width: 100%;
-  height: 0%;
+  height: 100%;
   background: var(--color-accent);
+  /* Riempimento via transform: scaleY (aggiornato dal JS) → solo compositing,
+     niente layout/paint per frame. transform-origin in alto = cresce dall'alto. */
+  transform: scaleY(0);
   transform-origin: top center;
-  transition: height 0.05s linear;
+  will-change: transform;
   border-radius: 0 0 2px 2px;
 }
 
@@ -539,6 +559,9 @@ button {
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: clamp(32px, 5vw, 80px);
   align-items: center;
+  /* Niente overflow:hidden qui: clipperebbe l'immagine al bordo della griglia
+     (dentro lo schermo), facendola "uscire dal vuoto". Il taglio fuori schermo
+     lo fa già overflow-x:clip su <html>, così entra a filo dal lato viewport. */
 }
 .problem-copy {
   display: flex;
@@ -595,10 +618,10 @@ button {
      nav fissa (logo in alto a sinistra) invece di sovrapporsi — la sezione
      respira, niente collisione, lettura pulita. */
   padding: clamp(150px, 20vh, 240px) 0 clamp(90px, 13vh, 170px);
-  /* Velature jewel-tone agli angoli: il warm white respira, non è piatto. */
-  background:
-    radial-gradient(46% 38% at 94% 2%, rgba(59, 91, 219, 0.05), transparent 70%),
-    radial-gradient(40% 34% at 2% 92%, rgba(154, 163, 178, 0.1), transparent 70%);
+  /* Nessuna velatura di sfondo: la sezione resta trasparente sul canvas
+     continuo (.post-reveal). La velatura grigio-fredda che stava nell'angolo
+     basso-sinistra creava una macchia/edge tenue su quel lato, percepita come
+     separazione verso "Chi siamo" — rimossa per una fusione pulita. */
 }
 
 /* Schermata works — quasi a tutta larghezza per sfruttare lo spazio. */
@@ -706,6 +729,10 @@ button {
   flex: 1 1 0;
   min-width: 0;
   overflow: hidden;
+  /* Stacking context isolato: la grana in mix-blend si fonde solo col pannello
+     (che ha già il suo background), non col fondo della pagina — così lo scroll
+     non deve ridipingere il blend contro tutto ciò che sta dietro la rail. */
+  isolation: isolate;
   border-radius: 22px;
   text-decoration: none;
   color: #fafaf8;
@@ -1192,6 +1219,10 @@ button {
   position: relative;
   padding: clamp(90px, 13vh, 170px) 0;
   background-color: var(--color-navy);
+  /* NB: niente overflow:clip qui — con il pin GSAP della sezione finirebbe per
+     ritagliare lo stage pinnato (un'enorme fascia bianca). I glow non sbordano
+     più in verticale (ancorati in alto), e lo sbordo orizzontale è già
+     contenuto dall'overflow-x:hidden del body, quindi non serve. */
 }
 .services-section .works-screen {
   max-width: 110rem;
@@ -1536,22 +1567,26 @@ button {
   pointer-events: none;
 }
 .about-video-frame {
-  position: sticky;
+  /* Bloccato durante la sezione dal pin GSAP (vedi main.ts), non più da
+     position:sticky — l'overflow-x sugli antenati lo neutralizzava. */
+  position: relative;
   top: 0;
   height: 100vh;
   overflow: hidden;
   /* Fascia di dissolvenza lunga e a più tappe sopra e sotto: il video non ha
      mai un bordo netto, sfuma nel colore della pagina su quasi metà altezza
      per lato (curva morbida, non lineare). */
+  /* Dissolvenza LINEARE e lunga: una rampa a pendenza costante non ha punti
+     d'inflessione, così il video emerge dal canvas senza nessun bordo
+     percepibile (le rampe "a curva" di prima creavano una linea lieve dove la
+     pendenza cambiava). Piccolo tratto trasparente in cima (0–6%) come cuscinetto
+     pulito esattamente sulla giunzione con i Risultati. */
   --about-mask: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(0, 0, 0, 0.15) 12%,
-    rgba(0, 0, 0, 0.6) 26%,
-    #000 40%,
-    #000 60%,
-    rgba(0, 0, 0, 0.6) 74%,
-    rgba(0, 0, 0, 0.15) 88%,
+    transparent 6%,
+    #000 44%,
+    #000 64%,
     transparent 100%
   );
   -webkit-mask-image: var(--about-mask);
@@ -1584,8 +1619,11 @@ button {
     ),
     linear-gradient(
       to bottom,
-      rgba(232, 232, 229, 1) 0%,
-      rgba(232, 232, 229, 0.7) 12%,
+      /* Top trasparente: il bordo superiore di Chi siamo mostra solo il canvas
+         continuo (lo stesso fondo dei Risultati, che vira in scrub), senza più
+         il blocco pieno #E8E8E5 che creava la cucitura tra le due sezioni. Il
+         grigio caldo e le nuvole affiorano gradualmente più in basso. */
+      rgba(232, 232, 229, 0) 0%,
       rgba(232, 232, 229, 0) 30%,
       rgba(232, 232, 229, 0) 70%,
       rgba(232, 232, 229, 0.7) 88%,
@@ -2616,8 +2654,9 @@ button {
   top: 0;
   left: 0;
   right: 0;
-  /* Si estende oltre la navbar così la sfocatura ha spazio per sfumare. */
-  bottom: -70%;
+  /* Banda più spessa: si estende molto oltre la navbar, così la sfocatura ha
+     più spazio per dissolversi gradualmente nella pagina. */
+  bottom: -200%;
   background: linear-gradient(
     to bottom,
     rgba(250, 250, 248, 0.08) 0%,
@@ -2627,18 +2666,26 @@ button {
   opacity: 0;
   z-index: -1;
   pointer-events: none;
-  /* Mask: la sfocatura è piena in cima e svanisce verso il basso, così
-     non c'è un bordo netto — il blur fa fade-in nella pagina. */
+  /* Mask: la sfocatura è piena in cima e svanisce verso il basso, così non c'è
+     un bordo netto — il blur fa fade nella pagina. Fade amplificato: il tratto
+     pieno è breve e la dissolvenza si distende su quasi tutta la banda, con
+     tappe intermedie per una curva morbida (niente stacco netto sotto). */
   -webkit-mask-image: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 1) 30%,
+    rgba(0, 0, 0, 1) 12%,
+    rgba(0, 0, 0, 0.65) 38%,
+    rgba(0, 0, 0, 0.28) 64%,
+    rgba(0, 0, 0, 0.1) 82%,
     rgba(0, 0, 0, 0) 100%
   );
   mask-image: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 1) 30%,
+    rgba(0, 0, 0, 1) 12%,
+    rgba(0, 0, 0, 0.65) 38%,
+    rgba(0, 0, 0, 0.28) 64%,
+    rgba(0, 0, 0, 0.1) 82%,
     rgba(0, 0, 0, 0) 100%
   );
   /* backdrop-filter impostato dinamicamente via JS: blur(0→20px) */
@@ -3835,22 +3882,6 @@ nav:has(#burger-menu.is-open) .pill {
   }
 }
 
-/* ---- Curve di livello — la mappa topografica dietro l'header progetti ---- */
-.section-topo {
-  position: absolute;
-  top: clamp(20px, 4vh, 60px);
-  right: clamp(-40px, -1vw, 0px);
-  width: clamp(200px, 24vw, 380px);
-  z-index: 0;
-  pointer-events: none;
-}
-.section-topo svg {
-  width: 100%;
-  height: auto;
-}
-@media (max-width: 767px) {
-  .section-topo { display: none; }
-}
 
 /* ---- Aurora della banda navy — bagliori jewel-tone in deriva lenta ---- */
 .services-glow {
@@ -3859,11 +3890,16 @@ nav:has(#burger-menu.is-open) .pill {
   border-radius: 9999px;
   pointer-events: none;
 }
+/* I glow restano nella scena visibile (parte alta della sezione): la sezione
+   è pinnata e diventa alta ~5 viewport, quindi qualunque ancoraggio a bottom
+   finirebbe proprio sul confine coi Lavori, dove overflow:clip lo taglierebbe
+   in un arco blu netto. Ancorati in alto (e con bleed solo orizzontale, sul
+   bordo schermo) non toccano mai le cuciture tra sezioni. */
 .services-glow--1 {
   width: 46vw;
   height: 46vw;
   left: -14vw;
-  top: -10vw;
+  top: 2vh;
   background: radial-gradient(circle, rgba(138, 160, 255, 0.17), transparent 70%);
   animation: glow-drift-a 26s ease-in-out infinite alternate;
 }
@@ -3871,7 +3907,7 @@ nav:has(#burger-menu.is-open) .pill {
   width: 40vw;
   height: 40vw;
   right: -12vw;
-  bottom: -8vw;
+  top: 26vh;
   background: radial-gradient(circle, rgba(59, 91, 219, 0.22), transparent 70%);
   animation: glow-drift-b 32s ease-in-out infinite alternate;
 }

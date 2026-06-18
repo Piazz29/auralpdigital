@@ -19,6 +19,7 @@ const SplitText = ({
   rootMargin = '-100px',
   textAlign = 'center',
   tag = 'p',
+  repeat = false,
   onLetterAnimationComplete
 }) => {
   const ref = useRef(null);
@@ -105,21 +106,58 @@ const SplitText = ({
               duration,
               ease,
               stagger: delay / 1000,
-              scrollTrigger: {
-                trigger: el,
-                start,
-                once: true,
-                fastScrollEnd: true,
-                anticipatePin: 0.4
-              },
+              // In repeat mode il tween è pilotato dallo ScrollTrigger qui sotto
+              // (restart a ogni ingresso), quindi parte in pausa e senza trigger
+              // proprio. Altrimenti: comportamento classico one-shot.
+              paused: repeat,
+              scrollTrigger: repeat
+                ? undefined
+                : {
+                    trigger: el,
+                    start,
+                    once: true,
+                    fastScrollEnd: true,
+                    anticipatePin: 0.4
+                  },
               onComplete: () => {
-                animationCompletedRef.current = true;
+                if (!repeat) {
+                  animationCompletedRef.current = true;
+                  // Rilascia i layer GPU: tenere will-change su decine di
+                  // caratteri dopo l'animazione tiene vivi tanti layer compositor
+                  // (memoria + jank). A reveal finito non serve più.
+                  gsap.set(targets, { willChange: 'auto' });
+                }
                 onCompleteRef.current?.();
               },
               willChange: 'transform, opacity',
               force3D: true
             }
           );
+
+          if (repeat) {
+            // Ripetibile, con due trigger distinti:
+            // 1) PLAY — riparte quando la sezione entra "in vista" (stesso start
+            //    one-shot), sia scrollando in giù sia risalendo dal basso.
+            ScrollTrigger.create({
+              trigger: el,
+              start,
+              fastScrollEnd: true,
+              onEnter: () => tween.restart(),
+              onEnterBack: () => tween.restart()
+            });
+            // 2) RESET — riporta le lettere allo stato nascosto SOLO quando la
+            //    sezione è completamente fuori dal viewport. Senza questo secondo
+            //    trigger il reset cadrebbe sulla linea di start (top 70%), facendo
+            //    sparire di colpo il testo ancora visibile mentre si risale.
+            ScrollTrigger.create({
+              trigger: el,
+              start: 'top bottom',
+              end: 'bottom top',
+              onLeave: () => tween.pause(0),
+              onLeaveBack: () => tween.pause(0)
+            });
+          }
+
           return tween;
         }
       });

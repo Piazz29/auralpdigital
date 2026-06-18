@@ -17,6 +17,7 @@ export const StaggeredMenu = ({
   changeMenuColorOnOpen = true,
   isFixed = false,
   homeUrl = '/',
+  logoReversedUrl = '',
   closeOnClickAway = true,
   socialsLabel = 'Socials',
   extraPanelContent = null,
@@ -227,14 +228,16 @@ export const StaggeredMenu = ({
     const layers = preLayerElsRef.current;
     if (!panel) return;
 
-    const all = [...layers, panel];
     closeTweenRef.current?.kill();
     const offscreen = position === 'left' ? -100 : 100;
-    closeTweenRef.current = gsap.to(all, {
-      xPercent: offscreen,
-      duration: 0.32,
-      ease: 'power3.in',
-      overwrite: 'auto',
+
+    // Chiusura speculare all'apertura: il pannello si ritrae per primo
+    // (rivelando i layer colorati dietro), poi i layer escono IN CASCATA con lo
+    // stesso stagger dell'apertura ma in ordine inverso (l'ultimo entrato è il
+    // primo a uscire) ed ease 'in' come specchio del 'power4.out' d'entrata.
+    // Così la stessa "animazione blu" si replica anche in chiusura.
+    const layersOut = [...layers].reverse();
+    closeTweenRef.current = gsap.timeline({
       onComplete: () => {
         const itemEls = Array.from(panel.querySelectorAll('.sm-panel-itemLabel'));
         if (itemEls.length) {
@@ -252,6 +255,19 @@ export const StaggeredMenu = ({
         if (extraEls.length) gsap.set(extraEls, { y: 20, opacity: 0 });
         busyRef.current = false;
       }
+    });
+
+    closeTweenRef.current.to(
+      panel,
+      { xPercent: offscreen, duration: 0.5, ease: 'power4.in', overwrite: 'auto' },
+      0
+    );
+    layersOut.forEach((el, i) => {
+      closeTweenRef.current.to(
+        el,
+        { xPercent: offscreen, duration: 0.5, ease: 'power4.in', overwrite: 'auto' },
+        0.1 + i * 0.07
+      );
     });
   }, [position]);
 
@@ -392,6 +408,11 @@ export const StaggeredMenu = ({
         })()}
       </div>
       <header className="staggered-menu-header" aria-label="Main navigation header">
+        {/* Layer blur del fondo navbar: backdrop-filter + opacity (0→1) animati
+            via JS sui primi 150px di scroll (vedi main.ts → .nav-blur-bg).
+            Nessuno `style` prop: così React non riconcilia lo style del div e
+            non cancella i valori inline messi dal JS a ogni re-render. */}
+        <div className="nav-blur-bg" aria-hidden="true" />
         <div className="sm-logo" aria-label="Logo">
           <a href={homeUrl} className="sm-logo-link" aria-label="Home">
             <img
@@ -402,6 +423,17 @@ export const StaggeredMenu = ({
               width={110}
               height={24}
             />
+            {logoReversedUrl && (
+              <img
+                src={logoReversedUrl}
+                alt=""
+                aria-hidden="true"
+                className="sm-logo-img sm-logo-img--reversed"
+                draggable={false}
+                width={110}
+                height={24}
+              />
+            )}
           </a>
         </div>
         <div className="sm-header-right">

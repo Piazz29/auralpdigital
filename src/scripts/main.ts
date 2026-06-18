@@ -5,6 +5,11 @@ import { Draggable } from "gsap/Draggable";
 
 gsap.registerPlugin(ScrollTrigger, Draggable);
 
+// Su mobile la barra URL che appare/scompare cambia l'altezza del viewport e
+// scatena un refresh di ScrollTrigger (ricalcolo di tutti i pin) in pieno
+// scroll → scatto. Ignorando quel resize lo scroll resta fluido.
+ScrollTrigger.config({ ignoreMobileResize: true });
+
 const reduceMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 ).matches;
@@ -20,7 +25,13 @@ if (reduceMotion) {
 
 // ---------- Lenis smooth scroll ----------
 const lenis = new Lenis({
-  duration: 1.2,
+  // Durata più lunga + easing expo con coda lunga: quando si smette di
+  // scrollare la pagina DECELERA dolcemente fino a fermarsi, invece di
+  // bloccarsi di colpo. Vale anche dentro le sezioni pinnate, dove lo scroll
+  // continua ad avanzare la timeline mentre rallenta → la scena "si posa"
+  // invece di scattare allo stop.
+  duration: 1.5,
+  easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
   smoothWheel: true,
 });
 
@@ -57,9 +68,11 @@ document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
 // ---------- Scroll progress bar ----------
 const scrollFill = document.getElementById("scroll-fill");
 if (scrollFill) {
+  // Aggiorna via transform (solo compositing) invece di `height` (layout +
+  // paint a ogni frame): la barra resta fluida anche durante scroll rapidi.
   lenis.on("scroll", ({ scroll, limit }: { scroll: number; limit: number }) => {
-    const pct = limit > 0 ? (scroll / limit) * 100 : 0;
-    scrollFill.style.height = `${pct}%`;
+    const pct = limit > 0 ? scroll / limit : 0;
+    scrollFill.style.transform = `scaleY(${pct})`;
   });
 }
 
@@ -69,12 +82,20 @@ if (scrollFill) {
 const navBluBg = document.querySelector<HTMLElement>(".nav-blur-bg");
 if (navBluBg) {
   const s = navBluBg.style as CSSStyleDeclaration & { webkitBackdropFilter: string };
+  // Riscrivere il backdrop-filter a OGNI frame di scroll è costosissimo (il
+  // blur viene ri-rasterizzato). Il valore però cambia solo nei primi 150px:
+  // quantizziamo `t` e aggiorniamo lo stile solo quando cambia davvero, così
+  // oltre i 150px (cioè per quasi tutta la pagina) non tocchiamo più lo stile.
+  let lastNavT = -1;
   lenis.on("scroll", ({ scroll }: { scroll: number }) => {
     const t = Math.min(1, scroll / 150);
-    const blurVal = `blur(${(t * 20).toFixed(2)}px) saturate(160%)`;
+    const q = Math.round(t * 40) / 40; // 40 step impercettibili su 150px
+    if (q === lastNavT) return;
+    lastNavT = q;
+    const blurVal = `blur(${(q * 20).toFixed(2)}px) saturate(160%)`;
     s.backdropFilter = blurVal;
     s.webkitBackdropFilter = blurVal;
-    s.opacity = String(t);
+    s.opacity = String(q);
   });
 }
 
@@ -225,7 +246,7 @@ gsap.fromTo(
 // pannello CTA scuro, un toggle aggiunge .nav-on-dark: logo bianco, burger
 // e pill invertiti. È contrasto funzionale, quindi attivo anche con
 // reduced motion.
-const navEl = document.querySelector<HTMLElement>("[data-anim='nav']");
+const navEl = document.querySelector<HTMLElement>(".staggered-menu-wrapper");
 if (navEl) {
   // La banda navy di Cosa Facciamo è gestita a parte (vedi sotto), perché il
   // suo pin sposta tutto ciò che segue e l'inversione va ancorata a chi-siamo.
@@ -243,7 +264,7 @@ if (navEl) {
       trigger: sel,
       start,
       end,
-      toggleClass: { targets: navEl, className: "nav-on-dark" },
+      toggleClass: { targets: navEl, className: "is-on-dark" },
     });
   });
 }
@@ -541,6 +562,42 @@ const revealHead = (selector: string, trigger: string) => {
 };
 revealHead("[data-anim='services-head']", "#cosa-facciamo");
 
+// ---------- "Il punto" — l'animazione SVG scivola dentro dal bordo destro ----------
+// In sincro con la comparsa del testo (stesso start: top 70%-=80px) e ripetibile
+// come il testo: riparte a ogni ingresso (in giù o risalendo), si resetta solo
+// quando la sezione è del tutto fuori dal viewport. Reduced motion: nessuno
+// slide, l'SVG resta fermo e pieno.
+const problemArt = document.querySelector<HTMLElement>("[data-problem-art]");
+if (problemArt && !reduceMotion) {
+  // Offset di partenza calcolato: sposta l'immagine finché il suo bordo SINISTRO
+  // tocca il bordo DESTRO del viewport, così entra a filo dal lato della
+  // schermata (niente "spazio vuoto" in mezzo). Il taglio fuori schermo lo fa
+  // l'overflow-x:clip su <html>; per questo .problem-grid non deve più clippare.
+  const artFromX = () =>
+    window.innerWidth - problemArt.getBoundingClientRect().left + 8;
+  // Reveal ONE-SHOT: entra una sola volta quando la sezione arriva in vista e
+  // resta. Niente più restart su enter/enterBack: il vecchio pattern a doppio
+  // trigger veniva ri-eseguito dai refresh di ScrollTrigger (idratazione delle
+  // isole client:visible a valle, fonts, immagini) facendo "compare/scompare/
+  // ricompare" l'immagine. `once` si auto-distrugge dopo lo scatto → immune.
+  gsap.fromTo(
+    problemArt,
+    { x: artFromX, autoAlpha: 0 },
+    {
+      x: 0,
+      autoAlpha: 1,
+      duration: 1.1,
+      ease: "power3.out",
+      force3D: true,
+      scrollTrigger: {
+        trigger: "#problema",
+        start: "top 70%-=80px",
+        once: true,
+      },
+    }
+  );
+}
+
 // ---------- Canvas — lo schermo cambia colore tra le sezioni ----------
 // I colori di sezione non stanno sulle sezioni ma sul canvas .post-reveal:
 // quattro scrub lo tingono in sequenza — warm white → navy (entrando in Cosa
@@ -567,7 +624,9 @@ if (!reduceMotion) {
           backgroundColor: to,
           ease: "none",
           immediateRender: false,
-          scrollTrigger: { trigger, start, end, scrub: 0.4 },
+          // Scrub un filo più morbido: la virata di colore insegue lo scroll
+          // con leggera inerzia invece di "scattare" al fermarsi della rotella.
+          scrollTrigger: { trigger, start, end, scrub: 0.6 },
         }
       );
     };
@@ -610,14 +669,18 @@ const servicesPinDistance = () =>
 // non compensa il pin): l'inversione si chiuderebbe subito. Quindi due
 // trigger a elemento singolo con callback —
 //   • accendi quando il navy si forma (cosa-facciamo, PRIMA del pin);
-//   • spegni quando chi-siamo riporta il chiaro (stesso elemento-trigger dei
-//     morph del colore, quindi posizione corretta col pin).
+//   • spegni quando i Lavori riportano il chiaro: il navy è scuro SOLO nella
+//     banda di Servizi e nell'inizio dei Lavori (il morph #projects vira
+//     navy→bianco tra top 80% e top 30%). Ancorare lo spegnimento a #projects
+//     (stesso elemento-trigger del morph colore) fa tornare la navbar normale
+//     appena lo sfondo ridiventa bianco, invece di restare invertita per tutta
+//     la sezione chiara fino a Chi Siamo.
 // onLeaveBack ripristina lo stato anche scrollando all'indietro.
 const servicesSection = document.querySelector<HTMLElement>("#cosa-facciamo");
-const aboutSection = document.querySelector<HTMLElement>("#chi-siamo");
-if (navEl && servicesSection && aboutSection && serviceSlides.length) {
-  const addDark = () => navEl.classList.add("nav-on-dark");
-  const removeDark = () => navEl.classList.remove("nav-on-dark");
+const projectsSection = document.querySelector<HTMLElement>("#projects");
+if (navEl && servicesSection && projectsSection && serviceSlides.length) {
+  const addDark = () => navEl.classList.add("is-on-dark");
+  const removeDark = () => navEl.classList.remove("is-on-dark");
 
   ScrollTrigger.create({
     trigger: servicesSection,
@@ -626,8 +689,8 @@ if (navEl && servicesSection && aboutSection && serviceSlides.length) {
     onLeaveBack: removeDark,
   });
   ScrollTrigger.create({
-    trigger: aboutSection,
-    start: "top 40%",
+    trigger: projectsSection,
+    start: "top 50%",
     onEnter: removeDark,
     onLeaveBack: addDark,
   });
@@ -860,16 +923,21 @@ if (pinStatement && !reduceMotion) {
     const ACCENT = "#3B5BDB";
     gsap.set(chars, { color: GRAY });
 
+    // Corsa proporzionale al numero di lettere: più corta (≈7px di scroll a
+    // lettera) per un passaggio tra le sezioni più immediato. Condivisa tra il
+    // pin dello statement e quello del fondale video, così restano sincronizzati.
+    const pinEnd = () => "+=" + Math.max(560, Math.round(chars.length * 7));
+
     const tl = gsap.timeline({
       defaults: { ease: "none" },
       scrollTrigger: {
         trigger: ".about-intro",
         start: "top top",
-        // Corsa proporzionale al numero di lettere: il riempimento resta
-        // "preciso" (≈12px di scroll a lettera) a qualsiasi viewport.
-        end: () => "+=" + Math.max(900, Math.round(chars.length * 12)),
+        end: pinEnd,
         pin: true,
-        scrub: 0.3,
+        // Scrub più morbido: il riempimento delle lettere "decelera" invece di
+        // bloccarsi netto quando si smette di scrollare.
+        scrub: 0.55,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         // Come il pin dei servizi: ricalcolato prima dei trigger a valle,
@@ -877,6 +945,26 @@ if (pinStatement && !reduceMotion) {
         refreshPriority: 1,
       },
     });
+
+    // Fondale video — bloccato ESATTAMENTE come lo statement (stesso
+    // trigger/start/end), pinnato via GSAP. Non si usa più position:sticky:
+    // è neutralizzato dall'overflow-x sugli antenati (body/html), quindi il
+    // video scrollava via mentre il testo restava fermo. pinSpacing:false →
+    // non aggiunge spazio (lo spazio lo riserva già il pin dello statement).
+    const aboutVideoFrame =
+      document.querySelector<HTMLElement>(".about-video-frame");
+    if (aboutVideoFrame) {
+      ScrollTrigger.create({
+        trigger: ".about-intro",
+        start: "top top",
+        end: pinEnd,
+        pin: aboutVideoFrame,
+        pinSpacing: false,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        refreshPriority: 1,
+      });
+    }
 
     // Un tween per lettera, in sequenza: 1 unità di timeline = 1 lettera.
     // duration < 1 → ogni lettera "scatta" piena prima che parta la
@@ -896,8 +984,9 @@ if (pinStatement && !reduceMotion) {
         0
       );
     }
-    // Coda: la frase resta piena e ferma prima dello sblocco.
-    tl.to({}, { duration: chars.length * 0.14 });
+    // Coda: la frase resta piena e ferma prima dello sblocco (breve, così lo
+    // sblocco verso la sezione successiva arriva subito).
+    tl.to({}, { duration: chars.length * 0.06 });
   }
 }
 
@@ -1236,31 +1325,6 @@ if (
   }
 }
 
-// ---------- Effetti legati alla VELOCITÀ di scroll ----------
-// La rail dei progetti si inclina di qualche frazione di grado nel verso
-// dello scroll e si raddrizza subito — l'inerzia di un oggetto fisico.
-if (!reduceMotion) {
-  const rail = document.querySelector<HTMLElement>(".works-rail");
-  const railSkew = rail
-    ? gsap.quickTo(rail, "skewY", { duration: 0.4, ease: "power2.out" })
-    : null;
-
-  if (railSkew) {
-    let skewReset: gsap.core.Tween | null = null;
-
-    ScrollTrigger.create({
-      start: 0,
-      end: "max",
-      onUpdate(self) {
-        const v = self.getVelocity();
-        railSkew(gsap.utils.clamp(-1.4, 1.4, v / 900));
-        skewReset?.kill();
-        skewReset = gsap.delayedCall(0.15, () => railSkew(0));
-      },
-    });
-  }
-}
-
 // ---------- Rail dei lavori — espansione del pannello attivo ----------
 // Pilotiamo l'attivo da JS invece che con :hover, perché i 14px di gap fra
 // i pannelli sono una "zona morta": attraversandoli col solo CSS, l'aperto
@@ -1275,120 +1339,41 @@ if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
       railEl.querySelectorAll<HTMLElement>(".work-panel")
     );
     panels.forEach((panel) => {
+      const vid = panel.querySelector<HTMLVideoElement>("video");
       panel.addEventListener("pointerenter", () => {
         railEl.classList.add("is-engaged");
-        panels.forEach((other) =>
-          other.classList.toggle("is-active", other === panel)
-        );
+        panels.forEach((other) => {
+          const isTarget = other === panel;
+          other.classList.toggle("is-active", isTarget);
+          const otherVid = other.querySelector<HTMLVideoElement>("video");
+          if (otherVid && !isTarget) {
+            otherVid.pause();
+            otherVid.currentTime = 0;
+          }
+        });
+        vid?.play();
       });
     });
     railEl.addEventListener("pointerleave", () => {
       railEl.classList.remove("is-engaged");
-      panels.forEach((other) => other.classList.remove("is-active"));
-    });
-  }
-}
-
-// ---------- Anteprime live dei progetti — lazy load + auto-scroll ----------
-// L'iframe del sito reale carica `src` solo alla PRIMA espansione del pannello
-// (la home non scarica due siti esterni all'avvio). Lo scroll interno di un
-// iframe cross-origin non è pilotabile via JS, quindi simuliamo lo scorrimento
-// animando il translateY dell'iframe (alto 220%).
-//
-// PERFORMANCE: animare il transform di un iframe che renderizza un sito vivo è
-// costoso. Per evitare il lag "dopo un po'":
-//  • scorre UN SOLO iframe alla volta (quello aperto/attivo);
-//  • l'auto-scroll è in PAUSA quando la sezione progetti è fuori viewport
-//    (prima restava attivo all'infinito, ridipingendo un sito esterno per
-//    sempre — la causa del rallentamento);
-//  • will-change: transform è acceso solo mentre l'iframe scorre davvero.
-{
-  const section = document.querySelector<HTMLElement>("#projects");
-  const rail = document.querySelector<HTMLElement>(".works-rail");
-  if (section && rail) {
-    const panels = Array.from(rail.querySelectorAll<HTMLElement>(".work-panel"));
-    const tweens = new WeakMap<HTMLIFrameElement, gsap.core.Tween>();
-    const open = panels.find((p) => p.hasAttribute("data-open")) ?? null;
-    let current: HTMLElement | null = open;
-    let inView = false;
-
-    const iframeOf = (panel: HTMLElement) =>
-      panel.querySelector<HTMLIFrameElement>("[data-iframe]");
-
-    // Carica src la prima volta e crea (in pausa) il tween di auto-scroll.
-    const ensure = (panel: HTMLElement): gsap.core.Tween | null => {
-      const iframe = iframeOf(panel);
-      if (!iframe) return null;
-      if (!iframe.src && iframe.dataset.src) iframe.src = iframe.dataset.src;
-      if (reduceMotion) return null;
-      let tw = tweens.get(iframe);
-      if (!tw) {
-        tw = gsap.fromTo(
-          iframe,
-          { yPercent: 0 },
-          {
-            yPercent: -50,
-            duration: 9,
-            ease: "none",
-            repeat: -1,
-            yoyo: true,
-            paused: true,
-            delay: 0.8,
-          }
-        );
-        tweens.set(iframe, tw);
-      }
-      return tw;
-    };
-
-    const pause = (panel: HTMLElement) => {
-      const iframe = iframeOf(panel);
-      if (!iframe) return;
-      tweens.get(iframe)?.pause();
-      iframe.style.willChange = "auto";
-    };
-
-    // Stato unico: scorre `current` solo se la sezione è in vista; tutto il
-    // resto è in pausa.
-    const sync = () => {
-      panels.forEach((p) => p !== current && pause(p));
-      if (inView && current) {
-        const iframe = iframeOf(current);
-        const tw = ensure(current);
-        if (tw && iframe) {
-          iframe.style.willChange = "transform";
-          tw.play();
+      panels.forEach((other) => {
+        other.classList.remove("is-active");
+        const vid = other.querySelector<HTMLVideoElement>("video");
+        if (vid) {
+          vid.pause();
+          vid.currentTime = 0;
         }
-      } else if (current) {
-        pause(current);
-      }
-    };
-
-    ScrollTrigger.create({
-      trigger: section,
-      start: "top bottom",
-      end: "bottom top",
-      onToggle: (self) => {
-        inView = self.isActive;
-        sync();
-      },
+      });
     });
-
-    // Su dispositivi con hover: l'anteprima segue il pannello attivo.
-    if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-      panels.forEach((panel) => {
-        if (!iframeOf(panel)) return;
-        panel.addEventListener("pointerenter", () => {
-          current = panel;
-          sync();
-        });
-      });
-      rail.addEventListener("pointerleave", () => {
-        current = open;
-        sync();
-      });
-    }
   }
+} else {
+  document.querySelectorAll<HTMLVideoElement>(".work-panel video").forEach((vid) => {
+    const obs = new IntersectionObserver(
+      ([e]) => { e.isIntersecting ? vid.play() : (vid.pause(), vid.currentTime = 0); },
+      { threshold: 0.5 }
+    );
+    obs.observe(vid);
+  });
 }
 
 // ---------- Pagina /chi-siamo ----------

@@ -89,6 +89,7 @@ export default function SiteMenu({ home = false, lang = defaultLang, route = '/'
       extraPanelContent={extraPanelContent}
       colors={['#3B5BDB', '#1A2340']}
       logoUrl="/logo/wordmark.svg"
+      logoReversedUrl="/logo/wordmark-reversed.svg"
       accentColor="#3B5BDB"
       menuButtonColor="#0D0D0D"
       openMenuButtonColor="#0D0D0D"
