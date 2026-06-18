@@ -14,15 +14,6 @@ const reduceMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 ).matches;
 
-// Reduced motion: ferma la SMIL dell'animazione SVG "Il punto" (le animazioni
-// SMIL non rispettano prefers-reduced-motion da sé). pauseAnimations() congela
-// l'SVG sul fotogramma corrente, lasciandolo come grafica statica.
-if (reduceMotion) {
-  document
-    .querySelectorAll<SVGSVGElement>("[data-problem-art] svg")
-    .forEach((svg) => svg.pauseAnimations?.());
-}
-
 // ---------- Lenis smooth scroll ----------
 const lenis = new Lenis({
   // Durata più lunga + easing expo con coda lunga: quando si smette di
@@ -562,40 +553,156 @@ const revealHead = (selector: string, trigger: string) => {
 };
 revealHead("[data-anim='services-head']", "#cosa-facciamo");
 
-// ---------- "Il punto" — l'animazione SVG scivola dentro dal bordo destro ----------
-// In sincro con la comparsa del testo (stesso start: top 70%-=80px) e ripetibile
-// come il testo: riparte a ogni ingresso (in giù o risalendo), si resetta solo
-// quando la sezione è del tutto fuori dal viewport. Reduced motion: nessuno
-// slide, l'SVG resta fermo e pieno.
-const problemArt = document.querySelector<HTMLElement>("[data-problem-art]");
-if (problemArt && !reduceMotion) {
-  // Offset di partenza calcolato: sposta l'immagine finché il suo bordo SINISTRO
-  // tocca il bordo DESTRO del viewport, così entra a filo dal lato della
-  // schermata (niente "spazio vuoto" in mezzo). Il taglio fuori schermo lo fa
-  // l'overflow-x:clip su <html>; per questo .problem-grid non deve più clippare.
-  const artFromX = () =>
-    window.innerWidth - problemArt.getBoundingClientRect().left + 8;
-  // Reveal ONE-SHOT: entra una sola volta quando la sezione arriva in vista e
-  // resta. Niente più restart su enter/enterBack: il vecchio pattern a doppio
-  // trigger veniva ri-eseguito dai refresh di ScrollTrigger (idratazione delle
-  // isole client:visible a valle, fonts, immagini) facendo "compare/scompare/
-  // ricompare" l'immagine. `once` si auto-distrugge dopo lo scatto → immune.
-  gsap.fromTo(
-    problemArt,
-    { x: artFromX, autoAlpha: 0 },
-    {
-      x: 0,
-      autoAlpha: 1,
-      duration: 1.1,
-      ease: "power3.out",
-      force3D: true,
+// ---------- "Il punto" — CILINDRO 3D orizzontale in scroll-pinning ----------
+// La sezione si BLOCCA (pin) mentre lo scroll fa "ruotare" un cilindro invisibile
+// ad asse orizzontale: il testo è sulla sua superficie interna, una riga per
+// fascia. La riga al centro del viewport è piatta e leggibile; allontanandosi
+// le righe si inclinano (rotateX), si schiacciano (scaleY), arretrano in
+// profondità (translateZ) e sfumano (opacity/blur), come se curvassero dietro
+// la superficie. Scrollando, le righe emergono distorte da un lato, si
+// raddrizzano al centro, poi escono distorte dall'altro. Quando tutte sono
+// passate il pin si rilascia. Senza motion: nessun pin/3D, blocco statico.
+const typeCloud = document.querySelector<HTMLElement>("[data-typecloud]");
+const typeCloudTrack = document.querySelector<HTMLElement>(
+  "[data-typecloud-track]"
+);
+if (typeCloud && typeCloudTrack && !reduceMotion) {
+  const cloudRows = gsap.utils.toArray<HTMLElement>(".typecloud-row");
+
+  // ----- PARAMETRI CALIBRABILI ------------------------------------------
+  // Tutti qui in cima: regola questi per cambiare il "feel" del cilindro.
+  const CYL = {
+    radius: 360, // px — raggio del cilindro. Più piccolo = curva stretta, righe che si distorcono in fretta; più grande = curva dolce.
+    rowSpacingDeg: 18, // gradi tra una riga e l'altra sulla superficie (≈ spaziatura verticale percepita).
+    maxRotateX: 86, // clamp del rotateX massimo (gradi) — oltre, la riga è quasi di taglio.
+    rotateXSign: 1, // 1 o -1: inverte il verso dell'inclinazione (curva concava/convessa).
+    minScaleY: 0.42, // scaleY minima: quanto si "schiaccia" al massimo una riga lontana.
+    scaleYStrength: 1, // 0 = nessuno schiacciamento extra · 1 = pieno (segue cos dell'angolo).
+    fadeStartDeg: 16, // entro questo angolo dal centro l'opacità è piena.
+    fadeEndDeg: 74, // oltre questo angolo la riga è del tutto invisibile.
+    minOpacity: 0, // opacità minima delle righe più lontane.
+    blurMax: 2.4, // px di sfocatura massima per le righe lontane (0 = nessuna sfocatura).
+    leadRows: 1.15, // righe di margine sopra/sotto: ingresso/uscita morbidi (la prima entra già distorta, l'ultima esce distorta).
+    scrollPerRowVh: 0.36, // quanto scroll (in frazioni di viewport) "vale" una riga → sensibilità/lunghezza del pin.
+    // Molla d'ingresso: all'apparire della sezione il cilindro è pre-ruotato di
+    // tot "righe" e scatta in posizione con un overshoot elastico.
+    introSpringRows: 0.85, // ampiezza della molla (in righe). 0 = nessuna molla.
+    introDuration: 1.15, // durata (s) della molla d'ingresso.
+    introEase: "elastic.out(1, 0.55)", // ease della molla (più "0.x" basso = più rimbalzi).
+  };
+  // ----------------------------------------------------------------------
+
+  // Attiva il layout 3D (100vh + perspective + righe in posizione assoluta):
+  // vedi .is-cloud-pinned in global.css. Solo qui, così il fallback no-JS resta
+  // un blocco leggibile in flusso normale.
+  typeCloud.classList.add("is-cloud-pinned");
+
+  const N = cloudRows.length;
+  // Righe totali "attraversate" dal cilindro: tutte + i margini d'ingresso/uscita.
+  const span = N - 1 + CYL.leadRows * 2;
+
+  const DEG2RAD = Math.PI / 180;
+  const clamp = (v: number, lo: number, hi: number) =>
+    Math.min(hi, Math.max(lo, v));
+
+  // Stato condiviso letto dal render: `lastP` = avanzamento scroll (0→1),
+  // `intro.v` = progresso della molla d'ingresso (0→1, con overshoot).
+  let lastP = 0;
+  const intro = { v: 1 }; // 1 = a regime; parte da 0 quando la molla scatta
+
+  // Render di un frame: per ogni riga calcola la distanza angolare dal centro e
+  // applica la trasformazione 3D. Solo transform/opacity/filter → niente reflow.
+  const render = () => {
+    // Offset della molla: il cilindro parte ruotato di `introSpringRows` e si
+    // assesta (l'elastic supera lo 0 e torna → effetto molla).
+    const introOffset = (1 - intro.v) * CYL.introSpringRows;
+    // Indice frazionario della riga attualmente al centro del cilindro.
+    const centerIndex = -CYL.leadRows + lastP * span + introOffset;
+    for (let i = 0; i < N; i++) {
+      const d = i - centerIndex; // distanza dal centro, in "righe"
+      const angDeg = d * CYL.rowSpacingDeg; // angolo sulla superficie
+      const a = angDeg * DEG2RAD;
+      const absDeg = Math.abs(angDeg);
+
+      const y = CYL.radius * Math.sin(a); // posizione verticale lungo la curva
+      const z = CYL.radius * (Math.cos(a) - 1); // profondità (0 al centro, <0 dietro)
+      const rotX = clamp(
+        -angDeg * CYL.rotateXSign,
+        -CYL.maxRotateX,
+        CYL.maxRotateX
+      );
+      const sy = clamp(
+        1 - (1 - Math.cos(a)) * CYL.scaleYStrength,
+        CYL.minScaleY,
+        1
+      );
+      const op = clamp(
+        (CYL.fadeEndDeg - absDeg) / (CYL.fadeEndDeg - CYL.fadeStartDeg),
+        CYL.minOpacity,
+        1
+      );
+      const blur = CYL.blurMax > 0 ? (1 - op) * CYL.blurMax : 0;
+
+      const el = cloudRows[i];
+      el.style.transform =
+        `translate(-50%, -50%) translateY(${y.toFixed(2)}px) ` +
+        `translateZ(${z.toFixed(2)}px) rotateX(${rotX.toFixed(2)}deg) ` +
+        `scaleY(${sy.toFixed(3)})`;
+      el.style.opacity = op.toFixed(3);
+      el.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "none";
+      // Righe del tutto trasparenti: tolte dal paint (niente costo a vuoto).
+      el.style.visibility = op <= 0.001 ? "hidden" : "visible";
+    }
+  };
+
+  // Stato scrubbato: lo scroll trascina `state.p` da 0 a 1 con un filo di
+  // inerzia (scrub), e ogni tick richiama render() → il cilindro ruota fluido.
+  const state = { p: 0 };
+  const pinDistance = () =>
+    Math.round(window.innerHeight * span * CYL.scrollPerRowVh);
+
+  gsap.to(state, {
+    p: 1,
+    ease: "none",
+    onUpdate: () => {
+      lastP = state.p;
+      render();
+    },
+    scrollTrigger: {
+      trigger: typeCloud,
+      start: "top top",
+      end: () => "+=" + pinDistance(),
+      pin: true,
+      scrub: 1,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      // Più alto del pin dei Servizi (1): essendo PRIMA nella pagina dev'essere
+      // ricalcolato per primo, così il suo spacer è in posizione quando i
+      // trigger a valle (morph colore canvas, pin Servizi) leggono le coordinate.
+      refreshPriority: 2,
+    },
+  });
+
+  // Molla d'ingresso: parte UNA volta quando la sezione entra in vista. `once`
+  // si auto-distrugge dopo lo scatto → immune ai refresh di ScrollTrigger (niente
+  // ri-molla quando le isole a valle idratano). onUpdate ridisegna ogni frame
+  // anche se lo scroll è fermo, così la molla è visibile.
+  if (CYL.introSpringRows > 0) {
+    intro.v = 0;
+    gsap.to(intro, {
+      v: 1,
+      duration: CYL.introDuration,
+      ease: CYL.introEase,
+      onUpdate: render,
       scrollTrigger: {
-        trigger: "#problema",
-        start: "top 70%-=80px",
+        trigger: typeCloud,
+        start: "top 78%",
         once: true,
       },
-    }
-  );
+    });
+  }
+
+  render(); // stato iniziale (cilindro pre-ruotato dalla molla) prima dello scroll
 }
 
 // ---------- Canvas — lo schermo cambia colore tra le sezioni ----------

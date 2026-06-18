@@ -49,8 +49,17 @@ const en = {
     },
     problem: {
       kicker: "The point",
-      line1: "A site that doesn't bring clients is a cost, not an investment.",
-      line2: "We build systems that turn searchers into bookers.",
+      // Type-cloud: vedi it.ts per la forma. tone = colore, size = scala.
+      cloud: [
+        { text: "A site", tone: "ink", size: "m" },
+        { text: "that doesn't bring clients", tone: "ink", size: "xl" },
+        { text: "is a cost,", tone: "ink", size: "l" },
+        { text: "not an investment.", tone: "ink", size: "m" },
+        { text: "We build systems", tone: "accent", size: "xl" },
+        { text: "that turn", tone: "accent", size: "m" },
+        { text: "searchers", tone: "accent", size: "l" },
+        { text: "into bookers.", tone: "accent", size: "xl" },
+      ],
     },
     services: {
       kicker: "What we do",

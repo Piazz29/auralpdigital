@@ -543,73 +543,125 @@ button {
 -------------------------------------------------------------------------- */
 
 /* ----------------------------------------------------------------------
-   PROBLEMA / VALORE — banda chiara tra hero e servizi (tassello PAS): nomina
-   il problema e lo ribalta nella promessa. Statement editoriale grande, che
-   si riempie per lettera in scroll (data-glow). Sfondo trasparente: mostra il
-   canvas warm white.
+   PROBLEMA / VALORE — CILINDRO 3D orizzontale (tassello PAS): nomina il problema
+   e lo ribalta nella promessa. Le righe stanno sulla superficie interna di un
+   cilindro invisibile ad asse orizzontale; durante il pin lo scroll lo fa
+   ruotare — la riga al centro è piatta/leggibile, le altre curvano dietro.
+   Sfondo trasparente: mostra il canvas.
+
+   Due stati:
+   - DEFAULT (no-JS / reduced-motion): blocco statico in flusso normale, tutte
+     le righe visibili e leggibili, nessun 3D.
+   - .is-cloud-pinned (aggiunto da JS quando il motion è attivo): la sezione
+     diventa 100vh, il viewport apre lo spazio 3D (perspective) e GSAP pinna la
+     sezione, ricalcolando la trasformazione di ogni riga a ogni frame.
+   La perspective è una var, così è ritoccabile anche da CSS (la geometria
+   principale del cilindro è però nei PARAMETRI in src/scripts/main.ts).
 -------------------------------------------------------------------------- */
-.problem-section {
+.typecloud-section {
   position: relative;
   padding: clamp(96px, 18vh, 220px) 0;
+  --cyl-perspective: 1000px;
 }
-/* Griglia a due colonne: copy a sinistra, animazione SVG a destra. minmax(0,…)
-   evita che il contenuto forzi overflow; su schermi stretti si impila. */
-.problem-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: clamp(32px, 5vw, 80px);
-  align-items: center;
-  /* Niente overflow:hidden qui: clipperebbe l'immagine al bordo della griglia
-     (dentro lo schermo), facendola "uscire dal vuoto". Il taglio fuori schermo
-     lo fa già overflow-x:clip su <html>, così entra a filo dal lato viewport. */
-}
-.problem-copy {
-  display: flex;
-  flex-direction: column;
-}
-.problem-statement {
-  margin-top: clamp(18px, 3vh, 32px);
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.12em;
-}
-/* Animazione SVG (animation1): riempie la colonna, mantiene il quadrato del
-   viewBox e resta contenuta. Niente layout shift (aspect-ratio fisso). */
-.problem-visual {
-  width: 100%;
-  max-width: 480px;
+/* Kicker "Il punto": in flusso sopra al blocco nel fallback; ancorato in alto
+   (sopra lo spazio 3D) quando la sezione è pinnata. */
+.typecloud-kicker {
+  position: relative;
+  z-index: 2;
+  max-width: 110rem;
   margin-inline: auto;
-  aspect-ratio: 1 / 1;
+  padding-inline: clamp(24px, 4vw, 64px);
 }
-.problem-visual svg {
+.typecloud-viewport {
+  position: relative;
+}
+.typecloud-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.typecloud-row {
   display: block;
-  width: 100%;
-  height: 100%;
+  max-width: min(94vw, 16em);
+  /* Tutto nero, bold e tracking stretto: blocco compatto e d'impatto. */
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
-@media (max-width: 860px) {
-  .problem-grid {
-    grid-template-columns: 1fr;
-    gap: clamp(24px, 5vw, 40px);
-  }
-  .problem-visual {
-    max-width: 360px;
-    order: 2;
-  }
+.typecloud-row + .typecloud-row {
+  margin-top: 0.06em;
 }
-/* Ogni riga è un SplitText (.split-parent): l'overflow:hidden del componente
-   maschera le parole che salgono. Sizing e colore qui, font-family ereditato
-   da .font-display sul wrapper. */
-.problem-line {
-  font-weight: 500;
-  font-size: clamp(30px, 4.6vw, 64px);
-  line-height: 1.12;
-  letter-spacing: -0.015em;
+.typecloud-row--ink {
   color: var(--color-ink);
 }
-.problem-line--accent {
+/* La promessa resta in corsivo come accento editoriale, ma ora in nero come il
+   resto (niente blu): testo "tutto nero" su richiesta. */
+.typecloud-row--accent {
+  color: var(--color-ink);
   font-style: italic;
-  color: var(--color-accent);
+}
+/* Scala tipografica: più grande, enfasi (xl/l/m) tenuta vicina perché sul
+   cilindro le righe devono restare coese e di pitch regolare. Clamp responsive
+   → su mobile scende mantenendo la leggibilità. */
+.tc-s {
+  font-size: clamp(20px, 2.6vw, 36px);
+}
+.tc-m {
+  font-size: clamp(26px, 3.6vw, 50px);
+}
+.tc-l {
+  font-size: clamp(32px, 4.4vw, 62px);
+}
+.tc-xl {
+  font-size: clamp(38px, 5.4vw, 78px);
+}
+
+/* --- Stato cilindro 3D (motion attivo) ----------------------------------- */
+.typecloud-section.is-cloud-pinned {
+  /* Altezza viewport: fa da "pin spacer" naturale; il pin di ScrollTrigger la
+     blocca mentre il cilindro ruota. overflow:hidden taglia le righe a filo. */
+  height: 100vh;
+  padding: 0;
+  overflow: hidden;
+}
+.typecloud-section.is-cloud-pinned .typecloud-kicker {
+  position: absolute;
+  top: clamp(80px, 12vh, 140px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  justify-content: center;
+}
+/* Viewport = contenitore con perspective: apre lo spazio 3D per i figli. */
+.typecloud-section.is-cloud-pinned .typecloud-viewport {
+  position: absolute;
+  inset: 0;
+  perspective: var(--cyl-perspective);
+  perspective-origin: 50% 50%;
+}
+/* Track = scena 3D: i figli vivono nello stesso spazio 3D (non appiattiti). */
+.typecloud-section.is-cloud-pinned .typecloud-track {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-style: preserve-3d;
+}
+/* Ogni riga è ancorata al centro del viewport; JS la sposta sul cilindro via
+   transform (translateY/Z + rotateX + scaleY). Solo transform/opacity/filter
+   → resta sul compositor, fluida a 60fps. nowrap: le frasi brevi restano su
+   una sola riga, geometria del cilindro pulita. */
+.typecloud-section.is-cloud-pinned .typecloud-row {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  max-width: 92vw;
+  white-space: nowrap;
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+  will-change: transform, opacity, filter;
 }
 
 .projects-section {
@@ -4224,7 +4276,7 @@ nav:has(#burger-menu.is-open) .pill {
 .cta-title,
 .duo-names,
 .ap-statement,
-.problem-line,
+.typecloud-row,
 .about-statement {
   overflow-wrap: break-word;
   hyphens: auto;

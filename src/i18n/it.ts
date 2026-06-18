@@ -50,8 +50,19 @@ const it = {
     },
     problem: {
       kicker: "Il punto",
-      line1: "Un sito che non porta clienti è un costo, non un investimento.",
-      line2: "Costruiamo sistemi che trasformano chi cerca in chi prenota.",
+      // Type-cloud: il testo è spezzato in righe brevi impilate. `tone` decide il
+      // colore (ink scuro / accent blu+corsivo); `size` la scala tipografica del
+      // collage (s/m/l/xl). L'ordine è quello di lettura, dall'alto al basso.
+      cloud: [
+        { text: "Un sito", tone: "ink", size: "m" },
+        { text: "che non porta clienti", tone: "ink", size: "xl" },
+        { text: "è un costo,", tone: "ink", size: "l" },
+        { text: "non un investimento.", tone: "ink", size: "m" },
+        { text: "Costruiamo sistemi", tone: "accent", size: "xl" },
+        { text: "che trasformano", tone: "accent", size: "m" },
+        { text: "chi cerca", tone: "accent", size: "l" },
+        { text: "in chi prenota.", tone: "accent", size: "xl" },
+      ],
     },
     services: {
       kicker: "Cosa facciamo",

@@ -13,9 +13,7 @@ import ContainerScroll from "../ContainerScroll.astro";
 import ContactForm from "../ContactForm.astro";
 import Rich from "../Rich.astro";
 import SplitText from "../reactbits/SplitText.jsx";
-// Animazione SVG (SMIL) accanto allo statement "Il punto". Importata ?raw e
-// iniettata inline: in <img> la SMIL non parte, inline sì.
-import animation1 from "../../svg/animation1.svg?raw";
+import TypeCloudSection from "../TypeCloudSection.astro";
 import "../../styles/global.css";
 
 interface Props {
@@ -165,52 +163,8 @@ const services = servicesMeta.map((m, i) => ({
   <!-- CONTENUTO — flusso normale -->
   <div class="post-reveal relative z-10">
 
-  <!-- SECTION — PROBLEMA / VALORE -->
-  <section id="problema" class="problem-section">
-    <span class="deco deco--plus deco-accent deco-float-2" style="right: 9%; top: 22%;" aria-hidden="true"></span>
-    <div class="works-screen">
-      <div class="problem-grid">
-        <div class="problem-copy">
-          <span class="works-kicker">{t.home.problem.kicker}</span>
-          <div class="problem-statement font-display">
-            <SplitText
-              client:load
-              tag="p"
-              className="problem-line"
-              text={t.home.problem.line1}
-              splitType="chars"
-              delay={22}
-              duration={0.9}
-              ease="power3.out"
-              from={{ opacity: 0, y: 24 }}
-              to={{ opacity: 1, y: 0 }}
-              threshold={0.3}
-              rootMargin="-80px"
-              textAlign="left"
-              repeat={false}
-            />
-            <SplitText
-              client:load
-              tag="p"
-              className="problem-line problem-line--accent"
-              text={t.home.problem.line2}
-              splitType="chars"
-              delay={22}
-              duration={0.9}
-              ease="power3.out"
-              from={{ opacity: 0, y: 24 }}
-              to={{ opacity: 1, y: 0 }}
-              threshold={0.3}
-              rootMargin="-80px"
-              textAlign="left"
-              repeat={false}
-            />
-          </div>
-        </div>
-        <div class="problem-visual" data-problem-art aria-hidden="true" set:html={animation1}></div>
-      </div>
-    </div>
-  </section>
+  <!-- SECTION — PROBLEMA / VALORE — type-cloud in scroll-pinning -->
+  <TypeCloudSection lang={lang} />
 
   <!-- SECTION — COSA FACCIAMO -->
   <section id="cosa-facciamo" class="services-section">
