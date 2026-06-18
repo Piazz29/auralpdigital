@@ -128,6 +128,7 @@ const de = {
       kicker: "Über uns",
       statement:
         "Ein unabhängiges Studio, das *universitäre Strenge* mit Werkzeugen der neuen Generation verbindet: jedes Projekt aus *einer Hand*, vom ersten Sketch bis zum Launch",
+      cta: "Unseren Ansatz entdecken",
     },
     contact: {
       kicker: "Los geht's",

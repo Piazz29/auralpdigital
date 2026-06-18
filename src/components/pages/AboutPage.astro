@@ -12,6 +12,8 @@ import LiquidEther from "../reactbits/LiquidEther.jsx";
 import BlurText from "../reactbits/BlurText.jsx";
 import HangBadge from "../HangBadge.astro";
 import FlowCardSwap from "../reactbits/FlowCardSwap.jsx";
+import JourneyPath from "../reactbits/JourneyPath.jsx";
+import HeroProximityTitle from "../reactbits/HeroProximityTitle.jsx";
 import "../../styles/global.css";
 
 interface Props {
@@ -20,6 +22,14 @@ interface Props {
 const { lang = defaultLang } = Astro.props;
 const t = getDict(lang);
 const ta = t.about;
+
+// Hero — il titolo usa la sintassi "Normale *accento*". Lo spezzo in segmenti
+// (pari = normale, dispari = accento) per l'effetto VariableProximity, che li
+// renderizza in un'unica isola (containerRef condiviso) preservando l'accento.
+const heroTitleParts = ta.hero.title
+  .split("*")
+  .map((text, i) => ({ text, accent: i % 2 === 1 }))
+  .filter((p) => p.text.length > 0);
 
 // IL DUO — dati strutturali fusi con bio/ruoli/focus tradotti.
 const peopleMeta = [
@@ -114,8 +124,8 @@ const journeyArt: Record<string, string> = {
           {ta.hero.badge}
         </span>
 
-        <h1 class="ap-hero-title font-display" style="opacity: 0;">
-          <Rich text={ta.hero.title} />
+        <h1 class="ap-hero-title font-display">
+          <HeroProximityTitle client:load parts={heroTitleParts} radius={140} />
         </h1>
 
         <p class="ap-hero-sub" style="opacity: 0;">
@@ -197,8 +207,12 @@ const journeyArt: Record<string, string> = {
       </div>
     </section>
 
-    <!-- IL PERCORSO -->
-    <section class="ap-section ap-journey">
+    <!-- IL PERCORSO — viaggio immersivo 3D scroll-driven. L'island JourneyPath
+         si attiva solo con WebGL + niente reduced-motion: in quel caso pinna la
+         sezione e fa volare il cursore 3D tra le 4 tappe (classe
+         `ap-journey-3d--on` aggiunta via JS). Altrimenti resta la timeline
+         statica qui sotto, che è anche il fallback SEO/no-JS/reduced-motion. -->
+    <section class="ap-section ap-journey ap-journey-3d">
       <div class="works-screen">
         <div class="works-head">
           <div class="works-head-left">
@@ -207,7 +221,9 @@ const journeyArt: Record<string, string> = {
           </div>
         </div>
 
-        <ol class="ap-timeline">
+        <JourneyPath client:idle steps={steps} />
+
+        <ol class="ap-timeline ap-timeline--fallback">
           <span class="ap-line" aria-hidden="true"></span>
           {steps.map((s, i) => (
             <li class={`ap-step ap-step--${i % 2 === 0 ? "left" : "right"}`}>
@@ -239,7 +255,7 @@ const journeyArt: Record<string, string> = {
           </div>
 
           <div class="ap-flow-stage">
-            <FlowCardSwap client:visible items={workflow} />
+            <FlowCardSwap client:visible items={workflow} width={517} height={397} />
           </div>
         </div>
       </div>

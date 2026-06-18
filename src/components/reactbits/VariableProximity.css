@@ -1,0 +1,19 @@
+/* VariableProximity — adattato: NIENTE import di Roboto Flex e NIENTE override
+   del font-family, così il testo eredita il font display del sito (Space Grotesk
+   variabile). Resta solo la utility .sr-only per l'accessibilità. */
+
+.variable-proximity {
+  font-family: inherit;
+}
+
+.variable-proximity .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

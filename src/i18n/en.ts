@@ -128,6 +128,7 @@ const en = {
       kicker: "About us",
       statement:
         "An independent studio that blends *academic rigor* with next-generation tools: every project handled by *the same hands*, from first sketch to launch",
+      cta: "Discover our approach",
     },
     contact: {
       kicker: "Let's start",

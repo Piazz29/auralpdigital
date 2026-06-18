@@ -5,7 +5,7 @@
 // animazione) restano qui, indipendenti dalla lingua, e si fondono per indice
 // con le stringhe tradotte.
 import type { Lang } from "../../i18n";
-import { defaultLang, getDict } from "../../i18n";
+import { defaultLang, getDict, localePath } from "../../i18n";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Navbar from "../Navbar.astro";
 import Footer from "../Footer.astro";
@@ -23,6 +23,7 @@ const { lang = defaultLang } = Astro.props;
 const t = getDict(lang);
 const tp = t.home.projects;
 const ts = t.home.services;
+const aboutHref = localePath(lang, "/chi-siamo");
 
 // PROGETTI — dati strutturali (lingua-indipendenti) fusi con le stringhe
 // tradotte. Titoli 01/02 sono nomi di brand (non si traducono); il 03 sì.
@@ -207,13 +208,17 @@ const services = servicesMeta.map((m, i) => ({
               <h3 class="slide-title">
                 <span class="sn-mask"><span class="sn">{s.name} <em>{s.nameEm}</em></span></span>
               </h3>
-              <p class="slide-desc">{s.desc}</p>
+              <p class="slide-desc">
+                <span class="title-line"><span>{s.desc}</span></span>
+              </p>
               <ul class="slide-ledger">
                 {s.points.map((p, i) => (
                   <li class="slide-ledger-row">
                     <span class="slide-ledger-num">{`0${i + 1}`}</span>
                     <span class="slide-ledger-rule" aria-hidden="true"></span>
-                    <span class="slide-ledger-text">{p}</span>
+                    <span class="slide-ledger-text">
+                      <span class="title-line"><span style={`--ln:${i + 1}`}>{p}</span></span>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -417,6 +422,10 @@ const services = servicesMeta.map((m, i) => ({
         <p class="about-statement font-display" data-glow-pin>
           <Rich text={t.home.aboutTeaser.statement} />
         </p>
+        <a href={aboutHref} class="about-teaser-cta">
+          <span class="about-teaser-cta-text">{t.home.aboutTeaser.cta}</span>
+          <span class="about-teaser-cta-arrow" aria-hidden="true">→</span>
+        </a>
       </div>
     </div>
 
@@ -435,9 +444,21 @@ const services = servicesMeta.map((m, i) => ({
         <h2 class="cta-title cscroll-headline" data-anim="contact-headline">
           <Rich text={t.home.contact.headline} />
         </h2>
-        <p class="cta-sub cscroll-sub" data-anim="contact-sub">
-          {t.home.contact.sub}
-        </p>
+        <SplitText
+          client:visible
+          tag="p"
+          className="cta-sub cscroll-sub"
+          text={t.home.contact.sub}
+          splitType="words"
+          delay={26}
+          duration={0.7}
+          ease="power3.out"
+          from={{ opacity: 0, y: 26 }}
+          to={{ opacity: 1, y: 0 }}
+          threshold={0.2}
+          rootMargin="-60px"
+          textAlign="center"
+        />
       </div>
 
       <ContactForm lang={lang} />

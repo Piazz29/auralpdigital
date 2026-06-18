@@ -131,6 +131,7 @@ const it = {
       kicker: "Chi siamo",
       statement:
         "Uno studio indipendente che unisce *rigore universitario* e strumenti di nuova generazione: ogni progetto seguito *dalle stesse mani*, dal primo sketch al lancio",
+      cta: "Scopri il nostro approccio",
     },
     contact: {
       kicker: "Iniziamo",

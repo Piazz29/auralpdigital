@@ -1425,6 +1425,41 @@ button {
   color: #fafaf8;
 }
 
+/* Reveal a righe sul testo delle service card — il testo emerge dal basso da
+   una maschera (overflow:hidden) quando la card diventa .is-active. Lo stato
+   "nascosto" iniziale è gated dietro .has-reveal (aggiunta da JS): senza JS o
+   sotto reduced-motion il testo resta visibile. Il titolo di sezione e il
+   titolo-card (.sn-mask/.sn) non sono coinvolti. */
+:root {
+  --ease-cb-3: cubic-bezier(0.77, 0, 0.175, 1);
+}
+.title-line {
+  display: block;
+  overflow: hidden;
+}
+.title-line > span {
+  display: inline-block;
+  will-change: transform;
+}
+.has-reveal .title-line > span {
+  transform: translate3d(0, 140%, 0);
+  opacity: 0;
+  transition: transform 0.45s ease, opacity 0.6s ease;
+}
+.has-reveal .is-active .title-line > span {
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+  transition: transform 0.6s var(--ease-cb-3), opacity 0.25s ease;
+  transition-delay: calc(var(--ln, 0) * 0.12s);
+}
+@media (prefers-reduced-motion: reduce) {
+  .title-line > span {
+    transform: none !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
+}
+
 /* Maschera del titolo — il nome "emerge" dal basso dentro un overflow
    hidden (yPercent via GSAP); il padding evita il taglio dei discendenti. */
 .sn-mask {
@@ -1709,8 +1744,12 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* Respiro sotto la navbar fissa quando la scena è bloccata. */
+  /* Respiro sotto la navbar fissa + padding-bottom SIMMETRICO: con solo il
+     padding-top il blocco centrato (justify-content:center) risultava ~38px più
+     in basso del centro reale. Bilanciandolo, kicker+testo+CTA tornano centrati
+     nella viewport su desktop, restando corretti anche su mobile/tablet. */
   padding-top: 76px;
+  padding-bottom: 76px;
 }
 .about-intro-screen {
   width: 100%;
@@ -1738,6 +1777,79 @@ button {
 .about-statement em {
   font-style: italic;
   color: var(--color-accent);
+}
+
+/* CTA teaser → /chi-siamo. Vive come terzo elemento del gruppo centrato
+   (.about-intro-screen): aggiungendola, kicker+statement salgono naturalmente
+   e lei occupa lo spazio sotto — senza toccare il pin né lo spacing tra eyebrow
+   e testo. Stile link raffinato, non invasivo: underline che "wipe-a" in accent
+   da sinistra + freccia che scorre all'hover. */
+.about-teaser-cta {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  /* Distacco proprio dallo statement, indipendente dal gap eyebrow↔testo. */
+  margin-top: clamp(10px, 1.6vh, 22px);
+  font-family: var(--font-body);
+  font-size: clamp(14px, 1.1vw, 16px);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--color-ink);
+  text-decoration: none;
+  padding-bottom: 2px;
+  transition: color 0.3s ease;
+}
+.about-teaser-cta-text {
+  position: relative;
+}
+/* Linea base tenue (affordance) sempre presente. */
+.about-teaser-cta-text::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.28;
+}
+/* Linea accent che entra da sinistra all'hover (effetto slide). */
+.about-teaser-cta-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.about-teaser-cta-arrow {
+  display: inline-block;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.about-teaser-cta:hover {
+  color: var(--color-accent);
+}
+.about-teaser-cta:hover .about-teaser-cta-text::after {
+  transform: scaleX(1);
+}
+.about-teaser-cta:hover .about-teaser-cta-arrow {
+  transform: translateX(4px);
+}
+.about-teaser-cta:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 6px;
+  border-radius: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-teaser-cta-text::after,
+  .about-teaser-cta-arrow {
+    transition: none;
+  }
 }
 
 /* FIRMA — chiusura di scena, ponte verso /chi-siamo. La velatura radiale
@@ -3167,6 +3279,13 @@ nav:has(#burger-menu.is-open) .pill {
   font-style: italic;
   color: var(--color-accent);
 }
+/* Hero "Chi siamo": il titolo usa VariableProximity (un'unica isola con
+   containerRef condiviso). L'accento conserva corsivo + colore brand; le lettere
+   variano il peso (asse 'wght') in base alla vicinanza del cursore. */
+.ap-hero-accent {
+  font-style: italic;
+  color: var(--color-accent);
+}
 .ap-hero-sub {
   font-family: var(--font-body);
   font-size: clamp(15px, 1.25vw, 19px);
@@ -3670,6 +3789,215 @@ nav:has(#burger-menu.is-open) .pill {
   }
   .ap-ico-caret { opacity: 1; }
   .ap-ico-sparkle { opacity: 0.8; }
+}
+
+/* ----------------------------------------------------------------------
+   IL PERCORSO — viaggio immersivo 3D (scroll-driven).
+   L'island JourneyPath si attiva solo con WebGL + niente reduced-motion:
+   aggiunge `.ap-journey-3d--on` alla sezione → nasconde la timeline statica
+   (fallback) e mostra lo stage 3D pinnato. Senza JS / reduced-motion / no-WebGL
+   resta la timeline classica, intatta.
+-------------------------------------------------------------------------- */
+/* La sezione condivide il fondo del "Duo" (warm-deeper) → transizione continua,
+   nessuna striscia bianca tra le due. Niente overflow-x qui: lo gestisce già
+   html{overflow-x:clip} e un overflow sull'antenato romperebbe lo sticky. */
+.ap-journey {
+  background: var(--color-warm-deeper);
+}
+/* Stato di default (non attivo): island nascosto, timeline statica visibile. */
+.ajx-holder {
+  display: none;
+}
+.ap-journey-3d--on .ajx-holder {
+  display: block;
+}
+.ap-journey-3d--on .ap-timeline--fallback {
+  display: none;
+}
+
+/* Root dello scrollytelling: l'altezza la danno gli step (sezione alta) → scroll
+   normale, niente pin. */
+.ajx-root {
+  position: relative;
+}
+
+/* Canvas di sfondo: overlay full-bleed (100vw) ancorato in cima alla root e
+   AGGANCIATO via pin GSAP (vedi JourneyPath.jsx) così resta centrato nel viewport
+   mentre gli step scorrono. È `absolute` (fuori dal flusso) → il pin con
+   pinSpacing:false non sposta nulla. NB: niente `position:sticky` perché il body
+   ha overflow-x:hidden e lo neutralizzerebbe. Niente transform: lo gestisce GSAP. */
+.ajx-viz {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  height: 100svh;
+  z-index: 0;
+  pointer-events: none; /* solo il cursore (mesh) cattura gli eventi */
+}
+.ajx-viz canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: auto; /* il cursore 3D è trascinabile */
+  touch-action: pan-y; /* su touch lo scroll verticale resta libero */
+}
+
+/* Step nel flusso normale: si sovrappongono al canvas (che è un overlay absolute,
+   non occupa il flusso → nessun margin negativo). Restano TUTTI visibili: entrano
+   con fade+rise (.is-in) e non spariscono più. */
+.ajx-steps {
+  position: relative;
+  z-index: 2;
+  /* Runway iniziale (il cursore "scende" dal titolo verso lo Step 1) + coda finale
+     (lo Step 4 arriva davvero al centro prima che il pin si sganci). Con stepH=80vh
+     i 4 step si centrano a ≈16/43/69/95% dello scroll (cfr. STEP_PARAMS). */
+  padding-top: 60vh;
+  padding-bottom: 24vh;
+  pointer-events: none; /* il testo non ruba scroll/drag al canvas */
+}
+.ajx-step {
+  min-height: 80vh;
+  width: min(40ch, 36vw);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(24px);
+  transition:
+    opacity 0.8s ease,
+    filter 0.8s ease,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform, filter;
+}
+.ajx-step--left {
+  margin-right: auto;
+  align-items: flex-start;
+  text-align: left;
+}
+.ajx-step--right {
+  margin-left: auto;
+  align-items: flex-end;
+  text-align: right;
+}
+.ajx-step.is-in {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
+.ajx-step-index {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(40px, 5vw, 76px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: transparent;
+  -webkit-text-stroke: 1.2px rgba(59, 91, 219, 0.42);
+  opacity: 0.9;
+}
+.ajx-step-year {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(13px, 1.1vw, 15px);
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+}
+.ajx-step-kicker {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.ajx-step-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(30px, 3.6vw, 56px);
+  line-height: 1.02;
+  letter-spacing: -0.018em;
+  color: var(--color-ink);
+}
+/* Animazione del titolo: ogni PAROLA (intera) risale da sotto una maschera, in
+   cascata morbida, quando lo step entra in vista (.is-in). Niente split per
+   carattere → le parole non si spezzano mai a fine riga. Calma ed elegante, in
+   sintonia con l'arrivo del cursore. */
+.ajx-step-title .ajx-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  /* spazio extra in basso + margine negativo: evita che la maschera tagli le
+     ascendenti/discendenti (es. la "à" di "Università."). */
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.ajx-step-title .ajx-word > span {
+  display: inline-block;
+  transform: translateY(115%);
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(0.1s + var(--wi, 0) * 0.06s);
+  will-change: transform;
+}
+.ajx-step.is-in .ajx-step-title .ajx-word > span {
+  transform: translateY(0);
+}
+.ajx-step-text {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.15vw, 17px);
+  line-height: 1.7;
+  color: var(--color-secondary);
+  max-width: 42ch;
+}
+/* Il testo descrittivo entra parola-per-parola (parole INTERE → mai spezzate),
+   appena dopo il titolo, con un fade+rise sobrio in cascata fitta. */
+.ajx-step-text .ajx-tword {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.55s ease,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(0.34s + var(--wi, 0) * 0.014s);
+  will-change: opacity, transform;
+}
+.ajx-step.is-in .ajx-step-text .ajx-tword {
+  opacity: 1;
+  transform: none;
+}
+
+/* Mobile: percorso semplificato. Step impilati centrati e leggibili, sezione
+   meno alta, tipografia ridotta. */
+@media (max-width: 768px) {
+  .ajx-steps {
+    padding-top: 42vh;
+    padding-bottom: 18vh;
+  }
+  .ajx-step,
+  .ajx-step--left,
+  .ajx-step--right {
+    width: min(86vw, 40ch);
+    margin: 0 auto;
+    min-height: 72vh;
+    align-items: center;
+    text-align: center;
+    padding: 0 16px;
+  }
+  .ajx-step-index {
+    font-size: clamp(34px, 12vw, 52px);
+  }
+  .ajx-step-title {
+    font-size: clamp(26px, 7.5vw, 40px);
+  }
+}
+
+/* Sicurezza: con reduced-motion l'island non si attiva mai, ma lo nascondiamo
+   comunque per evitare qualsiasi flash del canvas. */
+@media (prefers-reduced-motion: reduce) {
+  .ajx-holder {
+    display: none !important;
+  }
 }
 
 /* ----------------------------------------------------------------------
@@ -4216,7 +4544,15 @@ nav:has(#burger-menu.is-open) .pill {
 }
 .ap-flow-stage {
   position: relative;
-  min-height: 460px;
+  min-height: 510px;
+}
+/* Desktop: card un filo più grandi (vedi width/height passati a FlowCardSwap) e
+   l'intero blocco spostato leggermente verso sinistra (~1,6 cm). Solo qui: su
+   tablet/mobile il componente si impila e va lasciato centrato. */
+@media (min-width: 901px) {
+  .ap-flow-stage {
+    transform: translateX(-60px);
+  }
 }
 @media (max-width: 900px) {
   .ap-flow-inner--swap {
@@ -4224,7 +4560,8 @@ nav:has(#burger-menu.is-open) .pill {
     gap: clamp(48px, 8vh, 96px);
   }
   .ap-flow-stage {
-    min-height: 520px;
+    min-height: 560px;
+    transform: none;
   }
 }
 
@@ -4288,7 +4625,8 @@ nav:has(#burger-menu.is-open) .pill {
 .pill-outline,
 .about-cta-btn,
 .cform-submit,
-.works-head-link {
+.works-head-link,
+.about-teaser-cta {
   white-space: normal;
   text-align: center;
   overflow-wrap: break-word;

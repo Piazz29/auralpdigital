@@ -245,9 +245,15 @@ if (navEl) {
   // (ContainerScroll): l'inversione va ancorata alla card. In /chi-siamo la
   // CTA finale è ora chiara (niente card), quindi NESSUNA zona scura: il logo
   // bianco su fondo chiaro sparirebbe.
+  // La card dev'essere DAVVERO dietro la navbar (in cima al viewport) perché il
+  // logo bianco abbia senso: con "top 70" si accendeva quando la card era ancora
+  // in basso e l'area sotto la navbar era chiara → logo bianco su chiaro,
+  // invisibile. Ora si accende solo quando il bordo SUPERIORE della card tocca il
+  // top del viewport e si spegne quando il suo bordo INFERIORE lo supera: nella
+  // sezione form la navbar resta scura/leggibile finché lo sfondo lì è chiaro.
   const darkZones: { sel: string; start: string; end: string }[] =
     document.querySelector(".cscroll-card")
-      ? [{ sel: ".cscroll-card", start: "top 70", end: "bottom 130" }]
+      ? [{ sel: ".cscroll-card", start: "top top", end: "bottom top" }]
       : [];
   darkZones.forEach(({ sel, start, end }) => {
     if (!document.querySelector(sel)) return;
@@ -812,7 +818,9 @@ const slideReveal = (
 ) => {
   const index = slide.querySelector(".slide-index");
   const name = slide.querySelector(".sn");
-  const info = slide.querySelectorAll(".slide-desc, .slide-ledger");
+  // .slide-desc / .slide-ledger NON sono più animati qui: il loro testo usa il
+  // reveal a righe via CSS (.title-line / .is-active), per evitare doppia
+  // animazione. Restano i contenitori (visibili con la slide).
   const media = slide.querySelector(".slide-media");
 
   tl.fromTo(
@@ -837,14 +845,6 @@ const slideReveal = (
       at + 0.08
     );
   }
-  if (info.length) {
-    tl.fromTo(
-      info,
-      { autoAlpha: 0, y: 22 },
-      { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.1 },
-      at + 0.2
-    );
-  }
   if (media) {
     tl.fromTo(
       media,
@@ -859,6 +859,9 @@ if (servicesStage && serviceSlides.length && !reduceMotion) {
   if (servicesPinned) {
     // Le scene si impilano nello stesso spazio (vedi CSS .is-pinned).
     servicesStage.classList.add("is-pinned");
+    // Abilita il reveal a righe del testo card (stato nascosto iniziale gated da
+    // .has-reveal: senza JS / reduced-motion il testo resta visibile).
+    servicesStage.classList.add("has-reveal");
 
     // STEP = durata di una scena in unità di timeline (ingresso + sosta);
     // l'end mappa il tutto sulla distanza calcolata sopra.
@@ -870,6 +873,18 @@ if (servicesStage && serviceSlides.length && !reduceMotion) {
         start: "top top",
         end: () => "+=" + servicesPinDistance(),
         pin: true,
+        // Sincronizza .is-active (reveal testo) con lo step a fuoco. Calcolo
+        // idempotente dal progress → corretto anche scrollando all'indietro.
+        onUpdate: (self) => {
+          const time = self.progress * tl.duration();
+          const idx = Math.max(
+            0,
+            Math.min(serviceSlides.length - 1, Math.floor(time / STEP))
+          );
+          serviceSlides.forEach((s, i) =>
+            s.classList.toggle("is-active", i === idx)
+          );
+        },
         // Scrub più morbido = più "resistenza/lag": il movimento delle scene
         // insegue lo scroll con inerzia, così uno scatto veloce non fa avanzare
         // di colpo più servizi.
@@ -915,6 +930,10 @@ if (servicesStage && serviceSlides.length && !reduceMotion) {
       );
     }
   } else {
+    // Senza pin le slide entrano indipendenti → reveal testo via
+    // IntersectionObserver per-card (le slide impilate del pin scatterebbero
+    // invece tutte insieme, per questo qui NON si usa l'onUpdate del timeline).
+    servicesStage.classList.add("has-reveal");
     serviceSlides.forEach((slide) => {
       const tl = gsap.timeline({
         defaults: { ease: "power3.out" },
@@ -922,6 +941,18 @@ if (servicesStage && serviceSlides.length && !reduceMotion) {
       });
       slideReveal(tl, slide, 0);
     });
+
+    if ("IntersectionObserver" in window) {
+      const slideObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            entry.target.classList.toggle("is-active", entry.isIntersecting);
+          });
+        },
+        { threshold: 0.35 }
+      );
+      serviceSlides.forEach((slide) => slideObserver.observe(slide));
+    }
 
     if (servicesScrollHint) {
       gsap.fromTo(
@@ -1490,30 +1521,9 @@ if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
 // timeline del percorso.
 const aboutPage = document.querySelector<HTMLElement>(".aboutpage");
 if (aboutPage) {
-  // Hero — badge, titolo dalla maschera parola per parola, sottotitolo, hint.
-  // Il titolo parte con opacity: 0 inline (anti-flash prima dello split);
-  // qui viene riacceso in entrambi i rami.
-  const apTitle = aboutPage.querySelector<HTMLElement>(".ap-hero-title");
-  if (apTitle) {
-    if (reduceMotion) {
-      gsap.set(apTitle, { opacity: 1 });
-    } else {
-      const words = splitTitleWords(apTitle);
-      gsap.set(apTitle, { opacity: 1 });
-      gsap.fromTo(
-        words,
-        { yPercent: 115, rotate: 5 },
-        {
-          yPercent: 0,
-          rotate: 0,
-          duration: 1.1,
-          ease: "power4.out",
-          stagger: 0.08,
-          delay: 0.55,
-        }
-      );
-    }
-  }
+  // Hero — il titolo ora usa l'isola VariableProximity (React Bits): le lettere
+  // reagiscono al cursore variando il peso del font, quindi niente split/mask GSAP
+  // qui. Badge, sottotitolo, meta e hint mantengono l'entrata in dissolvenza.
   const apHeroBits: { sel: string; delay: number }[] = [
     { sel: ".ap-hero .hero-badge", delay: 0.45 },
     { sel: ".ap-hero-sub", delay: 1.0 },
