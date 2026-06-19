@@ -6,12 +6,16 @@
 // caricato come variabile 300..700) così l'effetto resta nel linguaggio del brand.
 // Dipendenza: motion.
 
-import { forwardRef, useMemo, useRef, useEffect, Fragment } from 'react';
+import { forwardRef, useMemo, useRef, useState, useEffect, Fragment } from 'react';
 import { motion } from 'motion/react';
 import './VariableProximity.css';
 
-function useAnimationFrame(callback) {
+// Il loop gira SOLO quando `active`. Senza questo gate il rAF restava acceso per
+// sempre: su touch/mobile (nessun mouse → effetto inutile) e anche con l'hero
+// fuori schermo, sprecando frame e batteria. `active` = pointer fine + in vista.
+function useAnimationFrame(callback, active) {
   useEffect(() => {
+    if (!active) return undefined;
     let frameId;
     const loop = () => {
       callback();
@@ -19,7 +23,7 @@ function useAnimationFrame(callback) {
     };
     frameId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frameId);
-  }, [callback]);
+  }, [callback, active]);
 }
 
 function useMousePositionRef(containerRef) {
@@ -70,6 +74,48 @@ const VariableProximity = forwardRef((props, ref) => {
   const interpolatedSettingsRef = useRef([]);
   const mousePositionRef = useMousePositionRef(containerRef);
   const lastPositionRef = useRef({ x: null, y: null });
+
+  // Attivazione condizionata: l'effetto di prossimità ha senso solo con un
+  // puntatore fine (mouse) e mentre l'hero è in vista. Su touch o fuori schermo
+  // il loop resta spento e le lettere mantengono il peso "from" (statico).
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const fine = window.matchMedia('(pointer: fine)');
+    let inView = true;
+    const update = () => setActive(fine.matches && inView);
+    let io;
+    const el = containerRef?.current;
+    if (el && typeof IntersectionObserver !== 'undefined') {
+      io = new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting;
+          update();
+        },
+        { rootMargin: '120px' }
+      );
+      io.observe(el);
+    }
+    fine.addEventListener('change', update);
+    update();
+    return () => {
+      fine.removeEventListener('change', update);
+      io?.disconnect();
+    };
+  }, [containerRef]);
+
+  // Al cambio di stato: se si disattiva, riporta le lettere al peso "from"
+  // (evita che restino "congelate" pesanti); se si riattiva, azzera l'ultima
+  // posizione così il loop ricalcola anche a mouse fermo.
+  useEffect(() => {
+    if (active) {
+      lastPositionRef.current = { x: null, y: null };
+      return;
+    }
+    letterRefs.current.forEach((l) => {
+      if (l) l.style.fontVariationSettings = fromFontVariationSettings;
+    });
+  }, [active, fromFontVariationSettings]);
 
   const parsedSettings = useMemo(() => {
     const parseSettings = settingsStr =>
@@ -147,7 +193,7 @@ const VariableProximity = forwardRef((props, ref) => {
       interpolatedSettingsRef.current[index] = newSettings;
       letterRef.style.fontVariationSettings = newSettings;
     });
-  });
+  }, active);
 
   const words = label.split(' ');
   let letterIndex = 0;

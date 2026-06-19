@@ -10,12 +10,13 @@ import './FlowCardSwap.css';
  * Comportamento (richiesto dal brief):
  *  - Le card avanzano SOLO al click oppure automaticamente dopo 10s d'inattività
  *    (`delay`); ogni click resetta il timer di autoplay (gestito in CardSwap).
- *  - L'hint "Clicca per scorrere" è solo testo leggero, ancorato sopra il bordo
- *    inferiore della prima card. Sparisce al primo click e ricompare dopo 15s
- *    se l'utente non ha più cliccato.
+ *  - L'hint (`hint`, localizzato dagli i18n) è solo testo leggero, ancorato sopra
+ *    il bordo inferiore della prima card. Sparisce al primo click e ricompare
+ *    dopo 15s se l'utente non ha più cliccato.
  */
 export default function FlowCardSwap({
   items = [],
+  hint: hintLabel = 'Scorri le schede',
   width = 460,
   height = 340,
   cardDistance = 60,
@@ -49,7 +50,7 @@ export default function FlowCardSwap({
           strokeLinejoin="round"
         />
       </svg>
-      Clicca per scorrere
+      {hintLabel}
     </span>
   );
 

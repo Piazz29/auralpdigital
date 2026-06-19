@@ -4527,15 +4527,17 @@ nav:has(#burger-menu.is-open) .pill {
   position: relative;
   min-height: 510px;
 }
-/* Desktop: card un filo più grandi (vedi width/height passati a FlowCardSwap) e
-   l'intero blocco spostato leggermente verso sinistra (~1,6 cm). Solo qui: su
-   tablet/mobile il componente si impila e va lasciato centrato. */
-@media (min-width: 901px) {
+/* Desktop ampio (≥1025px): card un filo più grandi (vedi width/height passati a
+   FlowCardSwap) e l'intero blocco spostato leggermente verso sinistra (~1,6 cm).
+   Sotto i 1025px le due colonne diventano troppo strette per una card da 517px:
+   anziché lasciarla sbordare sul testo, si passa allo stack singolo CENTRATO già
+   dal tablet in giù. */
+@media (min-width: 1025px) {
   .ap-flow-stage {
     transform: translateX(-60px);
   }
 }
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .ap-flow-inner--swap {
     grid-template-columns: 1fr;
     gap: clamp(48px, 8vh, 96px);
@@ -4543,6 +4545,32 @@ nav:has(#burger-menu.is-open) .pill {
   .ap-flow-stage {
     min-height: 560px;
     transform: none;
+  }
+  /* Impilato: la pila va CENTRATA (non più ancorata in basso a destra, dove su
+     schermo stretto resterebbe tagliata) e rimpicciolita per stare nel viewport.
+     `.ap-flow-stage .card-swap-container` (0,2,0) batte le regole generiche di
+     CardSwap.css (0,1,0) a prescindere dall'ordine d'import. */
+  .ap-flow-stage .card-swap-container {
+    left: 50%;
+    right: auto;
+    transform-origin: bottom center;
+    transform: translate(-50%, 6%) scale(0.84);
+  }
+}
+@media (max-width: 768px) {
+  .ap-flow-stage {
+    min-height: 520px;
+  }
+  .ap-flow-stage .card-swap-container {
+    transform: translate(-50%, 4%) scale(0.64);
+  }
+}
+@media (max-width: 480px) {
+  .ap-flow-stage {
+    min-height: 440px;
+  }
+  .ap-flow-stage .card-swap-container {
+    transform: translate(-50%, 2%) scale(0.48);
   }
 }
 

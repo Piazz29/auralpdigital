@@ -107,9 +107,6 @@ const STEP_PARAMS = [0.16, 0.43, 0.69, 0.95];
 // ---------------------------------------------------------------------------
 // Utility
 // ---------------------------------------------------------------------------
-const isMobile = () =>
-  typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
-
 const prefersReduced = () =>
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -682,12 +679,23 @@ export default function JourneyPath({ steps = [] }) {
 
   useEffect(() => {
     const eligible = hasWebGL() && !prefersReduced();
-    setMobile(isMobile());
     setMode(eligible ? 'on' : 'off');
 
     const section = holder.current?.closest('.ap-journey-3d');
     if (section && eligible) section.classList.add('ap-journey-3d--on');
+
+    // `mobile` REATTIVO: la curva (STATIONS_MOBILE/DESKTOP) e la scala del cursore
+    // dipendono dal breakpoint. Letto una sola volta al mount, restava sbagliato
+    // dopo un resize desktop o la rotazione di tablet/telefono. matchMedia.change
+    // scatta solo all'attraversamento della soglia → ricostruzione mirata, non a
+    // ogni pixel di resize.
+    const mq = window.matchMedia('(max-width: 768px)');
+    const sync = () => setMobile(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+
     return () => {
+      mq.removeEventListener('change', sync);
       if (section) section.classList.remove('ap-journey-3d--on');
     };
   }, []);

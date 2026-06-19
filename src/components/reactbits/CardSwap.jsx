@@ -39,8 +39,22 @@ const CardSwap = ({
   overlay,
   children
 }) => {
-  const config =
-    easing === 'elastic'
+  // Rispetto di prefers-reduced-motion: niente autoplay e swap istantanei (lo
+  // scambio al click resta disponibile, ma senza animazione elastica).
+  const prefersReduced =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const config = prefersReduced
+    ? {
+        ease: 'none',
+        durDrop: 0.001,
+        durMove: 0.001,
+        durReturn: 0.001,
+        promoteOverlap: 0,
+        returnDelay: 0
+      }
+    : easing === 'elastic'
       ? {
           ease: 'elastic.out(0.6,0.9)',
           durDrop: 2,
@@ -151,17 +165,21 @@ const CardSwap = ({
 
     // Nessuno swap immediato al mount: le card avanzano SOLO al click o dopo
     // `delay` ms d'inattività (auto-advance). Il primo movimento è quindi
-    // l'autoplay dopo `delay`, oppure il click dell'utente.
-    intervalRef.current = window.setInterval(swap, delay);
+    // l'autoplay dopo `delay`, oppure il click dell'utente. Con reduced-motion
+    // l'autoplay è disattivato: niente movimento non richiesto dall'utente.
+    if (!prefersReduced) {
+      intervalRef.current = window.setInterval(swap, delay);
+    }
 
     // Espone swap + reset del timer per il click manuale sulle card.
     swapRef.current = swap;
     resetTimerRef.current = () => {
+      if (prefersReduced) return;
       clearInterval(intervalRef.current);
       intervalRef.current = window.setInterval(swap, delay);
     };
 
-    if (pauseOnHover) {
+    if (pauseOnHover && !prefersReduced) {
       const node = container.current;
       const pause = () => {
         tlRef.current?.pause();

@@ -254,6 +254,7 @@ const de = {
       kicker: "Wie wir arbeiten",
       title: "Menschen am Steuer, *KI im Maschinenraum.*",
       lead: "Von der ersten Recherche bis zum Launch geht jede Phase durch unsere Hände: die KI beschleunigt, die Entscheidungen treffen wir. Vier Schritte, ein Standard.",
+      hint: "Karten durchblättern",
       items: [
         {
           title: "Zuhören",

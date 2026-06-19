@@ -253,6 +253,7 @@ const en = {
       kicker: "How we work",
       title: "Humans at the helm, *AI in the engine room.*",
       lead: "From the first research to launch, every phase passes through our hands: AI speeds things up, the decisions are ours. Four steps, one standard.",
+      hint: "Browse the cards",
       items: [
         {
           title: "Listening",

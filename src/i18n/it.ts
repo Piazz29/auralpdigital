@@ -258,6 +258,7 @@ const it = {
       kicker: "Come lavoriamo",
       title: "Umani al timone, *AI in sala macchine.*",
       lead: "Dalla prima ricerca fino al lancio, ogni fase passa dalle nostre mani: l'AI accelera, le decisioni le prendiamo noi. Quattro passi, un solo standard.",
+      hint: "Scorri le schede",
       items: [
         {
           title: "Ascolto",
