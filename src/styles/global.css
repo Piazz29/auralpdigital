@@ -543,125 +543,106 @@ button {
 -------------------------------------------------------------------------- */
 
 /* ----------------------------------------------------------------------
-   PROBLEMA / VALORE — CILINDRO 3D orizzontale (tassello PAS): nomina il problema
-   e lo ribalta nella promessa. Le righe stanno sulla superficie interna di un
-   cilindro invisibile ad asse orizzontale; durante il pin lo scroll lo fa
-   ruotare — la riga al centro è piatta/leggibile, le altre curvano dietro.
-   Sfondo trasparente: mostra il canvas.
+   IL PUNTO — sequenza scroll-driven a 4 fasi (logo bloom). Il wordmark fa da
+   elemento centrale: entra piccolo e sfocato → va a fuoco → cresce e si sfoca
+   tornando un alone luminoso DIETRO al testo → climax come grande bagliore.
+   Il testo si rivela lettera per lettera sopra al logo. Sfondo trasparente:
+   mostra il canvas warm white continuo (#FAFAF8), coerente col resto del sito.
 
    Due stati:
-   - DEFAULT (no-JS / reduced-motion): blocco statico in flusso normale, tutte
-     le righe visibili e leggibili, nessun 3D.
-   - .is-cloud-pinned (aggiunto da JS quando il motion è attivo): la sezione
-     diventa 100vh, il viewport apre lo spazio 3D (perspective) e GSAP pinna la
-     sezione, ricalcolando la trasformazione di ogni riga a ogni frame.
-   La perspective è una var, così è ritoccabile anche da CSS (la geometria
-   principale del cilindro è però nei PARAMETRI in src/scripts/main.ts).
+   - DEFAULT (no-JS / reduced-motion): blocco statico in flusso normale, logo a
+     fuoco + testo intero leggibile, nessun pin.
+   - .is-point-active (aggiunto da JS con motion attivo): la sezione diventa
+     100vh, logo e testo si sovrappongono centrati; GSAP pinna e guida le 4 fasi.
+   I range di blur/scale per fase sono nei PARAMETRI in src/scripts/main.ts.
 -------------------------------------------------------------------------- */
-.typecloud-section {
+.point-section {
   position: relative;
-  padding: clamp(96px, 18vh, 220px) 0;
-  --cyl-perspective: 1000px;
+  background: transparent; /* mostra il canvas warm white (#FAFAF8) */
+  padding: clamp(96px, 18vh, 200px) 0;
 }
-/* Kicker "Il punto": in flusso sopra al blocco nel fallback; ancorato in alto
-   (sopra lo spazio 3D) quando la sezione è pinnata. */
-.typecloud-kicker {
+/* Fallback (no-JS / reduced-motion): logo sopra, testo sotto, tutto leggibile. */
+.point-stage {
   position: relative;
-  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(28px, 5vh, 56px);
   max-width: 110rem;
   margin-inline: auto;
   padding-inline: clamp(24px, 4vw, 64px);
 }
-.typecloud-viewport {
-  position: relative;
-}
-.typecloud-track {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-.typecloud-row {
+.point-logo {
   display: block;
-  max-width: min(94vw, 16em);
-  /* Tutto nero, bold e tracking stretto: blocco compatto e d'impatto. */
+  width: clamp(320px, 58vw, 720px);
+  height: auto;
+  user-select: none;
+}
+.point-text {
+  margin: 0;
+  max-width: min(90vw, 20em);
+  text-align: center;
   font-weight: 700;
-  line-height: 0.95;
-  letter-spacing: -0.035em;
+  font-size: clamp(26px, 4vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
   text-wrap: balance;
-}
-.typecloud-row + .typecloud-row {
-  margin-top: 0.06em;
-}
-.typecloud-row--ink {
   color: var(--color-ink);
 }
-/* La promessa resta in corsivo come accento editoriale, ma ora in nero come il
-   resto (niente blu): testo "tutto nero" su richiesta. */
-.typecloud-row--accent {
-  color: var(--color-ink);
+/* La promessa: blu accent + corsivo (#3B5BDB, come l'em della hero). */
+.point-text-accent {
+  color: #3b5bdb;
   font-style: italic;
 }
-/* Scala tipografica: più grande, enfasi (xl/l/m) tenuta vicina perché sul
-   cilindro le righe devono restare coese e di pitch regolare. Clamp responsive
-   → su mobile scende mantenendo la leggibilità. */
-.tc-s {
-  font-size: clamp(20px, 2.6vw, 36px);
-}
-.tc-m {
-  font-size: clamp(26px, 3.6vw, 50px);
-}
-.tc-l {
-  font-size: clamp(32px, 4.4vw, 62px);
-}
-.tc-xl {
-  font-size: clamp(38px, 5.4vw, 78px);
-}
 
-/* --- Stato cilindro 3D (motion attivo) ----------------------------------- */
-.typecloud-section.is-cloud-pinned {
-  /* Altezza viewport: fa da "pin spacer" naturale; il pin di ScrollTrigger la
-     blocca mentre il cilindro ruota. overflow:hidden taglia le righe a filo. */
+/* --- Stato pinnato (motion attivo) --------------------------------------- */
+.point-section.is-point-active {
+  /* 100vh: fa da "pin spacer" naturale mentre la timeline gira. */
   height: 100vh;
   padding: 0;
   overflow: hidden;
 }
-.typecloud-section.is-cloud-pinned .typecloud-kicker {
-  position: absolute;
-  top: clamp(80px, 12vh, 140px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  justify-content: center;
-}
-/* Viewport = contenitore con perspective: apre lo spazio 3D per i figli. */
-.typecloud-section.is-cloud-pinned .typecloud-viewport {
+.point-section.is-point-active .point-stage {
   position: absolute;
   inset: 0;
-  perspective: var(--cyl-perspective);
-  perspective-origin: 50% 50%;
+  display: block; /* logo e testo posizionati in assoluto, sovrapposti */
+  max-width: none;
+  padding: 0;
 }
-/* Track = scena 3D: i figli vivono nello stesso spazio 3D (non appiattiti). */
-.typecloud-section.is-cloud-pinned .typecloud-track {
-  position: absolute;
-  inset: 0;
-  display: block;
-  transform-style: preserve-3d;
-}
-/* Ogni riga è ancorata al centro del viewport; JS la sposta sul cilindro via
-   transform (translateY/Z + rotateX + scaleY). Solo transform/opacity/filter
-   → resta sul compositor, fluida a 60fps. nowrap: le frasi brevi restano su
-   una sola riga, geometria del cilindro pulita. */
-.typecloud-section.is-cloud-pinned .typecloud-row {
+/* Logo = alone/bagliore dietro al testo (z-index basso). Centratura via
+   left/top 50% + xPercent/yPercent gestiti da GSAP, così lo scale si compone
+   correttamente col translate di centratura. */
+.point-section.is-point-active .point-logo {
   position: absolute;
   top: 50%;
   left: 50%;
-  margin: 0;
-  max-width: 92vw;
-  white-space: nowrap;
+  z-index: 1;
+  width: clamp(340px, 54vw, 700px);
   transform-origin: 50% 50%;
   backface-visibility: hidden;
   will-change: transform, opacity, filter;
+  pointer-events: none;
+}
+/* Testo = primo piano sopra il logo (z-index alto), centrato. Il container è
+   centrato in CSS (GSAP anima solo le singole lettere, non il container). */
+.point-section.is-point-active .point-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 20em);
+  max-width: none;
+}
+/* Lettere: inline-block così il translateX funziona; i wrapper-parola tengono
+   il wrapping ai confini di parola. Solo transform/opacity → sul compositor. */
+.point-char {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+.point-word {
+  display: inline-block;
 }
 
 .projects-section {
@@ -4613,7 +4594,7 @@ nav:has(#burger-menu.is-open) .pill {
 .cta-title,
 .duo-names,
 .ap-statement,
-.typecloud-row,
+.point-text,
 .about-statement {
   overflow-wrap: break-word;
   hyphens: auto;

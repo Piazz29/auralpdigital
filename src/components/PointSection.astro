@@ -1,0 +1,47 @@
+---
+// PointSection — "Il punto" come sequenza scroll-driven a 4 fasi (logo bloom).
+//
+// Concetto: il wordmark AuralpDigital fa da elemento centrale. Entra piccolo e
+// sfocato, va a fuoco, poi cresce e si sfoca tornando un alone luminoso DIETRO
+// al testo, che si rivela lettera per lettera. La sequenza è guidata dallo
+// scroll (pin + scrub) ed è interamente in src/scripts/main.ts (convenzione del
+// progetto: i .astro descrivono la scena, la logica GSAP vive nello script).
+//
+// Markup statico qui. Senza JS / con prefers-reduced-motion la sezione resta un
+// blocco statico e leggibile: logo a fuoco + testo intero (lo stato pinnato e le
+// trasformazioni sono attivati solo da JS via la classe .is-point-active).
+//
+// Il testo arriva dal dizionario (per-lingua), diviso in due parti: `textInk`
+// (scuro) e `textAccent` (blu + corsivo, la promessa).
+import type { Lang } from "../i18n";
+import { defaultLang, getDict } from "../i18n";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = getDict(lang);
+const problem = t.home.problem;
+---
+
+<section id="problema" class="point-section" data-point>
+  <div class="point-stage" data-point-stage>
+    <!-- Logo: alone/bagliore dietro al testo (z-index basso). aria-hidden: è
+         decorativo, il messaggio è nel testo sotto. -->
+    <img
+      src="/logo/wordmark.svg"
+      alt=""
+      class="point-logo"
+      data-point-logo
+      aria-hidden="true"
+      draggable="false"
+    />
+
+    <!-- Testo rivelato lettera per lettera, sopra al logo (z-index alto). Il
+         carattere viene splittato da GSAP SplitText in main.ts. -->
+    <p class="point-text font-display" data-point-text>
+      <span class="point-text-ink" data-point-ink>{problem.textInk}</span>{" "}
+      <span class="point-text-accent" data-point-accent>{problem.textAccent}</span>
+    </p>
+  </div>
+</section>

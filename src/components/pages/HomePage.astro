@@ -13,7 +13,7 @@ import ContainerScroll from "../ContainerScroll.astro";
 import ContactForm from "../ContactForm.astro";
 import Rich from "../Rich.astro";
 import SplitText from "../reactbits/SplitText.jsx";
-import TypeCloudSection from "../TypeCloudSection.astro";
+import PointSection from "../PointSection.astro";
 import "../../styles/global.css";
 
 interface Props {
@@ -164,8 +164,8 @@ const services = servicesMeta.map((m, i) => ({
   <!-- CONTENUTO — flusso normale -->
   <div class="post-reveal relative z-10">
 
-  <!-- SECTION — PROBLEMA / VALORE — type-cloud in scroll-pinning -->
-  <TypeCloudSection lang={lang} />
+  <!-- SECTION — PROBLEMA / VALORE — "Il punto": sequenza scroll-driven a 4 fasi (logo bloom) -->
+  <PointSection lang={lang} />
 
   <!-- SECTION — COSA FACCIAMO -->
   <section id="cosa-facciamo" class="services-section">

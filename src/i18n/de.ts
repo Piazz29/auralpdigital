@@ -49,17 +49,10 @@ const de = {
     },
     problem: {
       kicker: "Der Punkt",
-      // Type-cloud: vedi it.ts per la forma. tone = colore, size = scala.
-      cloud: [
-        { text: "Eine Website,", tone: "ink", size: "m" },
-        { text: "die keine Kunden bringt,", tone: "ink", size: "xl" },
-        { text: "ist ein Kostenfaktor,", tone: "ink", size: "l" },
-        { text: "keine Investition.", tone: "ink", size: "m" },
-        { text: "Wir bauen Systeme,", tone: "accent", size: "xl" },
-        { text: "die aus Suchenden", tone: "accent", size: "m" },
-        { text: "Buchende", tone: "accent", size: "l" },
-        { text: "machen.", tone: "accent", size: "xl" },
-      ],
+      // "Il punto" (logo bloom): vedi it.ts per la forma. textInk scura, textAccent blu+corsivo.
+      textInk:
+        "Eine Website, die keine Kunden bringt, ist ein Kostenfaktor, keine Investition.",
+      textAccent: "Wir bauen Systeme, die aus Suchenden Buchende machen.",
     },
     services: {
       kicker: "Was wir tun",

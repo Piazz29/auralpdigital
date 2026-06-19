@@ -50,19 +50,13 @@ const it = {
     },
     problem: {
       kicker: "Il punto",
-      // Type-cloud: il testo è spezzato in righe brevi impilate. `tone` decide il
-      // colore (ink scuro / accent blu+corsivo); `size` la scala tipografica del
-      // collage (s/m/l/xl). L'ordine è quello di lettura, dall'alto al basso.
-      cloud: [
-        { text: "Un sito", tone: "ink", size: "m" },
-        { text: "che non porta clienti", tone: "ink", size: "xl" },
-        { text: "è un costo,", tone: "ink", size: "l" },
-        { text: "non un investimento.", tone: "ink", size: "m" },
-        { text: "Costruiamo sistemi", tone: "accent", size: "xl" },
-        { text: "che trasformano", tone: "accent", size: "m" },
-        { text: "chi cerca", tone: "accent", size: "l" },
-        { text: "in chi prenota.", tone: "accent", size: "xl" },
-      ],
+      // "Il punto" (logo bloom): il testo si rivela lettera per lettera sopra al
+      // logo sfocato. Diviso in due parti: `textInk` (scura) nomina il problema,
+      // `textAccent` (blu + corsivo) lo ribalta nella promessa.
+      textInk:
+        "Un sito che non porta clienti è un costo, non un investimento.",
+      textAccent:
+        "Costruiamo sistemi che trasformano chi cerca in chi prenota.",
     },
     services: {
       kicker: "Cosa facciamo",

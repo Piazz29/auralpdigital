@@ -2,8 +2,9 @@ import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Draggable } from "gsap/Draggable";
+import { SplitText } from "gsap/SplitText";
 
-gsap.registerPlugin(ScrollTrigger, Draggable);
+gsap.registerPlugin(ScrollTrigger, Draggable, SplitText);
 
 // Su mobile la barra URL che appare/scompare cambia l'altezza del viewport e
 // scatena un refresh di ScrollTrigger (ricalcolo di tutti i pin) in pieno
@@ -559,156 +560,181 @@ const revealHead = (selector: string, trigger: string) => {
 };
 revealHead("[data-anim='services-head']", "#cosa-facciamo");
 
-// ---------- "Il punto" — CILINDRO 3D orizzontale in scroll-pinning ----------
-// La sezione si BLOCCA (pin) mentre lo scroll fa "ruotare" un cilindro invisibile
-// ad asse orizzontale: il testo è sulla sua superficie interna, una riga per
-// fascia. La riga al centro del viewport è piatta e leggibile; allontanandosi
-// le righe si inclinano (rotateX), si schiacciano (scaleY), arretrano in
-// profondità (translateZ) e sfumano (opacity/blur), come se curvassero dietro
-// la superficie. Scrollando, le righe emergono distorte da un lato, si
-// raddrizzano al centro, poi escono distorte dall'altro. Quando tutte sono
-// passate il pin si rilascia. Senza motion: nessun pin/3D, blocco statico.
-const typeCloud = document.querySelector<HTMLElement>("[data-typecloud]");
-const typeCloudTrack = document.querySelector<HTMLElement>(
-  "[data-typecloud-track]"
-);
-if (typeCloud && typeCloudTrack && !reduceMotion) {
-  const cloudRows = gsap.utils.toArray<HTMLElement>(".typecloud-row");
+// ---------- "Il punto" — sequenza scroll-driven (logo zoom + reveal testo) ---
+// La sezione si BLOCCA (pin) e lo scroll guida una timeline:
+//  1) hold      (0 → p1): il logo è subito NITIDO e GRANDE, a fuoco pieno;
+//     resta così (zoom appena accennato) → è la prima cosa che leggi;
+//  2) zoom+blur (p1 → p3): continuando a scrollare il logo ZOOMA e si SFOCA
+//     progressivamente, arretrando come alone dietro al testo; nel mentre il
+//     testo si rivela LETTERA PER LETTERA (fade-in + translateY, stagger);
+//  3) climax    (p3 → 1): zoom e blur al massimo (grande bagliore diffuso); il
+//     testo resta fermo e leggibile in primo piano; poi il pin si rilascia.
+// Tutto è agganciato allo scroll (scrub): scrollando indietro la sequenza si
+// riavvolge e le lettere si "ritirano". Senza motion / no-JS: blocco statico
+// leggibile (logo a fuoco + testo intero), nessun pin. Anima solo transform /
+// opacity / filter (con will-change) → niente reflow.
+const pointSection = document.querySelector<HTMLElement>("[data-point]");
+const pointLogo = pointSection?.querySelector<HTMLElement>("[data-point-logo]");
+const pointInk = pointSection?.querySelector<HTMLElement>("[data-point-ink]");
+const pointAccent =
+  pointSection?.querySelector<HTMLElement>("[data-point-accent]");
 
-  // ----- PARAMETRI CALIBRABILI ------------------------------------------
-  // Tutti qui in cima: regola questi per cambiare il "feel" del cilindro.
-  const CYL = {
-    radius: 360, // px — raggio del cilindro. Più piccolo = curva stretta, righe che si distorcono in fretta; più grande = curva dolce.
-    rowSpacingDeg: 18, // gradi tra una riga e l'altra sulla superficie (≈ spaziatura verticale percepita).
-    maxRotateX: 86, // clamp del rotateX massimo (gradi) — oltre, la riga è quasi di taglio.
-    rotateXSign: 1, // 1 o -1: inverte il verso dell'inclinazione (curva concava/convessa).
-    minScaleY: 0.42, // scaleY minima: quanto si "schiaccia" al massimo una riga lontana.
-    scaleYStrength: 1, // 0 = nessuno schiacciamento extra · 1 = pieno (segue cos dell'angolo).
-    fadeStartDeg: 16, // entro questo angolo dal centro l'opacità è piena.
-    fadeEndDeg: 74, // oltre questo angolo la riga è del tutto invisibile.
-    minOpacity: 0, // opacità minima delle righe più lontane.
-    blurMax: 2.4, // px di sfocatura massima per le righe lontane (0 = nessuna sfocatura).
-    leadRows: 1.15, // righe di margine sopra/sotto: ingresso/uscita morbidi (la prima entra già distorta, l'ultima esce distorta).
-    scrollPerRowVh: 0.36, // quanto scroll (in frazioni di viewport) "vale" una riga → sensibilità/lunghezza del pin.
-    // Molla d'ingresso: all'apparire della sezione il cilindro è pre-ruotato di
-    // tot "righe" e scatta in posizione con un overshoot elastico.
-    introSpringRows: 0.85, // ampiezza della molla (in righe). 0 = nessuna molla.
-    introDuration: 1.15, // durata (s) della molla d'ingresso.
-    introEase: "elastic.out(1, 0.55)", // ease della molla (più "0.x" basso = più rimbalzi).
+if (pointSection && pointLogo && pointInk && pointAccent && !reduceMotion) {
+  // ----- PARAMETRI CALIBRABILI (range blur/scale per fase) ----------------
+  // Tutti qui in cima: questa sequenza richiede calibrazione fine, ritocca qui.
+  const PT = {
+    pinVh: 2.6, // lunghezza del pin in viewport (più alto = sequenza più lenta/deliberata).
+    // Confini di fase del LOGO sulla progress (0→1) dello ScrollTrigger.
+    p1: 0.18, // fine "hold": fin qui il logo resta nitido e grande
+    p3: 0.75, // inizio climax: da qui zoom + blur al massimo
+    // Logo — scala: parte GRANDE e nitido, poi zooma crescendo.
+    scaleStart: 1.0, // inizio: dimensione piena, nitida
+    scaleHold: 1.12, // fine hold: zoom appena accennato, ancora nitido
+    scaleReveal: 2.0, // mentre il testo si rivela: zoom marcato
+    scaleClimax: 3.0, // climax: zoom massimo, grande bagliore
+    // Logo — blur (px): NITIDO all'inizio, poi si sfoca crescendo.
+    blurStart: 0, // inizio: a fuoco pieno
+    blurReveal: 22, // a testo rivelato: alone sfocato dietro
+    blurClimax: 42, // climax: bagliore diffuso
+    // Logo — opacità: piena dall'inizio; resta visibile come alone al climax.
+    opacityClimax: 0.85,
+    // Testo — reveal lettera-per-lettera ORIZZONTALE e morbido: ogni lettera
+    // entra scorrendo in orizzontale (translateX) + fade. Animazione A TEMPO
+    // (smooth), NON scrubbata: cascata sempre fluida, indipendente dagli scatti
+    // dello scroll. Soglie ASIMMETRICHE (isteresi): scendendo il testo compare a
+    // `textRevealAt`; risalendo si ritira solo a `textHideAt`, cioè quando il
+    // logo TORNA NITIDO (≈ p1, dove il blur torna a 0).
+    textRevealAt: 0.42, // progress (0→1): scendendo, soglia di APPARIZIONE del testo
+    textHideAt: 0.32, // progress (0→1): risalendo, soglia di RITIRO — più alto = il testo sparisce PRIMA tornando su (resta < textRevealAt)
+    charDur: 0.5, // durata (s) dell'ingresso di ogni lettera
+    charStaggerAmount: 0.9, // secondi su cui è distribuito lo stagger di TUTTE le lettere (più alto = cascata più lenta)
+    charFromX: -22, // px — scostamento orizzontale iniziale di ogni lettera (negativo = entra da sinistra)
+    charEase: "power3.out", // ease morbida del movimento di ogni lettera
   };
-  // ----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
 
-  // Attiva il layout 3D (100vh + perspective + righe in posizione assoluta):
-  // vedi .is-cloud-pinned in global.css. Solo qui, così il fallback no-JS resta
-  // un blocco leggibile in flusso normale.
-  typeCloud.classList.add("is-cloud-pinned");
+  // Attiva il layout pinnato (100vh, logo+testo centrati e sovrapposti): vedi
+  // .is-point-active in global.css. Solo da JS, così il fallback resta leggibile.
+  pointSection.classList.add("is-point-active");
 
-  const N = cloudRows.length;
-  // Righe totali "attraversate" dal cilindro: tutte + i margini d'ingresso/uscita.
-  const span = N - 1 + CYL.leadRows * 2;
+  // Split del testo in lettere. Le due parti restano nei rispettivi span colorati
+  // (ink scuro / accent blu+italic), così ogni lettera eredita il colore giusto.
+  // type "words,chars": i wrapper-parola tengono il wrapping ai confini di parola.
+  const splitInk = new SplitText(pointInk, {
+    type: "words,chars",
+    charsClass: "point-char",
+    wordsClass: "point-word",
+  });
+  const splitAccent = new SplitText(pointAccent, {
+    type: "words,chars",
+    charsClass: "point-char",
+    wordsClass: "point-word",
+  });
+  // Lettere in ordine di lettura: prima la parte ink, poi la parte accent.
+  const chars = [...splitInk.chars, ...splitAccent.chars];
 
-  const DEG2RAD = Math.PI / 180;
-  const clamp = (v: number, lo: number, hi: number) =>
-    Math.min(hi, Math.max(lo, v));
+  // Stato iniziale: logo GRANDE e NITIDO (a fuoco, opacità piena); lettere
+  // nascoste poco sotto. Centratura del logo via left/top 50% (CSS) +
+  // xPercent/yPercent gestiti da GSAP, così lo scale si compone col translate.
+  gsap.set(pointLogo, {
+    xPercent: -50,
+    yPercent: -50,
+    scale: PT.scaleStart,
+    autoAlpha: 1,
+    filter: `blur(${PT.blurStart}px)`,
+    transformOrigin: "50% 50%",
+    force3D: true,
+  });
+  // Lettere nascoste: scostate in orizzontale + trasparenti.
+  gsap.set(chars, { autoAlpha: 0, x: PT.charFromX });
 
-  // Stato condiviso letto dal render: `lastP` = avanzamento scroll (0→1),
-  // `intro.v` = progresso della molla d'ingresso (0→1, con overshoot).
-  let lastP = 0;
-  const intro = { v: 1 }; // 1 = a regime; parte da 0 quando la molla scatta
+  // Reveal del testo come timeline A TEMPO, in pausa finché lo scroll non
+  // supera la soglia: play() in avanti, reverse() tornando indietro → cascata
+  // orizzontale lettera-per-lettera sempre fluida (vedi onUpdate sotto).
+  const lettersTl = gsap.timeline({ paused: true });
+  lettersTl.to(chars, {
+    autoAlpha: 1,
+    x: 0,
+    duration: PT.charDur,
+    ease: PT.charEase,
+    stagger: { amount: PT.charStaggerAmount },
+  });
+  let textRevealed = false;
 
-  // Render di un frame: per ogni riga calcola la distanza angolare dal centro e
-  // applica la trasformazione 3D. Solo transform/opacity/filter → niente reflow.
-  const render = () => {
-    // Offset della molla: il cilindro parte ruotato di `introSpringRows` e si
-    // assesta (l'elastic supera lo 0 e torna → effetto molla).
-    const introOffset = (1 - intro.v) * CYL.introSpringRows;
-    // Indice frazionario della riga attualmente al centro del cilindro.
-    const centerIndex = -CYL.leadRows + lastP * span + introOffset;
-    for (let i = 0; i < N; i++) {
-      const d = i - centerIndex; // distanza dal centro, in "righe"
-      const angDeg = d * CYL.rowSpacingDeg; // angolo sulla superficie
-      const a = angDeg * DEG2RAD;
-      const absDeg = Math.abs(angDeg);
+  const pinDistance = () => Math.round(window.innerHeight * PT.pinVh);
 
-      const y = CYL.radius * Math.sin(a); // posizione verticale lungo la curva
-      const z = CYL.radius * (Math.cos(a) - 1); // profondità (0 al centro, <0 dietro)
-      const rotX = clamp(
-        -angDeg * CYL.rotateXSign,
-        -CYL.maxRotateX,
-        CYL.maxRotateX
-      );
-      const sy = clamp(
-        1 - (1 - Math.cos(a)) * CYL.scaleYStrength,
-        CYL.minScaleY,
-        1
-      );
-      const op = clamp(
-        (CYL.fadeEndDeg - absDeg) / (CYL.fadeEndDeg - CYL.fadeStartDeg),
-        CYL.minOpacity,
-        1
-      );
-      const blur = CYL.blurMax > 0 ? (1 - op) * CYL.blurMax : 0;
-
-      const el = cloudRows[i];
-      el.style.transform =
-        `translate(-50%, -50%) translateY(${y.toFixed(2)}px) ` +
-        `translateZ(${z.toFixed(2)}px) rotateX(${rotX.toFixed(2)}deg) ` +
-        `scaleY(${sy.toFixed(3)})`;
-      el.style.opacity = op.toFixed(3);
-      el.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "none";
-      // Righe del tutto trasparenti: tolte dal paint (niente costo a vuoto).
-      el.style.visibility = op <= 0.001 ? "hidden" : "visible";
-    }
-  };
-
-  // Stato scrubbato: lo scroll trascina `state.p` da 0 a 1 con un filo di
-  // inerzia (scrub), e ogni tick richiama render() → il cilindro ruota fluido.
-  const state = { p: 0 };
-  const pinDistance = () =>
-    Math.round(window.innerHeight * span * CYL.scrollPerRowVh);
-
-  gsap.to(state, {
-    p: 1,
-    ease: "none",
-    onUpdate: () => {
-      lastP = state.p;
-      render();
-    },
+  // Timeline normalizzata (durata totale = 1) mappata 1:1 sulla progress dello
+  // scroll: una posizione p nella timeline corrisponde alla progress p del pin.
+  const tl = gsap.timeline({
+    defaults: { ease: "none" },
     scrollTrigger: {
-      trigger: typeCloud,
+      trigger: pointSection,
       start: "top top",
       end: () => "+=" + pinDistance(),
       pin: true,
-      scrub: 1,
+      scrub: 1, // scroll-driven con un filo d'inerzia (resta burroso con Lenis)
       anticipatePin: 1,
       invalidateOnRefresh: true,
       // Più alto del pin dei Servizi (1): essendo PRIMA nella pagina dev'essere
       // ricalcolato per primo, così il suo spacer è in posizione quando i
       // trigger a valle (morph colore canvas, pin Servizi) leggono le coordinate.
       refreshPriority: 2,
+      onUpdate: (self) => {
+        // Reveal a tempo (sempre fluido), lo scroll fa solo da grilletto. Soglie
+        // ASIMMETRICHE: scendendo il testo compare a `textRevealAt` (logo che si
+        // sfoca); risalendo si ritira solo a `textHideAt`, cioè quando il logo
+        // torna nitido. Tra le due soglie lo stato resta com'è (isteresi).
+        const p = self.progress;
+        if (!textRevealed && p >= PT.textRevealAt) {
+          textRevealed = true;
+          lettersTl.play();
+        } else if (textRevealed && p <= PT.textHideAt) {
+          textRevealed = false;
+          lettersTl.reverse();
+        }
+      },
     },
   });
 
-  // Molla d'ingresso: parte UNA volta quando la sezione entra in vista. `once`
-  // si auto-distrugge dopo lo scatto → immune ai refresh di ScrollTrigger (niente
-  // ri-molla quando le isole a valle idratano). onUpdate ridisegna ogni frame
-  // anche se lo scroll è fermo, così la molla è visibile.
-  if (CYL.introSpringRows > 0) {
-    intro.v = 0;
-    gsap.to(intro, {
-      v: 1,
-      duration: CYL.introDuration,
-      ease: CYL.introEase,
-      onUpdate: render,
-      scrollTrigger: {
-        trigger: typeCloud,
-        start: "top 78%",
-        once: true,
-      },
-    });
-  }
+  // --- LOGO: nitido e grande all'inizio, poi zoom + blur crescenti ----------
+  // Fase 1 (0 → p1): hold — resta NITIDO (blur 0) e grande, zoom appena accennato.
+  tl.to(pointLogo, { scale: PT.scaleHold, duration: PT.p1 }, 0);
+  // Fase 2 (p1 → p3): ZOOMA e si SFOCA progressivamente, mentre il testo appare.
+  tl.to(
+    pointLogo,
+    {
+      scale: PT.scaleReveal,
+      filter: `blur(${PT.blurReveal}px)`,
+      duration: PT.p3 - PT.p1,
+      ease: "power1.in",
+    },
+    PT.p1
+  );
+  // Fase 3 (p3 → 1): climax — zoom e blur al massimo, grande bagliore diffuso.
+  tl.to(
+    pointLogo,
+    {
+      scale: PT.scaleClimax,
+      autoAlpha: PT.opacityClimax,
+      filter: `blur(${PT.blurClimax}px)`,
+      duration: 1 - PT.p3,
+      ease: "power1.in",
+    },
+    PT.p3
+  );
 
-  render(); // stato iniziale (cilindro pre-ruotato dalla molla) prima dello scroll
+  // (Il reveal del testo è la timeline a tempo `lettersTl` qui sopra, avviata
+  // dall'onUpdate dello ScrollTrigger — non è scrubbato, così resta fluido.)
+
+  // Pulizia listener/timeline al cambio pagina (utile anche in futuro con view
+  // transitions): killa lo ScrollTrigger, le timeline e ripristina il testo.
+  window.addEventListener("astro:before-swap", () => {
+    tl.scrollTrigger?.kill();
+    tl.kill();
+    lettersTl.kill();
+    splitInk.revert();
+    splitAccent.revert();
+  });
 }
 
 // ---------- Canvas — lo schermo cambia colore tra le sezioni ----------
