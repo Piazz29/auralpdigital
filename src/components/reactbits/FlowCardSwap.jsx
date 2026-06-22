@@ -26,6 +26,11 @@ export default function FlowCardSwap({
   const [hintHidden, setHintHidden] = useState(false);
   const hintTimer = useRef(null);
 
+  // Inclinazione delle card (skewY): l'hint deve seguire la STESSA pendenza del
+  // bordo inferiore della card frontale, così sembra appoggiato e non "dritto".
+  // Tenuto in una const per restare in sync tra CardSwap e la CSS dell'hint.
+  const skewAmount = 5;
+
   // Pulizia del timer dell'hint allo smontaggio.
   useEffect(() => () => clearTimeout(hintTimer.current), []);
 
@@ -39,6 +44,7 @@ export default function FlowCardSwap({
   const hint = (
     <span
       className={'flow-swap-hint' + (hintHidden ? ' is-hidden' : '')}
+      style={{ '--flow-hint-skew': `${skewAmount}deg` }}
       aria-hidden="true"
     >
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -63,7 +69,7 @@ export default function FlowCardSwap({
         verticalDistance={verticalDistance}
         delay={delay}
         pauseOnHover
-        skewAmount={5}
+        skewAmount={skewAmount}
         easing="elastic"
         onCardClick={handleCardClick}
         overlay={hint}

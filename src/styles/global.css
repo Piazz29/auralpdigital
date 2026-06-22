@@ -4441,7 +4441,11 @@ nav:has(#burger-menu.is-open) .pill {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 66%;
+  /* Panoramica verso il basso della foto (object-position alto = mostra la parte
+     bassa dello scatto): più busto, meno aria morta sopra la testa, così il volto
+     sale nella composizione (più alto, meglio inquadrato) invece di restare
+     centrale/basso. */
+  object-position: center 100%;
   transform: scale(1.18);
   transform-origin: center 24%;
 }

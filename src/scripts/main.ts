@@ -246,16 +246,14 @@ if (navEl) {
   // (ContainerScroll): l'inversione va ancorata alla card. In /chi-siamo la
   // CTA finale è ora chiara (niente card), quindi NESSUNA zona scura: il logo
   // bianco su fondo chiaro sparirebbe.
-  // La card dev'essere DAVVERO dietro la navbar (in cima al viewport) perché il
-  // logo bianco abbia senso: con "top 70" si accendeva quando la card era ancora
-  // in basso e l'area sotto la navbar era chiara → logo bianco su chiaro,
-  // invisibile. Ora si accende solo quando il bordo SUPERIORE della card tocca il
-  // top del viewport e si spegne quando il suo bordo INFERIORE lo supera: nella
-  // sezione form la navbar resta scura/leggibile finché lo sfondo lì è chiaro.
-  const darkZones: { sel: string; start: string; end: string }[] =
-    document.querySelector(".cscroll-card")
-      ? [{ sel: ".cscroll-card", start: "top top", end: "bottom top" }]
-      : [];
+  // La card scura (ContainerScroll) è CENTRATA e più stretta del viewport: il
+  // logo (estrema sinistra) e le icone/lingue (estrema destra) della navbar
+  // cadono sui MARGINI chiari della pagina, NON sopra la card. Invertire a
+  // bianco lì rendeva logo e icone invisibili su sfondo chiaro non appena la
+  // card saliva sotto la navbar. In tutta l'ultima parte della home lo sfondo
+  // dietro la navbar è chiaro → la navbar resta nella variante scura (default,
+  // leggibile). Nessun darkZone per la sezione form.
+  const darkZones: { sel: string; start: string; end: string }[] = [];
   darkZones.forEach(({ sel, start, end }) => {
     if (!document.querySelector(sel)) return;
     ScrollTrigger.create({
@@ -575,11 +573,12 @@ revealHead("[data-anim='services-head']", "#cosa-facciamo");
 // opacity / filter (con will-change) → niente reflow.
 const pointSection = document.querySelector<HTMLElement>("[data-point]");
 const pointLogo = pointSection?.querySelector<HTMLElement>("[data-point-logo]");
+const pointText = pointSection?.querySelector<HTMLElement>("[data-point-text]");
 const pointInk = pointSection?.querySelector<HTMLElement>("[data-point-ink]");
 const pointAccent =
   pointSection?.querySelector<HTMLElement>("[data-point-accent]");
 
-if (pointSection && pointLogo && pointInk && pointAccent && !reduceMotion) {
+if (pointSection && pointLogo && pointText && pointInk && pointAccent && !reduceMotion) {
   // ----- PARAMETRI CALIBRABILI (range blur/scale per fase) ----------------
   // Tutti qui in cima: questa sequenza richiede calibrazione fine, ritocca qui.
   const PT = {
@@ -605,11 +604,16 @@ if (pointSection && pointLogo && pointInk && pointAccent && !reduceMotion) {
     // `textRevealAt`; risalendo si ritira solo a `textHideAt`, cioè quando il
     // logo TORNA NITIDO (≈ p1, dove il blur torna a 0).
     textRevealAt: 0.42, // progress (0→1): scendendo, soglia di APPARIZIONE del testo
-    textHideAt: 0.32, // progress (0→1): risalendo, soglia di RITIRO — più alto = il testo sparisce PRIMA tornando su (resta < textRevealAt)
+    textHideAt: 0.36, // progress (0→1): risalendo, soglia di RITIRO — alzata così il testo inizia a dissolversi mentre il logo è ANCORA sfocato (no momento "entrambi nitidi"); resta < textRevealAt (isteresi)
     charDur: 0.5, // durata (s) dell'ingresso di ogni lettera
     charStaggerAmount: 0.9, // secondi su cui è distribuito lo stagger di TUTTE le lettere (più alto = cascata più lenta)
     charFromX: -22, // px — scostamento orizzontale iniziale di ogni lettera (negativo = entra da sinistra)
     charEase: "power3.out", // ease morbida del movimento di ogni lettera
+    // Uscita risalendo: dissolvenza MORBIDA (blur + opacità) dell'intero blocco
+    // testo, SENZA scorrimento laterale. Parte appena il logo torna verso il
+    // nitido e si completa prima che lo sia del tutto → mai "entrambi nitidi".
+    textHideDur: 0.55, // durata (s) della dissolvenza in uscita
+    textHideBlur: 12, // px — sfocatura raggiunta dal testo mentre svanisce
   };
   // -----------------------------------------------------------------------
 
@@ -645,12 +649,15 @@ if (pointSection && pointLogo && pointInk && pointAccent && !reduceMotion) {
     transformOrigin: "50% 50%",
     force3D: true,
   });
-  // Lettere nascoste: scostate in orizzontale + trasparenti.
+  // Blocco testo: contenitore visibile e nitido; le singole lettere partono
+  // nascoste (scostate in orizzontale + trasparenti). La dissolvenza in uscita
+  // agisce sul CONTENITORE (blur + opacità), il reveal in entrata sulle lettere.
+  gsap.set(pointText, { autoAlpha: 1, filter: "blur(0px)", willChange: "filter, opacity" });
   gsap.set(chars, { autoAlpha: 0, x: PT.charFromX });
 
   // Reveal del testo come timeline A TEMPO, in pausa finché lo scroll non
-  // supera la soglia: play() in avanti, reverse() tornando indietro → cascata
-  // orizzontale lettera-per-lettera sempre fluida (vedi onUpdate sotto).
+  // supera la soglia: cascata orizzontale lettera-per-lettera (entrata da
+  // sinistra + fade), sempre fluida e indipendente dagli scatti dello scroll.
   const lettersTl = gsap.timeline({ paused: true });
   lettersTl.to(chars, {
     autoAlpha: 1,
@@ -660,6 +667,33 @@ if (pointSection && pointLogo && pointInk && pointAccent && !reduceMotion) {
     stagger: { amount: PT.charStaggerAmount },
   });
   let textRevealed = false;
+  let hideTween: gsap.core.Tween | null = null;
+
+  // SCENDENDO: il testo entra (cascata laterale invariata). Reset esplicito del
+  // contenitore (nitido, opaco) e delle lettere allo stato iniziale, così la
+  // cascata riparte pulita anche dopo una dissolvenza in uscita.
+  const revealText = () => {
+    hideTween?.kill();
+    hideTween = null;
+    gsap.set(pointText, { autoAlpha: 1, filter: "blur(0px)" });
+    gsap.set(chars, { autoAlpha: 0, x: PT.charFromX });
+    lettersTl.play(0);
+  };
+
+  // RISALENDO: il testo NON si ritira di lato. Svanisce con una dissolvenza
+  // morbida (blur + opacità crescenti) di tutto il blocco, mentre il logo sotto
+  // sta tornando nitido → niente scorrimento laterale, niente "entrambi nitidi".
+  const hideText = () => {
+    lettersTl.pause();
+    hideTween?.kill();
+    hideTween = gsap.to(pointText, {
+      autoAlpha: 0,
+      filter: `blur(${PT.textHideBlur}px)`,
+      duration: PT.textHideDur,
+      ease: "power2.in",
+      overwrite: "auto",
+    });
+  };
 
   const pinDistance = () => Math.round(window.innerHeight * PT.pinVh);
 
@@ -687,10 +721,10 @@ if (pointSection && pointLogo && pointInk && pointAccent && !reduceMotion) {
         const p = self.progress;
         if (!textRevealed && p >= PT.textRevealAt) {
           textRevealed = true;
-          lettersTl.play();
+          revealText();
         } else if (textRevealed && p <= PT.textHideAt) {
           textRevealed = false;
-          lettersTl.reverse();
+          hideText();
         }
       },
     },
@@ -732,6 +766,7 @@ if (pointSection && pointLogo && pointInk && pointAccent && !reduceMotion) {
     tl.scrollTrigger?.kill();
     tl.kill();
     lettersTl.kill();
+    hideTween?.kill();
     splitInk.revert();
     splitAccent.revert();
   });

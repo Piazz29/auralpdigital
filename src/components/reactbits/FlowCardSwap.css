@@ -4,16 +4,18 @@
   inset: 0;
 }
 
-/* Hint "Clicca per scorrere" — NON un bottone: solo testo leggero e
-   trasparente. Renderizzato dentro al container CardSwap (overlay), quindi
-   ancorato alla prima card: centrato orizzontalmente e appena sopra il suo
-   bordo inferiore. Pulsa appena, sparisce al primo click e ricompare dopo 15s
-   d'inattività (gestito in FlowCardSwap). pointer-events:none → non intercetta
-   l'interazione con la card. */
+/* Hint "Scorri le schede" — NON un bottone: solo testo leggero e trasparente.
+   Renderizzato dentro al container CardSwap (overlay), quindi ancorato alla prima
+   card: centrato orizzontalmente, appena sopra il suo bordo inferiore con un
+   piccolo margine (~0.5cm). Inclinato con la STESSA skewY della card frontale
+   (`--flow-hint-skew`, impostata da FlowCardSwap = skewAmount) così segue la
+   pendenza del bordo invece di restare orizzontale rispetto allo schermo. Pulsa
+   appena, sparisce al primo click e ricompare dopo 15s d'inattività (gestito in
+   FlowCardSwap). pointer-events:none → non intercetta l'interazione con la card. */
 .flow-swap-hint {
   position: absolute;
   left: 50%;
-  bottom: 16px;
+  bottom: 18px;
   z-index: 30;
   display: inline-flex;
   align-items: center;
@@ -26,7 +28,8 @@
   color: rgba(250, 250, 248, 0.68);
   text-shadow: 0 1px 6px rgba(13, 13, 13, 0.5);
   pointer-events: none;
-  transform: translateX(-50%);
+  /* La skewY allinea l'hint alla pendenza del bordo inferiore della card. */
+  transform: translateX(-50%) skewY(var(--flow-hint-skew, 5deg));
   animation: flow-hint-bob 2.4s ease-in-out infinite;
   transition:
     opacity 0.5s ease,
@@ -40,12 +43,12 @@
 }
 .flow-swap-hint.is-hidden {
   opacity: 0;
-  /* mantiene il centraggio orizzontale mentre si dissolve verso l'alto */
-  transform: translateX(-50%) translateY(-6px);
+  /* mantiene centraggio + inclinazione mentre si dissolve verso l'alto */
+  transform: translateX(-50%) translateY(-6px) skewY(var(--flow-hint-skew, 5deg));
 }
 @keyframes flow-hint-bob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-4px); }
+  0%, 100% { transform: translateX(-50%) translateY(0) skewY(var(--flow-hint-skew, 5deg)); }
+  50% { transform: translateX(-50%) translateY(-4px) skewY(var(--flow-hint-skew, 5deg)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .flow-swap-hint { animation: none; }

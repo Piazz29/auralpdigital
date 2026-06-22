@@ -44,12 +44,12 @@ const TIP_OFFSET = 0; // correzione rotazione punta (rad) — da tarare a occhio
 const FACE_FLIP = false; // true se la freccia appare specchiata/di spalle
 
 // --- Volo "aeroplanino": più assi 3D, mai piatto, mai troppo -------------
-const PITCH = 0.16; // inclinazione 3D fissa (rad ≈ 9°): dà volume
+const PITCH = 0.24; // inclinazione 3D fissa (rad ≈ 14°): più volume/asse frontale
 const BANK_MAX = 0.5; // roll massimo in curva (rad ≈ 29°)
 const BANK_GAIN = 4.8; // quanto la variazione di direzione genera roll (più calmo)
 const BANK_SMOOTH = 0.08; // smoothing del roll (0..1) — più morbido, meno nervoso
-const YAW_MAX = 0.5; // imbardata massima (rad ≈ 29°): mostra il fianco 3D
-const YAW_GAIN = 1.6; // quanto la direzione orizzontale genera yaw
+const YAW_MAX = 0.66; // imbardata massima (rad ≈ 38°): mostra di più il fianco 3D
+const YAW_GAIN = 2.1; // quanto la direzione orizzontale genera yaw (più profondità)
 const YAW_SMOOTH = 0.09; // smoothing dello yaw
 const STEP_PULSE = 0.05; // +scala sobria all'arrivo su uno step
 
@@ -80,10 +80,13 @@ const DRAG_RETURN = 0.07; // velocità di ritorno alla posizione di scroll (0..1
 // state ridotte rispetto alla versione precedente perché due inversioni profonde
 // (Step 2 e Step 3) scendevano a ~54°/56°. Angoli interni attuali ai vertici:
 // ≈113° / 70° / 73° / 91° — minimo ~70°, con margine sopra la soglia di 65°.
-// La PARTENZA è alta (y 4.05) ma interamente visibile sotto la navbar fissa: per
-// alzarla ancora aumentare `[0][1]` (accettando un possibile overlap navbar).
+// La PARTENZA: il cursore entra dall'alto-destra accanto al titolo. A y 4.05 la
+// punta sporgeva oltre il bordo superiore (sembrava uscire dallo schermo / finire
+// sotto la navbar) nei primi istanti. Abbassata a 3.4 così è SUBITO interamente
+// dentro la viewport; la curva ricongiunge la traiettoria originale già allo
+// Step 1 (il resto del percorso è invariato). Per rialzarla aumentare `[0][1]`.
 const STATIONS_DESKTOP = [
-  [1.1, 4.05, 0.15], // partenza: alto-destra, accanto al titolo
+  [1.1, 3.4, 0.15], // partenza: alto-destra, accanto al titolo (abbassata)
   [1.35, 2.2, -0.25], // Step 1 (destra)
   [-0.95, 0.85, 0.3], // Step 2 (sinistra) — escursione ridotta (vertice ≈70°)
   [0.95, -0.7, -0.3], // Step 3 (destra) — escursione ridotta (vertice ≈73°)
@@ -91,7 +94,7 @@ const STATIONS_DESKTOP = [
   [-0.2, -3.6, 0.0], // uscita: basso, quasi al centro
 ];
 const STATIONS_MOBILE = [
-  [0.72, 4.05, 0.1],
+  [0.72, 3.4, 0.1],
   [0.9, 2.2, -0.2],
   [-0.63, 0.85, 0.25],
   [0.63, -0.7, -0.24],
