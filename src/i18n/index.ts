@@ -53,5 +53,6 @@ export function localePath(lang: Lang, path: string): string {
 export const routes = {
   home: "/",
   about: "/chi-siamo",
+  faq: "/faq",
 } as const;
 export type RouteKey = keyof typeof routes;

@@ -120,23 +120,39 @@ const journeyArt: Record<string, string> = {
       </div>
 
       <div class="ap-hero-inner">
-        <span class="hero-badge ap-hero-badge" style="opacity: 0;">
-          {ta.hero.badge}
-        </span>
+        <!-- Riga alta: kicker a sinistra, pill di stato "live" a destra —
+             il classico segnale da studio attivo, senza rubare scena. -->
+        <div class="ap-hero-top">
+          <span class="hero-badge ap-hero-badge" style="opacity: 0;">
+            {ta.hero.badge}
+          </span>
+          <span class="ap-hero-status" style="opacity: 0;">
+            <span class="ap-hero-status-dot" aria-hidden="true"></span>
+            {ta.hero.status}
+          </span>
+        </div>
 
-        <h1 class="ap-hero-title font-display">
+        <!-- opacity:0 inline = anti-flash (stesso pattern di badge/sub/meta):
+             la riespone l'island HeroProximityTitle quando parte la cascata
+             split-text delle lettere (o subito, con reduced-motion).
+             L'accento va a capo da solo, indentato (righe sfalsate). -->
+        <h1 class="ap-hero-title font-display" style="opacity: 0;">
           <HeroProximityTitle client:load parts={heroTitleParts} radius={140} />
         </h1>
 
-        <p class="ap-hero-sub" style="opacity: 0;">
-          {ta.hero.sub}
-        </p>
+        <!-- Piede editoriale: un'unica hairline full-width, sub a sinistra e
+             riga meta a destra — chiude la composizione come un colophon. -->
+        <div class="ap-hero-foot">
+          <p class="ap-hero-sub" style="opacity: 0;">
+            {ta.hero.sub}
+          </p>
 
-        <ul class="ap-hero-meta" style="opacity: 0;">
-          {ta.hero.meta.map((m) => (
-            <li><span>{m.label}</span><strong>{m.value}</strong></li>
-          ))}
-        </ul>
+          <ul class="ap-hero-meta" style="opacity: 0;">
+            {ta.hero.meta.map((m) => (
+              <li><span>{m.label}</span><strong>{m.value}</strong></li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <div class="hero-scroll-hint ap-hero-scroll" style="opacity: 0;" aria-hidden="true">
@@ -173,8 +189,15 @@ const journeyArt: Record<string, string> = {
       </div>
     </section>
 
-    <!-- IL DUO -->
-    <section class="ap-section ap-section--deeper">
+    <!-- IL DUO — la sezione vive in un "campo" tecnico ultra-minimale:
+         gridlines semi-trasparenti che si accendono attorno al cursore
+         (mask-image su var --gx/--gy aggiornate da main.ts, solo pointer
+         fine) e micro-coordinate editoriali agli angoli. Tutto aria-hidden,
+         solo background/mask → nessun costo di layout. -->
+    <section class="ap-section ap-section--deeper ap-duo-env">
+      <div class="ap-duo-field" aria-hidden="true"></div>
+      <span class="ap-duo-coord ap-duo-coord--tl" aria-hidden="true">AURALP — DUO / 02</span>
+      <span class="ap-duo-coord ap-duo-coord--br" aria-hidden="true">46.49° N · 11.35° E</span>
       <div class="works-screen">
         <div class="works-head">
           <div class="works-head-left">
@@ -183,9 +206,21 @@ const journeyArt: Record<string, string> = {
           </div>
         </div>
 
+        <!-- Split-stage 50/50: ogni metà è il "palco" di una persona — indice
+             e ruolo in testa, la card fotografica appesa al centro, il nome
+             gigante sotto. Al passaggio del mouse la metà si accende (glow +
+             iniziale watermark), l'altra si spegne, e bio + aree focus
+             affiorano. Solo opacity/transform/filter: la geometria del
+             documento NON cambia mai (gli ScrollTrigger a valle — il pin del
+             Percorso — restano validi). Su touch tutto è visibile. -->
         <div class="ap-duo">
           {people.map((person, i) => (
             <div class={`ap-person${i % 2 === 1 ? " ap-person--flip" : ""}`}>
+              <span class="ap-duo-mark font-display" aria-hidden="true">{person.initial}</span>
+              <div class="ap-duo-head">
+                <span class="ap-duo-index">0{i + 1}</span>
+                <span class="ap-bio-role">{person.role}</span>
+              </div>
               <HangBadge
                 initial={person.initial}
                 name={person.name}
@@ -194,12 +229,15 @@ const journeyArt: Record<string, string> = {
                 photo={person.photo || undefined}
               />
               <div class="ap-bio">
-                <span class="ap-bio-role">{person.role}</span>
                 <h3 class="ap-bio-name font-display">{person.name}<em>.</em></h3>
-                <p class="ap-bio-text">{person.bio}</p>
-                <ul class="ap-focus">
-                  {person.focus.map((f) => <li>{f}</li>)}
-                </ul>
+                <div class="ap-duo-more">
+                  <div class="ap-duo-more-in">
+                    <p class="ap-bio-text">{person.bio}</p>
+                    <ul class="ap-focus">
+                      {person.focus.map((f) => <li>{f}</li>)}
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           ))}

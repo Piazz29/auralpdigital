@@ -1,0 +1,56 @@
+---
+// FaqPage — corpo della pagina FAQ, parametrizzato per lingua. Contenuti dal
+// dizionario (t.faq). Layout bianco/minimale/centrato: header + accordion su
+// sfondo DotGrid interattivo (dietro al contenuto). Raggiungibile solo dal menu
+// hamburger (voce "FAQ", ex "Info").
+import type { Lang } from "../../i18n";
+import { defaultLang, getDict, localePath } from "../../i18n";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Navbar from "../Navbar.astro";
+import Footer from "../Footer.astro";
+import FaqAccordion from "../reactbits/FaqAccordion.jsx";
+import FaqBackground from "../reactbits/FaqBackground.jsx";
+import "../../styles/global.css";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = getDict(lang);
+const f = t.faq;
+
+const metaTitle = `${f.title} — AuralpDigital`;
+---
+
+<BaseLayout lang={lang} title={metaTitle} description={f.subtitle}>
+  <Navbar lang={lang} route="/faq" />
+
+  <main class="faqpage">
+    <!-- Sfondo DotGrid: layer fisso dietro al contenuto, non interattivo come
+         box (gli eventi li ascolta su window il componente). -->
+    <div class="faq-bg" aria-hidden="true">
+      <FaqBackground client:idle />
+    </div>
+
+    <div class="faq-shell">
+      <header class="faq-head">
+        <span class="faq-kicker">FAQ</span>
+        <h1 class="faq-title">{f.title}</h1>
+        <p class="faq-subtitle">{f.subtitle}</p>
+      </header>
+
+      <FaqAccordion categories={f.categories} client:visible />
+
+      <!-- Domanda non in lista → form di contatto in fondo alla homepage. -->
+      <div class="faq-cta">
+        <p class="faq-cta-text">{f.cta.text}</p>
+        <a class="faq-cta-btn" href={localePath(lang, "/#contatti")}>
+          <span>{f.cta.button}</span>
+          <span class="faq-cta-arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <Footer lang={lang} />
+</BaseLayout>

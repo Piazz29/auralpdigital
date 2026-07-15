@@ -1587,6 +1587,7 @@ if (aboutPage) {
   // qui. Badge, sottotitolo, meta e hint mantengono l'entrata in dissolvenza.
   const apHeroBits: { sel: string; delay: number }[] = [
     { sel: ".ap-hero .hero-badge", delay: 0.45 },
+    { sel: ".ap-hero-status", delay: 0.62 },
     { sel: ".ap-hero-sub", delay: 1.0 },
     { sel: ".ap-hero-meta", delay: 1.18 },
     { sel: ".ap-hero .hero-scroll-hint", delay: 1.35 },
@@ -1600,14 +1601,29 @@ if (aboutPage) {
     );
   });
 
+  // Hero — parallax editoriale in scrub: uscendo dalla hero il blocco
+  // tipografico sale un filo più veloce della pagina mentre il fondale fluido
+  // scivola nella direzione opposta → profondità tra testo e sfondo. Solo
+  // transform su due layer, costo nullo.
+  if (!reduceMotion && aboutPage.querySelector(".ap-hero")) {
+    const heroScrub = {
+      trigger: ".ap-hero",
+      start: "top top",
+      end: "bottom top",
+      scrub: true,
+    };
+    gsap.to(".ap-hero-inner", { yPercent: -9, ease: "none", scrollTrigger: { ...heroScrub } });
+    gsap.to(".ap-hero-fluid", { yPercent: 7, ease: "none", scrollTrigger: { ...heroScrub } });
+  }
+
   // Duo — ogni riga è una scena indipendente: il badge cala dall'alto come da
   // un filo (corda che cresce + badge che scende, assestamento a pendolo),
   // mentre la bio sale a pezzi. L'animazione parte solo quando IL blocco di
   // QUELLA persona entra in viewport (trigger per riga), una volta sola, e il
   // badge resta poi fisso. Solo transform/opacity. Reduced-motion → stato
   // finale immediato (lo stato iniziale nascosto è inline nel componente).
-  aboutPage.querySelectorAll<HTMLElement>(".ap-person").forEach((row) => {
-    revealRise(row.querySelectorAll(".ap-bio > *"), {
+  aboutPage.querySelectorAll<HTMLElement>(".ap-person").forEach((row, idx) => {
+    revealRise(row.querySelectorAll(":scope > .ap-duo-head, .ap-bio > *"), {
       trigger: row,
       start: "top 78%",
       stagger: 0.1,
@@ -1712,6 +1728,9 @@ if (aboutPage) {
     const tl = gsap.timeline({
       scrollTrigger: { trigger: row, start: "top 68%", once: true },
       defaults: { force3D: true },
+      // Nel layout split le due metà entrano in vista insieme: la seconda
+      // card cala con un piccolo scarto — caduta "a canone", non a blocco.
+      delay: idx * 0.22,
       onComplete: enablePendulum,
     });
     tl.set([swing, badge], { willChange: "transform, opacity" })
@@ -1738,6 +1757,27 @@ if (aboutPage) {
       .to(swing, { rotation: 1, duration: 0.5, ease: "sine.inOut" })
       .to(swing, { rotation: 0, duration: 0.6, ease: "sine.out" });
   });
+
+  // Duo — le gridlines del "campo" seguono il cursore: pointermove aggiorna
+  // due var CSS (--gx/--gy) e la mask radiale la disegna la GPU. Solo con
+  // pointer fine; su touch il campo resta statico e tenue.
+  const duoEnv = aboutPage.querySelector<HTMLElement>(".ap-duo-env");
+  const duoField = duoEnv?.querySelector<HTMLElement>(".ap-duo-field");
+  if (
+    duoEnv &&
+    duoField &&
+    window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  ) {
+    duoEnv.addEventListener(
+      "pointermove",
+      (e) => {
+        const r = duoEnv.getBoundingClientRect();
+        duoField.style.setProperty("--gx", `${((e.clientX - r.left) / r.width) * 100}%`);
+        duoField.style.setProperty("--gy", `${((e.clientY - r.top) / r.height) * 100}%`);
+      },
+      { passive: true }
+    );
+  }
 
   // Percorso — la linea si disegna in scrub lungo la timeline, le tappe
   // entrano una a una.
@@ -1780,6 +1820,16 @@ if (aboutPage) {
       y: 22,
       duration: 0.9,
     });
+  });
+
+  // Come lavoriamo — la copy (kicker/titolo/lead) sale in cascata quando la
+  // sezione entra: aggancia visivamente il Percorso al blocco finale.
+  revealRise(aboutPage.querySelectorAll(".ap-flow-copy > *"), {
+    trigger: ".ap-flow",
+    start: "top 76%",
+    stagger: 0.12,
+    y: 34,
+    duration: 0.9,
   });
 
   // Come lavoriamo — le card bento salgono in cascata; lo spotlight segue il

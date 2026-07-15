@@ -19,13 +19,13 @@ const en = {
       projects: "Projects",
       services: "What We Do",
       about: "About Us",
-      info: "Info",
+      faq: "FAQ",
     },
     aria: {
       projects: "Go to projects",
       services: "Discover what we do",
       about: "Find out who we are",
-      info: "Information and contact",
+      faq: "Frequently asked questions",
     },
     socialsLabel: "Social",
     write: "Write to us",
@@ -35,6 +35,123 @@ const en = {
     openMenu: "Open menu",
     closeMenu: "Close menu",
     langLabel: "Language",
+  },
+
+  faq: {
+    title: "Frequently Asked Questions",
+    subtitle:
+      "Everything you need to know before starting a digital project with AuralpDigital.",
+    categories: [
+      {
+        name: "Projects",
+        items: [
+          {
+            q: "What kind of websites do you build?",
+            a: "Showcase sites, landing pages, lightweight e-commerce and custom platforms. Every project is built on clean, fast code designed to convert — not on generic templates.",
+          },
+          {
+            q: "Do you only work with companies, or with professionals too?",
+            a: "Both. We work with established companies, local businesses and individual professionals. What matters is having a clear goal to reach online.",
+          },
+          {
+            q: "Can I request just a landing page?",
+            a: "Yes. A single, well-built landing page is often the best way to launch a service or a campaign, and we treat it with the same care as a full website.",
+          },
+          {
+            q: "Do you also redesign existing websites?",
+            a: "Yes. We analyse the current site, understand what works and what holds results back, then rebuild it: we keep what has value and improve structure, speed and design.",
+          },
+        ],
+      },
+      {
+        name: "Services",
+        items: [
+          {
+            q: "Do you only handle the website, or the strategy too?",
+            a: "We always start with strategy. First we define who you're speaking to and what action visitors should take, then we design accordingly. The website is the tool, not the starting point.",
+          },
+          {
+            q: "Can you integrate booking systems, CRM or automations?",
+            a: "Yes. We connect bookings, CRM, payments and automations so the site talks to the tools you already use, cutting down manual work.",
+          },
+          {
+            q: "Do you also handle content, copy and visuals?",
+            a: "Yes. We can take care of text, images and visual identity, so the message stays consistent across the whole site. If you already have material, we make the most of it.",
+          },
+          {
+            q: "Do you offer support after launch?",
+            a: "Yes. After launch we stay available for updates, changes and improvements. We don't disappear once the site is delivered.",
+          },
+        ],
+      },
+      {
+        name: "Process",
+        items: [
+          {
+            q: "How does a project start?",
+            a: "With a free call to understand goals, context and timing. From there we prepare a clear proposal with scope, timeline and costs, before writing a single line of code.",
+          },
+          {
+            q: "How long does it take to build a site?",
+            a: "A landing page usually takes 1-2 weeks, a full website 3 to 6. The exact timeline depends on content and features, and we tell you before we start.",
+          },
+          {
+            q: "What do you need from the client?",
+            a: "Clear goals, any material you already have (text, logo, images) and a little time for feedback. We handle the rest and guide you step by step.",
+          },
+          {
+            q: "Can I see a demo before deciding?",
+            a: "Yes. During the project we work on a live preview you can visit at any time: you see the site take shape and there are no surprises at the end.",
+          },
+        ],
+      },
+      {
+        name: "Pricing",
+        items: [
+          {
+            q: "How much does a website cost?",
+            a: "A landing page starts from a few hundred euros, a full website grows with pages and features. After the first call you get a precise quote, with no hidden costs.",
+          },
+          {
+            q: "Why don't you have one fixed price for everyone?",
+            a: "Because every project has different needs. A single price would make you pay for things you don't need: we build the quote around what you actually require.",
+          },
+          {
+            q: "Can I start with a simpler version and expand it later?",
+            a: "Absolutely. Many clients start with a solid base and grow it over time. We design the site so it can expand without rebuilding it from scratch.",
+          },
+          {
+            q: "How does payment work?",
+            a: "Usually a deposit upfront and the balance on delivery, with instalments for larger projects. We agree everything transparently before we begin.",
+          },
+        ],
+      },
+      {
+        name: "Collaboration",
+        items: [
+          {
+            q: "Do you also work remotely?",
+            a: "Yes, we work remotely with clients across Italy. For those in South Tyrol we can also meet in person when it helps.",
+          },
+          {
+            q: "How are revisions and feedback handled?",
+            a: "At each stage we show you the work and gather your feedback in an orderly way, with defined review moments. No endless back-and-forth: clear steps and deadlines respected.",
+          },
+          {
+            q: "Can I edit the site on my own after delivery?",
+            a: "Yes, if you want. We can build it on a system that lets you update text and content yourself, and we show you how to do it.",
+          },
+          {
+            q: "What happens after launch?",
+            a: "You get a finished, documented site. From there you can continue on your own or rely on us for maintenance, improvements and new campaigns.",
+          },
+        ],
+      },
+    ],
+    cta: {
+      text: "Have a question that isn't listed here?",
+      button: "Write to us directly",
+    },
   },
 
   home: {
@@ -186,6 +303,7 @@ const en = {
   about: {
     hero: {
       badge: "About us",
+      status: "Available for new projects",
       title: "The people behind *the pixels.*",
       sub: "An independent two-person studio from South Tyrol. No middlemen: whoever replies to you is the one who designs and builds.",
       meta: [

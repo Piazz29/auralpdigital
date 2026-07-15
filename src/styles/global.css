@@ -2895,6 +2895,10 @@ nav:has(#burger-menu.is-open) .pill {
 -------------------------------------------------------------------------- */
 .site-footer {
   position: relative;
+  /* Sfondo opaco col colore base: copre l'eventuale DotGrid fixed della pagina
+     FAQ → il footer resta del colore di base, senza pallini/animazione. */
+  background: var(--color-bg);
+  z-index: 1;
   overflow: hidden;
   border-top: 1px solid var(--color-border);
 }
@@ -3228,17 +3232,28 @@ nav:has(#burger-menu.is-open) .pill {
   position: relative;
   z-index: 1;
 }
-/* Wrapper centrale: la gerarchia respira via `gap` (niente margini sparsi
-   che si accavallano), con un ritmo crescente kicker → titolo → sub → meta. */
+/* Wrapper: composizione editoriale a piena larghezza — riga alta (kicker +
+   pill di stato), titolo display gigante con l'accento su una riga propria
+   indentata (righe sfalsate), e un "colophon" in basso: hairline full-width
+   con sub a sinistra e riga meta a destra. Lo spazio negativo lo abita il
+   fluido. */
 .ap-hero-inner {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: clamp(22px, 3.4vh, 40px);
+  align-items: stretch;
+  text-align: left;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1360px;
+}
+.ap-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 28px;
+  flex-wrap: wrap;
+  margin-bottom: clamp(30px, 6vh, 64px);
 }
 .ap-hero-badge {
   font-size: 11px;
@@ -3246,15 +3261,47 @@ nav:has(#burger-menu.is-open) .pill {
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
+/* Pill di stato: segnale "live" dello studio, vetro leggero + dot che pulsa. */
+.ap-hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border: 1px solid rgba(13, 13, 13, 0.12);
+  border-radius: 999px;
+  background: rgba(250, 250, 248, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-secondary);
+  white-space: nowrap;
+}
+.ap-hero-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2f9e44;
+  animation: ap-status-pulse 2.4s ease-out infinite;
+}
+@keyframes ap-status-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(47, 158, 68, 0.45); }
+  70% { box-shadow: 0 0 0 9px rgba(47, 158, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(47, 158, 68, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap-hero-status-dot { animation: none; }
+}
 .ap-hero-title {
   font-weight: 500;
-  font-size: clamp(44px, 8vw, 120px);
-  line-height: 0.96;
-  letter-spacing: -0.02em;
+  font-size: clamp(48px, 9vw, 148px);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
   color: var(--color-ink);
   margin: 0;
-  max-width: 13ch;
-  text-wrap: balance;
 }
 .ap-hero-title em {
   font-style: italic;
@@ -3262,10 +3309,36 @@ nav:has(#burger-menu.is-open) .pill {
 }
 /* Hero "Chi siamo": il titolo usa VariableProximity (un'unica isola con
    containerRef condiviso). L'accento conserva corsivo + colore brand; le lettere
-   variano il peso (asse 'wght') in base alla vicinanza del cursore. */
+   variano il peso (asse 'wght') in base alla vicinanza del cursore.
+   L'accento è display:block (inline, dal componente) → riga propria, indentata,
+   introdotta da una barra accent: composizione a righe sfalsate che regge in
+   tutte le lingue (l'accento chiude il titolo in it/de/en). */
 .ap-hero-accent {
   font-style: italic;
   color: var(--color-accent);
+  margin-left: clamp(36px, 15vw, 240px);
+}
+.ap-hero-accent::before {
+  content: "";
+  display: inline-block;
+  width: clamp(44px, 7.5vw, 120px);
+  height: 0.075em;
+  margin-right: 0.22em;
+  vertical-align: 0.26em;
+  background: var(--color-accent);
+  border-radius: 999px;
+}
+/* Colophon: un'unica hairline a piena larghezza chiude la hero — sub a
+   sinistra, riga meta a destra. */
+.ap-hero-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(24px, 5vw, 80px);
+  flex-wrap: wrap;
+  margin-top: clamp(40px, 8.5vh, 100px);
+  padding-top: clamp(20px, 3.2vh, 34px);
+  border-top: 1px solid rgba(13, 13, 13, 0.1);
 }
 .ap-hero-sub {
   font-family: var(--font-body);
@@ -3274,23 +3347,19 @@ nav:has(#burger-menu.is-open) .pill {
   letter-spacing: 0.01em;
   color: var(--color-secondary);
   margin: 0;
-  max-width: 50ch;
+  max-width: 44ch;
 }
-/* Riga di contesto — micro-dato editoriale: tre coppie etichetta/valore
-   separate da hairline, ancorate sotto al sub con spazio extra. */
+/* Riga di contesto — micro-dato editoriale: tre coppie etichetta/valore. */
 .ap-hero-meta {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-end;
   gap: clamp(20px, 4vw, 56px);
-  margin-top: clamp(8px, 2vh, 22px);
-  padding-top: clamp(20px, 3vh, 30px);
-  border-top: 1px solid rgba(13, 13, 13, 0.1);
 }
 .ap-hero-meta li {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
 }
 .ap-hero-meta span {
@@ -3313,6 +3382,20 @@ nav:has(#burger-menu.is-open) .pill {
    implicito. */
 @media (max-height: 860px) {
   .ap-hero-scroll { display: none; }
+}
+/* Sotto gli 860px: l'indent dell'accento si riduce (già fluido), il colophon
+   impila sub e meta, la pill di stato scende sotto il kicker. */
+@media (max-width: 860px) {
+  .ap-hero-accent {
+    margin-left: clamp(20px, 8vw, 60px);
+  }
+  .ap-hero-foot {
+    flex-direction: column;
+    gap: clamp(20px, 3.5vh, 32px);
+  }
+  .ap-hero-meta {
+    justify-content: flex-start;
+  }
 }
 @media (max-width: 600px) {
   .ap-hero-meta { gap: 18px 26px; }
@@ -3403,40 +3486,142 @@ nav:has(#burger-menu.is-open) .pill {
 
 /* DUO — un ritratto per riga, alternato: media da un lato, bio dall'altra.
    Le card riusano founder-card/founder-media (tilt 3D incluso). */
+/* IL DUO — split-stage 50/50: due "palchi" affiancati, uno per persona.
+   Hover su una metà → quella si accende (glow radiale, watermark, bio+focus
+   che affiorano) e l'altra si spegne (dim + desaturazione). SOLO opacity/
+   transform/filter: nessuna variazione di geometria del documento, così gli
+   ScrollTrigger a valle (pin del Percorso) restano validi anche durante
+   l'interazione. Su touch (niente hover) tutto è sempre visibile. */
 .ap-duo {
   display: flex;
-  flex-direction: column;
-  gap: clamp(56px, 10vh, 130px);
+  align-items: stretch;
+  border-top: 1px solid rgba(13, 13, 13, 0.1);
+  border-bottom: 1px solid rgba(13, 13, 13, 0.1);
 }
 .ap-person {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: clamp(20px, 3vw, 44px);
-  align-items: center;
-}
-.ap-person > .hang {
-  grid-column: 1 / span 5;
-}
-.ap-person--flip > .hang {
-  grid-column: 8 / span 5;
-  order: 2;
-}
-.ap-bio {
-  grid-column: 7 / -1;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  align-items: center;
+  gap: clamp(24px, 3.6vh, 42px);
+  padding: clamp(30px, 4.5vh, 54px) clamp(18px, 3vw, 56px) clamp(36px, 5vh, 66px);
+  transition: opacity 0.6s ease, filter 0.6s ease;
 }
-.ap-person--flip .ap-bio {
-  grid-column: 1 / span 6;
-  order: 1;
+.ap-person + .ap-person {
+  border-left: 1px solid rgba(13, 13, 13, 0.1);
+}
+/* Glow radiale della metà attiva (dietro a tutto, disegnato dalla GPU). */
+.ap-person::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    72% 56% at 50% 42%,
+    rgba(59, 91, 219, 0.09),
+    transparent 72%
+  );
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ap-person:hover::after {
+    opacity: 1;
+  }
+  /* Spotlight incrociato: la metà non attiva si ritira. */
+  .ap-duo:has(.ap-person:hover) .ap-person:not(:hover) {
+    opacity: 0.45;
+    filter: saturate(0.55);
+  }
+}
+/* Testa del palco: indice a sinistra, ruolo a destra. */
+.ap-duo-head {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+}
+.ap-duo-index {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(14px, 1.3vw, 19px);
+  color: var(--color-accent);
+}
+.ap-duo-head .ap-bio-role {
+  text-align: right;
+}
+.ap-bio {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(16px, 2.4vh, 26px);
+  width: 100%;
+  max-width: 56ch;
+  margin-inline: auto;
+}
+/* Il blocco bio/focus affiora al hover della metà (desktop); su touch è
+   sempre visibile. Occupa SEMPRE il suo spazio: niente shift di layout. */
+.ap-duo-more {
+  width: 100%;
+}
+.ap-duo-more-in {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(16px, 2.2vh, 24px);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ap-duo-more {
+    position: relative;
+  }
+  /* Affordance: un "+" quieto segnala che il palco risponde al cursore;
+     ruota e svanisce quando la bio affiora al suo posto. */
+  .ap-duo-more::before {
+    content: "+";
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1;
+    color: var(--color-accent);
+    opacity: 0.55;
+    transition: opacity 0.4s ease, transform 0.5s ease;
+    pointer-events: none;
+  }
+  .ap-person:hover .ap-duo-more::before {
+    opacity: 0;
+    transform: translateX(-50%) rotate(90deg);
+  }
+  .ap-duo-more-in {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.55s ease 0.06s,
+      transform 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.06s;
+  }
+  .ap-person:hover .ap-duo-more-in {
+    opacity: 1;
+    transform: none;
+  }
 }
 .ap-bio-name {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(34px, 4vw, 64px);
+  font-size: clamp(40px, 4.8vw, 84px);
   line-height: 1;
   color: var(--color-ink);
+  text-align: center;
 }
 .ap-bio-name em {
   font-style: italic;
@@ -3456,9 +3641,12 @@ nav:has(#burger-menu.is-open) .pill {
   line-height: 1.7;
   color: var(--color-secondary);
   max-width: 52ch;
+  text-align: left;
 }
 /* Aree di focus — righe hairline essenziali, non chip. */
 .ap-focus {
+  width: 100%;
+  max-width: 52ch;
   margin-top: 8px;
   border-top: 1px solid rgba(13, 13, 13, 0.1);
 }
@@ -3481,16 +3669,152 @@ nav:has(#burger-menu.is-open) .pill {
   height: 1px;
   background: var(--color-accent);
 }
+/* Sotto i 900px lo split impila le due metà (bordo orizzontale tra loro). */
 @media (max-width: 900px) {
-  .ap-person > .hang,
-  .ap-person--flip > .hang {
-    grid-column: 1 / -1;
-    order: 0;
+  .ap-duo {
+    flex-direction: column;
   }
-  .ap-bio,
-  .ap-person--flip .ap-bio {
-    grid-column: 1 / -1;
-    order: 1;
+  .ap-person + .ap-person {
+    border-left: none;
+    border-top: 1px solid rgba(13, 13, 13, 0.1);
+  }
+}
+
+/* --- IL DUO: ambiente interattivo -----------------------------------------
+   Un "campo" tecnico dietro alle persone: gridlines hairline che si accendono
+   attorno al cursore (mask radiale su --gx/--gy, aggiornate da main.ts solo
+   con pointer fine), micro-coordinate agli angoli, iniziale watermark in
+   outline che affiora al passaggio del mouse sulla riga. Tutto pittorico
+   (background/mask/transform): zero layout, zero JS per-frame. */
+.ap-duo-env {
+  position: relative;
+  overflow: clip;
+  /* Bordo morbido col manifesto (bg) sopra: nessuno stacco netto. */
+  background: linear-gradient(
+    180deg,
+    var(--color-bg),
+    var(--color-warm-deeper) clamp(160px, 22vh, 300px)
+  );
+}
+.ap-duo-field {
+  --gx: 50%;
+  --gy: 35%;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(13, 13, 13, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 13, 13, 0.5) 1px, transparent 1px);
+  background-size: 72px 72px;
+  opacity: 0.16;
+  -webkit-mask-image: radial-gradient(
+    480px circle at var(--gx) var(--gy),
+    rgba(0, 0, 0, 1),
+    rgba(0, 0, 0, 0.16) 62%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  mask-image: radial-gradient(
+    480px circle at var(--gx) var(--gy),
+    rgba(0, 0, 0, 1),
+    rgba(0, 0, 0, 0.16) 62%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  transition: opacity 0.6s ease;
+}
+/* Con una persona in hover il campo si accende appena: la scena "risponde". */
+.ap-duo-env:has(.ap-person:hover) .ap-duo-field {
+  opacity: 0.26;
+}
+.ap-duo-coord {
+  position: absolute;
+  z-index: 0;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  opacity: 0.6;
+  pointer-events: none;
+  transition: color 0.6s ease;
+}
+.ap-duo-env:has(.ap-person:hover) .ap-duo-coord {
+  color: var(--color-accent);
+}
+.ap-duo-coord--tl {
+  top: clamp(20px, 3.4vh, 34px);
+  left: clamp(20px, 3.5vw, 48px);
+}
+.ap-duo-coord--br {
+  bottom: clamp(20px, 3.4vh, 34px);
+  right: clamp(20px, 3.5vw, 48px);
+}
+/* Card e bio stanno SOPRA il campo e il watermark. */
+.ap-person > .hang {
+  position: relative;
+  z-index: 1;
+}
+/* Watermark: iniziale gigante in outline blu nella zona alta del palco
+   (l'area della corda, visivamente vuota), che affiora al hover. */
+.ap-duo-mark {
+  position: absolute;
+  z-index: 0;
+  top: 24%;
+  left: 50%;
+  font-size: clamp(200px, 20vw, 360px);
+  font-weight: 500;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(59, 91, 219, 0.2);
+  opacity: 0;
+  transform: translate(-50%, calc(-50% + 28px));
+  transition:
+    opacity 0.7s ease,
+    transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  user-select: none;
+}
+.ap-person:hover .ap-duo-mark {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+/* Micro-interazioni hover sulla bio: il trattino delle aree focus si allunga,
+   il ruolo prende l'accento, il punto del nome scatta di un filo. */
+.ap-focus li::before {
+  transition:
+    width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.45s ease;
+}
+.ap-person:hover .ap-focus li::before {
+  width: 34px;
+}
+.ap-bio-role {
+  transition: color 0.5s ease;
+}
+.ap-person:hover .ap-bio-role {
+  color: var(--color-accent);
+}
+.ap-bio-name em {
+  display: inline-block;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ap-person:hover .ap-bio-name em {
+  transform: translateX(0.06em) scale(1.12);
+}
+@media (max-width: 900px) {
+  /* Su mobile le righe sono impilate e non c'è hover: via il watermark. */
+  .ap-duo-mark {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap-duo-mark {
+    transform: translate(-50%, -50%);
+    transition: opacity 0.4s ease;
+  }
+  .ap-bio-name em {
+    transition: none;
   }
 }
 
@@ -4584,6 +4908,14 @@ nav:has(#burger-menu.is-open) .pill {
   /* Più aria sotto: lo stack CardSwap deborda (translate 20%) e in swap una
      card scende ~500px; questo padding evita che invada il separatore/CTA. */
   padding-block: clamp(40px, 9vh, 110px) clamp(90px, 16vh, 180px);
+  /* Ancora visiva: il warm-deeper del Percorso si scioglie nel plain bg lungo
+     la parte alta della sezione → nessuno stacco netto tra le due scene, e la
+     pagina degrada dolcemente verso separatore/CTA/footer. */
+  background: linear-gradient(
+    180deg,
+    var(--color-warm-deeper),
+    var(--color-bg) clamp(240px, 34vh, 460px)
+  );
 }
 .ap-flow--plain .ap-flow-kicker {
   color: var(--color-muted);
@@ -4664,4 +4996,497 @@ nav:has(#burger-menu.is-open) .pill {
 .ap-hero-meta li span,
 .ap-hero-meta li strong {
   overflow-wrap: break-word;
+}
+
+/* =========================================================================
+   FIRST-LOAD LOADER — schermata di caricamento solo alla prima entrata della
+   sessione. Wordmark del brand (colori IDENTICI al logo SVG) e, ben separato
+   sotto, un loader 3D a cuboide. Resta visibile per un minimo di 3s. Lo script
+   scripts/loader.ts gestisce l'uscita e imposta sessionStorage['apd:loaded'];
+   lo script inline in <head> decide skip vs loading prima del render.
+   ========================================================================= */
+html.apd-loading {
+  overflow: hidden;
+}
+/* Visite successive nella stessa sessione: il loader non esiste visivamente
+   (niente flash). */
+html.apd-skip-loader #apd-loader {
+  display: none !important;
+}
+
+.apd-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafaf8;
+  /* L'animazione di uscita usa autoAlpha + y; evita ripaint pesanti. */
+  will-change: opacity, transform;
+}
+
+.apd-loader-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* gap ampio: il cuboide (che salta) non deve mai toccare la wordmark. */
+  gap: clamp(48px, 9vh, 96px);
+  width: min(86vw, 520px);
+  padding: 0 24px;
+}
+
+/* Wordmark = logo SVG reale → colori identici a quelli del marchio. */
+.apd-mark-img {
+  display: block;
+  width: clamp(200px, 56vw, 420px);
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  animation: apd-mark-in 0.6s ease both;
+}
+@keyframes apd-mark-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- Loader 3D a cuboide (adattato al brand: navy / blu / periwinkle) -------
+   La scala globale del demo (applicata al body) qui vive sul wrapper .apd-cuboid;
+   preserve-3d è scopato SOLO ai discendenti del loader per non toccare il sito. */
+.apd-cuboid {
+  --size: 54;
+  --coefficient: 1px;
+  --timeline: 2.6s;
+  --delay: 0.4s;
+  --rotation-y: -24;
+  --rotation-x: 28;
+  --color-one: #1a2340;
+  --color-two: #3b5bdb;
+  --color-three: #8aa0ff;
+  display: grid;
+  place-items: center;
+  width: 180px;
+  height: 168px;
+  transform-origin: 50% 50%;
+  animation: apd-cube-scale var(--timeline) var(--delay) infinite linear;
+}
+.apd-cuboid *,
+.apd-cuboid *::before,
+.apd-cuboid *::after {
+  box-sizing: border-box;
+  transform-style: preserve-3d;
+}
+
+.apd-cuboid .scene {
+  position: relative;
+  transform: translate3d(0, 0, 100vmin)
+    rotateX(calc(var(--rotation-y, 0) * 1deg))
+    rotateY(calc(var(--rotation-x, 0) * 1deg)) rotateX(0deg);
+}
+
+@keyframes apd-cube-scale {
+  0%,
+  10% {
+    transform: scaleX(1) scaleY(1);
+  }
+  35%,
+  100% {
+    transform: scaleX(0.5) scaleY(0.5);
+  }
+}
+
+.apd-cuboid .shadow {
+  width: calc(var(--size) * var(--coefficient));
+  position: absolute;
+  bottom: 0;
+  aspect-ratio: 1;
+  transform-origin: 50% 50%;
+  transform: rotateX(90deg)
+    translate3d(0, 0, calc((var(--size) * (var(--coefficient) * -0.5)) - 1px))
+    scale(0.96);
+  background: rgba(13, 13, 13, 0.55);
+  animation: apd-cube-squish var(--timeline) var(--delay) infinite,
+    apd-cube-fade var(--timeline) var(--delay) infinite;
+}
+
+.apd-cuboid .loader {
+  --depth: var(--size);
+  --color: var(--color-one);
+  width: calc(var(--depth) * var(--coefficient));
+  aspect-ratio: 1;
+  transform-origin: 50% 50%;
+  animation: apd-cube-squish var(--timeline) var(--delay) infinite;
+}
+.apd-cuboid .spinner {
+  animation: apd-cube-spin var(--timeline) var(--delay) infinite;
+}
+.apd-cuboid .jumper {
+  animation: apd-cube-jump var(--timeline) var(--delay) infinite;
+}
+
+@keyframes apd-cube-squish {
+  0%,
+  50%,
+  60% {
+    scale: 1 1 1;
+  }
+  10%,
+  35% {
+    scale: 1.2 0.8 1.2;
+  }
+  25% {
+    scale: 0.8 1.2 0.8;
+  }
+  70% {
+    scale: 1 1 2;
+  }
+  80% {
+    scale: 2 1 2;
+  }
+  90%,
+  100% {
+    scale: 2 2 2;
+  }
+}
+@keyframes apd-cube-fade {
+  0%,
+  10%,
+  40%,
+  50%,
+  60%,
+  100% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.5;
+  }
+}
+@keyframes apd-cube-spin {
+  0%,
+  10% {
+    rotate: 0deg;
+  }
+  30%,
+  100% {
+    rotate: -360deg;
+  }
+}
+@keyframes apd-cube-jump {
+  0%,
+  10%,
+  35%,
+  50% {
+    translate: 0 0;
+  }
+  25% {
+    translate: 0 -150%;
+  }
+}
+
+/* Cuboid boilerplate (facce del cubo) */
+.apd-cuboid .cuboid {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.apd-cuboid .cuboid__side {
+  background: var(--color);
+  position: absolute;
+}
+.apd-cuboid .cuboid__side:nth-of-type(1) {
+  height: calc(var(--depth, 20) * var(--coefficient));
+  width: 100%;
+  top: 0;
+  transform: translate(0, -50%) rotateX(90deg);
+}
+.apd-cuboid .cuboid__side:nth-of-type(2) {
+  --color: var(--color-three);
+  height: 100%;
+  width: calc(var(--depth, 20) * var(--coefficient));
+  top: 50%;
+  right: 0;
+  transform: translate(50%, -50%) rotateY(90deg);
+}
+.apd-cuboid .cuboid__side:nth-of-type(3) {
+  width: 100%;
+  height: calc(var(--depth, 20) * var(--coefficient));
+  bottom: 0;
+  transform: translate(0%, 50%) rotateX(90deg);
+}
+.apd-cuboid .cuboid__side:nth-of-type(4) {
+  --color: var(--color-three);
+  height: 100%;
+  width: calc(var(--depth, 20) * var(--coefficient));
+  left: 0;
+  top: 50%;
+  transform: translate(-50%, -50%) rotateY(90deg);
+}
+.apd-cuboid .cuboid__side:nth-of-type(5) {
+  --color: var(--color-two);
+  height: 100%;
+  width: 100%;
+  transform: translate3d(0, 0, calc(var(--depth, 20) * (var(--coefficient) * 0.5)));
+  top: 0;
+  left: 0;
+}
+.apd-cuboid .cuboid__side:nth-of-type(6) {
+  height: 100%;
+  width: 100%;
+  transform: translate3d(0, 0, calc(var(--depth, 20) * (var(--coefficient) * -0.5)))
+    rotateY(180deg);
+  top: 0;
+  left: 0;
+}
+
+/* Reduced-motion: niente cubo che salta/scala — resta la sola wordmark. */
+@media (prefers-reduced-motion: reduce) {
+  .apd-mark-img {
+    animation: none;
+  }
+  .apd-cuboid {
+    display: none;
+  }
+}
+
+/* =========================================================================
+   PAGINA FAQ — layout bianco/minimale/centrato su sfondo DotGrid. Niente card:
+   separatori sottili, ampio spacing, area di lettura calma e leggibile.
+   ========================================================================= */
+.faqpage {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: clip;
+  background: var(--color-bg);
+}
+
+/* Sfondo DotGrid: layer fisso dietro al contenuto. Una maschera radiale morbida
+   schiarisce i punti dietro la colonna di lettura, così il testo resta calmo. */
+.faq-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(
+    115% 75% at 50% 42%,
+    transparent 0%,
+    transparent 22%,
+    rgba(0, 0, 0, 0.4) 44%,
+    rgba(0, 0, 0, 0.8) 66%,
+    #000 82%
+  );
+  mask-image: radial-gradient(
+    115% 75% at 50% 42%,
+    transparent 0%,
+    transparent 22%,
+    rgba(0, 0, 0, 0.4) 44%,
+    rgba(0, 0, 0, 0.8) 66%,
+    #000 82%
+  );
+}
+
+.faq-shell {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 760px);
+  margin: 0 auto;
+  padding: clamp(120px, 16vh, 190px) 0 clamp(90px, 14vh, 150px);
+}
+
+.faq-head {
+  text-align: center;
+  margin-bottom: clamp(48px, 8vh, 84px);
+}
+.faq-kicker {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: 18px;
+}
+.faq-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(32px, 6vw, 56px);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  margin: 0 0 18px;
+}
+.faq-subtitle {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.5vw, 18px);
+  line-height: 1.6;
+  color: var(--color-secondary);
+  max-width: 56ch;
+  margin: 0 auto;
+  text-wrap: balance;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(40px, 6vh, 64px);
+}
+.faq-cat-name {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 0 0 6px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+.faq-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.faq-item {
+  border-bottom: 1px solid var(--color-border);
+}
+.faq-q {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: clamp(20px, 2.6vh, 26px) 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(16px, 1.9vw, 20px);
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  transition: color 0.25s ease;
+}
+.faq-q:hover {
+  color: var(--color-accent);
+}
+.faq-q-text {
+  flex: 1;
+}
+
+/* Icona +/− : due barre; la verticale collassa quando aperto. */
+.faq-icon {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+}
+.faq-icon-bar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 1.5px;
+  background: currentColor;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+}
+.faq-icon-bar--v {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+.faq-item.is-open .faq-q {
+  color: var(--color-accent);
+}
+.faq-item.is-open .faq-icon-bar--v {
+  transform: translate(-50%, -50%) rotate(0deg);
+  opacity: 0;
+}
+
+.faq-a-wrap {
+  overflow: hidden;
+}
+.faq-a {
+  margin: 0;
+  padding: 0 64px clamp(22px, 2.8vh, 28px) 0;
+  font-family: var(--font-body);
+  font-size: clamp(14.5px, 1.5vw, 16.5px);
+  line-height: 1.66;
+  color: var(--color-secondary);
+  max-width: 64ch;
+}
+
+@media (max-width: 768px) {
+  .faq-shell {
+    width: 88vw;
+  }
+  .faq-a {
+    padding-right: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-icon-bar {
+    transition: none;
+  }
+}
+
+/* CTA "domanda non in lista" → form in fondo alla homepage. */
+.faq-cta {
+  margin-top: clamp(48px, 8vh, 80px);
+  padding-top: clamp(40px, 6vh, 60px);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  text-align: center;
+}
+.faq-cta-text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(18px, 2.2vw, 24px);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.faq-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border-radius: 9999px;
+  background: var(--color-cta-bg);
+  color: var(--color-cta-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.faq-cta-btn:hover {
+  background: var(--color-accent);
+  transform: translateY(-2px);
+}
+.faq-cta-arrow {
+  transition: transform 0.25s ease;
+}
+.faq-cta-btn:hover .faq-cta-arrow {
+  transform: translate(2px, -2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq-cta-btn,
+  .faq-cta-btn:hover {
+    transform: none;
+  }
 }

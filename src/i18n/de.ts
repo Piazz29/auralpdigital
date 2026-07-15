@@ -19,13 +19,13 @@ const de = {
       projects: "Projekte",
       services: "Was wir tun",
       about: "Über uns",
-      info: "Info",
+      faq: "FAQ",
     },
     aria: {
       projects: "Zu den Projekten",
       services: "Entdecke, was wir tun",
       about: "Erfahre, wer wir sind",
-      info: "Informationen und Kontakt",
+      faq: "Häufige Fragen",
     },
     socialsLabel: "Social",
     write: "Schreib uns",
@@ -35,6 +35,123 @@ const de = {
     openMenu: "Menü öffnen",
     closeMenu: "Menü schließen",
     langLabel: "Sprache",
+  },
+
+  faq: {
+    title: "Frequently Asked Questions",
+    subtitle:
+      "Alles, was du wissen musst, bevor du ein digitales Projekt mit AuralpDigital startest.",
+    categories: [
+      {
+        name: "Projekte",
+        items: [
+          {
+            q: "Welche Art von Websites erstellt ihr?",
+            a: "Präsentations-Websites, Landing Pages, schlanke Online-Shops und maßgeschneiderte Plattformen. Jedes Projekt entsteht auf sauberem, schnellem Code und ist auf Conversion ausgelegt — keine generischen Templates.",
+          },
+          {
+            q: "Arbeitet ihr nur mit Unternehmen oder auch mit Selbstständigen?",
+            a: "Mit beiden. Wir betreuen etablierte Unternehmen, lokale Betriebe und einzelne Profis. Entscheidend ist ein klares Ziel, das online erreicht werden soll.",
+          },
+          {
+            q: "Kann ich auch nur eine Landing Page anfragen?",
+            a: "Ja. Eine einzelne, gut gebaute Landing Page ist oft der beste Weg, um einen Service oder eine Kampagne zu starten — und wir behandeln sie mit derselben Sorgfalt wie eine komplette Website.",
+          },
+          {
+            q: "Macht ihr auch Redesigns bestehender Websites?",
+            a: "Ja. Wir analysieren die aktuelle Website, verstehen, was funktioniert und was die Ergebnisse bremst, und bauen sie dann neu auf: Wertvolles bleibt, Struktur, Geschwindigkeit und Design werden besser.",
+          },
+        ],
+      },
+      {
+        name: "Leistungen",
+        items: [
+          {
+            q: "Kümmert ihr euch nur um die Website oder auch um die Strategie?",
+            a: "Wir starten immer mit der Strategie. Zuerst klären wir, an wen du dich richtest und welche Handlung Besucher auf der Website ausführen sollen, dann gestalten wir entsprechend. Die Website ist das Werkzeug, nicht der Ausgangspunkt.",
+          },
+          {
+            q: "Könnt ihr Buchungssysteme, CRM oder Automatisierungen integrieren?",
+            a: "Ja. Wir verbinden Buchungen, CRM, Zahlungen und Automatisierungen, damit die Website mit den Tools spricht, die du bereits nutzt, und manuelle Arbeit reduziert wird.",
+          },
+          {
+            q: "Übernehmt ihr auch Inhalte, Texte und Visuals?",
+            a: "Ja. Wir können Texte, Bilder und visuelle Identität übernehmen, damit die Botschaft auf der ganzen Website stimmig bleibt. Vorhandenes Material setzen wir gezielt ein.",
+          },
+          {
+            q: "Bietet ihr Support nach der Veröffentlichung?",
+            a: "Ja. Nach dem Launch bleiben wir für Updates, Änderungen und Weiterentwicklungen verfügbar. Wir verschwinden nicht nach der Übergabe.",
+          },
+        ],
+      },
+      {
+        name: "Ablauf",
+        items: [
+          {
+            q: "Wie beginnt ein Projekt?",
+            a: "Mit einem kostenlosen Call, um Ziele, Kontext und Zeitrahmen zu verstehen. Daraus erstellen wir ein klares Angebot mit Umfang, Zeitplan und Kosten — bevor eine einzige Zeile Code geschrieben wird.",
+          },
+          {
+            q: "Wie lange dauert die Umsetzung einer Website?",
+            a: "Eine Landing Page braucht in der Regel 1-2 Wochen, eine komplette Website 3 bis 6. Der genaue Zeitrahmen hängt von Inhalten und Funktionen ab und wird vorab festgelegt.",
+          },
+          {
+            q: "Was braucht ihr vom Kunden?",
+            a: "Klare Ziele, vorhandenes Material (Texte, Logo, Bilder) und etwas Zeit für Feedback. Um den Rest kümmern wir uns und begleiten dich Schritt für Schritt.",
+          },
+          {
+            q: "Kann ich vor der Entscheidung eine Demo sehen?",
+            a: "Ja. Während des Projekts arbeiten wir an einer Live-Vorschau, die du jederzeit besuchen kannst: Du siehst die Website entstehen und es gibt keine Überraschungen am Ende.",
+          },
+        ],
+      },
+      {
+        name: "Preise",
+        items: [
+          {
+            q: "Was kostet eine Website?",
+            a: "Eine Landing Page beginnt bei einigen hundert Euro, eine komplette Website wächst mit Seiten und Funktionen. Nach dem ersten Call erhältst du ein genaues Angebot, ohne versteckte Kosten.",
+          },
+          {
+            q: "Warum habt ihr keinen Fixpreis für alle?",
+            a: "Weil jedes Projekt andere Anforderungen hat. Ein Einheitspreis würde dich für Dinge zahlen lassen, die du nicht brauchst: Wir bauen das Angebot auf dem auf, was du wirklich brauchst.",
+          },
+          {
+            q: "Kann ich mit einer einfacheren Version starten und sie später ausbauen?",
+            a: "Absolut. Viele Kunden starten mit einer soliden Basis und lassen sie mit der Zeit wachsen. Wir gestalten die Website so, dass sie sich erweitern lässt, ohne sie neu zu bauen.",
+          },
+          {
+            q: "Wie funktioniert die Bezahlung?",
+            a: "In der Regel eine Anzahlung zu Beginn und der Rest bei Übergabe, bei größeren Projekten in Raten. Alles wird transparent vereinbart, bevor wir starten.",
+          },
+        ],
+      },
+      {
+        name: "Zusammenarbeit",
+        items: [
+          {
+            q: "Arbeitet ihr auch remote?",
+            a: "Ja, wir arbeiten remote mit Kunden in ganz Italien. Wer in Südtirol ist, kann uns bei Bedarf auch persönlich treffen.",
+          },
+          {
+            q: "Wie werden Revisionen und Feedback gehandhabt?",
+            a: "In jeder Phase zeigen wir dir die Arbeit und sammeln dein Feedback geordnet, mit festen Revisionsmomenten. Kein endloses Hin und Her: klare Schritte und eingehaltene Termine.",
+          },
+          {
+            q: "Kann ich die Website nach der Übergabe selbst bearbeiten?",
+            a: "Ja, wenn du möchtest. Wir können sie auf einem System aufbauen, mit dem du Texte und Inhalte selbst aktualisierst, und zeigen dir, wie es geht.",
+          },
+          {
+            q: "Was passiert nach dem Launch?",
+            a: "Du erhältst eine fertige, dokumentierte Website. Von dort kannst du eigenständig weitermachen oder uns mit Wartung, Weiterentwicklung und neuen Kampagnen betrauen.",
+          },
+        ],
+      },
+    ],
+    cta: {
+      text: "Hast du eine Frage, die hier nicht steht?",
+      button: "Schreib uns direkt",
+    },
   },
 
   home: {
@@ -187,6 +304,7 @@ const de = {
   about: {
     hero: {
       badge: "Über uns",
+      status: "Verfügbar für neue Projekte",
       title: "Die Menschen hinter *den Pixeln.*",
       sub: "Ein unabhängiges Zwei-Personen-Studio aus Südtirol. Keine Zwischenhändler: Wer dir antwortet, ist der, der entwirft und baut.",
       meta: [

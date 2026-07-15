@@ -23,6 +23,9 @@ const {
     <meta name="description" content={description} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- La wordmark è la maschera del loader: preload così è disponibile dal
+         primo frame (niente logo vuoto all'avvio). -->
+    <link rel="preload" as="image" href="/logo/wordmark.svg" type="image/svg+xml" />
     <!-- Sistema tipografico: Space Grotesk (display/tech) + Inter (body/UI).
          display=swap evita il FOIT. Space Grotesk è caricato come font VARIABILE
          (asse wght 300..700) così l'effetto VariableProximity della hero può
@@ -32,8 +35,61 @@ const {
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@400;500;600&display=swap"
     />
     <title>{title}</title>
+
+    <!-- Loader: decisione SINCRONA prima del render per evitare flash. Se la
+         sessione ha già visto il loader, lo si salta (skip); altrimenti si
+         blocca lo scroll finché il loader è attivo. -->
+    <script is:inline>
+      (function () {
+        try {
+          if (sessionStorage.getItem("apd:loaded")) {
+            document.documentElement.classList.add("apd-skip-loader");
+          } else {
+            document.documentElement.classList.add("apd-loading");
+          }
+        } catch (e) {
+          document.documentElement.classList.add("apd-loading");
+        }
+      })();
+    </script>
   </head>
   <body class="bg-[#FAFAF8] text-[#0D0D0D] overflow-x-hidden">
+    <!-- First-load loader: wordmark del brand (colori identici al logo SVG) e,
+         sotto, un loader 3D a cuboide. Primo figlio del body così copre tutto
+         fin da subito; rimosso dallo script dopo un minimo di 3s. -->
+    <div id="apd-loader" class="apd-loader" role="presentation" aria-hidden="true">
+      <div class="apd-loader-inner">
+        <img
+          class="apd-mark-img"
+          src="/logo/wordmark.svg"
+          alt="AuralpDigital"
+          width="556"
+          height="119"
+        />
+        <div class="apd-cuboid" aria-hidden="true">
+          <div class="scene">
+            <div class="shadow"></div>
+            <div class="jumper">
+              <div class="spinner">
+                <div class="scaler">
+                  <div class="loader">
+                    <div class="cuboid">
+                      <div class="cuboid__side"></div>
+                      <div class="cuboid__side"></div>
+                      <div class="cuboid__side"></div>
+                      <div class="cuboid__side"></div>
+                      <div class="cuboid__side"></div>
+                      <div class="cuboid__side"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="cursor-dot" id="cursor-dot"></div>
     <div class="cursor-ring" id="cursor-ring"><span class="cursor-ring-circle"></span></div>
 
@@ -45,6 +101,7 @@ const {
     <slot />
 
     <script>
+      import "../scripts/loader.ts";
       import "../scripts/main.ts";
     </script>
   </body>

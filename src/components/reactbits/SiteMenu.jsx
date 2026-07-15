@@ -19,7 +19,7 @@ export default function SiteMenu({ home = false, lang = defaultLang, route = '/'
     { label: t.nav.items.projects, ariaLabel: t.nav.aria.projects, link: anchor('projects') },
     { label: t.nav.items.services, ariaLabel: t.nav.aria.services, link: anchor('cosa-facciamo') },
     { label: t.nav.items.about, ariaLabel: t.nav.aria.about, link: localePath(lang, '/chi-siamo') },
-    { label: t.nav.items.info, ariaLabel: t.nav.aria.info, link: anchor('info') }
+    { label: t.nav.items.faq, ariaLabel: t.nav.aria.faq, link: localePath(lang, '/faq') }
   ];
 
   // Switcher: una voce per lingua, ognuna verso la stessa pagina nell'altra lingua.

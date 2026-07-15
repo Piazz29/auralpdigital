@@ -20,13 +20,13 @@ const it = {
       projects: "Progetti",
       services: "Cosa Facciamo",
       about: "Chi Siamo",
-      info: "Info",
+      faq: "FAQ",
     },
     aria: {
       projects: "Vai ai progetti",
       services: "Scopri cosa facciamo",
       about: "Scopri chi siamo",
-      info: "Informazioni e contatti",
+      faq: "Domande frequenti",
     },
     socialsLabel: "Social",
     write: "Scrivici",
@@ -36,6 +36,123 @@ const it = {
     openMenu: "Apri il menu",
     closeMenu: "Chiudi il menu",
     langLabel: "Lingua",
+  },
+
+  faq: {
+    title: "Frequently Asked Questions",
+    subtitle:
+      "Tutto quello che ti serve sapere prima di iniziare un progetto digitale con AuralpDigital.",
+    categories: [
+      {
+        name: "Progetti",
+        items: [
+          {
+            q: "Che tipo di siti realizzate?",
+            a: "Siti vetrina, landing page, e-commerce leggeri e piattaforme su misura. Ogni progetto nasce su codice pulito e veloce, pensato per convertire — non su template generici.",
+          },
+          {
+            q: "Lavorate solo con aziende o anche con professionisti?",
+            a: "Entrambi. Seguiamo aziende strutturate, attività locali e singoli professionisti. Quello che conta è avere un obiettivo chiaro da raggiungere online.",
+          },
+          {
+            q: "Posso richiedere solo una landing page?",
+            a: "Sì. Una landing page singola e ben costruita è spesso il modo migliore per lanciare un servizio o una campagna, e la trattiamo con la stessa cura di un sito completo.",
+          },
+          {
+            q: "Realizzate anche redesign di siti esistenti?",
+            a: "Sì. Analizziamo il sito attuale, capiamo cosa funziona e cosa frena i risultati, poi lo ricostruiamo: teniamo ciò che ha valore e miglioriamo struttura, velocità e design.",
+          },
+        ],
+      },
+      {
+        name: "Servizi",
+        items: [
+          {
+            q: "Vi occupate solo del sito o anche della strategia?",
+            a: "Partiamo sempre dalla strategia. Prima definiamo a chi ti rivolgi e quale azione deve compiere chi arriva sul sito, poi progettiamo di conseguenza. Il sito è lo strumento, non il punto di partenza.",
+          },
+          {
+            q: "Potete integrare sistemi di prenotazione, CRM o automazioni?",
+            a: "Sì. Colleghiamo prenotazioni, CRM, pagamenti e automazioni per far parlare il sito con gli strumenti che usi già, riducendo il lavoro manuale.",
+          },
+          {
+            q: "Gestite anche contenuti, copy e visual?",
+            a: "Sì. Possiamo occuparci di testi, immagini e identità visiva, così il messaggio resta coerente in ogni parte del sito. Se hai già del materiale, lo valorizziamo.",
+          },
+          {
+            q: "Offrite supporto dopo la pubblicazione?",
+            a: "Sì. Dopo il lancio restiamo a disposizione per aggiornamenti, modifiche ed evoluzioni. Non spariamo alla consegna.",
+          },
+        ],
+      },
+      {
+        name: "Processo",
+        items: [
+          {
+            q: "Come funziona l'inizio di un progetto?",
+            a: "Si parte da una call gratuita per capire obiettivi, contesto e tempi. Da lì prepariamo una proposta chiara con scope, tempistiche e costi, prima di scrivere una riga di codice.",
+          },
+          {
+            q: "Quanto tempo serve per realizzare un sito?",
+            a: "Una landing page richiede in genere 1-2 settimane, un sito completo dalle 3 alle 6. La tempistica esatta dipende da contenuti e funzionalità, e te la diciamo prima di iniziare.",
+          },
+          {
+            q: "Cosa vi serve da parte del cliente?",
+            a: "Obiettivi chiari, l'eventuale materiale che hai già (testi, logo, immagini) e qualche momento per i feedback. Al resto pensiamo noi, guidandoti passo dopo passo.",
+          },
+          {
+            q: "Posso vedere una demo prima di decidere?",
+            a: "Sì. Durante il progetto lavoriamo su un'anteprima live che puoi visitare in ogni momento: vedi il sito prendere forma e non ci sono sorprese alla fine.",
+          },
+        ],
+      },
+      {
+        name: "Prezzi",
+        items: [
+          {
+            q: "Quanto costa un sito?",
+            a: "Una landing page parte da poche centinaia di euro, un sito completo cresce in base a pagine e funzionalità. Dopo la prima call ricevi un preventivo preciso, senza costi nascosti.",
+          },
+          {
+            q: "Perché non avete un prezzo fisso uguale per tutti?",
+            a: "Perché ogni progetto ha esigenze diverse. Un prezzo unico ti farebbe pagare per cose che non ti servono: costruiamo il preventivo su ciò che serve davvero a te.",
+          },
+          {
+            q: "È possibile partire con una versione più semplice e poi ampliarla?",
+            a: "Assolutamente. Molti clienti partono con una base solida e la fanno crescere nel tempo. Progettiamo il sito perché possa espandersi senza rifarlo da zero.",
+          },
+          {
+            q: "Come funziona il pagamento?",
+            a: "In genere un acconto all'avvio e il saldo alla consegna, con rate per i progetti più grandi. Concordiamo tutto in modo trasparente prima di partire.",
+          },
+        ],
+      },
+      {
+        name: "Collaborazione",
+        items: [
+          {
+            q: "Lavorate anche da remoto?",
+            a: "Sì, lavoriamo da remoto con clienti in tutta Italia. Per chi è in Alto Adige possiamo anche incontrarci di persona quando serve.",
+          },
+          {
+            q: "Come vengono gestite revisioni e feedback?",
+            a: "A ogni fase ti mostriamo il lavoro e raccogliamo i feedback in modo ordinato, con momenti di revisione definiti. Niente scambi infiniti: passaggi chiari e tempi rispettati.",
+          },
+          {
+            q: "Posso modificare il sito in autonomia dopo la consegna?",
+            a: "Sì, se vuoi. Possiamo costruirlo su un sistema che ti permette di aggiornare testi e contenuti da solo, e ti mostriamo come farlo.",
+          },
+          {
+            q: "Cosa succede dopo il lancio?",
+            a: "Ti consegniamo un sito pronto e documentato. Da lì puoi proseguire in autonomia o affidarti a noi per manutenzione, evoluzioni e nuove campagne.",
+          },
+        ],
+      },
+    ],
+    cta: {
+      text: "Hai una domanda che non trovi tra queste?",
+      button: "Scrivici direttamente",
+    },
   },
 
   home: {
@@ -191,6 +308,7 @@ const it = {
   about: {
     hero: {
       badge: "Chi siamo",
+      status: "Disponibili per nuovi progetti",
       title: "Le persone dietro *i pixel.*",
       sub: "Uno studio indipendente di due persone, dall'Alto Adige. Niente intermediari: chi ti risponde è chi progetta e costruisce.",
       meta: [

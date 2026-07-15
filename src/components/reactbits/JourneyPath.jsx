@@ -26,6 +26,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import * as THREE from 'three';
+import StepAssets from './JourneyStepAssets.jsx';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -298,6 +299,17 @@ function PathLine({ curve, progressRef }) {
     return { fullObj, growObj, growGeometry, vertexCount: pts.length };
   }, [curve]);
 
+  // Le geometry/material delle due linee sono create qui (non dalla cache
+  // GLTF) → vanno rilasciate quando la curva cambia o l'island smonta.
+  useEffect(() => {
+    return () => {
+      fullObj.geometry.dispose();
+      fullObj.material.dispose();
+      growObj.geometry.dispose();
+      growObj.material.dispose();
+    };
+  }, [fullObj, growObj]);
+
   useFrame(() => {
     const p = THREE.MathUtils.clamp(progressRef.current ?? 0, 0, 1);
     const count = Math.max(2, Math.floor(p * vertexCount));
@@ -538,6 +550,11 @@ function JourneyStage({ steps, mobile }) {
   const viz = useRef(null);
   const stepsWrap = useRef(null);
   const progressRef = useRef(0);
+  // Ancoraggi misurati dal DOM per gli asset 3D: per ogni step, `p` = progress
+  // al quale il TESTO è centrato verticalmente nel viewport, `y` = Y locale
+  // (nella scena traslante) che mette l'asset a world-Y 0 in quello stesso
+  // istante → testo e asset condividono la linea mediana al momento di fuoco.
+  const anchorsRef = useRef(null);
   const [inView, setInView] = useState(true);
 
   const curve = useMemo(() => {
@@ -568,11 +585,35 @@ function JourneyStage({ steps, mobile }) {
           progressRef.current = self.progress;
         },
       });
+      // Misura i centri REALI degli step (offsetTop → immune ai transform
+      // delle animazioni .is-in) e li converte in coppie {p, y} per gli asset:
+      //   p_i = (centroStep − vh/2) / (rootH − vh)   [start 'top top'/'bottom bottom']
+      //   y_i = −(SCENE_BASE + p_i·SCENE_TRAVEL)     [world-Y 0 quando p = p_i]
+      // Rifatta a ogni refresh di ScrollTrigger (resize, font caricati, ecc.).
+      const measure = () => {
+        const rootEl = root.current;
+        const wrap = stepsWrap.current;
+        if (!rootEl || !wrap) return;
+        const vh = window.innerHeight;
+        const span = Math.max(rootEl.offsetHeight - vh, 1);
+        anchorsRef.current = Array.from(
+          wrap.querySelectorAll('.ajx-step')
+        ).map((el) => {
+          const center = wrap.offsetTop + el.offsetTop + el.offsetHeight / 2;
+          const p = THREE.MathUtils.clamp((center - vh / 2) / span, 0, 1);
+          return { p, y: -(SCENE_BASE + p * SCENE_TRAVEL) };
+        });
+      };
+      measure();
+      ScrollTrigger.addEventListener('refresh', measure);
       requestAnimationFrame(() => {
         ScrollTrigger.refresh();
         window.dispatchEvent(new Event('resize'));
       });
-      return () => st.kill();
+      return () => {
+        ScrollTrigger.removeEventListener('refresh', measure);
+        st.kill();
+      };
     },
     { scope: root, dependencies: [mobile] }
   );
@@ -625,6 +666,12 @@ function JourneyStage({ steps, mobile }) {
           <JourneyScene progressRef={progressRef}>
             <PathLine curve={curve} progressRef={progressRef} />
             <Cursor curve={curve} progressRef={progressRef} mobile={mobile} />
+            <StepAssets
+              progressRef={progressRef}
+              stepParams={STEP_PARAMS}
+              anchorsRef={anchorsRef}
+              mobile={mobile}
+            />
           </JourneyScene>
         </Canvas>
       </div>
