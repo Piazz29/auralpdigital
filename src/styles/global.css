@@ -4773,6 +4773,13 @@ nav:has(#burger-menu.is-open) .pill {
   transform: scale(1.18);
   transform-origin: center 24%;
 }
+/* Ritratto di Julian: primo piano già stretto (non un mezzobusto seduto come
+   Alice), quindi niente pan verso il basso — altrimenti la testa si taglia. */
+.hang-card.grad-2 .hang-photo img {
+  object-position: center 58%;
+  transform: scale(1.04);
+  transform-origin: center 58%;
+}
 .hang-initial {
   font-family: var(--font-display);
   font-weight: 500;

@@ -328,7 +328,7 @@ const de = {
     },
     people: [
       {
-        role: "Co-Founder — Strategie & Entwicklung",
+        role: "Founder — Strategie & Entwicklung",
         bio: "Strategie, Code und Systeme. Julian entwirft die Architektur jedes Projekts — von der Positionierung bis zum Deploy — und baut Websites und Management-Systeme mit modernem Stack und einem KI-gestützten Workflow. Was sich messen lässt, misst er.",
         focus: ["Digitale Strategie", "Webentwicklung", "SEO + GEO", "KI & Automatisierung"],
       },
