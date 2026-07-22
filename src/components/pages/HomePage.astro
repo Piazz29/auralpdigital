@@ -34,18 +34,18 @@ const projectsMeta = [
     titleEm: "PMU",
     year: "2026",
     url: "https://www.alessiapmu.de/",
-    preview: "",
-    video: "/videos/projects/dimitricavazzana_vid.mp4",
+    video: "/videos/projects/alessiapmu_vid.mp4",
+    flag: "alessiapmu.de",
     status: "live" as const,
   },
   {
     n: "02",
-    title: "Mary",
-    titleEm: "Poppinks",
+    title: "Dimitri",
+    titleEm: "Cavazzana",
     year: "2026",
-    url: "https://marypoppinks.vercel.app/",
-    preview: "",
-    video: "/videos/projects/alessiapmu_vid.mp4",
+    url: "https://www.dimitricavazzana.com/",
+    video: "/videos/projects/dimitricavazzana_vid.mp4",
+    flag: "dimitricavazzana.com",
     status: "live" as const,
   },
   {
@@ -54,7 +54,9 @@ const projectsMeta = [
     titleEm: tp.items[2].titleEm,
     year: "",
     url: "#contatti",
-    preview: "",
+    video: "",
+    // La flag della card CTA cade sul suo cta (label d'azione tradotta).
+    flag: "",
     status: "soon" as const,
   },
 ];
@@ -341,54 +343,80 @@ const services = servicesMeta.map((m, i) => ({
         </a>
       </div>
 
-      <div class="works-rail">
+      <!-- STAGE 3D PIN — 3 card grandi in riga (desktop). L'animazione firma
+           (tilt prospettico + "pin" fluttuante con anelli pulsanti) è pura CSS,
+           gated da (hover:hover); main.ts aggiunge solo play video e il flag
+           reduced-motion. Adattamento del componente Aceternity 3D Pin al brand. -->
+      <div class="pinstage">
         {projects.map((p, i) => {
-          const Tag = p.url ? "a" : "div";
-          const props = !p.url
-            ? { "aria-disabled": "true" }
-            : p.url.startsWith("#")
-              ? { href: p.url }
-              : { href: p.url, target: "_blank", rel: "noopener noreferrer" };
+          const external = !!p.url && !p.url.startsWith("#");
+          const flagText = p.flag || p.cta;
           return (
-            <Tag
-              class={`work-panel grad-${(i % 4) + 1}${p.status === "soon" ? " work-panel--soon" : ""}`}
-              data-open={i === 0 ? "" : undefined}
-              data-anim="work-panel"
-              {...props}
+            <a
+              class={`projpin${p.status === "soon" ? " projpin--cta" : ""}`}
+              href={p.url}
+              data-anim="projpin"
+              style={`--i:${i}`}
+              {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             >
-              {p.video && (
-                <video class="work-panel-img" src={p.video} loop muted playsinline preload="metadata" />
-              )}
-              {p.preview && !p.video && (
-                <img class="work-panel-img" src={p.preview} alt={p.title} loading="lazy" />
-              )}
-              <span class="work-panel-scrim" aria-hidden="true"></span>
+              <!-- PIN — flag + fascio + anelli pulsanti (appare in hover) -->
+              <span class="projpin-pin" aria-hidden="true">
+                <span class="projpin-rings">
+                  <span class="projpin-ring"></span>
+                  <span class="projpin-ring"></span>
+                  <span class="projpin-ring"></span>
+                </span>
+                <span class="projpin-beam"></span>
+                <span class="projpin-flag">
+                  <span class="projpin-flag-dot"></span>
+                  <span class="projpin-flag-text">{flagText}</span>
+                  <span class="projpin-flag-arrow">↗</span>
+                </span>
+              </span>
 
-              <div class="panel-vertical">
-                <span class="panel-vertical-num">{p.n}</span>
-                <span class="panel-vertical-title">{p.title} {p.titleEm}</span>
-              </div>
-
-              <div class="panel-full">
-                <span class="panel-index" aria-hidden="true">{p.n}</span>
-                <div class="panel-body">
-                  <span class="panel-kicker">
-                    <span class="panel-tick" aria-hidden="true"></span>
-                    {p.type}{p.year ? ` · ${p.year}` : ""}
-                  </span>
-                  <h3 class="panel-title">
-                    {p.title} <em>{p.titleEm}</em>
-                  </h3>
-                  {p.desc && <p class="panel-desc">{p.desc}</p>}
-                  {p.url && p.cta && (
-                    <span class="panel-cta">
-                      <span class="panel-cta-label">{p.cta}</span>
-                      <span class="panel-cta-arrow" aria-hidden="true">↗</span>
-                    </span>
+              <!-- CARD — faccia editoriale che rincula in prospettiva -->
+              <span class="projpin-persp">
+                <span class={`projpin-card grad-${(i % 4) + 1}`}>
+                  {p.video && (
+                    <video
+                      class="projpin-media"
+                      src={p.video}
+                      loop
+                      muted
+                      playsinline
+                      preload="metadata"
+                      data-projpin-video
+                    />
                   )}
-                </div>
-              </div>
-            </Tag>
+                  <span class="projpin-scrim" aria-hidden="true"></span>
+                  {p.status === "soon" && (
+                    <svg class="projpin-emblem" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+                      <circle cx="60" cy="60" r="46" stroke="currentColor" stroke-width="1" stroke-dasharray="3 7" opacity="0.5" />
+                      <circle cx="60" cy="60" r="30" stroke="currentColor" stroke-width="1" opacity="0.35" />
+                      <line x1="60" y1="46" x2="60" y2="74" stroke="currentColor" stroke-width="1.4" />
+                      <line x1="46" y1="60" x2="74" y2="60" stroke="currentColor" stroke-width="1.4" />
+                      <circle cx="60" cy="60" r="3.4" fill="currentColor" />
+                    </svg>
+                  )}
+                  <span class="projpin-index" aria-hidden="true">{p.n}</span>
+
+                  <span class="projpin-body">
+                    <span class="projpin-kicker">
+                      <span class="projpin-tick" aria-hidden="true"></span>
+                      {p.type}{p.year ? ` · ${p.year}` : ""}
+                    </span>
+                    <h3 class="projpin-title">{p.title} <em>{p.titleEm}</em></h3>
+                    {p.desc && <p class="projpin-desc">{p.desc}</p>}
+                    {p.cta && (
+                      <span class="projpin-cta">
+                        <span class="projpin-cta-label">{p.cta}</span>
+                        <span class="projpin-cta-arrow">↗</span>
+                      </span>
+                    )}
+                  </span>
+                </span>
+              </span>
+            </a>
           );
         })}
       </div>

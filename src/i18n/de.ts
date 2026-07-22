@@ -221,8 +221,8 @@ const de = {
           cta: "Website öffnen",
         },
         {
-          type: "Tattoo-Studio",
-          desc: "Dark-Luxe-Identität mit scrollgebundener Motion für ein Tattoo-Studio.",
+          type: "Sport · Golf-Coaching",
+          desc: "Persönliche Website für einen Golflehrer und Profispieler: Erfahrung, Lektionen und Clinics.",
           cta: "Website öffnen",
         },
         {

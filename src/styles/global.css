@@ -746,92 +746,6 @@ button {
   .works-head-link { display: none; }
 }
 
-/* ---------- RAIL a pannelli espandibili ----------
-   I pannelli sono flex item. Il primo ([data-open]) parte espanso; al passaggio
-   del mouse su uno qualsiasi, quello cresce (flex-grow) e gli altri si stringono.
-   L'espansione è CSS puro; GSAP gestisce solo l'entrata in scroll. */
-.works-rail {
-  display: flex;
-  gap: 18px;
-  height: clamp(520px, 76vh, 820px);
-  perspective: 1600px;
-}
-
-.work-panel {
-  position: relative;
-  flex: 1 1 0;
-  min-width: 0;
-  overflow: hidden;
-  /* Stacking context isolato: la grana in mix-blend si fonde solo col pannello
-     (che ha già il suo background), non col fondo della pagina — così lo scroll
-     non deve ridipingere il blend contro tutto ciò che sta dietro la rail. */
-  isolation: isolate;
-  border-radius: 22px;
-  text-decoration: none;
-  color: #fafaf8;
-  border: 1px solid rgba(250, 250, 248, 0.06);
-  box-shadow:
-    0 2px 4px rgba(13, 13, 13, 0.05),
-    0 30px 70px rgba(13, 13, 13, 0.14);
-  transition:
-    flex-grow 0.7s cubic-bezier(0.65, 0, 0.35, 1),
-    box-shadow 0.6s ease;
-  /* transform (non flex-grow, che non è GPU-accelerabile): pre-promuove il
-     layer così la PRIMA salita non paga la creazione del layer sul primo
-     frame — è quel costo a freddo il "lag al primo caricamento". A reveal
-     finito il JS lo rilascia (will-change: auto). */
-  will-change: transform;
-}
-
-/* Grana finissima — tattilità "stampa" premium, sopra il fondo ma sotto i testi. */
-.work-panel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.5;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* Durante l'entrata (rail con .is-revealing) la grana in mix-blend viene
-   sospesa: senza il blend i pannelli restano su un layer GPU e la salita non
-   lagga. Niente transizione: torna in un solo paint a reveal finito (snap su
-   pannello già fermo = impercettibile), così non ci sono frame di blend
-   ridipinti dopo l'entrata. */
-.works-rail.is-revealing .work-panel::after { opacity: 0; }
-
-/* Bagliore interno in alto — fa sembrare il pannello "illuminato dall'alto". */
-.work-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  box-shadow: inset 0 1px 0 rgba(250, 250, 248, 0.12);
-  border-radius: inherit;
-}
-
-/* Stato espanso: di default il primo, altrimenti quello attivo.
-   L'attivo è pilotato da JS (pointerenter sul pannello): resta l'ULTIMO
-   pannello entrato finché il mouse non lascia l'intera rail — così
-   attraversare i 14px di gap fra due finestre non riapre/richiude più
-   l'aperto-di-default. I collassati restano immobili: si muove solo la
-   finestra su cui si passa. L'aperto-di-default cede solo quando un ALTRO
-   pannello diventa attivo. */
-.work-panel[data-open] { flex-grow: 7; }
-.works-rail.is-engaged .work-panel[data-open]:not(.is-active) { flex-grow: 1; }
-.work-panel.is-active { flex-grow: 7; }
-
-/* Ombra più profonda sul pannello attivo. */
-.work-panel[data-open],
-.work-panel.is-active {
-  box-shadow:
-    0 2px 4px rgba(13, 13, 13, 0.06),
-    0 40px 90px rgba(13, 13, 13, 0.20);
-}
-
 /* Cover — mesh di radiali su base profonda, solo tinte di palette
    (accent / navy / muted su ink): splendide anche senza foto. */
 .grad-1 {
@@ -859,191 +773,140 @@ button {
     linear-gradient(155deg, #1A2340 0%, #0D0D0D 100%);
 }
 
-.work-panel-img {
-  position: absolute;
-  inset: 0;
+/* ----------------------------------------------------------------------
+   PROGETTI — STAGE 3D PIN
+   Adattamento del componente Aceternity "3D Pin" al design system del sito:
+   tre card grandi in riga (desktop). A riposo la card è frontale e leggibile;
+   in hover rincula in prospettiva (rotateX con origine sul bordo basso) e sale
+   un "pin" — flag di destinazione + fascio luminoso + anelli concentrici
+   pulsanti — nei toni del brand (accent #3B5BDB / periwinkle #8AA0FF su ink).
+   Tutta l'animazione è CSS ed è attiva solo su (hover:hover); il touch resta
+   sullo stato statico con CTA sempre visibile. Rispetta prefers-reduced-motion.
+-------------------------------------------------------------------------- */
+.pinstage {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(20px, 2.2vw, 40px);
+  /* width esplicita: la stage è flex-item di .works-screen (flex-column); senza
+     un cross-size definito il margin-inline:auto dei breakpoint stretti azzera
+     lo stretch e la griglia collassa a content-size. */
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scale(1.04);
-  transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.work-panel.is-active .work-panel-img { transform: scale(1.08); }
-
-/* Scrim per leggibilità del testo bianco. Due strati: una velatura dal basso
-   (gerarchia verticale) + un focus più scuro nell'angolo basso-sinistra, dove
-   vive il blocco editoriale: così l'anteprima live (col suo logo/hero) non si
-   sovrappone mai al testo, qualunque cosa mostri l'iframe. */
-.work-panel-scrim {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(
-      120% 95% at 0% 100%,
-      rgba(13, 13, 13, 0.72) 0%,
-      rgba(13, 13, 13, 0.28) 42%,
-      transparent 68%
-    ),
-    linear-gradient(
-      to top,
-      rgba(13, 13, 13, 0.84) 0%,
-      rgba(13, 13, 13, 0.36) 46%,
-      rgba(13, 13, 13, 0.04) 74%
-    );
-  pointer-events: none;
+  /* Aria sopra le card: il pin sale nello spazio senza toccare l'header. */
+  padding-top: clamp(52px, 7vh, 96px);
 }
 
-/* ---- Anteprima live — browser-frame con iframe del sito reale ---- */
-.panel-preview {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: flex;
-  flex-direction: column;
-  background: #0d0d0d;
-  opacity: 0;
-  /* Non interattivo: i click attraversano e aprono il link del pannello,
-     e l'iframe cross-origin non può "rubare" il puntatore o bustare il frame. */
-  pointer-events: none;
-  transition: opacity 0.5s ease;
-}
-.browser-bar {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  height: clamp(34px, 3.4vh, 42px);
-  padding: 0 16px;
-  background: rgba(8, 9, 14, 0.92);
-  border-bottom: 1px solid rgba(250, 250, 248, 0.08);
-}
-.browser-dots {
-  display: inline-flex;
-  gap: 7px;
-  flex: 0 0 auto;
-}
-.browser-dots i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: rgba(250, 250, 248, 0.22);
-}
-.browser-url {
-  font-family: var(--font-body);
-  font-size: 12px;
-  letter-spacing: 0.02em;
-  color: rgba(250, 250, 248, 0.55);
-  background: rgba(250, 250, 248, 0.06);
-  border-radius: 8px;
-  padding: 4px 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 60%;
-}
-.browser-viewport {
+/* Cella-card — ancora il pin (che esce in alto) e alza lo z in hover. */
+.projpin {
   position: relative;
-  flex: 1 1 auto;
-  overflow: hidden;
-  background: #fff;
+  display: block;
+  text-decoration: none;
+  color: #fafaf8;
+  z-index: 1;
 }
-/* Iframe alto: renderizza il sito alla larghezza del pannello e lascia
-   "corsa" verticale per l'auto-scroll via translateY (yPercent in main.ts). */
-.browser-iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
+.projpin:hover,
+.projpin:focus-visible { z-index: 3; }
+/* Focus da tastiera: anello brand sempre visibile (indipendente dall'hover). */
+.projpin:focus-visible { outline: none; }
+.projpin:focus-visible .projpin-card {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+/* Wrapper prospettico (statico): fornisce la perspective; dentro ruota la card. */
+.projpin-persp {
+  position: relative;
+  display: block;
+  perspective: 1500px;
+}
+
+/* Faccia card — ritratto, grande, sfrutta la larghezza desktop. */
+.projpin-card {
+  position: relative;
+  display: block;
   width: 100%;
-  height: 220%;
-  border: 0;
-  background: #fff;
-  /* will-change gestito da JS solo mentre l'iframe scorre (vedi main.ts):
-     un layer permanente su una superficie così grande costa memoria. */
+  aspect-ratio: 5 / 6;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 22px;
+  border: 1px solid rgba(250, 250, 248, 0.08);
+  box-shadow:
+    0 2px 4px rgba(13, 13, 13, 0.05),
+    0 30px 70px rgba(13, 13, 13, 0.14);
+  transform-origin: 50% 100%;
+  transform: rotateX(0deg) scale(1);
+  transition:
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.7s ease;
+  will-change: transform;
 }
-/* Fallback elegante mentre l'iframe non è ancora caricato / se bloccato. */
-.panel-preview::before {
+/* Grana "stampa" — stessa texture delle altre superfici scure. */
+.projpin-card::after {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
-  background:
-    radial-gradient(120% 100% at 80% 0%, rgba(59, 91, 219, 0.4), transparent 55%),
-    linear-gradient(155deg, #1a2340 0%, #0d0d0d 100%);
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-.browser-viewport { z-index: 1; }
-.browser-bar { z-index: 1; }
-
-/* ---- Stato collassato: numero in alto, titolo verticale in basso ---- */
-.panel-vertical {
+/* Bagliore superiore — la card sembra illuminata dall'alto. */
+.projpin-card::before {
+  content: "";
   position: absolute;
   inset: 0;
   z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 28px 0;
-  opacity: 1;
-  /* Default (pannello collassato): il verticale rientra DOPO che il pieno è
-     uscito → nessuna sovrapposizione di testo. */
-  transition: opacity 0.5s ease 0.18s;
-}
-.panel-vertical-num {
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: #8aa0ff;
-}
-.panel-vertical-title {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(18px, 1.7vw, 24px);
-  letter-spacing: 0.01em;
-  white-space: nowrap;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(250, 250, 248, 0.14);
 }
 
-/* ---- Stato espanso: blocco editoriale in basso a sinistra ---- */
-.panel-full {
+.projpin-media {
   position: absolute;
   inset: 0;
-  z-index: 3;
-  padding: clamp(32px, 3.4vw, 60px);
-  opacity: 0;
-  /* Default (uscita): fade veloce così il testo grande non resta schiacciato
-     mentre il pannello si restringe. */
-  transition: opacity 0.28s ease;
-  pointer-events: none;
-  will-change: opacity;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.05);
+  transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.panel-index {
+.projpin-scrim {
   position: absolute;
-  top: clamp(26px, 3vw, 50px);
-  right: clamp(30px, 3.4vw, 58px);
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    /* Velatura in alto: smorza la barra-nav del sito ripreso nel video → il
+       bordo superiore resta pulito e astratto, non "screenshot". */
+    linear-gradient(to bottom, rgba(13, 13, 13, 0.55) 0%, rgba(13, 13, 13, 0.14) 15%, transparent 28%),
+    radial-gradient(120% 95% at 0% 100%, rgba(13, 13, 13, 0.72) 0%, rgba(13, 13, 13, 0.28) 42%, transparent 68%),
+    linear-gradient(to top, rgba(13, 13, 13, 0.88) 0%, rgba(13, 13, 13, 0.4) 46%, rgba(13, 13, 13, 0.06) 74%);
+}
+.projpin-index {
+  position: absolute;
+  top: clamp(16px, 1.7vw, 28px);
+  right: clamp(18px, 1.9vw, 32px);
+  z-index: 3;
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(58px, 7vw, 120px);
+  font-size: clamp(30px, 3.2vw, 52px);
   line-height: 0.9;
   letter-spacing: -0.02em;
-  color: rgba(250, 250, 248, 0.1);
+  color: rgba(250, 250, 248, 0.14);
 }
-.panel-body {
+.projpin-body {
   position: absolute;
-  left: clamp(32px, 3.4vw, 60px);
-  bottom: clamp(32px, 3.4vw, 60px);
-  /* Larghezza FISSA → il testo si impagina una volta sola: niente reflow per
-     frame mentre il pannello cambia larghezza. Viene solo rivelato/clippato. */
-  width: clamp(280px, 32vw, 500px);
+  left: clamp(22px, 2vw, 40px);
+  right: clamp(22px, 2vw, 40px);
+  bottom: clamp(24px, 2.3vw, 44px);
+  z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  transform: translateY(16px);
-  transition: transform 0.3s ease;
-  will-change: transform;
 }
-.panel-kicker {
+.projpin-kicker {
   display: inline-flex;
   align-items: center;
   gap: 12px;
@@ -1054,39 +917,38 @@ button {
   text-transform: uppercase;
   color: rgba(250, 250, 248, 0.78);
 }
-.panel-tick {
-  width: 24px;
+.projpin-tick {
+  width: 22px;
   height: 1px;
   background: var(--color-text-muted);
 }
-.panel-title {
+.projpin-title {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(34px, 4vw, 62px);
-  line-height: 1.0;
+  font-size: clamp(28px, 2.7vw, 44px);
+  line-height: 1.02;
   letter-spacing: -0.015em;
-  margin-top: 16px;
-  white-space: nowrap;
+  margin-top: 14px;
 }
-.panel-title em {
+.projpin-title em {
   font-style: italic;
   color: #fafaf8;
 }
-.panel-desc {
+.projpin-desc {
   font-family: var(--font-body);
-  font-size: clamp(13px, 1vw, 15px);
+  font-size: clamp(13px, 0.95vw, 15px);
   line-height: 1.55;
   color: rgba(250, 250, 248, 0.82);
   max-width: 34ch;
-  margin-top: 18px;
+  margin-top: 14px;
 }
-.panel-cta {
+.projpin-cta {
   display: inline-flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 26px;
+  gap: 14px;
+  margin-top: 22px;
 }
-.panel-cta-label {
+.projpin-cta-label {
   font-family: var(--font-body);
   font-size: 11px;
   font-weight: 500;
@@ -1094,133 +956,281 @@ button {
   text-transform: uppercase;
   color: #fafaf8;
   padding-bottom: 3px;
-  border-bottom: 1px solid rgba(250, 250, 248, 0.4);
+  border-bottom: 1px solid rgba(250, 250, 248, 0.42);
   transition: border-color 0.3s ease;
 }
-.panel-cta-arrow {
+.projpin-cta-arrow {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 9999px;
-  border: 1px solid rgba(250, 250, 248, 0.4);
-  font-size: 15px;
+  border: 1px solid rgba(250, 250, 248, 0.42);
+  font-size: 14px;
   transition:
     background-color 0.4s ease,
     color 0.4s ease,
     border-color 0.4s ease,
     transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.work-panel.is-active .panel-cta-label { border-color: #fafaf8; }
-.work-panel.is-active .panel-cta-arrow {
-  background: #fafaf8;
-  color: #0d0d0d;
-  border-color: #fafaf8;
-  transform: translate(3px, -3px);
-}
 
-/* ---- Crossfade collassato ⇄ espanso ----
-   Transizioni dichiarate esplicitamente in ogni stato per un'asimmetria pulita:
-   chi ENTRA lo fa con ritardo (dopo che la larghezza è cambiata), chi ESCE lo fa
-   subito. L'ordine delle regole conta: a parità di specificità vince l'ultima. */
-
-/* Tier 1 — pannello aperto di default (rail non in hover). */
-.work-panel[data-open] .panel-full {
-  opacity: 1;
-  transition: opacity 0.42s ease 0.1s;
+/* ---- Card CTA "spazio libero": trattamento chiaro warm + reticolo brand ---- */
+.projpin--cta .projpin-card {
+  background-color: var(--color-warm-deeper);
+  background-image:
+    linear-gradient(rgba(59, 91, 219, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 91, 219, 0.05) 1px, transparent 1px),
+    radial-gradient(130% 92% at 50% -18%, rgba(59, 91, 219, 0.14), transparent 60%);
+  background-size: 38px 38px, 38px 38px, 100% 100%;
+  border-color: rgba(13, 13, 13, 0.06);
+  box-shadow: 0 30px 70px rgba(13, 13, 13, 0.08);
 }
-.work-panel[data-open] .panel-body {
-  transform: translateY(0);
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.08s;
-}
-.work-panel[data-open] .panel-vertical {
-  opacity: 0;
-  transition: opacity 0.22s ease;
-}
-
-/* Tier 2 — un ALTRO pannello è attivo e questo è il default che si richiude:
-   pieno via subito, verticale che rientra dopo. */
-.works-rail.is-engaged .work-panel[data-open]:not(.is-active) .panel-full {
-  opacity: 0;
-  transition: opacity 0.24s ease;
-}
-.works-rail.is-engaged .work-panel[data-open]:not(.is-active) .panel-body {
-  transform: translateY(16px);
-  transition: transform 0.3s ease;
-}
-.works-rail.is-engaged .work-panel[data-open]:not(.is-active) .panel-vertical {
-  opacity: 1;
-  transition: opacity 0.5s ease 0.2s;
-}
-
-/* Tier 3 — il pannello attivo si espande (vince sui Tier 1/2). */
-.work-panel.is-active .panel-full {
-  opacity: 1;
-  transition: opacity 0.42s ease 0.1s;
-}
-.work-panel.is-active .panel-body {
-  transform: translateY(0);
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.08s;
-}
-.work-panel.is-active .panel-vertical {
-  opacity: 0;
-  transition: opacity 0.22s ease;
-}
-
-/* L'anteprima live segue gli stessi tier del pieno: visibile solo quando il
-   pannello è espanso (default-open o attivo), nascosta quando si richiude. */
-.work-panel[data-open] .panel-preview {
-  opacity: 1;
-  transition: opacity 0.5s ease 0.12s;
-}
-.works-rail.is-engaged .work-panel[data-open]:not(.is-active) .panel-preview {
-  opacity: 0;
-  transition: opacity 0.24s ease;
-}
-.work-panel.is-active .panel-preview {
-  opacity: 1;
-  transition: opacity 0.5s ease 0.12s;
-}
-
-/* ---- Pannello "spazio libero": chiaro, invito ai contatti ---- */
-.work-panel--soon {
-  background: var(--color-warm-deeper);
-  color: var(--color-secondary);
-  border-color: rgba(13, 13, 13, 0.05);
-  box-shadow: 0 30px 70px rgba(13, 13, 13, 0.07);
-}
-.work-panel--soon::after,
-.work-panel--soon::before,
-.work-panel--soon .work-panel-scrim { display: none; }
-.work-panel--soon .panel-vertical-title,
-.work-panel--soon .panel-kicker,
-.work-panel--soon .panel-title { color: var(--color-secondary); }
-.work-panel--soon .panel-title em { color: var(--color-accent); }
-.work-panel--soon .panel-vertical-num,
-.work-panel--soon .panel-tick { color: var(--color-muted); background: var(--color-muted); }
-.work-panel--soon .panel-index { color: rgba(13, 13, 13, 0.05); }
-.work-panel--soon .panel-desc { color: var(--color-secondary); }
-/* CTA su fondo chiaro: inchiostro al posto del warm white; quando il
-   pannello è attivo l'arrow si riempie di accent — l'invito "scatta". */
-.work-panel--soon .panel-cta-label {
+.projpin--cta .projpin-card::after { display: none; }
+.projpin--cta .projpin-scrim { display: none; }
+.projpin--cta .projpin-index { color: rgba(13, 13, 13, 0.06); }
+.projpin--cta .projpin-kicker { color: var(--color-secondary); }
+.projpin--cta .projpin-tick { background: var(--color-muted); }
+.projpin--cta .projpin-title { color: var(--color-ink); }
+.projpin--cta .projpin-title em { color: var(--color-accent); }
+.projpin--cta .projpin-desc { color: var(--color-secondary); }
+.projpin--cta .projpin-cta-label {
   color: var(--color-ink);
   border-color: rgba(13, 13, 13, 0.3);
 }
-.work-panel--soon .panel-cta-arrow {
+.projpin--cta .projpin-cta-arrow {
   color: var(--color-ink);
   border-color: rgba(13, 13, 13, 0.3);
 }
-.work-panel--soon.is-active .panel-cta-label { border-color: var(--color-ink); }
-.work-panel--soon.is-active .panel-cta-arrow {
-  background: var(--color-accent);
-  color: var(--color-cta-text);
-  border-color: var(--color-accent);
-  transform: translate(3px, -3px);
+/* Emblema "target" — mira dove cadrà il prossimo pin. Echeggia gli anelli del
+   pin e riempie di intento l'area alta della card CTA (mai un vuoto). */
+.projpin-emblem {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(88px, 9vw, 132px);
+  height: clamp(88px, 9vw, 132px);
+  z-index: 2;
+  color: var(--color-accent);
+  animation: projpin-emblem 4.5s ease-in-out infinite;
 }
+@keyframes projpin-emblem {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.85; transform: translate(-50%, -50%) scale(1.04); }
+}
+/* In hover il pin reale prende il centro scena: l'emblema si ferma e si defila. */
+.projpin--cta:hover .projpin-emblem { animation: none; opacity: 0.26; }
+@media (prefers-reduced-motion: reduce) {
+  .projpin-emblem { animation: none; }
+}
+
+/* ---------- PIN — flag + fascio + anelli pulsanti (Aceternity, ai colori brand) ----------
+   Il pin vive sopra la card (bottom:100%) e appare in hover. La perspective è
+   locale al pin, indipendente da quella della card. */
+.projpin-pin {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 22px);
+  transform: translateX(-50%);
+  width: 320px;
+  height: 118px;
+  z-index: 4;
+  perspective: 700px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+/* Flag di destinazione — pill scura con hairline periwinkle sotto. */
+.projpin-flag {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 15px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  background: #0d0d0d;
+  border: 1px solid rgba(138, 160, 255, 0.24);
+  box-shadow: 0 10px 28px rgba(13, 13, 13, 0.34);
+}
+.projpin-flag::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(138, 160, 255, 0.95), transparent);
+}
+.projpin-flag-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #8aa0ff;
+  box-shadow: 0 0 8px rgba(138, 160, 255, 0.9);
+}
+.projpin-flag-text {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #fafaf8;
+}
+.projpin-flag-arrow {
+  font-size: 11px;
+  line-height: 1;
+  color: #8aa0ff;
+}
+/* Fascio verticale — dal basso della flag verso il centro-alto della card. */
+.projpin-beam {
+  position: absolute;
+  left: 50%;
+  top: 30px;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 62px;
+  background: linear-gradient(to bottom, transparent, #3b5bdb);
+}
+.projpin-beam::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  filter: blur(2px);
+  background: linear-gradient(to bottom, transparent, rgba(59, 91, 219, 0.9));
+}
+.projpin-beam::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #8aa0ff;
+  box-shadow: 0 0 10px 2px rgba(138, 160, 255, 0.7);
+}
+/* Anelli concentrici — piano prospettico, pulsazione in loop (opacity 0→1→.5→0). */
+.projpin-rings {
+  position: absolute;
+  left: 50%;
+  top: 92px;
+  transform: translateX(-50%) rotateX(70deg);
+  transform-style: preserve-3d;
+  width: 170px;
+  height: 170px;
+}
+.projpin-ring {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 170px;
+  height: 170px;
+  margin-left: -85px;
+  border-radius: 50%;
+  background: rgba(59, 91, 219, 0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: scale(0);
+  animation: projpin-ring 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-play-state: paused;
+}
+.projpin-ring:nth-child(2) { animation-delay: 2s; }
+.projpin-ring:nth-child(3) { animation-delay: 4s; }
+@keyframes projpin-ring {
+  0% { opacity: 0; transform: scale(0); }
+  25% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* ---------- HOVER (solo puntatore fine) — tilt della card + comparsa del pin ---------- */
+@media (hover: hover) and (pointer: fine) {
+  .projpin:hover .projpin-card,
+  .projpin:focus-visible .projpin-card {
+    transform: rotateX(17deg) scale(0.94) translateY(-4px);
+    border-color: rgba(138, 160, 255, 0.3);
+    box-shadow:
+      0 2px 4px rgba(13, 13, 13, 0.06),
+      0 54px 104px rgba(13, 13, 13, 0.3);
+  }
+  .projpin--cta:hover .projpin-card,
+  .projpin--cta:focus-visible .projpin-card {
+    box-shadow:
+      0 2px 4px rgba(13, 13, 13, 0.05),
+      0 54px 104px rgba(13, 13, 13, 0.16);
+  }
+  .projpin:hover .projpin-media { transform: scale(1.11); }
+  .projpin:hover .projpin-pin,
+  .projpin:focus-visible .projpin-pin {
+    opacity: 1;
+    transition-delay: 0.12s;
+  }
+  .projpin:hover .projpin-ring,
+  .projpin:focus-visible .projpin-ring { animation-play-state: running; }
+  .projpin:hover .projpin-cta-label { border-color: #fafaf8; }
+  .projpin:hover .projpin-cta-arrow {
+    background: #fafaf8;
+    color: #0d0d0d;
+    border-color: #fafaf8;
+    transform: translate(3px, -3px);
+  }
+  .projpin--cta:hover .projpin-cta-label { border-color: var(--color-ink); }
+  .projpin--cta:hover .projpin-cta-arrow {
+    background: var(--color-accent);
+    color: var(--color-cta-text);
+    border-color: var(--color-accent);
+  }
+}
+
+/* ---------- Tablet: colonna singola, card orizzontali, sempre forti ---------- */
+@media (max-width: 1023px) {
+  .pinstage {
+    grid-template-columns: 1fr;
+    gap: clamp(30px, 5vw, 52px);
+    padding-top: clamp(38px, 6vh, 68px);
+    max-width: 660px;
+    margin-inline: auto;
+  }
+  .projpin-card { aspect-ratio: 16 / 10; }
+  .projpin-title { font-size: clamp(30px, 4.4vw, 44px); }
+  .projpin-desc { max-width: 46ch; }
+}
+
+/* ---------- Mobile: card verticali, pin disattivo (touch), CTA visibile ---------- */
+@media (max-width: 639px) {
+  .pinstage {
+    gap: 18px;
+    padding-top: 10px;
+    max-width: none;
+  }
+  .projpin-card {
+    aspect-ratio: 4 / 5;
+    border-radius: 18px;
+  }
+  .projpin-title { font-size: clamp(26px, 8vw, 34px); }
+  .projpin-body { bottom: clamp(20px, 6vw, 30px); }
+  .projpin-desc { max-width: none; }
+}
+
+/* ---------- Reduced motion: niente tilt né pulsazione; il pin resta statico ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .projpin-card,
+  .projpin-media,
+  .projpin-cta-arrow { transition: none; }
+  .projpin:hover .projpin-card,
+  .projpin:focus-visible .projpin-card { transform: none; }
+  .projpin:hover .projpin-media { transform: scale(1.05); }
+  .projpin-ring { animation: none; }
+}
+
 
 /* ----------------------------------------------------------------------
-   GRAIN — utility riusabile: stessa grana "stampa" dei work-panel, per
+   GRAIN — utility riusabile: stessa grana "stampa" delle card progetti, per
    qualsiasi superficie scura (anteprime servizi, founder card, CTA).
 -------------------------------------------------------------------------- */
 .grain {
@@ -2154,7 +2164,7 @@ button {
   background-size: 165% 165%, 150% 150%, 172% 172%, 150% 150%, 140% 140%;
   animation: menu-aurora 30s ease-in-out infinite alternate;
 }
-/* Bagliore interno in alto — stesso linguaggio dei work-panel. */
+/* Bagliore interno in alto — stesso linguaggio delle card progetti. */
 .cta-panel::before {
   content: "";
   position: absolute;
@@ -3023,45 +3033,6 @@ nav:has(#burger-menu.is-open) .pill {
   }
 }
 
-/* ---- Mobile: niente rail orizzontale → stack verticale di card piene ---- */
-@media (max-width: 767px) {
-  .works-rail {
-    flex-direction: column;
-    height: auto;
-    gap: 16px;
-    perspective: none;
-  }
-  .work-panel,
-  .work-panel[data-open],
-  .works-rail:hover .work-panel,
-  .works-rail:hover .work-panel:hover {
-    flex: none;
-    height: 74vw;
-    min-height: 300px;
-  }
-  /* Su mobile mostra sempre il contenuto pieno, mai il verticale. */
-  .panel-full,
-  .work-panel[data-open] .panel-full,
-  .works-rail:hover .work-panel[data-open] .panel-full {
-    opacity: 1;
-  }
-  .panel-body,
-  .work-panel[data-open] .panel-body,
-  .works-rail:hover .work-panel[data-open] .panel-body {
-    transform: none;
-  }
-  /* Mobile: pannelli statici a tutta larghezza → il testo usa tutto lo spazio. */
-  .panel-body {
-    width: auto;
-    right: clamp(28px, 7vw, 44px);
-  }
-  .panel-vertical,
-  .work-panel[data-open] .panel-vertical,
-  .works-rail:hover .work-panel[data-open] .panel-vertical {
-    opacity: 0;
-  }
-  .panel-title { white-space: normal; }
-}
 
 /* ----------------------------------------------------------------------
    TITLE REVEAL — i titoli di sezione vengono divisi in parole dal JS;
@@ -3206,15 +3177,42 @@ nav:has(#burger-menu.is-open) .pill {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  overflow: hidden;
   background-color: var(--color-bg);
-  background-image:
-    radial-gradient(58% 50% at 12% 16%, rgba(59, 91, 219, 0.18), transparent 70%),
-    radial-gradient(54% 46% at 88% 10%, rgba(26, 35, 64, 0.14), transparent 70%),
-    radial-gradient(66% 56% at 84% 90%, rgba(59, 91, 219, 0.11), transparent 70%),
-    radial-gradient(50% 44% at 20% 94%, rgba(154, 163, 178, 0.16), transparent 70%);
-  background-repeat: no-repeat;
-  background-size: 160% 160%, 150% 150%, 172% 172%, 150% 150%;
-  animation: menu-aurora 26s ease-in-out infinite alternate;
+}
+/* Aurora "boreale" — linguaggio dell'Aceternity Aurora Background adattato al
+   brand: nastri diagonali di blu/periwinkle tagliati da una maschera a righe e
+   sfocati in bagliore, che scorrono lenti e si concentrano in alto a destra.
+   Due maschere in AND (righe ∩ vignette radiale) creano i "raggi"; l'animazione
+   sfasa sfondo e maschera → lo scintillio dell'aurora vera. */
+.ap-hero-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background-image: repeating-linear-gradient(
+    100deg,
+    #3b5bdb 10%,
+    #8aa0ff 15%,
+    #9fb4ff 20%,
+    #cdd8ff 25%,
+    #5a78ff 30%
+  );
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  -webkit-mask-image:
+    repeating-linear-gradient(100deg, #000 0%, #000 7%, transparent 10%, transparent 12%, #000 16%),
+    radial-gradient(ellipse 95% 75% at 76% 6%, #000 8%, transparent 74%);
+  mask-image:
+    repeating-linear-gradient(100deg, #000 0%, #000 7%, transparent 10%, transparent 12%, #000 16%),
+    radial-gradient(ellipse 95% 75% at 76% 6%, #000 8%, transparent 74%);
+  -webkit-mask-size: 220% 130%, 100% 100%;
+  mask-size: 220% 130%, 100% 100%;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  filter: blur(30px) saturate(1.2);
+  opacity: 0.82;
+  animation: aurora-flow 55s linear infinite;
+  will-change: background-position, mask-position;
 }
 /* L'aurora sfuma nel warm white prima della sezione successiva. */
 .ap-hero-aurora::after {
@@ -3222,11 +3220,23 @@ nav:has(#burger-menu.is-open) .pill {
   position: absolute;
   inset-inline: 0;
   bottom: 0;
-  height: 30%;
+  height: 34%;
   background: linear-gradient(to bottom, transparent, var(--color-bg));
 }
+@keyframes aurora-flow {
+  from {
+    background-position: 0% 50%;
+    -webkit-mask-position: 0% 0%, 50% 50%;
+    mask-position: 0% 0%, 50% 50%;
+  }
+  to {
+    background-position: 200% 50%;
+    -webkit-mask-position: 220% 0%, 50% 50%;
+    mask-position: 220% 0%, 50% 50%;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .ap-hero-aurora { animation: none; }
+  .ap-hero-aurora::before { animation: none; }
 }
 .ap-hero > * {
   position: relative;
@@ -4971,7 +4981,7 @@ nav:has(#burger-menu.is-open) .pill {
 /* Titoli e display: spezzano le parole troppo lunghe invece di sfondare. */
 .works-title,
 .slide-title,
-.panel-title,
+.projpin-title,
 .ap-hero-title,
 .ap-bio-name,
 .ap-step-title,

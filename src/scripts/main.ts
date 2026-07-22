@@ -517,25 +517,21 @@ const revealRise = (targets: gsap.DOMTarget, opts: RiseOpts = {}) => {
   );
 };
 
-// ---------- Lavori selezionati — entrata header + pannelli ----------
-// I pannelli salgono in cascata; durante la salita la rail porta .is-revealing
-// che sospende la grana (mix-blend) così l'animazione resta sul layer GPU.
-const worksRail = document.querySelector<HTMLElement>(".works-rail");
+// ---------- Lavori selezionati — entrata header + card 3D Pin ----------
+// Header e card salgono in cascata all'ingresso in viewport della stage.
 revealRise("[data-anim='works-head']", {
-  trigger: ".works-rail",
+  trigger: ".pinstage",
   start: "top 85%",
   stagger: 0.12,
   y: 26,
   duration: 0.9,
 });
-revealRise("[data-anim='work-panel']", {
-  trigger: ".works-rail",
-  start: "top 80%",
+revealRise("[data-anim='projpin']", {
+  trigger: ".pinstage",
+  start: "top 82%",
   stagger: 0.1,
-  y: 56,
+  y: 48,
   duration: 1,
-  onStart: () => worksRail?.classList.add("is-revealing"),
-  onComplete: () => worksRail?.classList.remove("is-revealing"),
 });
 
 // ---------- Header di sezione — stesso reveal per Servizi e Chi Siamo ----------
@@ -1524,55 +1520,34 @@ if (
   }
 }
 
-// ---------- Rail dei lavori — espansione del pannello attivo ----------
-// Pilotiamo l'attivo da JS invece che con :hover, perché i 14px di gap fra
-// i pannelli sono una "zona morta": attraversandoli col solo CSS, l'aperto
-// di default si riapriva/richiudeva un istante (flicker). Con pointerenter
-// l'attivo resta l'ULTIMO pannello entrato finché il mouse non lascia la
-// rail intera: passare da una finestra all'altra non tocca più le altre.
-// Solo su dispositivi con hover reale — il touch usa il layout statico.
-if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-  const railEl = document.querySelector<HTMLElement>(".works-rail");
-  if (railEl) {
-    const panels = Array.from(
-      railEl.querySelectorAll<HTMLElement>(".work-panel")
-    );
-    panels.forEach((panel) => {
-      const vid = panel.querySelector<HTMLVideoElement>("video");
-      panel.addEventListener("pointerenter", () => {
-        railEl.classList.add("is-engaged");
-        panels.forEach((other) => {
-          const isTarget = other === panel;
-          other.classList.toggle("is-active", isTarget);
-          const otherVid = other.querySelector<HTMLVideoElement>("video");
-          if (otherVid && !isTarget) {
-            otherVid.pause();
-            otherVid.currentTime = 0;
-          }
-        });
-        vid?.play();
+// ---------- Progetti (stage 3D Pin) — preview video delle card ----------
+// L'interazione 3D (tilt + pin con anelli) è tutta CSS, gated da (hover:hover).
+// Qui serve solo pilotare la preview video: parte all'hover del puntatore, o
+// via IntersectionObserver su touch (dove l'hover non esiste). Il video è muto
+// e in loop; a fine hover torna al primo frame.
+const pinstage = document.querySelector<HTMLElement>(".pinstage");
+if (pinstage) {
+  if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    pinstage.querySelectorAll<HTMLElement>(".projpin").forEach((card) => {
+      const vid = card.querySelector<HTMLVideoElement>("video");
+      if (!vid) return;
+      card.addEventListener("pointerenter", () => void vid.play().catch(() => {}));
+      card.addEventListener("pointerleave", () => {
+        vid.pause();
+        vid.currentTime = 0;
       });
     });
-    railEl.addEventListener("pointerleave", () => {
-      railEl.classList.remove("is-engaged");
-      panels.forEach((other) => {
-        other.classList.remove("is-active");
-        const vid = other.querySelector<HTMLVideoElement>("video");
-        if (vid) {
-          vid.pause();
-          vid.currentTime = 0;
-        }
-      });
+  } else {
+    pinstage.querySelectorAll<HTMLVideoElement>("video").forEach((vid) => {
+      const obs = new IntersectionObserver(
+        ([e]) => {
+          e.isIntersecting ? void vid.play().catch(() => {}) : (vid.pause(), (vid.currentTime = 0));
+        },
+        { threshold: 0.5 }
+      );
+      obs.observe(vid);
     });
   }
-} else {
-  document.querySelectorAll<HTMLVideoElement>(".work-panel video").forEach((vid) => {
-    const obs = new IntersectionObserver(
-      ([e]) => { e.isIntersecting ? vid.play() : (vid.pause(), vid.currentTime = 0); },
-      { threshold: 0.5 }
-    );
-    obs.observe(vid);
-  });
 }
 
 // ---------- Pagina /chi-siamo ----------

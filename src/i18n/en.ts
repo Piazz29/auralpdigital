@@ -220,8 +220,8 @@ const en = {
           cta: "Open the site",
         },
         {
-          type: "Tattoo Studio",
-          desc: "Dark-luxe identity with scroll-driven motion for a tattoo studio.",
+          type: "Sport · Golf Coaching",
+          desc: "Personal site for a golf instructor and professional player: experience, lessons and clinics.",
           cta: "Open the site",
         },
         {

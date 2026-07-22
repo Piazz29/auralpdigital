@@ -6,7 +6,8 @@ step2.glb  Computer (Prima riga di codice)— origine: Old Computer V3.fbx + tex
                                             emissivo (Screen_Emit.png)
 step3.glb  Logo AuralpDigital             — origine: step3.glb; il materiale è
                                             sostituito a runtime col blu glossy brand
-step4.glb  Lampadina (Domani)             — origine: step4.glb; materiale brand a runtime
+step4.glb  Lampadina (Domani)             — origine: bulb.glb (Desktop); materiali
+                                            originali del GLB (neutro)
 
 Tutti ottimizzati con: npx @gltf-transform/cli optimize <in> <out>
   --compress meshopt --texture-compress webp --texture-size 1024

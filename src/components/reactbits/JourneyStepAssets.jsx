@@ -34,8 +34,11 @@ import * as THREE from 'three';
 // SOLO fallback (la Y reale è misurata dal DOM, vedi sopra). `rot` =
 // orientamento base (il logo arriva "sdraiato" da SketchUp → raddrizzato).
 // `colors` = ricolorazione per-materiale (chiave = nome materiale glTF).
-// Senza `colors` i materiali restano quelli del GLB (clonati per il fade) →
-// l'asset è "neutro" e pronto a uno swap del file senza toccare il codice.
+// `materials` = sostituzione per-materiale con una factory (chiave = nome glTF
+// → funzione che ritorna un THREE.Material), per look non riducibili a un tinta
+// (es. la lampadina: vetro + filamento emissivo + metalli). Ha priorità su
+// `colors`. Senza né `materials` né `colors` i materiali restano quelli del GLB
+// (clonati per il fade) → asset "neutro", pronto a uno swap del file.
 // ---------------------------------------------------------------------------
 const BRAND_BLUE = '#3b5bdb'; // blu del sito (il glb del logo usa lo stesso)
 
@@ -50,8 +53,21 @@ const ASSETS = [
     rot: [Math.PI / 2, 0.25, 0],
     colors: { Color_A02: '#1A1A1A', Color_B03: BRAND_BLUE, Color_B06: '#A0A0A0' },
   },
-  // Lampadina: materiali originali del GLB (neutro, pronto per lo swap).
-  { url: '/assets/step4.glb', side: 1,  y: -2.74, z: -0.35, size: 1.45, rot: [0.05, -0.35, 0] },
+  // Lampadina (bulb.glb, swap lug 2026): vetro realistico + filamento emissivo.
+  // Chiave '' = bulbo di vetro (l'unica primitiva SENZA materiale nel glb);
+  // `Helix` = filamento; gli altri (`Bottom`/`Material #4/#15/#16`) = metalli.
+  {
+    url: '/assets/step4.glb', side: 1,  y: -2.74, z: -0.35, size: 1.45,
+    rot: [0.05, -0.35, 0],
+    materials: {
+      '': makeGlassMaterial,
+      Helix: makeFilamentMaterial,
+      Bottom: makeMetalMaterial,
+      'Material #4': makeMetalMaterial,
+      'Material #15': makeMetalMaterial,
+      'Material #16': makeMetalMaterial,
+    },
+  },
 ];
 
 // --- Tuning interazione ----------------------------------------------------
@@ -109,6 +125,52 @@ function makeGlossyMaterial(color) {
   });
 }
 
+// --- Materiali della lampadina (step4) --------------------------------------
+// QUIRK IMPORTANTE: il `transmission` del MeshPhysicalMaterial NON è usabile
+// qui — il canvas è `alpha:true` e dietro al bulbo non c'è nulla in scena, così
+// il transmission campiona il vuoto e vira a un bianco lattiginoso che nasconde
+// il filamento. Soluzione: vetro trasparente "classico" (opacity bassa +
+// clearcoat) con `depthWrite:false`, così il filamento — disegnato nel pass
+// opaco — resta visibile attraverso il bulbo.
+function makeGlassMaterial() {
+  return new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#eaf0ff'),
+    metalness: 0,
+    roughness: 0.05,
+    transmission: 0,
+    transparent: true,
+    opacity: 0.26,
+    ior: 1.5,
+    clearcoat: 1,
+    clearcoatRoughness: 0.06,
+    envMapIntensity: 1.4,
+    depthWrite: false, // il filamento opaco si vede attraverso il vetro
+  });
+}
+
+// Filamento: emissivo caldo e `toneMapped:false` così "buca" e sembra acceso.
+// A grandezza-pagina il bulbo è piccolo → intensità alta (3.6).
+function makeFilamentMaterial() {
+  return new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#2a1403'),
+    emissive: new THREE.Color('#ff7d22'),
+    emissiveIntensity: 3.6,
+    roughness: 0.5,
+    metalness: 0,
+    toneMapped: false,
+  });
+}
+
+// Attacco/contatti/isolante: metallo neutro leggermente freddo.
+function makeMetalMaterial() {
+  return new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#9a9ba3'),
+    metalness: 0.9,
+    roughness: 0.34,
+    envMapIntensity: 1.2,
+  });
+}
+
 // Boundary silenzioso: se un GLB manca o fallisce, lo spazio resta pulito.
 class AssetBoundary extends Component {
   constructor(props) {
@@ -160,8 +222,11 @@ function StepAsset({ cfg, index, params, progressRef, anchorsRef, mouseRef, mobi
         o.raycast = noRaycast; // il raycast lo fa la sfera-proxy
         const name = o.material?.name ?? '';
         if (!byName.has(name + (o.geometry.attributes.normal ? '' : '|flat'))) {
+          const factory = cfg.materials?.[name];
           const hex = cfg.colors?.[name];
-          const m = hex ? makeGlossyMaterial(hex) : o.material.clone();
+          // `materials` (factory → THREE.Material) ha priorità su `colors`
+          // (ricolorazione) e sul clone del materiale originale del GLB.
+          const m = factory ? factory() : hex ? makeGlossyMaterial(hex) : o.material.clone();
           // Mesh senza normali (es. logo estruso da SketchUp) → flat shading,
           // come farebbe GLTFLoader coi materiali originali.
           if (!o.geometry.attributes.normal) m.flatShading = true;
