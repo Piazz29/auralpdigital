@@ -309,13 +309,10 @@ const it = {
     hero: {
       badge: "Chi siamo",
       status: "Disponibili per nuovi progetti",
-      title: "Le persone dietro *i pixel.*",
+      title: "Le persone\ndietro *i pixel.*",
       sub: "Uno studio indipendente di due persone, dall'Alto Adige. Niente intermediari: chi ti risponde è chi progetta e costruisce.",
-      meta: [
-        { label: "Base", value: "Alto Adige" },
-        { label: "Team", value: "Due fondatori" },
-        { label: "Metodo", value: "AI-augmented" },
-      ],
+      cta: "Parla con noi",
+      robotAlt: "Robot 3D interattivo — muovi il cursore per interagire",
     },
     manifesto: {
       kicker: "Il manifesto",

@@ -304,13 +304,10 @@ const en = {
     hero: {
       badge: "About us",
       status: "Available for new projects",
-      title: "The people behind *the pixels.*",
+      title: "The people\nbehind *the pixels.*",
       sub: "An independent two-person studio from South Tyrol. No middlemen: whoever replies to you is the one who designs and builds.",
-      meta: [
-        { label: "Base", value: "South Tyrol" },
-        { label: "Team", value: "Two founders" },
-        { label: "Method", value: "AI-augmented" },
-      ],
+      cta: "Talk to us",
+      robotAlt: "Interactive 3D robot — move your cursor to interact",
     },
     manifesto: {
       kicker: "The manifesto",

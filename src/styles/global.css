@@ -3247,54 +3247,6 @@ nav:has(#burger-menu.is-open) .pill {
   width: 100%;
   max-width: 1360px;
 }
-.ap-hero-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px 28px;
-  flex-wrap: wrap;
-  margin-bottom: clamp(30px, 6vh, 64px);
-}
-.ap-hero-badge {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-/* Pill di stato: segnale "live" dello studio, vetro leggero + dot che pulsa. */
-.ap-hero-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
-  border: 1px solid rgba(13, 13, 13, 0.12);
-  border-radius: 999px;
-  background: rgba(250, 250, 248, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-secondary);
-  white-space: nowrap;
-}
-.ap-hero-status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #2f9e44;
-  animation: ap-status-pulse 2.4s ease-out infinite;
-}
-@keyframes ap-status-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(47, 158, 68, 0.45); }
-  70% { box-shadow: 0 0 0 9px rgba(47, 158, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(47, 158, 68, 0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ap-hero-status-dot { animation: none; }
-}
 .ap-hero-title {
   font-weight: 500;
   font-size: clamp(48px, 9vw, 148px);
@@ -3310,9 +3262,9 @@ nav:has(#burger-menu.is-open) .pill {
 /* Hero "Chi siamo": il titolo usa VariableProximity (un'unica isola con
    containerRef condiviso). L'accento conserva corsivo + colore brand; le lettere
    variano il peso (asse 'wght') in base alla vicinanza del cursore.
-   L'accento è display:block (inline, dal componente) → riga propria, indentata,
-   introdotta da una barra accent: composizione a righe sfalsate che regge in
-   tutte le lingue (l'accento chiude il titolo in it/de/en). */
+   Le righe sono ESPLICITE ("\n" nel dizionario → blocchi nowrap dal
+   componente): il titolo vive sempre su due righe esatte in it/de/en e
+   "dietro i pixel" non si spezza mai. */
 .ap-hero-accent {
   font-style: italic;
   color: var(--color-accent);
@@ -3328,18 +3280,6 @@ nav:has(#burger-menu.is-open) .pill {
   background: var(--color-accent);
   border-radius: 999px;
 }
-/* Colophon: un'unica hairline a piena larghezza chiude la hero — sub a
-   sinistra, riga meta a destra. */
-.ap-hero-foot {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: clamp(24px, 5vw, 80px);
-  flex-wrap: wrap;
-  margin-top: clamp(40px, 8.5vh, 100px);
-  padding-top: clamp(20px, 3.2vh, 34px);
-  border-top: 1px solid rgba(13, 13, 13, 0.1);
-}
 .ap-hero-sub {
   font-family: var(--font-body);
   font-size: clamp(15px, 1.25vw, 19px);
@@ -3349,56 +3289,139 @@ nav:has(#burger-menu.is-open) .pill {
   margin: 0;
   max-width: 44ch;
 }
-/* Riga di contesto — micro-dato editoriale: tre coppie etichetta/valore. */
-.ap-hero-meta {
+/* HERO SPLIT — variante "one-shot" a 2 colonne con il robot Spline: la
+   sezione occupa ESATTAMENTE un viewport (height 100svh + overflow clip già
+   sul .ap-hero), copy centrata in verticale a sinistra, palco 3D a destra.
+   Tutto visibile senza scroll; la pagina prosegue pulita sotto la piega.
+   Il padding-bottom > padding-top posiziona il contenuto un filo SOPRA il
+   centro reale del viewport (equilibrio ottico). */
+.ap-hero--split {
+  height: 100svh;
+  min-height: 660px;
+  padding: clamp(76px, 10vh, 112px) clamp(24px, 5vw, 48px) clamp(96px, 14vh, 152px);
+}
+.ap-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  align-items: center;
+  gap: clamp(28px, 4vw, 72px);
+}
+.ap-hero--split .ap-hero-title {
+  font-size: clamp(44px, 6.2vw, 96px);
+}
+/* Niente barra né indent prima dell'accento: l'ultima riga chiude il blocco
+   tipografico pulita — solo corsivo + colore brand. */
+.ap-hero--split .ap-hero-accent {
+  margin-left: 0;
+}
+.ap-hero--split .ap-hero-accent::before {
+  display: none;
+}
+.ap-hero--split .ap-hero-sub {
+  margin-top: clamp(20px, 3.2vh, 34px);
+}
+.ap-hero-cta {
+  margin-top: clamp(24px, 4vh, 42px);
+}
+.ap-hero-btn {
+  padding: 15px 30px;
+}
+
+/* Palco del robot: altezza FISSA (nessun layout shift quando la scena
+   arriva), glow azzurro radiale dietro il soggetto, canvas contenuto
+   (overflow clip → mai sbordi sopra il testo). Niente card/bordo: il robot
+   abita lo spazio negativo della composizione. */
+.ap-hero-robot {
+  position: relative;
+  height: clamp(340px, 56vh, 560px);
+  overflow: clip;
+}
+/* Fondale morbido dietro il soggetto: radiale azzurro chiaro che fonde il
+   3D col tema light della pagina. */
+.ap-hero-robot::before {
+  content: "";
+  position: absolute;
+  inset: 2%;
+  background:
+    radial-gradient(56% 50% at 50% 46%, rgba(147, 176, 255, 0.28), rgba(59, 91, 219, 0.10) 52%, transparent 74%),
+    radial-gradient(40% 34% at 64% 68%, rgba(120, 160, 255, 0.16), transparent 72%);
+  filter: blur(8px);
+  pointer-events: none;
+}
+/* Il riquadro Spline è più ALTO e LARGO del palco (inset negativo
+   simmetrico → il soggetto resta centrato): il watermark, ancorato al suo
+   angolo basso-destro, finisce oltre il bordo e l'overflow clip del palco
+   lo taglia via. */
+.ap-robot {
+  position: absolute;
+  inset: -64px -20px;
+}
+/* Il canvas sfuma dentro solo a scena caricata (classe dal componente):
+   la dissolvenza è sul canvas, NON sul wrapper, così l'overlay di
+   caricamento resta visibile fino all'onLoad. Il filtro sposta il viola
+   della scena (hue ~265°) sul blu brand (~228°) e la fonde col tema
+   chiaro. */
+.ap-robot canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+  filter: hue-rotate(-40deg) saturate(1.18) brightness(1.05);
+}
+.ap-robot--ready canvas {
+  opacity: 1;
+}
+.ap-robot-loading {
+  position: absolute;
+  inset: 0;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: clamp(20px, 4vw, 56px);
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
-.ap-hero-meta li {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+.ap-robot-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid rgba(59, 91, 219, 0.18);
+  border-top-color: var(--color-accent);
+  animation: ap-robot-spin 0.9s linear infinite;
 }
-.ap-hero-meta span {
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--color-muted);
+@keyframes ap-robot-spin {
+  to { transform: rotate(360deg); }
 }
-.ap-hero-meta strong {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(15px, 1.3vw, 18px);
-  letter-spacing: -0.005em;
-  color: var(--color-ink);
+@media (prefers-reduced-motion: reduce) {
+  .ap-robot canvas { transition: none; }
+  .ap-robot-spinner { animation: none; }
 }
-/* Su viewport bassi (laptop corti) la hero è densa: lo scroll hint in basso
-   rischia di toccare la riga meta — lo togliamo, l'invito a scorrere resta
-   implicito. */
-@media (max-height: 860px) {
-  .ap-hero-scroll { display: none; }
+/* Su touch il canvas non intercetta i gesti: lo scroll della pagina non
+   viene mai rubato dalla scena (il robot resta un elemento scenografico). */
+@media (hover: none) {
+  .ap-hero-robot { pointer-events: none; }
 }
-/* Sotto gli 860px: l'indent dell'accento si riduce (già fluido), il colophon
-   impila sub e meta, la pill di stato scende sotto il kicker. */
-@media (max-width: 860px) {
-  .ap-hero-accent {
-    margin-left: clamp(20px, 8vw, 60px);
+/* Stack mobile: copy sopra, robot sotto. Il vincolo one-shot si rilassa
+   (height auto — il contenuto impilato non va mai clippato). */
+@media (max-width: 960px) {
+  .ap-hero--split {
+    height: auto;
+    min-height: 100svh;
+    /* In colonna il bias ottico desktop non serve: si torna al ritmo
+       verticale precedente. */
+    padding-top: clamp(88px, 12vh, 132px);
+    padding-bottom: clamp(48px, 7vh, 72px);
   }
-  .ap-hero-foot {
-    flex-direction: column;
-    gap: clamp(20px, 3.5vh, 32px);
+  .ap-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(18px, 3.5vh, 32px);
   }
-  .ap-hero-meta {
-    justify-content: flex-start;
+  .ap-hero-robot {
+    height: clamp(300px, 42vh, 430px);
+    /* La camera della scena non copre l'aspect stretto: il piedistallo esce
+       dal bordo basso — la sfumatura rende il taglio intenzionale. */
+    -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
   }
-}
-@media (max-width: 600px) {
-  .ap-hero-meta { gap: 18px 26px; }
 }
 
 /* Sezioni interne — stesso ritmo verticale della home. */
@@ -4638,26 +4661,17 @@ nav:has(#burger-menu.is-open) .pill {
 
 
 /* ======================================================================
-   REACT BITS — integrazioni (chi-siamo): sfondo fluido hero, statement
-   blur, badge appesi (Lanyard), stage CardSwap del metodo.
+   REACT BITS — integrazioni (chi-siamo): statement blur, badge appesi
+   (Lanyard), stage CardSwap del metodo.
    ====================================================================== */
 
-/* HERO — il LiquidEther e l'aurora stanno entrambi dietro al testo. Higher
-   specificity per battere `.ap-hero > *` (che porterebbe i figli a z-index:1). */
-.ap-hero .ap-hero-aurora,
-.ap-hero .ap-hero-fluid {
+/* HERO — l'aurora sta dietro al testo. Higher specificity per battere
+   `.ap-hero > *` (che porterebbe i figli a z-index:1). */
+.ap-hero .ap-hero-aurora {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-}
-.ap-hero .ap-hero-fluid {
-  /* sopra l'aurora soft, sotto il contenuto */
-  z-index: 0;
-}
-.ap-hero-fluid .liquid-ether-container {
-  width: 100%;
-  height: 100%;
 }
 
 /* MANIFESTO — BlurText rende un <p> flex; manteniamo la resa dello statement
@@ -4997,12 +5011,6 @@ nav:has(#burger-menu.is-open) .pill {
 .hero-section p[data-anim="hero-subline"] {
   max-width: min(92vw, 540px);
   text-wrap: balance;
-}
-
-/* Meta del duo (Sitz/Team/Methode…): la label può crescere, evita overflow. */
-.ap-hero-meta li span,
-.ap-hero-meta li strong {
-  overflow-wrap: break-word;
 }
 
 /* =========================================================================

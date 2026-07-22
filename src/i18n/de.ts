@@ -305,13 +305,10 @@ const de = {
     hero: {
       badge: "Über uns",
       status: "Verfügbar für neue Projekte",
-      title: "Die Menschen hinter *den Pixeln.*",
+      title: "Die Menschen\nhinter *den Pixeln.*",
       sub: "Ein unabhängiges Zwei-Personen-Studio aus Südtirol. Keine Zwischenhändler: Wer dir antwortet, ist der, der entwirft und baut.",
-      meta: [
-        { label: "Sitz", value: "Südtirol" },
-        { label: "Team", value: "Zwei Gründer" },
-        { label: "Methode", value: "AI-augmented" },
-      ],
+      cta: "Sprich mit uns",
+      robotAlt: "Interaktiver 3D-Roboter — bewege den Cursor, um zu interagieren",
     },
     manifesto: {
       kicker: "Das Manifest",

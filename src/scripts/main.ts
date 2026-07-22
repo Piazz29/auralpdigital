@@ -1584,13 +1584,10 @@ const aboutPage = document.querySelector<HTMLElement>(".aboutpage");
 if (aboutPage) {
   // Hero — il titolo ora usa l'isola VariableProximity (React Bits): le lettere
   // reagiscono al cursore variando il peso del font, quindi niente split/mask GSAP
-  // qui. Badge, sottotitolo, meta e hint mantengono l'entrata in dissolvenza.
+  // qui. Sottotitolo e CTA mantengono l'entrata in dissolvenza.
   const apHeroBits: { sel: string; delay: number }[] = [
-    { sel: ".ap-hero .hero-badge", delay: 0.45 },
-    { sel: ".ap-hero-status", delay: 0.62 },
-    { sel: ".ap-hero-sub", delay: 1.0 },
-    { sel: ".ap-hero-meta", delay: 1.18 },
-    { sel: ".ap-hero .hero-scroll-hint", delay: 1.35 },
+    { sel: ".ap-hero-sub", delay: 0.75 },
+    { sel: ".ap-hero-cta", delay: 0.92 },
   ];
   apHeroBits.forEach(({ sel, delay }) => {
     if (!aboutPage.querySelector(sel)) return;
@@ -1601,10 +1598,21 @@ if (aboutPage) {
     );
   });
 
+  // Hero — entrata del palco robot: dissolvenza + risalita morbida, un filo
+  // dopo il titolo (il canvas dentro sfuma poi da solo all'onLoad della
+  // scena Spline — due tempi che si compongono senza conflitto).
+  if (aboutPage.querySelector(".ap-hero-robot")) {
+    gsap.fromTo(
+      ".ap-hero-robot",
+      { opacity: 0, y: 30 },
+      { opacity: 1, y: 0, duration: 1.2, ease: "power2.out", delay: 0.7 }
+    );
+  }
+
   // Hero — parallax editoriale in scrub: uscendo dalla hero il blocco
-  // tipografico sale un filo più veloce della pagina mentre il fondale fluido
-  // scivola nella direzione opposta → profondità tra testo e sfondo. Solo
-  // transform su due layer, costo nullo.
+  // tipografico sale un filo più veloce della pagina mentre il robot resta
+  // leggermente indietro (yPercent positivo dentro l'inner che sale) →
+  // profondità tra copy e scena 3D. Solo transform, costo nullo.
   if (!reduceMotion && aboutPage.querySelector(".ap-hero")) {
     const heroScrub = {
       trigger: ".ap-hero",
@@ -1613,7 +1621,7 @@ if (aboutPage) {
       scrub: true,
     };
     gsap.to(".ap-hero-inner", { yPercent: -9, ease: "none", scrollTrigger: { ...heroScrub } });
-    gsap.to(".ap-hero-fluid", { yPercent: 7, ease: "none", scrollTrigger: { ...heroScrub } });
+    gsap.to(".ap-hero-robot", { yPercent: 8, ease: "none", scrollTrigger: { ...heroScrub } });
   }
 
   // Duo — ogni riga è una scena indipendente: il badge cala dall'alto come da

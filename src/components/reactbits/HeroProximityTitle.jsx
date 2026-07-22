@@ -26,11 +26,36 @@ export default function HeroProximityTitle({ parts = [], radius = 130 }) {
     const reveal = () => {
       if (h1) h1.style.opacity = '1';
     };
+
+    // FIT-TO-WIDTH: le righe del titolo sono nowrap — se la più lunga eccede
+    // la colonna (succede in de/en, più prolissi dell'italiano), il titolo
+    // scala IN BLOCCO del minimo necessario. Content-aware: quando il clamp
+    // CSS basta (it), il fattore è 1 e non tocca nulla. Il buffer 0.98 assorbe
+    // l'allargamento delle lettere sotto il cursore (wght 500→700).
+    const fit = () => {
+      if (!h1) return;
+      h1.style.fontSize = ''; // rimisura sempre dalla base CSS (clamp)
+      const base = parseFloat(getComputedStyle(h1).fontSize);
+      let scale = 1;
+      wrap.querySelectorAll(':scope > span').forEach((line) => {
+        if (line.scrollWidth > 0) {
+          scale = Math.min(scale, line.clientWidth / line.scrollWidth);
+        }
+      });
+      if (scale < 1) h1.style.fontSize = `${(base * scale * 0.98).toFixed(2)}px`;
+    };
+    fit();
+    // I metrics cambiano quando arriva il font display: rimisura a font pronti
+    // e a ogni resize (ricalcolo leggero: due letture layout, una scrittura).
+    document.fonts?.ready?.then(fit);
+    window.addEventListener('resize', fit);
+    const cleanup = () => window.removeEventListener('resize', fit);
+
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const letters = wrap.querySelectorAll('span[aria-hidden]');
     if (reduce || !letters.length || !('animate' in Element.prototype)) {
       reveal();
-      return;
+      return cleanup;
     }
     letters.forEach((el, i) => {
       // fill:'backwards' nasconde la lettera dal momento della chiamata fino
@@ -53,29 +78,41 @@ export default function HeroProximityTitle({ parts = [], radius = 130 }) {
       );
     });
     reveal();
+    return cleanup;
   }, []);
+
+  // Le righe del titolo sono ESPLICITE (part.line, dal "\n" nel dizionario):
+  // ogni riga diventa un blocco white-space:nowrap → il titolo occupa sempre
+  // esattamente quelle righe, il wrapping non può mai spezzarle ("dietro i
+  // pixel" resta unito su ogni breakpoint). L'accento resta inline nella
+  // propria riga.
+  const lines = [];
+  parts.forEach((part) => {
+    const li = part.line ?? 0;
+    (lines[li] ||= []).push(part);
+  });
 
   return (
     <span
       ref={containerRef}
       className="ap-hero-prox-wrap"
-      style={{ position: 'relative', display: 'inline' }}
+      style={{ position: 'relative', display: 'block' }}
     >
-      {parts.map((part, i) => (
-        <VariableProximity
-          key={i}
-          label={part.text}
-          className={`ap-hero-prox${part.accent ? ' ap-hero-accent' : ''}`}
-          fromFontVariationSettings="'wght' 500"
-          toFontVariationSettings="'wght' 700"
-          containerRef={containerRef}
-          radius={radius}
-          falloff="gaussian"
-          // L'accento vive su una riga propria, indentata (righe sfalsate):
-          // VariableProximity forza display:inline INLINE, quindi il block va
-          // passato da qui — una regola CSS non lo batterebbe mai.
-          style={part.accent ? { display: 'block' } : undefined}
-        />
+      {lines.map((lineParts, li) => (
+        <span key={li} style={{ display: 'block', whiteSpace: 'nowrap' }}>
+          {lineParts.map((part, i) => (
+            <VariableProximity
+              key={i}
+              label={part.text}
+              className={`ap-hero-prox${part.accent ? ' ap-hero-accent' : ''}`}
+              fromFontVariationSettings="'wght' 500"
+              toFontVariationSettings="'wght' 700"
+              containerRef={containerRef}
+              radius={radius}
+              falloff="gaussian"
+            />
+          ))}
+        </span>
       ))}
     </span>
   );
