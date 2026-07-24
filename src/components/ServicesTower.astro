@@ -1,0 +1,75 @@
+---
+// TORRE ISOMETRICA DEI SERVIZI — visual persistente della sezione Cosa
+// Facciamo: tre box isometrici impilati, uno per servizio, che restano al
+// loro posto mentre le scene di testo si avvicendano (vedi main.ts). Il JS
+// toggla .is-active / .is-lifted sui layer; le transizioni sono tutte CSS
+// (stesso contratto di .title-line: default statico, animazione gated).
+// Geometria adattata dal blocco Aceternity "Features With Stacked Isometric
+// Boxes"; colori e trattamento rimappati sulla palette del sito (navy +
+// warm white + periwinkle #8aa0ff).
+//
+// Ogni layer: faccia superiore a rombo (t-top), rombo interno incassato
+// (t-in), facce laterali sx/dx (t-left/t-right), tratteggi verticali
+// (t-dash) e un glifo del servizio proiettato sul piano isometrico
+// (t-glyph): browser / grafico a barre / cuore-like.
+const glyphs = ["web", "ops", "social"] as const;
+---
+
+<div class="services-visual" aria-hidden="true">
+  <div class="services-tower">
+    {glyphs.map((glyph) => (
+      <div class="tower-layer" data-glyph={glyph}>
+        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Facce laterali — restano ferme: l'estrusione è solo del "coperchio". */}
+          <path class="t-left" d="M45 76 L100 104 L100 164 Q100 170 92 166 L45 140 Q38 136 38 128 L38 80 Q38 72 45 76 Z" stroke-width="1.5" />
+          <path class="t-right" d="M155 76 L100 104 L100 164 Q100 170 108 166 L155 140 Q162 136 162 128 L162 80 Q162 72 155 76 Z" stroke-width="1.5" />
+          <path class="t-dash" d="M55 86 L55 145" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 3" />
+          <path class="t-dash" d="M70 95 L70 155" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 3" />
+          <path class="t-dash" d="M85 104 L85 162" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 3" />
+          <path class="t-dash" d="M145 86 L145 145" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 3" />
+          <path class="t-dash" d="M130 95 L130 155" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 3" />
+          <path class="t-dash" d="M115 104 L115 162" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 3" />
+          {/* Coperchio — faccia superiore + rombo interno + glifo: si solleva quando il layer è attivo. */}
+          <g class="t-cap">
+            <path class="t-top" d="M100 40 Q108 40 155 68 Q162 72 155 76 Q108 104 100 104 Q92 104 45 76 Q38 72 45 68 Q92 40 100 40 Z" stroke-width="1.5" />
+            <path class="t-in" d="M100 52 Q105 52 132 68 Q138 72 132 76 Q105 92 100 92 Q95 92 68 76 Q62 72 68 68 Q95 52 100 52 Z" stroke-width="1" />
+            {/* Glifo proiettato sul piano isometrico: disegno "piatto" in un
+                quadrato ±16 centrato in (0,0), mappato sul rombo interno da
+                scale(1,.5) rotate(45). Solo fill (le scale non uniformi
+                distorcerebbero gli stroke). */}
+            <g class="t-glyph" transform="translate(100 71.5) scale(1 0.5) rotate(45)">
+              {glyph === "web" && (
+                <>
+                  {/* Browser: cornice, barra superiore con "semafori", blocco hero accent, righe di testo. */}
+                  <path class="t-glyph-s" fill-rule="evenodd" d="M-14 -14 H14 V14 H-14 Z M-12.6 -12.6 V12.6 H12.6 V-12.6 Z" />
+                  <rect class="t-glyph-s" x="-14" y="-9.4" width="28" height="1.4" />
+                  <circle class="t-glyph-s" cx="-11.4" cy="-11.8" r="0.9" />
+                  <circle class="t-glyph-s" cx="-8.6" cy="-11.8" r="0.9" />
+                  <rect class="t-glyph-a" x="-10.5" y="-5.5" width="21" height="9" rx="1" />
+                  <rect class="t-glyph-s" x="-10.5" y="6" width="14" height="2" rx="1" />
+                  <rect class="t-glyph-s" x="-10.5" y="9.6" width="9" height="2" rx="1" />
+                </>
+              )}
+              {glyph === "ops" && (
+                <>
+                  {/* Gestionale: baseline + barre dati, una accent. */}
+                  <rect class="t-glyph-s" x="-13" y="11" width="26" height="1.4" />
+                  <rect class="t-glyph-s" x="-10.5" y="1" width="4.6" height="9" rx="1" />
+                  <rect class="t-glyph-s" x="-3.5" y="-6" width="4.6" height="16" rx="1" />
+                  <rect class="t-glyph-a" x="3.5" y="-12" width="4.6" height="22" rx="1" />
+                </>
+              )}
+              {glyph === "social" && (
+                <>
+                  {/* Social: cuore-like accent + righe feed. */}
+                  <path class="t-glyph-a" d="M0 8.5 C-6.8 3.5 -10.5 0 -10.5 -4.5 A5.4 5.4 0 0 1 0 -6.5 A5.4 5.4 0 0 1 10.5 -4.5 C10.5 0 6.8 3.5 0 8.5 Z" />
+                  <rect class="t-glyph-s" x="-8" y="11" width="16" height="1.8" rx="0.9" />
+                </>
+              )}
+            </g>
+          </g>
+        </svg>
+      </div>
+    ))}
+  </div>
+</div>

@@ -801,70 +801,45 @@ if (!reduceMotion) {
       );
     };
 
-    // Nuovo ordine sezioni: Problema(warm) → Servizi(navy) → Lavori(warm) →
-    // Chi Siamo(grigio) → CTA(warm). Il canvas vira di conseguenza.
-    // Start ritardato (top 50%): mentre "Il punto" è centrato lo sfondo resta
-    // warm white; il blu inizia solo quando Servizi è già ben dentro lo
-    // schermo (e "Il punto" è scrollato via), completando prima del pin.
-    morph("#cosa-facciamo", "top 50%", "top 12%", "#FAFAF8", "#1A2340");
-    morph("#projects", "top 80%", "top 30%", "#1A2340", "#FAFAF8");
+    // Ordine sezioni: Problema(warm) → Servizi(CHIARO) → Lavori(warm) →
+    // Chi Siamo(grigio) → CTA(warm). Servizi ora è chiaro come il resto: il
+    // canvas resta warm white per tutta la fascia Problema→Servizi→Lavori
+    // (niente virata navy), poi vira verso il grigio bordo entrando in Chi Siamo.
     morph("#chi-siamo", "top 70%", "top 20%", "#FAFAF8", "#E8E8E5");
     morph(".section-rule", "top 95%", "top 50%", "#E8E8E5", "#FAFAF8");
   }
 }
 
 // ---------- Cosa Facciamo — scene a tutta schermata, una per servizio ----------
-// Su desktop la sezione si "blocca" (pin) e i servizi si avvicendano come
-// scene piene: l'indice sale, il titolo emerge dalla maschera, descrizione
-// e chip seguono, il placeholder immagine si solleva; la scena uscente
-// sfuma verso l'alto mentre entra la successiva. Su mobile (niente pin)
-// le scene scorrono in colonna e si rivelano entrando in viewport.
+// La sezione si "blocca" (pin) e i servizi si avvicendano come scene:
+// l'indice sale, il titolo emerge dalla maschera, descrizione e ledger
+// seguono; la scena uscente sfuma verso l'alto mentre entra la successiva.
+// A destra (sopra, su mobile) la TORRE ISOMETRICA resta ferma per tutta la
+// sequenza: l'onUpdate del pin accende il layer del servizio a fuoco
+// (.is-active) e alza quelli sopra (.is-lifted); il movimento lo fanno le
+// transizioni CSS (vedi global.css). Con reduced-motion niente pin: scene
+// in colonna statiche e torre in trattamento pieno.
 const servicesStage = document.querySelector<HTMLElement>(".services-stage");
 const serviceSlides = gsap.utils.toArray<HTMLElement>(".service-slide");
+const towerLayers = gsap.utils.toArray<HTMLElement>(".tower-layer");
 const servicesScrollHint = document.querySelector<HTMLElement>(".services-scroll-hint");
 
-// Pin attivo solo su desktop con motion abilitato.
-const servicesPinned =
-  !reduceMotion && window.matchMedia("(min-width: 1024px)").matches;
+// Distanza di scroll della sezione pinnata: ~140vh per scena su desktop
+// (~110vh su mobile, dove lo swipe "costa" di più) + coda finale. Più lunga
+// della distanza "naturale" → lo scroll è meno sensibile, ogni servizio ha
+// il tempo di essere percepito e uno scroll veloce non salta più scene
+// insieme (in coppia con lo scrub morbido qui sotto).
+const servicesPinDistance = () => {
+  const perScene = window.matchMedia("(min-width: 1024px)").matches ? 1.4 : 1.1;
+  const tail = perScene === 1.4 ? 0.6 : 0.4;
+  return Math.round(window.innerHeight * (serviceSlides.length * perScene + tail));
+};
 
-// Distanza di scroll della sezione pinnata: ~140vh per scena + coda finale.
-// Più lunga della distanza "naturale" → lo scroll è meno sensibile, ogni
-// servizio ha il tempo di essere percepito e uno scroll veloce non salta più
-// scene insieme (in coppia con lo scrub morbido qui sotto).
-const servicesPinDistance = () =>
-  Math.round(window.innerHeight * (serviceSlides.length * 1.4 + 0.6));
-
-// ---------- Navbar — zona scura della banda navy ----------
-// Un solo trigger che attraversa la sezione pinnata si "accorcia" (lo span
-// non compensa il pin): l'inversione si chiuderebbe subito. Quindi due
-// trigger a elemento singolo con callback —
-//   • accendi quando il navy si forma (cosa-facciamo, PRIMA del pin);
-//   • spegni quando i Lavori riportano il chiaro: il navy è scuro SOLO nella
-//     banda di Servizi e nell'inizio dei Lavori (il morph #projects vira
-//     navy→bianco tra top 80% e top 30%). Ancorare lo spegnimento a #projects
-//     (stesso elemento-trigger del morph colore) fa tornare la navbar normale
-//     appena lo sfondo ridiventa bianco, invece di restare invertita per tutta
-//     la sezione chiara fino a Chi Siamo.
-// onLeaveBack ripristina lo stato anche scrollando all'indietro.
+// La sezione Servizi è ora CHIARA come il resto della fascia: la navbar non si
+// inverte più qui (nessuna banda navy da scavalcare). L'inversione resta solo
+// dove serve davvero — hero e fondale video di Chi Siamo (vedi il trigger con
+// toggleClass "is-on-dark" più in alto).
 const servicesSection = document.querySelector<HTMLElement>("#cosa-facciamo");
-const projectsSection = document.querySelector<HTMLElement>("#projects");
-if (navEl && servicesSection && projectsSection && serviceSlides.length) {
-  const addDark = () => navEl.classList.add("is-on-dark");
-  const removeDark = () => navEl.classList.remove("is-on-dark");
-
-  ScrollTrigger.create({
-    trigger: servicesSection,
-    start: "top 40%",
-    onEnter: addDark,
-    onLeaveBack: removeDark,
-  });
-  ScrollTrigger.create({
-    trigger: projectsSection,
-    start: "top 50%",
-    onEnter: removeDark,
-    onLeaveBack: addDark,
-  });
-}
 
 // Coreografia d'ingresso di una scena, agganciata alla timeline `tl` a
 // partire da `at` (unità di timeline: con lo scrub diventano scroll).
@@ -873,12 +848,11 @@ const slideReveal = (
   slide: HTMLElement,
   at: number
 ) => {
-  const index = slide.querySelector(".slide-index");
+  const ghost = slide.querySelector(".slide-ghost");
   const name = slide.querySelector(".sn");
   // .slide-desc / .slide-ledger NON sono più animati qui: il loro testo usa il
   // reveal a righe via CSS (.title-line / .is-active), per evitare doppia
   // animazione. Restano i contenitori (visibili con la slide).
-  const media = slide.querySelector(".slide-media");
 
   tl.fromTo(
     slide,
@@ -886,12 +860,13 @@ const slideReveal = (
     { autoAlpha: 1, y: 0, duration: 0.3 },
     at
   );
-  if (index) {
+  // Numerale ghost — entrata morbida (deriva + fade) dietro alla scena.
+  if (ghost) {
     tl.fromTo(
-      index,
-      { autoAlpha: 0, y: 12 },
-      { autoAlpha: 1, y: 0, duration: 0.4 },
-      at + 0.06
+      ghost,
+      { autoAlpha: 0, y: 18, xPercent: -4 },
+      { autoAlpha: 1, y: 0, xPercent: 0, duration: 0.5 },
+      at + 0.04
     );
   }
   if (name) {
@@ -902,133 +877,97 @@ const slideReveal = (
       at + 0.08
     );
   }
-  if (media) {
-    tl.fromTo(
-      media,
-      { autoAlpha: 0, y: 48, scale: 0.96 },
-      { autoAlpha: 1, y: 0, scale: 1, duration: 0.65 },
-      at + 0.1
-    );
-  }
 };
 
 if (servicesStage && serviceSlides.length && !reduceMotion) {
-  if (servicesPinned) {
-    // Le scene si impilano nello stesso spazio (vedi CSS .is-pinned).
-    servicesStage.classList.add("is-pinned");
-    // Abilita il reveal a righe del testo card (stato nascosto iniziale gated da
-    // .has-reveal: senza JS / reduced-motion il testo resta visibile).
-    servicesStage.classList.add("has-reveal");
+  // Le scene si impilano nello stesso spazio (vedi CSS .is-pinned); la
+  // sezione riempie lo schermo anche sotto 1024px (.is-pin-mode).
+  servicesStage.classList.add("is-pinned");
+  servicesSection?.classList.add("is-pin-mode");
+  // Abilita il reveal a righe del testo card (stato nascosto iniziale gated da
+  // .has-reveal: senza JS / reduced-motion il testo resta visibile).
+  servicesStage.classList.add("has-reveal");
 
-    // STEP = durata di una scena in unità di timeline (ingresso + sosta);
-    // l'end mappa il tutto sulla distanza calcolata sopra.
-    const STEP = 1.5;
-    const tl = gsap.timeline({
-      defaults: { ease: "power3.out" },
-      scrollTrigger: {
-        trigger: "#cosa-facciamo",
-        start: "top top",
-        end: () => "+=" + servicesPinDistance(),
-        pin: true,
-        // Sincronizza .is-active (reveal testo) con lo step a fuoco. Calcolo
-        // idempotente dal progress → corretto anche scrollando all'indietro.
-        onUpdate: (self) => {
-          const time = self.progress * tl.duration();
-          const idx = Math.max(
-            0,
-            Math.min(serviceSlides.length - 1, Math.floor(time / STEP))
-          );
-          serviceSlides.forEach((s, i) =>
-            s.classList.toggle("is-active", i === idx)
-          );
-        },
-        // Scrub più morbido = più "resistenza/lag": il movimento delle scene
-        // insegue lo scroll con inerzia, così uno scatto veloce non fa avanzare
-        // di colpo più servizi.
-        scrub: 1,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        // Il pin sposta in basso tutto ciò che lo segue (chi-siamo, marquee,
-        // CTA…). I morph del colore e l'inversione nav sono creati PRIMA di
-        // questo pin nel codice: con priorità più alta il pin si ricalcola
-        // per primo, così quei trigger leggono le posizioni già spostate e
-        // il navy resta pieno per tutta la sezione, tornando chiaro solo
-        // entrando in chi-siamo.
-        refreshPriority: 1,
-      },
-    });
-
-    serviceSlides.forEach((slide, i) => {
-      const at = i * STEP;
-      // La scena precedente esce appena prima che entri questa.
-      if (i > 0) {
-        tl.to(
-          serviceSlides[i - 1],
-          { autoAlpha: 0, y: -36, duration: 0.32, ease: "power2.in" },
-          at - 0.34
+  // STEP = durata di una scena in unità di timeline (ingresso + sosta);
+  // l'end mappa il tutto sulla distanza calcolata sopra.
+  const STEP = 1.5;
+  const tl = gsap.timeline({
+    defaults: { ease: "power3.out" },
+    scrollTrigger: {
+      trigger: "#cosa-facciamo",
+      start: "top top",
+      end: () => "+=" + servicesPinDistance(),
+      pin: true,
+      // Sincronizza .is-active (reveal testo + layer torre) con lo step a
+      // fuoco. Calcolo idempotente dal progress → corretto anche scrollando
+      // all'indietro. La torre non viene mai ricreata: cambiano solo le
+      // classi, le transizioni CSS fanno il movimento.
+      onUpdate: (self) => {
+        const time = self.progress * tl.duration();
+        const idx = Math.max(
+          0,
+          Math.min(serviceSlides.length - 1, Math.floor(time / STEP))
         );
-      }
-      slideReveal(tl, slide, at);
-    });
-    tl.to({}, { duration: 0.7 }); // respiro finale: l'ultima scena resta ferma
+        serviceSlides.forEach((s, i) =>
+          s.classList.toggle("is-active", i === idx)
+        );
+        towerLayers.forEach((layer, i) => {
+          layer.classList.toggle("is-active", i === idx);
+          layer.classList.toggle("is-lifted", i < idx);
+        });
+      },
+      // Scrub più morbido = più "resistenza/lag": il movimento delle scene
+      // insegue lo scroll con inerzia, così uno scatto veloce non fa avanzare
+      // di colpo più servizi.
+      scrub: 1,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      // Il pin sposta in basso tutto ciò che lo segue (chi-siamo, marquee,
+      // CTA…). I morph del colore e l'inversione nav sono creati PRIMA di
+      // questo pin nel codice: con priorità più alta il pin si ricalcola
+      // per primo, così quei trigger leggono le posizioni già spostate e
+      // il navy resta pieno per tutta la sezione, tornando chiaro solo
+      // entrando in chi-siamo.
+      refreshPriority: 1,
+    },
+  });
 
-    if (servicesScrollHint) {
-      const totalDuration = serviceSlides.length * STEP + 0.7;
-      tl.fromTo(
-        servicesScrollHint,
-        { autoAlpha: 0, y: 24 },
-        { autoAlpha: 1, y: 0, duration: 0.3, ease: "power2.out" },
-        0
-      );
+  // La torre entra UNA volta, insieme alla prima scena, e poi resta ferma
+  // per tutta la sequenza (l'oggetto è persistente, non per-scena).
+  tl.fromTo(
+    ".services-visual",
+    { autoAlpha: 0, y: 40 },
+    { autoAlpha: 1, y: 0, duration: 0.5 },
+    0
+  );
+
+  serviceSlides.forEach((slide, i) => {
+    const at = i * STEP;
+    // La scena precedente esce appena prima che entri questa.
+    if (i > 0) {
       tl.to(
-        servicesScrollHint,
-        { autoAlpha: 0, y: -24, duration: 0.32, ease: "power2.in" },
-        totalDuration - 0.4
+        serviceSlides[i - 1],
+        { autoAlpha: 0, y: -36, duration: 0.32, ease: "power2.in" },
+        at - 0.34
       );
     }
-  } else {
-    // Senza pin le slide entrano indipendenti → reveal testo via
-    // IntersectionObserver per-card (le slide impilate del pin scatterebbero
-    // invece tutte insieme, per questo qui NON si usa l'onUpdate del timeline).
-    servicesStage.classList.add("has-reveal");
-    serviceSlides.forEach((slide) => {
-      const tl = gsap.timeline({
-        defaults: { ease: "power3.out" },
-        scrollTrigger: { trigger: slide, start: "top 80%", once: true },
-      });
-      slideReveal(tl, slide, 0);
-    });
+    slideReveal(tl, slide, at);
+  });
+  tl.to({}, { duration: 0.7 }); // respiro finale: l'ultima scena resta ferma
 
-    if ("IntersectionObserver" in window) {
-      const slideObserver = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            entry.target.classList.toggle("is-active", entry.isIntersecting);
-          });
-        },
-        { threshold: 0.35 }
-      );
-      serviceSlides.forEach((slide) => slideObserver.observe(slide));
-    }
-
-    if (servicesScrollHint) {
-      gsap.fromTo(
-        servicesScrollHint,
-        { opacity: 0, y: 24 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.9,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: "#cosa-facciamo",
-            start: "top 80%",
-            end: "bottom 20%",
-            toggleActions: "play reverse play reverse",
-          },
-        }
-      );
-    }
+  if (servicesScrollHint) {
+    const totalDuration = serviceSlides.length * STEP + 0.7;
+    tl.fromTo(
+      servicesScrollHint,
+      { autoAlpha: 0, y: 24 },
+      { autoAlpha: 1, y: 0, duration: 0.3, ease: "power2.out" },
+      0
+    );
+    tl.to(
+      servicesScrollHint,
+      { autoAlpha: 0, y: -24, duration: 0.32, ease: "power2.in" },
+      totalDuration - 0.4
+    );
   }
 }
 
@@ -1862,26 +1801,6 @@ if (!reduceMotion) {
       }
     );
   });
-}
-
-// ---------- Service art — animazioni SVG gated da IntersectionObserver ----------
-// Ogni cover .slide-media parte spenta: le @keyframes degli SVG (browser,
-// dashboard, feed) sono dichiarate "paused" nel CSS. Quando il quadrato entra
-// in viewport riceve .is-active e le animazioni partono in loop; uscendo si
-// rimettono in pausa così non sprecano cicli fuori schermo. Gate reduced-motion
-// (sotto reduced-motion il CSS mostra il fotogramma statico, niente loop).
-if (!reduceMotion && "IntersectionObserver" in window) {
-  const artObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        entry.target.classList.toggle("is-active", entry.isIntersecting);
-      });
-    },
-    { threshold: 0.35 }
-  );
-  document
-    .querySelectorAll<HTMLElement>(".slide-media")
-    .forEach((el) => artObserver.observe(el));
 }
 
 // ---------- Footer — il ghost wordmark emerge in parallasse ----------

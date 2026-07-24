@@ -180,30 +180,57 @@ const en = {
           name: "Websites",
           nameEm: "that convert.",
           desc: "Ultra-modern, fast and flawless on mobile. Optimized for Google and for AI search (SEO + GEO), with built-in artificial intelligence and every detail designed to turn visitors into clients.",
-          points: [
-            "First impression in under 3 seconds",
-            "Found on Google and on AI",
-            "Every section drives action",
+          features: [
+            {
+              title: "Impact in 3 seconds",
+              text: "The first glance decides. Clean design and instant loading keep visitors on the page.",
+            },
+            {
+              title: "Found everywhere",
+              text: "Technical SEO and AI-search optimization (GEO): people find you on Google and on assistants.",
+            },
+            {
+              title: "Built to convert",
+              text: "Copy and structure guide every section toward one action: getting in touch.",
+            },
           ],
         },
         {
           name: "Management systems",
           nameEm: "built to fit.",
           desc: "Systems built around your processes: centralized data, always under control, every lead followed to the end. AI-powered, to get more done in less time.",
-          points: [
-            "One place for all your data",
-            "No lead left half-done",
-            "Hours less manual work",
+          features: [
+            {
+              title: "All in one place",
+              text: "Centralized data, always under control: no more scattered spreadsheets or lost information.",
+            },
+            {
+              title: "No lead lost",
+              text: "Every contact tracked and followed to the close, without relying on memory.",
+            },
+            {
+              title: "Less manual work",
+              text: "Automation and AI remove repetitive tasks and give you back hours every week.",
+            },
           ],
         },
         {
           name: "Social",
           nameEm: "that sells.",
           desc: "Strategy and content to grow organic traffic, targeted ad campaigns to turn it into clients: your brand in front of the right people, at the right time.",
-          points: [
-            "Content that stops the scroll",
-            "Ads aimed at buyers",
-            "Clear numbers, every month",
+          features: [
+            {
+              title: "Stop the scroll",
+              text: "Content and formats designed to catch attention in the first, decisive seconds.",
+            },
+            {
+              title: "Ads on buyers",
+              text: "Targeted campaigns for the right audience: budget goes to those ready to buy.",
+            },
+            {
+              title: "Clear numbers",
+              text: "Transparent monthly reports: you always know what works and what it returns.",
+            },
           ],
         },
       ],

@@ -185,30 +185,57 @@ const it = {
           name: "Siti web",
           nameEm: "che convertono.",
           desc: "Ultra-moderni, veloci e impeccabili su mobile. Ottimizzati per Google e per le ricerche AI (SEO + GEO), con intelligenza artificiale integrata e ogni dettaglio progettato per trasformare i visitatori in clienti.",
-          points: [
-            "Primo contatto in meno di 3 secondi",
-            "Trovato su Google e sulle AI",
-            "Ogni sezione spinge all'azione",
+          features: [
+            {
+              title: "Impatto in 3 secondi",
+              text: "Il primo sguardo decide. Design pulito e caricamento istantaneo tengono il visitatore sulla pagina.",
+            },
+            {
+              title: "Trovato ovunque",
+              text: "SEO tecnica e ottimizzazione per le ricerche AI (GEO): ti trovano su Google e sugli assistenti.",
+            },
+            {
+              title: "Costruito per convertire",
+              text: "Copy e struttura guidano ogni sezione verso un'unica azione: il contatto.",
+            },
           ],
         },
         {
           name: "Gestionali",
           nameEm: "su misura.",
           desc: "Sistemi costruiti attorno ai tuoi processi: dati centralizzati e sempre sotto controllo, ogni lead seguito fino in fondo. Potenziati dall'AI, per completare più lavoro in meno tempo.",
-          points: [
-            "Un solo posto per tutti i dati",
-            "Nessun lead lasciato a metà",
-            "Ore di lavoro manuale in meno",
+          features: [
+            {
+              title: "Tutto in un posto",
+              text: "Dati centralizzati e sempre sotto controllo: niente più fogli sparsi o informazioni perse.",
+            },
+            {
+              title: "Nessun lead perso",
+              text: "Ogni contatto tracciato e seguito fino alla chiusura, senza affidarsi alla memoria.",
+            },
+            {
+              title: "Meno lavoro manuale",
+              text: "Automazioni e AI tolgono le attività ripetitive e ti restituiscono ore ogni settimana.",
+            },
           ],
         },
         {
           name: "Social",
           nameEm: "che vendono.",
           desc: "Strategia e contenuti per far crescere il traffico organico, campagne ads mirate per trasformarlo in clienti: il tuo brand davanti alle persone giuste, al momento giusto.",
-          points: [
-            "Contenuti che fermano lo scroll",
-            "Ads puntate su chi compra",
-            "Numeri chiari, ogni mese",
+          features: [
+            {
+              title: "Fermano lo scroll",
+              text: "Contenuti e format pensati per catturare l'attenzione nei primi, decisivi secondi.",
+            },
+            {
+              title: "Ads su chi compra",
+              text: "Campagne mirate al pubblico giusto: il budget va su chi è pronto ad acquistare.",
+            },
+            {
+              title: "Numeri chiari",
+              text: "Report mensili trasparenti: sai sempre cosa funziona e quanto sta rendendo.",
+            },
           ],
         },
       ],

@@ -181,30 +181,57 @@ const de = {
           name: "Websites,",
           nameEm: "die konvertieren.",
           desc: "Ultramodern, schnell und tadellos auf dem Smartphone. Optimiert für Google und für KI-Suchen (SEO + GEO), mit integrierter künstlicher Intelligenz und jedem Detail darauf ausgelegt, Besucher zu Kunden zu machen.",
-          points: [
-            "Erster Eindruck in unter 3 Sekunden",
-            "Gefunden bei Google und bei KI",
-            "Jeder Abschnitt führt zur Aktion",
+          features: [
+            {
+              title: "Wirkung in 3 Sekunden",
+              text: "Der erste Blick entscheidet. Klares Design und sofortiges Laden halten den Besucher auf der Seite.",
+            },
+            {
+              title: "Überall gefunden",
+              text: "Technisches SEO und Optimierung für KI-Suchen (GEO): Man findet dich bei Google und den Assistenten.",
+            },
+            {
+              title: "Gebaut zum Konvertieren",
+              text: "Text und Struktur führen jeden Abschnitt auf eine einzige Aktion hin: den Kontakt.",
+            },
           ],
         },
         {
           name: "Management-Systeme",
           nameEm: "nach Maß.",
           desc: "Systeme, die um deine Abläufe herum gebaut sind: zentrale Daten, jederzeit unter Kontrolle, jeder Lead bis zum Ende verfolgt. Von KI verstärkt, um mehr Arbeit in weniger Zeit zu schaffen.",
-          points: [
-            "Alle Daten an einem Ort",
-            "Kein Lead bleibt liegen",
-            "Stunden weniger Handarbeit",
+          features: [
+            {
+              title: "Alles an einem Ort",
+              text: "Zentrale Daten, jederzeit unter Kontrolle: keine verstreuten Tabellen oder verlorenen Infos mehr.",
+            },
+            {
+              title: "Kein Lead verloren",
+              text: "Jeder Kontakt erfasst und bis zum Abschluss verfolgt, ganz ohne sich auf das Gedächtnis zu verlassen.",
+            },
+            {
+              title: "Weniger Handarbeit",
+              text: "Automatisierungen und KI nehmen dir wiederkehrende Aufgaben ab und schenken dir Stunden pro Woche.",
+            },
           ],
         },
         {
           name: "Social Media,",
           nameEm: "das verkauft.",
           desc: "Strategie und Inhalte für mehr organischen Traffic, gezielte Ad-Kampagnen, um ihn in Kunden zu verwandeln: deine Marke vor den richtigen Menschen, zur richtigen Zeit.",
-          points: [
-            "Inhalte, die den Scroll stoppen",
-            "Ads, gezielt auf Käufer",
-            "Klare Zahlen, jeden Monat",
+          features: [
+            {
+              title: "Stoppen den Scroll",
+              text: "Inhalte und Formate, die in den ersten, entscheidenden Sekunden Aufmerksamkeit fangen.",
+            },
+            {
+              title: "Ads auf Käufer",
+              text: "Gezielte Kampagnen für das richtige Publikum: das Budget geht an die, die kaufbereit sind.",
+            },
+            {
+              title: "Klare Zahlen",
+              text: "Transparente Monatsberichte: du weißt immer, was funktioniert und was es bringt.",
+            },
           ],
         },
       ],

@@ -703,6 +703,14 @@ button {
   background: var(--color-accent);
   opacity: 0.85;
 }
+/* Kicker delle ultime due sezioni della home (Chi Siamo teaser, Iniziamo):
+   mantenuti come etichette ma SENZA il trattino accent davanti. */
+.about-kicker::before,
+.cscroll-kicker::before,
+.ap-flow-kicker::before,
+.about-cta-kicker::before {
+  display: none;
+}
 .works-title {
   font-family: var(--font-display);
   font-weight: 500;
@@ -1298,10 +1306,12 @@ button {
 .services-section {
   position: relative;
   padding: clamp(90px, 13vh, 170px) 0;
-  background-color: var(--color-navy);
+  /* Sezione CHIARA (come il blocco Aceternity di riferimento): lo sfondo resta
+     il warm white del sito — niente banda navy. Il canvas .post-reveal non
+     vira più qui (vedi main.ts); questo background è il fallback no-JS. */
+  background-color: var(--color-bg);
   /* NB: niente overflow:clip qui — con il pin GSAP della sezione finirebbe per
-     ritagliare lo stage pinnato (un'enorme fascia bianca). I glow non sbordano
-     più in verticale (ancorati in alto), e lo sbordo orizzontale è già
+     ritagliare lo stage pinnato. Lo sbordo orizzontale dei glow è già
      contenuto dall'overflow-x:hidden del body, quindi non serve. */
 }
 .services-section .works-screen {
@@ -1322,24 +1332,32 @@ button {
   }
 }
 
-/* Palette sul navy: testi warm white, corsivi e tick in periwinkle. */
-.services-section .works-kicker { color: rgba(250, 250, 248, 0.55); }
-.services-section .works-kicker::before { background: rgba(138, 160, 255, 0.65); }
-.services-section .works-title { color: var(--color-cta-text); }
-.services-section .works-title em { color: #8aa0ff; }
-.services-section .works-head-link {
-  color: var(--color-cta-text);
-  border-color: rgba(250, 250, 248, 0.3);
+/* Sezione chiara: header, kicker e link ereditano gli stili base (testo scuro
+   + accent), gli stessi dei Lavori. Nessun override di palette qui. */
+
+/* ---- Palco a due colonne ----
+   Testo a sinistra, torre isometrica persistente a destra. Sotto 1024px la
+   composizione diventa colonna: torre in alto (compatta), testo sotto. */
+.services-stage-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 4vh, 40px);
 }
-.services-section .works-head-link:hover {
-  color: var(--color-cta-text);
-  border-color: var(--color-cta-text);
+.services-stage-wrap .services-visual { order: -1; }
+@media (min-width: 1024px) {
+  .services-stage-wrap {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: clamp(24px, 4vw, 72px);
+    align-items: center;
+  }
+  .services-stage-wrap .services-visual { order: 0; }
 }
 
 /* ---- Palco delle scene ----
-   Flusso normale: colonna di scene distanziate (mobile / reduced motion /
-   no-JS). Con il pin attivo (classe .is-pinned aggiunta dal JS) le scene
-   si impilano nello stesso spazio e si avvicendano in dissolvenza. */
+   Flusso normale: colonna di scene distanziate (reduced motion / no-JS).
+   Con il pin attivo (classe .is-pinned aggiunta dal JS) le scene si
+   impilano nello stesso spazio e si avvicendano in dissolvenza. */
 .services-stage {
   position: relative;
   display: flex;
@@ -1348,11 +1366,34 @@ button {
 }
 .services-stage.is-pinned {
   display: block;
-  height: min(62vh, 640px);
+  height: clamp(340px, 56vh, 480px);
+}
+@media (min-width: 1024px) {
+  .services-stage.is-pinned { height: min(62vh, 640px); }
 }
 .services-stage.is-pinned .service-slide {
   position: absolute;
   inset: 0;
+  /* Scena testo centrata in verticale nel palco → allineata alla torre. */
+  display: flex;
+  align-items: center;
+}
+
+/* Con il pin attivo la sezione riempie lo schermo anche sotto 1024px
+   (dove la regola desktop qui sopra non arriva): la classe la aggiunge il
+   JS solo quando pinna, così il fallback reduced-motion/no-JS resta a
+   flusso con i padding di banda originali. */
+@media (max-width: 1023px) {
+  .services-section.is-pin-mode {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    padding: clamp(76px, 11vh, 110px) 0 clamp(30px, 5vh, 60px);
+  }
+  .services-section.is-pin-mode .works-screen {
+    width: 100%;
+    gap: clamp(18px, 3vh, 32px);
+  }
 }
 
 .service-slide {
@@ -1360,97 +1401,135 @@ button {
   gap: clamp(24px, 4vw, 72px);
   align-items: center;
 }
-@media (min-width: 768px) {
-  .service-slide { grid-template-columns: 1.05fr 1fr; }
-}
 
 .slide-body {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: clamp(14px, 2.4vh, 24px);
 }
-.slide-index {
-  font-family: var(--font-body);
-  font-size: 11px;
+
+/* Numerale "ghost" — grande cifra editoriale in filigrana dietro alla scena:
+   dà impatto e ancora l'occhio senza aggiungere UI. È decorativo (aria-hidden),
+   dietro al testo, e appare/scompare con la scena via .is-active. */
+.slide-ghost {
+  position: absolute;
+  left: clamp(-8px, -1vw, -18px);
+  top: clamp(-46px, -8vh, -96px);
+  z-index: 0;
+  font-family: var(--font-display);
   font-weight: 600;
-  letter-spacing: 0.18em;
-  color: #8aa0ff;
+  font-style: italic;
+  font-size: clamp(112px, 18vw, 300px);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(59, 91, 219, 0.16);
+  pointer-events: none;
+  user-select: none;
 }
+.slide-body > * { position: relative; z-index: 1; }
+
 .slide-title {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(34px, 4.6vw, 72px);
-  line-height: 1.02;
-  letter-spacing: -0.02em;
-  color: var(--color-cta-text);
+  font-size: clamp(38px, 5.2vw, 82px);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
 }
 .slide-title em {
   font-style: italic;
-  color: #8aa0ff;
+  color: var(--color-accent);
 }
 .slide-desc {
   font-family: var(--font-body);
   font-size: clamp(14px, 1.15vw, 17px);
   line-height: 1.65;
-  color: rgba(250, 250, 248, 0.75);
+  color: var(--color-text-secondary);
   max-width: 46ch;
 }
-/* Ledger — al posto delle chip generiche, gli ESITI concreti del servizio
-   come righe editoriali numerate. Ogni riga ha un indice mono, una stanghetta
-   accent che cresce all'hover e il testo che slitta: dettaglio premium, zero
-   "tag standard". Niente layout cambiato: vive dove stavano le chip. */
-.slide-ledger {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+/* Feature card — al posto del ledger: sotto il testo del servizio, tre
+   piccole box editoriali (una per feature) che spiegano in più dettaglio cosa
+   comprende il servizio. Numero mono accent, titolo display compatto e una
+   riga di dettaglio; bordo hairline con hover che alza la box e accende
+   l'accent (stesso linguaggio delle card Progetti). Su desktop stanno in riga
+   nella colonna di sinistra; sotto 640px si impilano. */
+.slide-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
   width: 100%;
   max-width: 42ch;
 }
-.slide-ledger-row {
+@media (min-width: 640px) {
+  .slide-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(12px, 1vw, 16px);
+    max-width: none;
+  }
+}
+.slide-card {
   display: flex;
-  align-items: baseline;
-  gap: 14px;
-  padding: 11px 0;
-  border-top: 1px solid rgba(250, 250, 248, 0.1);
+  flex-direction: column;
+  gap: 7px;
+  padding: clamp(15px, 1.3vw, 20px);
+  border: 1px solid var(--color-border);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.5);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease;
 }
-.slide-ledger-row:last-child {
-  border-bottom: 1px solid rgba(250, 250, 248, 0.1);
+@media (hover: hover) {
+  .slide-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(59, 91, 219, 0.35);
+    box-shadow: var(--shadow-premium);
+    background: rgba(255, 255, 255, 0.86);
+  }
 }
-.slide-ledger-num {
-  flex: 0 0 auto;
+.slide-card-num {
   font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.12em;
-  color: #8aa0ff;
+  color: var(--color-accent);
   font-variant-numeric: tabular-nums;
 }
-/* Stanghetta accent: nasce corta e si allunga al passaggio del mouse. */
-.slide-ledger-rule {
-  flex: 0 0 auto;
-  width: 14px;
-  height: 1px;
-  background: rgba(138, 160, 255, 0.55);
-  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease;
+.slide-card-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(15px, 1.15vw, 18px);
+  line-height: 1.16;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
 }
-.slide-ledger-text {
+.slide-card-text {
   font-family: var(--font-body);
-  font-size: clamp(13px, 1vw, 15.5px);
-  line-height: 1.4;
-  color: rgba(250, 250, 248, 0.78);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+  font-size: clamp(12.5px, 0.92vw, 14px);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
 }
-.slide-ledger-row:hover .slide-ledger-rule {
-  width: 30px;
-  background: var(--color-accent);
+/* Reveal d'ingresso: le card entrano come gruppo con la scena (gated da
+   .has-reveal, così senza JS / reduced-motion restano visibili). Il reveal sta
+   sul contenitore per non entrare in conflitto con il transform dell'hover. */
+.has-reveal .slide-cards {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.5s ease, transform 0.65s var(--ease-cb-3);
 }
-.slide-ledger-row:hover .slide-ledger-text {
-  transform: translateX(4px);
-  color: #fafaf8;
+.has-reveal .is-active .slide-cards {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.12s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide-card { transition: none !important; }
+  .has-reveal .slide-cards {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 /* Reveal a righe sul testo delle service card — il testo emerge dal basso da
@@ -1503,154 +1582,200 @@ button {
   will-change: transform;
 }
 
-/* Placeholder immagine — cover brandizzata con grana e badge, stesso
-   linguaggio dei ritratti founder in attesa dei visual definitivi. */
-.slide-media {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 11;
-  border-radius: 24px;
-  overflow: hidden;
-  border: 1px solid rgba(250, 250, 248, 0.1);
-  box-shadow:
-    0 2px 4px rgba(13, 13, 13, 0.08),
-    0 30px 70px rgba(13, 13, 13, 0.3);
-}
-.services-stage.is-pinned .slide-media {
-  height: 100%;
-  aspect-ratio: auto;
-}
-/* ---- ART — animazioni SVG hairline per scena ----
-   Interfacce accennate in SVG puro: bianco a varie opacità + accento #8aa0ff
-   sopra le cover di palette. Le @keyframes sono dichiarate ma in PAUSA: partono
-   solo quando .slide-media riceve .is-active (IntersectionObserver, vedi
-   main.ts), transform/opacity-only. Sotto reduced-motion restano sul
-   fotogramma statico. */
-.media-art {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
+/* ---- TORRE ISOMETRICA — visual persistente della sezione ----
+   Tre box isometrici impilati (uno per servizio) che si sovrappongono in
+   wrapper bassi formando un'unica torre. Il JS (onUpdate del pin) toggla
+   .is-active sul layer del servizio a fuoco e .is-lifted sui layer sopra:
+   il layer attivo "esce" (si solleva + coperchio estruso + accent
+   periwinkle), quelli sopra si alzano per fargli spazio, gli inattivi
+   restano in trattamento hairline leggero. Tutte le transizioni sono CSS
+   (stesso contratto di .title-line: GSAP toggla classi, il tempo lo fa la
+   transizione → reversibile e fluido in entrambe le direzioni).
+   Geometria dal blocco Aceternity "Stacked Isometric Boxes", palette del
+   sito: navy + warm white a bassa opacità + periwinkle #8aa0ff. */
+.services-visual {
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
 }
-.svg-art {
-  width: min(78%, 360px);
-  height: auto;
+.services-tower {
+  --tower-size: clamp(150px, 40vw, 200px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .services-tower { --tower-size: clamp(220px, 22vw, 300px); }
+}
+.tower-layer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Wrapper basso + SVG pieno = i box si compenetrano in verticale. */
+  height: calc(var(--tower-size) * 0.3);
+  width: var(--tower-size);
+  transition:
+    transform 0.65s var(--ease-cb-3),
+    opacity 0.5s ease,
+    filter 0.5s ease;
+}
+.tower-layer:nth-child(1) { z-index: 3; }
+.tower-layer:nth-child(2) { z-index: 2; margin-top: calc(var(--tower-size) * 0.045); }
+.tower-layer:nth-child(3) { z-index: 1; margin-top: calc(var(--tower-size) * 0.045); }
+.tower-layer svg {
+  width: var(--tower-size);
+  height: var(--tower-size);
+  flex: none;
   overflow: visible;
 }
-/* Variante "nuda" — niente cover/box: resta solo l'elemento animato, che può
-   respirare e occupare più spazio (l'animazione È il visual della scena). */
-.slide-media--bare {
-  border: none;
-  background: none;
-  box-shadow: none;
-  overflow: visible;
+
+/* Trattamento base (inattivo): hairline warm white, facce appena tinte —
+   la faccia sinistra più scura per la lettura di profondità. */
+.tower-layer path,
+.tower-layer rect,
+.tower-layer circle {
+  transition:
+    fill 0.5s ease,
+    stroke 0.5s ease,
+    opacity 0.5s ease;
 }
-.slide-media--bare .svg-art {
-  width: min(100%, 480px);
+.tower-layer .t-top   { fill: rgba(13, 13, 13, 0.015); stroke: rgba(13, 13, 13, 0.22); }
+.tower-layer .t-in    { fill: rgba(13, 13, 13, 0.04);   stroke: rgba(13, 13, 13, 0.14); }
+.tower-layer .t-left  { fill: rgba(13, 13, 13, 0.07);   stroke: rgba(13, 13, 13, 0.22); }
+.tower-layer .t-right { fill: rgba(13, 13, 13, 0.02);   stroke: rgba(13, 13, 13, 0.2); }
+.tower-layer .t-dash  { stroke: rgba(13, 13, 13, 0.12); }
+.tower-layer .t-glyph-a { fill: var(--color-accent); opacity: 0.35; }
+.tower-layer .t-glyph-s { fill: rgba(13, 13, 13, 0.32); }
+
+/* Il coperchio (faccia superiore + rombo interno + glifo) può estrudersi
+   da solo: transizione dedicata, leggermente ritardata rispetto al
+   sollevamento del layer per un feel "a molla". */
+.tower-layer .t-cap {
+  transition: transform 0.65s var(--ease-cb-3) 0.06s;
 }
 
-/* 01 — SITI WEB: hero image + barre di testo compaiono in fade-in + slide-up
-   sequenziale (effetto caricamento pagina), poi sfumano e ricominciano. */
-.svg-web .wf {
-  opacity: 0;
-  transform-box: fill-box;
-  animation: web-load 4.6s ease-in-out infinite;
-  animation-play-state: paused;
-}
-.svg-web .wf-hero { animation-delay: 0s; }
-.svg-web .wf-l1 { animation-delay: 0.22s; }
-.svg-web .wf-l2 { animation-delay: 0.4s; }
-.svg-web .wf-l3 { animation-delay: 0.58s; }
-@keyframes web-load {
-  0%   { opacity: 0; transform: translateY(12px); }
-  14%  { opacity: 1; transform: translateY(0); }
-  74%  { opacity: 1; transform: translateY(0); }
-  90%  { opacity: 0; transform: translateY(-6px); }
-  100% { opacity: 0; transform: translateY(-6px); }
+/* Solo in pin-mode gli inattivi si attenuano (il default resta pieno e
+   leggibile per no-JS / reduced-motion). */
+.services-section.is-pin-mode .tower-layer { opacity: 0.42; }
+
+/* Layer sopra quello attivo: si alzano di più per "aprire" la pila e far
+   leggere chiaramente il movimento del box attivo che emerge sotto. */
+.tower-layer.is-lifted {
+  transform: translateY(calc(var(--tower-size) * -0.09));
 }
 
-/* 02 — GESTIONALI: due schede compaiono in sequenza; nel mezzo un grafico a
-   linee (accento) si "disegna" da sinistra a destra (stroke-dashoffset). */
-.svg-ops .op-card {
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: op-card-in 4.8s ease-in-out infinite;
-  animation-play-state: paused;
+/* Layer ATTIVO: piena opacità, sollevamento, COPERCHIO estruso in modo marcato
+   (il "lato" del cubo che si sposta, richiesto più evidente), line work e facce
+   in accent, alone morbido accent. Tutto in transizione CSS → reversibile. */
+.services-section.is-pin-mode .tower-layer.is-active { opacity: 1; }
+.tower-layer.is-active {
+  transform: translateY(calc(var(--tower-size) * -0.05));
+  filter: drop-shadow(0 18px 30px rgba(13, 13, 13, 0.13))
+    drop-shadow(0 0 18px rgba(59, 91, 219, 0.18));
 }
-.svg-ops .op-c1 { animation-delay: 0.1s; }
-.svg-ops .op-c2 { animation-delay: 0.5s; }
-.svg-ops .op-c3 { animation-delay: 0.9s; }
-@keyframes op-card-in {
-  0%   { opacity: 0; transform: translateY(9px) scale(0.97); }
-  12%  { opacity: 1; transform: translateY(0) scale(1); }
-  84%  { opacity: 1; transform: translateY(0) scale(1); }
-  95%  { opacity: 0; transform: translateY(-4px) scale(0.99); }
-  100% { opacity: 0; }
-}
-.svg-ops .op-chart {
-  stroke-dasharray: 130;
-  stroke-dashoffset: 130;
-  animation: op-draw 4.8s ease-in-out infinite;
-  animation-play-state: paused;
-}
-@keyframes op-draw {
-  0%, 14%  { stroke-dashoffset: 130; opacity: 0; }
-  20%      { opacity: 1; }
-  55%      { stroke-dashoffset: 0; opacity: 1; }
-  84%      { stroke-dashoffset: 0; opacity: 1; }
-  94%      { stroke-dashoffset: 0; opacity: 0; }
-  100%     { stroke-dashoffset: 130; opacity: 0; }
-}
+/* Estrusione del coperchio proporzionale alla torre (≈18px @300, ≈9px @150):
+   marcata a sufficienza da leggersi come "lato che si solleva", scalata bene
+   su mobile. */
+.tower-layer.is-active .t-cap    { transform: translateY(calc(var(--tower-size) * -0.06)); }
+.tower-layer.is-active .t-top    { fill: rgba(59, 91, 219, 0.1);  stroke: var(--color-accent); }
+.tower-layer.is-active .t-in     { fill: rgba(59, 91, 219, 0.06); stroke: rgba(59, 91, 219, 0.55); }
+.tower-layer.is-active .t-left   { fill: rgba(59, 91, 219, 0.13); stroke: rgba(59, 91, 219, 0.6); }
+.tower-layer.is-active .t-right  { fill: rgba(59, 91, 219, 0.04); stroke: rgba(59, 91, 219, 0.45); }
+.tower-layer.is-active .t-dash   { stroke: rgba(59, 91, 219, 0.4); }
+.tower-layer.is-active .t-glyph-a { opacity: 1; }
+.tower-layer.is-active .t-glyph-s { fill: rgba(13, 13, 13, 0.72); }
 
-/* 03 — SOCIAL: il feed scorre dal basso verso l'alto in loop; al centro un
-   cuore "like" (accento) si illumina e svanisce. */
-.svg-social .feed-track {
-  animation: feed-scroll 9s linear infinite;
-  animation-play-state: paused;
-}
-@keyframes feed-scroll {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-160px); }
-}
-.svg-social .like-heart {
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: like-pop 3s ease-in-out infinite;
-  animation-play-state: paused;
-  filter: drop-shadow(0 0 7px rgba(138, 160, 255, 0.85));
-}
-@keyframes like-pop {
-  0%, 58%   { opacity: 0; transform: scale(0.4); }
-  68%       { opacity: 1; transform: scale(1.18); }
-  80%       { opacity: 1; transform: scale(1); }
-  92%, 100% { opacity: 0; transform: scale(0.85); }
-}
-
-/* GATE — le animazioni partono solo a quadrato visibile (.is-active). */
-.slide-media.is-active .svg-web .wf,
-.slide-media.is-active .svg-ops .op-card,
-.slide-media.is-active .svg-ops .op-chart,
-.slide-media.is-active .svg-social .feed-track,
-.slide-media.is-active .svg-social .like-heart {
-  animation-play-state: running;
+/* Viewport bassi (telefoni piccoli / landscape) in composizione colonna:
+   torre e palco più compatti per non sforare la schermata pinnata. */
+@media (max-width: 1023px) and (max-height: 720px) {
+  .services-tower { --tower-size: clamp(120px, 26vw, 150px); }
+  .services-stage.is-pinned { height: clamp(300px, 52vh, 400px); }
+  .slide-title { font-size: clamp(28px, 4.6vw, 40px); }
+  .slide-cards { gap: 8px; }
+  .slide-card { padding: 12px 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .svg-web .wf,
-  .svg-ops .op-card,
-  .svg-ops .op-chart,
-  .svg-social .feed-track,
-  .svg-social .like-heart {
-    animation: none;
-    opacity: 1;
+  .tower-layer,
+  .tower-layer .t-cap,
+  .tower-layer path,
+  .tower-layer rect,
+  .tower-layer circle {
+    transition: none !important;
   }
-  .svg-ops .op-chart { stroke-dashoffset: 0; }
-  .svg-social .feed-track { transform: none; }
+}
+
+/* ----------------------------------------------------------------------
+   CHI SIAMO — scena cinematografica: il video dello Sciliar in bianco e
+   nero come fondale sticky, lo statement pinnato che si riempie lettera
+   per lettera, i nomi del duo come firma. Il colore della sezione vive
+   sul canvas (vedi morph in main.ts): il background qui è solo fallback
+   per no-JS / reduced-motion.
+-------------------------------------------------------------------------- */
+.about-section {
+  position: relative;
+  background: var(--color-warm-deeper);
+  overflow: clip;
+}
+/* Il contenuto sta sopra il fondale video. */
+.about-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* BACKDROP — video sticky a tutta viewport dietro al contenuto, pura
+   scenografia (pointer-events: none). La mask verticale fa nascere e
+   morire il video dentro il colore del canvas — qualunque esso sia
+   durante i morph — così la fusione con lo sfondo è sempre perfetta. */
+.about-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.services-scroll-hint {
+  position: absolute;
+  right: 34px;
+  bottom: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.services-scroll-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.services-scroll-line {
+  position: relative;
+  width: 1px;
+  height: 44px;
+  background: rgba(13, 13, 13, 0.14);
+  overflow: hidden;
+}
+.services-scroll-line::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 14px;
+  background: var(--color-accent);
+  animation: scroll-dash 1.9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-scroll-line::after {
+    animation: none;
+  }
 }
 
 /* ----------------------------------------------------------------------
@@ -3137,49 +3262,6 @@ nav:has(#burger-menu.is-open) .pill {
   to { transform: translateY(46px); }
 }
 
-.services-scroll-hint {
-  position: absolute;
-  right: 34px;
-  bottom: 34px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-.services-scroll-label {
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.65);
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-}
-.services-scroll-line {
-  position: relative;
-  width: 1px;
-  height: 44px;
-  background: rgba(250, 250, 248, 0.18);
-  overflow: hidden;
-}
-.services-scroll-line::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 14px;
-  background: rgba(250, 250, 248, 0.7);
-  animation: scroll-dash 1.9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .services-scroll-line::after {
-    animation: none;
-  }
-}
-
 /* Tilt 3D delle founder card — la prospettiva sta sul genitore, la rotazione
    (GSAP) sulla media. */
 .founder-card {
@@ -4638,7 +4720,8 @@ nav:has(#burger-menu.is-open) .pill {
 }
 
 
-/* ---- Aurora della banda navy — bagliori jewel-tone in deriva lenta ---- */
+/* ---- Aura chiara — bagliori accent appena percettibili in deriva lenta:
+   danno profondità alla sezione chiara senza sporcare il fondo warm white. ---- */
 .services-glow {
   position: absolute;
   z-index: 0;
@@ -4655,7 +4738,7 @@ nav:has(#burger-menu.is-open) .pill {
   height: 46vw;
   left: -14vw;
   top: 2vh;
-  background: radial-gradient(circle, rgba(138, 160, 255, 0.17), transparent 70%);
+  background: radial-gradient(circle, rgba(59, 91, 219, 0.06), transparent 70%);
   animation: glow-drift-a 26s ease-in-out infinite alternate;
 }
 .services-glow--2 {
@@ -4663,7 +4746,7 @@ nav:has(#burger-menu.is-open) .pill {
   height: 40vw;
   right: -12vw;
   top: 26vh;
-  background: radial-gradient(circle, rgba(59, 91, 219, 0.22), transparent 70%);
+  background: radial-gradient(circle, rgba(59, 91, 219, 0.05), transparent 70%);
   animation: glow-drift-b 32s ease-in-out infinite alternate;
 }
 @keyframes glow-drift-a {
@@ -5047,7 +5130,7 @@ nav:has(#burger-menu.is-open) .pill {
 
 /* Le voci del menu (numerate) e i punti dei servizi: wrapping controllato. */
 .sm-panel-itemLabel,
-.slide-ledger-text,
+.slide-card-text,
 .ap-focus li,
 .footer-link {
   overflow-wrap: break-word;
