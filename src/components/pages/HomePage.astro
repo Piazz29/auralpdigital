@@ -15,6 +15,7 @@ import Rich from "../Rich.astro";
 import SplitText from "../reactbits/SplitText.jsx";
 import PointSection from "../PointSection.astro";
 import ServicesTower from "../ServicesTower.astro";
+import MacBookProjects from "../MacBookProjects.astro";
 import "../../styles/global.css";
 
 interface Props {
@@ -265,83 +266,15 @@ const services = servicesMeta.map((m, i) => ({
         </a>
       </div>
 
-      <!-- STAGE 3D PIN — 3 card grandi in riga (desktop). L'animazione firma
-           (tilt prospettico + "pin" fluttuante con anelli pulsanti) è pura CSS,
-           gated da (hover:hover); main.ts aggiunge solo play video e il flag
-           reduced-motion. Adattamento del componente Aceternity 3D Pin al brand. -->
-      <div class="pinstage">
-        {projects.map((p, i) => {
-          const external = !!p.url && !p.url.startsWith("#");
-          const flagText = p.flag || p.cta;
-          return (
-            <a
-              class={`projpin${p.status === "soon" ? " projpin--cta" : ""}`}
-              href={p.url}
-              data-anim="projpin"
-              style={`--i:${i}`}
-              {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            >
-              <!-- PIN — flag + fascio + anelli pulsanti (appare in hover) -->
-              <span class="projpin-pin" aria-hidden="true">
-                <span class="projpin-rings">
-                  <span class="projpin-ring"></span>
-                  <span class="projpin-ring"></span>
-                  <span class="projpin-ring"></span>
-                </span>
-                <span class="projpin-beam"></span>
-                <span class="projpin-flag">
-                  <span class="projpin-flag-dot"></span>
-                  <span class="projpin-flag-text">{flagText}</span>
-                  <span class="projpin-flag-arrow">↗</span>
-                </span>
-              </span>
-
-              <!-- CARD — faccia editoriale che rincula in prospettiva -->
-              <span class="projpin-persp">
-                <span class={`projpin-card grad-${(i % 4) + 1}`}>
-                  {p.video && (
-                    <video
-                      class="projpin-media"
-                      src={p.video}
-                      loop
-                      muted
-                      playsinline
-                      preload="metadata"
-                      data-projpin-video
-                    />
-                  )}
-                  <span class="projpin-scrim" aria-hidden="true"></span>
-                  {p.status === "soon" && (
-                    <svg class="projpin-emblem" viewBox="0 0 120 120" fill="none" aria-hidden="true">
-                      <circle cx="60" cy="60" r="46" stroke="currentColor" stroke-width="1" stroke-dasharray="3 7" opacity="0.5" />
-                      <circle cx="60" cy="60" r="30" stroke="currentColor" stroke-width="1" opacity="0.35" />
-                      <line x1="60" y1="46" x2="60" y2="74" stroke="currentColor" stroke-width="1.4" />
-                      <line x1="46" y1="60" x2="74" y2="60" stroke="currentColor" stroke-width="1.4" />
-                      <circle cx="60" cy="60" r="3.4" fill="currentColor" />
-                    </svg>
-                  )}
-                  <span class="projpin-index" aria-hidden="true">{p.n}</span>
-
-                  <span class="projpin-body">
-                    <span class="projpin-kicker">
-                      <span class="projpin-tick" aria-hidden="true"></span>
-                      {p.type}{p.year ? ` · ${p.year}` : ""}
-                    </span>
-                    <h3 class="projpin-title">{p.title} <em>{p.titleEm}</em></h3>
-                    {p.desc && <p class="projpin-desc">{p.desc}</p>}
-                    {p.cta && (
-                      <span class="projpin-cta">
-                        <span class="projpin-cta-label">{p.cta}</span>
-                        <span class="projpin-cta-arrow">↗</span>
-                      </span>
-                    )}
-                  </span>
-                </span>
-              </span>
-            </a>
-          );
-        })}
-      </div>
+      <!-- STAGE MACBOOK SCROLL — reimplementazione GSAP del componente Aceternity
+           "MacBook Scroll". La sezione si pinna: lo scroll apre il coperchio e fa
+           avvicendare sullo schermo i due progetti reali (uno per volta, a piena
+           grandezza) fino alla scena CTA "Il prossimo.". Meccanica in main.ts. -->
+      <MacBookProjects
+        projects={projects}
+        previewLabel={tp.previewLabel}
+        ctaAddress={tp.ctaAddress}
+      />
     </div>
   </section>
 

@@ -240,6 +240,7 @@ const en = {
       title: "What we've created.",
       link: "The next one is yours",
       previewLabel: "Preview",
+      ctaAddress: "your-project",
       items: [
         {
           type: "Beauty · Permanent Make-up",

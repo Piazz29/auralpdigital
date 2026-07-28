@@ -517,21 +517,15 @@ const revealRise = (targets: gsap.DOMTarget, opts: RiseOpts = {}) => {
   );
 };
 
-// ---------- Lavori selezionati — entrata header + card 3D Pin ----------
-// Header e card salgono in cascata all'ingresso in viewport della stage.
+// ---------- Lavori selezionati — entrata header dello stage MacBook ----------
+// L'header sale all'ingresso in viewport; il "reveal" del laptop è l'apertura
+// del coperchio guidata dallo scroll (vedi lo stage MacBook più in basso).
 revealRise("[data-anim='works-head']", {
-  trigger: ".pinstage",
-  start: "top 85%",
+  trigger: ".mbp-mount",
+  start: "top 90%",
   stagger: 0.12,
   y: 26,
   duration: 0.9,
-});
-revealRise("[data-anim='projpin']", {
-  trigger: ".pinstage",
-  start: "top 82%",
-  stagger: 0.1,
-  y: 48,
-  duration: 1,
 });
 
 // ---------- Header di sezione — stesso reveal per Servizi e Chi Siamo ----------
@@ -705,10 +699,12 @@ if (pointSection && pointLogo && pointText && pointInk && pointAccent && !reduce
       scrub: 1, // scroll-driven con un filo d'inerzia (resta burroso con Lenis)
       anticipatePin: 1,
       invalidateOnRefresh: true,
-      // Più alto del pin dei Servizi (1): essendo PRIMA nella pagina dev'essere
-      // ricalcolato per primo, così il suo spacer è in posizione quando i
-      // trigger a valle (morph colore canvas, pin Servizi) leggono le coordinate.
-      refreshPriority: 2,
+      // Priorità massima: è il PRIMO pin della pagina, dev'essere ricalcolato
+      // per primo così il suo spacer è in posizione quando i trigger a valle
+      // (morph colore canvas, pin Servizi/Progetti/Chi-siamo) leggono le
+      // coordinate. Scala per posizione: pointSection 4 > servizi 3 >
+      // progetti 2 > chi-siamo 1 > morph 0.
+      refreshPriority: 4,
       onUpdate: (self) => {
         // Reveal a tempo (sempre fluido), lo scroll fa solo da grilletto. Soglie
         // ASIMMETRICHE: scendendo il testo compare a `textRevealAt` (logo che si
@@ -928,7 +924,10 @@ if (servicesStage && serviceSlides.length && !reduceMotion) {
       // per primo, così quei trigger leggono le posizioni già spostate e
       // il navy resta pieno per tutta la sezione, tornando chiaro solo
       // entrando in chi-siamo.
-      refreshPriority: 1,
+      // Priorità 3: è il PRIMO pin della pagina, deve ricalcolarsi prima di
+      // tutti (progetti=2, chi-siamo=1, morph=0), così ogni spacer a valle
+      // legge le posizioni già spostate. Vedi nota sul pin dei progetti.
+      refreshPriority: 3,
     },
   });
 
@@ -1459,33 +1458,107 @@ if (
   }
 }
 
-// ---------- Progetti (stage 3D Pin) — preview video delle card ----------
-// L'interazione 3D (tilt + pin con anelli) è tutta CSS, gated da (hover:hover).
-// Qui serve solo pilotare la preview video: parte all'hover del puntatore, o
-// via IntersectionObserver su touch (dove l'hover non esiste). Il video è muto
-// e in loop; a fine hover torna al primo frame.
-const pinstage = document.querySelector<HTMLElement>(".pinstage");
-if (pinstage) {
-  if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-    pinstage.querySelectorAll<HTMLElement>(".projpin").forEach((card) => {
-      const vid = card.querySelector<HTMLVideoElement>("video");
-      if (!vid) return;
-      card.addEventListener("pointerenter", () => void vid.play().catch(() => {}));
-      card.addEventListener("pointerleave", () => {
-        vid.pause();
-        vid.currentTime = 0;
-      });
-    });
-  } else {
-    pinstage.querySelectorAll<HTMLVideoElement>("video").forEach((vid) => {
-      const obs = new IntersectionObserver(
-        ([e]) => {
-          e.isIntersecting ? void vid.play().catch(() => {}) : (vid.pause(), (vid.currentTime = 0));
+// ---------- Progetti — stage MacBook Scroll (reimplementazione GSAP) ----------
+// Reimplementazione del componente Aceternity "MacBook Scroll": la sezione si
+// BLOCCA (pin) e lo scroll guida una timeline che (1) apre il coperchio
+// (rotateX) scalando il laptop, poi (2) fa avvicendare sullo schermo le slide
+// dei progetti — una attiva per volta (crossfade CSS) — fino alla scena CTA.
+// La parte continua (coperchio + scale) è scrubbata; l'indice attivo è discreto
+// e sincronizzato dall'onUpdate (idempotente → corretto anche scrollando su).
+// Le tab sotto il laptop indicano la fase e permettono il salto diretto
+// (lenis.scrollTo su desktop, switch immediato su mobile/touch).
+// Senza pin (mobile o reduced-motion): laptop aperto statico, tab = switch.
+{
+  // Stage MacBook 3D — il laptop è ora un modello glTF renderizzato in WebGL
+  // dall'isola React MacBook3D (client-only). main.ts NON tocca più il DOM del
+  // laptop (coperchio, slide, tastiera): resta l'UNICO driver di scroll
+  // (Lenis + ScrollTrigger) e pilota la scena tramite lo store globale
+  // window.__mbp, letto dall'isola:
+  //   • store.open  (0→1) = apertura del coperchio (letto in useFrame → rotazione)
+  //   • store.index (int) = slide attiva (→ window.__mbpApi.setIndex → React)
+  // Il numero di slide arriva da data-mbp-count sul wrapper statico (subito
+  // disponibile, prima ancora che l'isola idrati → niente race sul pin).
+  const mount = document.querySelector<HTMLElement>("[data-mbp-mount]");
+  const projectsSection = document.querySelector<HTMLElement>("#projects");
+  const slideCount = Math.max(
+    1,
+    parseInt(mount?.dataset.mbpCount ?? "0", 10) || 0
+  );
+
+  interface MbpStore {
+    open: number;
+    index: number;
+    count?: number;
+  }
+  const win = window as unknown as {
+    __mbp?: MbpStore;
+    __mbpApi?: { setIndex: (i: number) => void };
+    __mbpSeek?: (i: number) => void;
+  };
+
+  if (mount && projectsSection) {
+    const store: MbpStore = (win.__mbp ??= { open: 0, index: 0 });
+    store.count = slideCount;
+
+    const setIndex = (idx: number) => {
+      const i = Math.max(0, Math.min(slideCount - 1, idx));
+      if (store.index === i) return;
+      store.index = i;
+      win.__mbpApi?.setIndex(i); // idempotente lato isola
+    };
+
+    const canPin =
+      window.matchMedia("(min-width: 769px)").matches && !reduceMotion;
+
+    if (canPin) {
+      projectsSection.classList.add("is-pin-mode");
+      store.open = 0;
+      store.index = 0;
+
+      // Unità di timeline = "vh scrollati": mapping 1:1 con la distanza di pin.
+      const INTRO = 0.95; // apertura del coperchio (frazione iniziale)
+      const STEP = 1.1; // permanenza per progetto
+      const TAIL = 0.3; // coda finale sulla CTA (breve: niente scroll morto)
+      const total = INTRO + STEP * slideCount + TAIL;
+
+      const st = ScrollTrigger.create({
+        trigger: "#projects",
+        start: "top top",
+        end: () => "+=" + Math.round(window.innerHeight * total),
+        pin: true,
+        scrub: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        // CRITICO: questo pin sta TRA servizi (priority 3) e chi-siamo
+        // (priority 1). Deve ricalcolarsi PRIMA di chi-siamo, altrimenti il
+        // suo pin-spacer viene inserito dopo che le posizioni di chi-siamo
+        // sono già fissate → chi-siamo (video + testo) si sblocca troppo
+        // presto e si sovrappone al monitor. Priority 2 impone l'ordine
+        // corretto: servizi → progetti → chi-siamo.
+        refreshPriority: 2,
+        onUpdate: (self) => {
+          const time = self.progress * total;
+          // Apertura coperchio mappata sulla prima frazione (INTRO) dello scroll.
+          store.open = Math.max(0, Math.min(1, time / INTRO));
+          // Indice slide sul resto (discreto, idempotente → corretto anche su).
+          setIndex(Math.floor((time - INTRO) / STEP));
         },
-        { threshold: 0.5 }
-      );
-      obs.observe(vid);
-    });
+      });
+
+      // Tab → salto diretto alla fase corrispondente (centro della slide).
+      // Esposto all'isola: al click di una tab chiama window.__mbpSeek(i).
+      win.__mbpSeek = (i: number) => {
+        const frac = (INTRO + STEP * i + STEP * 0.5) / total;
+        const y = st.start + (st.end - st.start) * frac;
+        lenis.scrollTo(y, { duration: 1.1 });
+      };
+    } else {
+      // Statico (mobile / reduced-motion): coperchio aperto, prima slide attiva.
+      // Lo switch via tab è gestito dall'isola stessa (fallback senza pin);
+      // qui niente __mbpSeek, così l'isola cambia slide immediatamente.
+      store.open = 1;
+      store.index = 0;
+    }
   }
 }
 

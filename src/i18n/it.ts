@@ -245,6 +245,7 @@ const it = {
       title: "Cosa abbiamo creato.",
       link: "Il prossimo è il tuo",
       previewLabel: "Anteprima",
+      ctaAddress: "il-tuo-progetto",
       items: [
         {
           type: "Beauty · Permanent Make-up",

@@ -241,6 +241,7 @@ const de = {
       title: "Was wir geschaffen haben.",
       link: "Das nächste ist deins",
       previewLabel: "Vorschau",
+      ctaAddress: "dein-projekt",
       items: [
         {
           type: "Beauty · Permanent Make-up",
