@@ -1,30 +1,101 @@
 @import "tailwindcss";
 
 @theme {
-  /* Palette ufficiale — unica fonte dei colori del sito. */
-  --color-bg: #FAFAF8;
-  --color-text: #0D0D0D;
-  --color-text-secondary: #4A4A4A;
-  --color-text-muted: #9AA3B2;
-  --color-accent: #3B5BDB;
+  /* ======================================================================
+     PALETTE — unica fonte dei colori del sito.
+     Tre famiglie, ognuna con un ruolo preciso:
+
+     1. CARTA    → tutte le superfici chiare. Bianco carta, appena tiepido.
+     2. BLU      → struttura e tecnologia: link, focus, UI, superfici scure,
+                   grafica di sistema (torre servizi, card progetti, form).
+     3. ARANCIO  → calore e azione: corsivi dei titoli nelle sezioni "calde",
+                   numerali, hairline dei kicker, hover dei bottoni d'azione.
+
+     Il ritmo della pagina alterna le due famiglie sezione per sezione
+     (vedi "ASSEGNAZIONE PER SEZIONE" più sotto): Hero arancio → Servizi blu →
+     Progetti arancio → Chi siamo blu → CTA calda su scuro → Footer blu.
+     ====================================================================== */
+
+  /* --- Superfici: scala carta (dal più chiaro al più caldo) --- */
+  --color-bg: #FCFAF6;            /* carta base — fondo di tutta la pagina */
+  --color-surface: #F6F2EA;       /* carta profonda — box, card, hover */
+  --color-warm-deeper: #F2EEE5;   /* sabbia chiara — bande alternate di /chi-siamo.
+                                     NON si usa in home: lì il fondo è sempre e
+                                     solo la carta base, senza virate di tono. */
+  --color-border: #E8E3D9;        /* hairline caldo */
+  --color-border-strong: #D9D2C4; /* hairline marcato */
+
+  /* --- Inchiostri caldi (nessun grigio freddo sul testo) --- */
+  --color-text: #171310;
+  --color-text-secondary: #544C40;
+  /* Terzo gradino della scala di lettura. Era #9C9384: bello ma fuori norma
+     (2.9:1 sulla carta), e su kicker/label/footer il testo si sfaldava nel
+     fondo. #746B5C tiene la stessa temperatura calda e passa AA su tutte e
+     tre le carte (5.0 base · 4.7 surface · 4.5 sabbia), lasciando intatta la
+     gerarchia: ink 16:1 → secondary 8.1:1 → muted 5.0:1. */
+  --color-text-muted: #746B5C;
+
+  /* --- Famiglia BLU — struttura, tecnologia, superfici scure --- */
+  --color-accent: #3B5BDB;        /* blu brand */
+  --color-accent-soft: #8AA0FF;   /* periwinkle — accento del blu sullo scuro */
   --color-navy: #1A2340;
-  --color-cta-bg: #0D0D0D;
-  --color-cta-text: #FAFAF8;
-  --color-border: #E8E8E5;
-  --shadow-premium: 0 4px 20px rgba(13, 13, 13, 0.06);
+  --color-navy-deep: #121A33;
+  --color-steel: #9AA3B2;         /* foschia fredda dentro i gradienti scuri */
+
+  /* --- Famiglia CALDA — energia, azione, dettaglio umano --- */
+  --color-orange: #E2632F;        /* arancio brand (grafica, hairline, hover) */
+  --color-orange-deep: #B8461C;   /* variante da TESTO su carta (contrasto AA) */
+  --color-amber: #F0A24B;         /* bagliori e aloni caldi */
+  --color-clay: #F6E3D2;          /* velatura calda su superfici chiare */
+
+  /* --- Bottoni --- */
+  --color-cta-bg: #171310;
+  --color-cta-text: #FCFAF6;
+  --shadow-premium: 0 4px 20px rgba(23, 19, 16, 0.06);
 
   /* Alias storici — stessi valori della palette, nomi usati nel resto del CSS. */
-  --color-ink: #0D0D0D;
-  --color-secondary: #4A4A4A;
-  --color-muted: #9AA3B2;
-  --color-warm: #FAFAF8;
-  --color-warm-deeper: #E8E8E5;
-  --color-border-soft: #E8E8E5;
+  --color-ink: #171310;
+  --color-secondary: #544C40;
+  --color-muted: #746B5C;   /* allineato a --color-text-muted, vedi nota sopra */
+  --color-warm: #FCFAF6;
+  --color-border-soft: #E8E3D9;
 
-  /* Display/headline → Space Grotesk (tech, geometrico) · Body/UI → Inter */
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Satoshi su tutto: display e body sono la stessa famiglia (variabile,
+     wght 300..900). Restano due variabili distinte perché la gerarchia la
+     fanno peso e tracking, non il cambio di carattere — e per poter tornare
+     a due famiglie da un punto solo. */
+  --font-display: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Satoshi", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
+
+/* ======================================================================
+   ASSEGNAZIONE PER SEZIONE — chi usa cosa (mappa di riferimento).
+
+   TESTI (ovunque):   titolo = ink caldo · corpo = secondary · meta = muted.
+                      Il CORSIVO dei titoli prende il dominante della sezione.
+   SEGNI RICORRENTI:  hairline dei kicker e numerali = sempre ARANCIO.
+                      Bottoni primari: fondo ink, hover ARANCIO.
+                      Focus, bordi attivi dei campi, link = sempre BLU.
+
+   Home
+     Hero .............. ARANCIO  (corsivo, hairline badge, scroll hint)
+     Il punto .......... BLU      (statement + alone del wordmark)
+     Cosa facciamo ..... BLU      (corsivi, torre isometrica) + numerali arancio
+     Progetti .......... ARANCIO  (parola-fondale, aloni, didascalie, puntini)
+                                   su card navy/blu → contrasto complementare
+     Chi siamo ......... BLU      su carta base + video B/N (nessuna banda:
+                                   il fondo non cambia mai tono in home)
+     Contatti .......... AMBRA    su pannello scuro (aside blu, submit arancio)
+     Footer ............ BLU      (link) + stella arancio
+
+   /chi-siamo
+     Hero aurora ....... BLU + ARANCIO (nastri misti), corsivo arancio
+     Manifesto ......... ARANCIO
+     Il duo ............ BLU      (badge alternati caldo/freddo)
+     Percorso .......... BLU→ARANCIO (la linea si scalda scendendo), anni arancio
+     Come lavoriamo .... AMBRA su pannello scuro
+   /faq ................ BLU (interazione) + kicker e dots arancio
+   ====================================================================== */
 
 /* Tutti i titoli usano il font display */
 h1,
@@ -33,10 +104,10 @@ h3 {
   font-family: var(--font-display);
 }
 
-/* Selezione testo brandizzata — micro-dettaglio che firma ogni copia. */
+/* Selezione testo brandizzata — arancio: il segno caldo che firma ogni copia. */
 ::selection {
-  background: rgba(59, 91, 219, 0.9);
-  color: #fafaf8;
+  background: rgba(226, 99, 47, 0.92);
+  color: #FCFAF6;
 }
 
 html,
@@ -108,14 +179,15 @@ html.lenis body {
 #mobile-menu {
   --menu-r: 0%;
   /* Aurora boreale sulle Alpi — mesh di gradienti che deriva lentamente.
-     Tinte SOLO dalla palette (accent / navy / muted) su warm white:
-     i testi scuri del menu restano leggibili. */
+     Blu e navy come base, un braccio arancio/ambra in basso (come le aurore
+     vere, che virano al rosso ai bordi) su carta: i testi scuri restano
+     perfettamente leggibili. */
   background-color: var(--color-bg);
   background-image:
     radial-gradient(58% 50% at 12% 16%, rgba(59, 91, 219, 0.20), transparent 70%),
     radial-gradient(54% 46% at 88% 10%, rgba(26, 35, 64, 0.16), transparent 70%),
-    radial-gradient(66% 56% at 84% 90%, rgba(59, 91, 219, 0.13), transparent 70%),
-    radial-gradient(50% 44% at 20% 94%, rgba(154, 163, 178, 0.18), transparent 70%),
+    radial-gradient(66% 56% at 84% 90%, rgba(226, 99, 47, 0.16), transparent 70%),
+    radial-gradient(50% 44% at 20% 94%, rgba(240, 162, 75, 0.20), transparent 70%),
     radial-gradient(46% 40% at 50% 52%, rgba(26, 35, 64, 0.07), transparent 70%);
   background-repeat: no-repeat;
   background-size: 160% 160%, 150% 150%, 172% 172%, 150% 150%, 140% 140%;
@@ -257,64 +329,6 @@ html.lenis body {
   transform: translateY(-8px) rotate(-45deg);
 }
 
-/* Custom cursor — accent dot follows precisely, thin ring trails smoothly.
-   Centering is done with negative margins so the JS transform is pure
-   position (no CSS transition on it → no double-lag). */
-.cursor-dot,
-.cursor-ring {
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 9999;
-  will-change: transform;
-}
-
-.cursor-dot {
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 9999px;
-  background: var(--color-accent);
-}
-
-.cursor-ring {
-  width: 38px;
-  height: 38px;
-  margin: -19px 0 0 -19px;
-}
-
-/* Inner circle carries the visuals + the only transition (scale/colour on
-   hover), keeping the trailing position perfectly responsive. */
-.cursor-ring-circle {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 9999px;
-  border: 1px solid var(--color-muted);
-  transition:
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.3s ease;
-}
-
-.cursor-ring.is-hover .cursor-ring-circle {
-  transform: scale(1.45);
-}
-
-@media (max-width: 768px) {
-  .cursor-dot,
-  .cursor-ring {
-    display: none;
-  }
-  body {
-    cursor: auto;
-  }
-}
-
-body {
-  cursor: none;
-}
-
 /* ---------- Barra scroll personalizzata ---------- */
 #scroll-track {
   position: fixed;
@@ -322,7 +336,7 @@ body {
   top: 0;
   width: 3px;
   height: 100vh;
-  background: rgba(13, 13, 13, 0.08);
+  background: rgba(23, 19, 16, 0.08);
   z-index: 9999;
   pointer-events: none;
 }
@@ -330,7 +344,9 @@ body {
 #scroll-fill {
   width: 100%;
   height: 100%;
-  background: var(--color-accent);
+  /* Blu → arancio: la barra si "scalda" scendendo, come il ritmo cromatico
+     della pagina (sezioni fredde e calde alternate). */
+  background: linear-gradient(to bottom, var(--color-accent), var(--color-orange));
   /* Riempimento via transform: scaleY (aggiornato dal JS) → solo compositing,
      niente layout/paint per frame. transform-origin in alto = cresce dall'alto. */
   transform: scaleY(0);
@@ -341,20 +357,11 @@ body {
 
 a,
 button {
-  cursor: none;
-}
-
-@media (max-width: 768px) {
-  a,
-  button {
-    cursor: pointer;
-  }
+  cursor: pointer;
 }
 
 /* Pill buttons — primary (filled ink) + outline (secondary).
-   Both share a lift-on-hover that mirrors the custom cursor ring, which
-   scales up over hoverable elements: button + cursor "grow" together with
-   the same easing so the interaction feels like one gesture. */
+   Entrambi condividono il sollevamento in hover. */
 .pill,
 .pill-outline {
   display: inline-flex;
@@ -384,18 +391,19 @@ button {
   transform: translate(2px, -2px);
 }
 
-/* Primary — filled ink, deepens to navy. */
+/* Primary — inchiostro pieno che in hover si accende di ARANCIO: nel sistema
+   di colore il caldo significa "azione" (tutti i bottoni primari fanno così). */
 .pill {
-  background: #0D0D0D;
-  color: #FAFAF8;
-  border-color: #0D0D0D;
+  background: #171310;
+  color: #FCFAF6;
+  border-color: #171310;
 }
 .pill:hover {
-  background: #1A2340;
-  border-color: #1A2340;
+  background: var(--color-orange);
+  border-color: var(--color-orange);
 }
 
-/* Secondary — ghost outline, fills with accent on hover (matches cursor dot). */
+/* Secondary — ghost outline, fills with accent on hover. */
 .pill-outline {
   background: transparent;
   color: var(--color-navy);
@@ -404,14 +412,17 @@ button {
 .pill-outline:hover {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: #FAFAF8;
+  color: #FCFAF6;
 }
 
-/* Shared lift — the "grow" that pairs with the cursor ring. */
+/* Shared lift. */
 .pill:hover,
 .pill-outline:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 10px 26px rgba(26, 35, 64, 0.2);
+}
+.pill:hover {
+  box-shadow: 0 10px 26px rgba(226, 99, 47, 0.32);
 }
 
 /* Nav link */
@@ -447,7 +458,7 @@ button {
    Layer 2: fusione ai bordi (vignettatura calda) per far emergere il video dalla
    pagina invece di sembrare un rettangolo appiccicato. */
 .hero-warm-overlay {
-  background: rgba(250, 250, 248, 0.25);
+  background: rgba(252, 250, 246, 0.25);
 }
 
 .hero-edge-fade {
@@ -457,28 +468,34 @@ button {
   background:
     linear-gradient(
       to bottom,
-      rgba(250, 250, 248, 0.45) 0%,
+      rgba(252, 250, 246, 0.45) 0%,
       transparent 20%,
       transparent 80%,
-      rgba(250, 250, 248, 0.45) 100%
+      rgba(252, 250, 246, 0.45) 100%
     ),
     linear-gradient(
       to right,
-      rgba(250, 250, 248, 0.45) 0%,
+      rgba(252, 250, 246, 0.45) 0%,
       transparent 14%,
       transparent 86%,
-      rgba(250, 250, 248, 0.45) 100%
+      rgba(252, 250, 246, 0.45) 100%
     );
 }
 
 /* Fusione hero → progetti: banda in fondo alla hero che sfuma fino al warm
    white della pagina, così non c'è uno stacco netto tra video e sezione sotto. */
 .hero-bottom-fade {
-  height: 38vh;
+  /* Banda alta e a pendenza costante: il video della hero è già sciolto nel
+     colore della pagina ben prima del bordo della sezione, così la giunzione
+     con Chi Siamo (che sotto continua con lo stesso warm white del canvas)
+     non ha nessuna linea percepibile. */
+  height: 52vh;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(250, 250, 248, 0.5) 55%,
+    rgba(252, 250, 246, 0.35) 34%,
+    rgba(252, 250, 246, 0.78) 64%,
+    var(--color-bg) 88%,
     var(--color-bg) 100%
   );
 }
@@ -490,14 +507,14 @@ button {
   align-items: center;
   gap: 14px;
   color: var(--color-ink);
-  text-shadow: 0 1px 8px rgba(250, 250, 248, 0.9);
+  text-shadow: 0 1px 8px rgba(252, 250, 246, 0.9);
 }
 .hero-badge::before,
 .hero-badge::after {
   content: "";
   width: 28px;
   height: 1px;
-  background: var(--color-accent);
+  background: var(--color-orange);
 }
 
 /* Hero — link secondario accanto al pill: hairline essenziale, stesso
@@ -514,15 +531,15 @@ button {
   text-decoration: none;
   color: var(--color-text);
   padding-bottom: 6px;
-  border-bottom: 1px solid rgba(13, 13, 13, 0.22);
+  border-bottom: 1px solid rgba(23, 19, 16, 0.22);
   transition: color 0.25s ease, border-color 0.25s ease;
 }
 .hero-link > [aria-hidden] {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hero-link:hover {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
+  color: var(--color-orange-deep);
+  border-color: var(--color-orange-deep);
 }
 .hero-link:hover > [aria-hidden] {
   transform: translate(2px, -2px);
@@ -538,16 +555,11 @@ button {
 }
 
 /* ----------------------------------------------------------------------
-   PROGETTI — sezione "Lavori selezionati", flusso normale sotto la hero.
-   Griglia 2 colonne su desktop, riga orizzontale swipe su mobile.
--------------------------------------------------------------------------- */
-
-/* ----------------------------------------------------------------------
    IL PUNTO — sequenza scroll-driven a 4 fasi (logo bloom). Il wordmark fa da
    elemento centrale: entra piccolo e sfocato → va a fuoco → cresce e si sfoca
    tornando un alone luminoso DIETRO al testo → climax come grande bagliore.
    Il testo si rivela lettera per lettera sopra al logo. Sfondo trasparente:
-   mostra il canvas warm white continuo (#FAFAF8), coerente col resto del sito.
+   mostra il canvas warm white continuo (#FCFAF6), coerente col resto del sito.
 
    Due stati:
    - DEFAULT (no-JS / reduced-motion): blocco statico in flusso normale, logo a
@@ -558,7 +570,7 @@ button {
 -------------------------------------------------------------------------- */
 .point-section {
   position: relative;
-  background: transparent; /* mostra il canvas warm white (#FAFAF8) */
+  background: transparent; /* mostra il canvas warm white (#FCFAF6) */
   padding: clamp(96px, 18vh, 200px) 0;
 }
 /* Fallback (no-JS / reduced-motion): logo sopra, testo sotto, tutto leggibile. */
@@ -647,14 +659,14 @@ button {
 
 .projects-section {
   position: relative;
-  /* Più aria in cima: l'header "Risultati reali" resta sotto la fascia della
-     nav fissa (logo in alto a sinistra) invece di sovrapporsi — la sezione
-     respira, niente collisione, lettura pulita. */
-  padding: clamp(150px, 20vh, 240px) 0 clamp(90px, 13vh, 170px);
-  /* Nessuna velatura di sfondo: la sezione resta trasparente sul canvas
-     continuo (.post-reveal). La velatura grigio-fredda che stava nell'angolo
-     basso-sinistra creava una macchia/edge tenue su quel lato, percepita come
-     separazione verso "Chi siamo" — rimossa per una fusione pulita. */
+  /* Le carte esterne possono sfiorare i bordi: il clip orizzontale sta qui. */
+  overflow-x: clip;
+  /* Una schermata sola: il mazzo si apre dentro il viewport, niente scroll
+     interno. Sfondo trasparente → warm white nudo, senza aloni. */
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding: clamp(64px, 8vh, 104px) 0 clamp(28px, 4vh, 64px);
 }
 
 /* Schermata works — quasi a tutta larghezza per sfruttare lo spazio. */
@@ -696,16 +708,16 @@ button {
   text-transform: uppercase;
   color: var(--color-text-secondary);
 }
+/* La hairline del kicker è SEMPRE arancio: è il segno caldo ricorrente che
+   attraversa tutta la pagina, qualunque sia il colore dominante della sezione. */
 .works-kicker::before {
   content: "";
   width: 28px;
   height: 1px;
-  background: var(--color-accent);
-  opacity: 0.85;
+  background: var(--color-orange);
+  opacity: 0.9;
 }
-/* Kicker delle ultime due sezioni della home (Chi Siamo teaser, Iniziamo):
-   mantenuti come etichette ma SENZA il trattino accent davanti. */
-.about-kicker::before,
+/* Kicker senza il trattino accent davanti (Iniziamo, flow, CTA Chi Siamo). */
 .cscroll-kicker::before,
 .ap-flow-kicker::before,
 .about-cta-kicker::before {
@@ -754,555 +766,230 @@ button {
   .works-head-link { display: none; }
 }
 
-/* Cover — mesh di radiali su base profonda, solo tinte di palette
-   (accent / navy / muted su ink): splendide anche senza foto. */
+/* Cover — mesh di radiali su base profonda. La famiglia alterna FREDDO e
+   CALDO: 1 e 3 blu, 2 e 4 con un tramonto arancio sul navy. Così ogni
+   superficie scura del sito (card, badge appesi) non è mai monocroma. */
 .grad-1 {
   background:
     radial-gradient(130% 110% at 18% 0%, rgba(59, 91, 219, 0.55), transparent 56%),
     radial-gradient(120% 120% at 100% 100%, rgba(154, 163, 178, 0.30), transparent 55%),
-    linear-gradient(155deg, #1A2340 0%, #0D0D0D 100%);
+    linear-gradient(155deg, #1A2340 0%, #171310 100%);
 }
 .grad-2 {
   background:
-    radial-gradient(130% 110% at 82% 0%, rgba(59, 91, 219, 0.52), transparent 56%),
-    radial-gradient(120% 120% at 0% 100%, rgba(59, 91, 219, 0.26), transparent 55%),
-    linear-gradient(155deg, #0D0D0D 0%, #1A2340 100%);
+    radial-gradient(130% 110% at 82% 0%, rgba(226, 99, 47, 0.50), transparent 58%),
+    radial-gradient(120% 120% at 0% 100%, rgba(59, 91, 219, 0.34), transparent 55%),
+    linear-gradient(155deg, #171310 0%, #1A2340 100%);
 }
 .grad-3 {
   background:
     radial-gradient(130% 110% at 50% 0%, rgba(154, 163, 178, 0.28), transparent 56%),
     radial-gradient(120% 120% at 100% 100%, rgba(59, 91, 219, 0.36), transparent 55%),
-    linear-gradient(155deg, #1A2340 0%, #0D0D0D 100%);
+    linear-gradient(155deg, #1A2340 0%, #171310 100%);
 }
 .grad-4 {
   background:
     radial-gradient(130% 110% at 22% 0%, rgba(59, 91, 219, 0.42), transparent 56%),
-    radial-gradient(120% 120% at 88% 96%, rgba(154, 163, 178, 0.18), transparent 55%),
-    linear-gradient(155deg, #1A2340 0%, #0D0D0D 100%);
+    radial-gradient(120% 120% at 88% 96%, rgba(240, 162, 75, 0.30), transparent 58%),
+    linear-gradient(155deg, #1A2340 0%, #171310 100%);
 }
 
 /* ----------------------------------------------------------------------
-   PROGETTI — STAGE MACBOOK SCROLL
-   Reimplementazione GSAP/CSS del componente Aceternity "MacBook Scroll",
-   allineata al design system. Lo scroll (pin + scrub, main.ts) apre il
-   coperchio e fa avvicendare sullo schermo i due progetti reali — uno per
-   volta, a piena grandezza — fino alla scena CTA "Il prossimo.".
-   Stato di DEFAULT = coperchio APERTO, prima slide attiva: no-JS e
-   reduced-motion mostrano la sezione statica e leggibile. GSAP impone lo stato
-   "chiuso" (rotateX) solo quando può animare (anti-flash).
+   PROGETTI — MAZZO DI CARTE CHE SI SPARPAGLIA
+   Sette carte quadrate impilate al centro come un mazzo buttato sul tavolo;
+   entrando in vista si aprono e scoprono il titolo che stava sotto.
+
+   Lo stato SPARPAGLIATO è quello di base, scritto qui: ogni carta ha la sua
+   posizione in frazioni dello stage (--x/--y, 0 = centro) e la sua rotazione
+   (--r). Così anche senza JS la scena è già a posto.
+   Lo stato MAZZO è .deck.is-js (prima che parta l'animazione) e poi lo scrive
+   GSAP in transform. --dx/--dy/--dr sono lo scompiglio della pila.
+   Niente aloni, niente ombre di scena: sotto c'è solo il warm white.
 -------------------------------------------------------------------------- */
-.mbp-mount {
+.deck {
+  /* Ampiezza dell'anello: quanto lontano dal centro finiscono le carte.
+     Moltiplicano --x/--y, così su schermi stretti il mazzo si apre meno in
+     larghezza e più in altezza senza toccare le posizioni delle singole carte. */
+  --sx: 1;
+  --sy: 1;
   position: relative;
   width: 100%;
-}
-.mbp-scene {
-  position: relative;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(18px, 3vh, 36px);
+  max-width: 110rem;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 48px);
+  /* Altezza definita: le carte sono posizionate in percentuale di questo box. */
+  height: clamp(440px, 76svh, 860px);
 }
 
-/* ---- STAGE 3D — box che ospita il <canvas> WebGL del MacBook Pro glTF.
-   L'inquadratura del laptop è governata dalla CAMERA di R3F (fov/position in
-   MacBook3D.jsx → TUNING.camera), NON da una larghezza CSS: qui si definisce
-   solo lo spazio che la scena occupa a schermo. ---- */
-.mbp-stage {
-  position: relative;
-  width: 100%;
-  height: clamp(320px, 52vh, 600px);
-}
-.mbp-stage canvas {
-  display: block;
-  touch-action: pan-y;
-}
-/* Alone ambient accent dietro al laptop: profondità + "accende" la scena. */
-.mbp-stage::before {
-  content: "";
+/* ---- Testo al centro, sotto al mazzo ----
+   Centrato in flex, NON con translate(-50%,-50%): il transform resta libero
+   per l'animazione (GSAP sommerebbe il proprio offset a quello del CSS). */
+.deck-copy {
   position: absolute;
-  inset: 4% 8% 8%;
-  z-index: -1;
-  background: radial-gradient(52% 44% at 50% 44%, rgba(59, 91, 219, 0.18), transparent 70%);
-  filter: blur(42px);
-  pointer-events: none;
-}
-
-/* ---- Superficie LOGICA dello schermo: drei la proietta sul pannello del Mac
-   3D con <Html transform>. Le dimensioni (1000 × altezza-da-aspect) sono
-   applicate inline dall'isola, calcolate dal FIT automatico sul pannello. ---- */
-.mbp-html-screen {
-  border-radius: 12px;
-  overflow: hidden;
-  background: #07080d;
-}
-.mbp-display {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: clamp(8px, 1vw, 13px);
-  overflow: hidden;
-  background: #07080d;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ---- Chrome del browser: pallini + barra indirizzo (dominio reale) ---- */
-.mbp-chrome {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: clamp(8px, 1vw, 14px);
-  height: clamp(30px, 3.4vw, 42px);
-  padding: 0 clamp(10px, 1.4vw, 16px);
-  background: rgba(18, 20, 28, 0.94);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-.mbp-dots {
-  display: inline-flex;
-  gap: 6px;
-  flex: 0 0 auto;
-}
-.mbp-dots i {
-  width: clamp(7px, 0.8vw, 9px);
-  height: clamp(7px, 0.8vw, 9px);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
-}
-.mbp-dots i:nth-child(1) { background: rgba(255, 255, 255, 0.28); }
-.mbp-dots i:nth-child(2) { background: rgba(255, 255, 255, 0.2); }
-.mbp-address {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-family: var(--font-body);
-  font-size: clamp(10px, 1.05vw, 13px);
-  letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.66);
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 999px;
-  padding: clamp(4px, 0.5vw, 6px) clamp(12px, 1.4vw, 18px);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: color 0.4s ease;
-}
-/* Puntino "connessione sicura" — segnala che è un sito vivo. */
-.mbp-address::before {
-  content: "";
-  flex: 0 0 auto;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #57c78a;
-  box-shadow: 0 0 6px rgba(87, 199, 138, 0.6);
-}
-.mbp-chrome-badge {
-  flex: 0 0 auto;
-  font-family: var(--font-body);
-  font-size: clamp(8px, 0.85vw, 10px);
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  padding: 3px 9px;
-}
-@media (max-width: 520px) {
-  .mbp-chrome-badge { display: none; }
-}
-
-/* ---- Viewport: le slide si impilano nello stesso spazio (crossfade) ---- */
-.mbp-viewport {
-  position: relative;
-  flex: 1 1 auto;
-  overflow: hidden;
-  background: #07080d;
-}
-.mbp-slide {
-  position: absolute;
-  inset: 0;
-  display: block;
-  text-decoration: none;
-  color: #fafaf8;
-  opacity: 0;
-  transform: scale(1.05);
-  pointer-events: none;
-  transition: opacity 0.6s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1;
-}
-.mbp-slide.is-active {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-  z-index: 2;
-}
-.mbp-media {
-  position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.mbp-scrim {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(7, 8, 13, 0.86) 0%,
-    rgba(7, 8, 13, 0.28) 40%,
-    transparent 66%
-  );
-  pointer-events: none;
-}
-.mbp-caption {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(7px, 1vw, 12px);
-  padding: clamp(14px, 2.2vw, 28px);
-}
-.mbp-caption-meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-body);
-  font-size: clamp(9px, 1vw, 11px);
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.72);
-}
-.mbp-caption-tick {
-  width: 18px;
-  height: 1px;
-  background: #8aa0ff;
-}
-.mbp-caption-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: clamp(12px, 2vw, 22px);
-}
-.mbp-caption-title {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(19px, 2.7vw, 34px);
-  line-height: 1;
-  letter-spacing: -0.01em;
-}
-.mbp-caption-title em {
-  font-style: italic;
-  color: #8aa0ff;
-}
-
-/* Pulsante "Apri il sito" — link vivo (l'intera slide è già un <a>). */
-.mbp-open {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  flex: 0 0 auto;
-  font-family: var(--font-body);
-  font-size: clamp(11px, 1.15vw, 13px);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  padding: clamp(8px, 1vw, 11px) clamp(14px, 1.6vw, 18px);
-  border-radius: 999px;
-  color: #fafaf8;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-}
-.mbp-open-arrow {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@media (hover: hover) {
-  .mbp-slide:hover .mbp-open,
-  .mbp-slide:focus-visible .mbp-open {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-  }
-  .mbp-slide:hover .mbp-open-arrow {
-    transform: translate(2px, -2px);
-  }
-}
-.mbp-slide:focus-visible {
-  outline: 2px solid #8aa0ff;
-  outline-offset: -3px;
-}
-
-/* ---- Slide CTA — "Il prossimo." (fondo navy grad-2 applicato via classe) ---- */
-.mbp-slide--cta {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: clamp(9px, 1.5vh, 16px);
-  padding: clamp(20px, 4vw, 54px);
-  color: #fafaf8;
-}
-.mbp-grain {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(120% 90% at 50% 0%, rgba(59, 91, 219, 0.22), transparent 60%);
   pointer-events: none;
 }
-.mbp-emblem {
-  position: relative;
-  width: clamp(48px, 6.5vw, 82px);
-  height: auto;
-  color: #8aa0ff;
-  opacity: 0.85;
+.deck-title,
+.deck-sub {
+  max-width: min(90%, 34rem);
 }
-.mbp-cta-kicker {
-  position: relative;
-  font-family: var(--font-body);
-  font-size: clamp(9px, 1vw, 11px);
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.66);
-}
-.mbp-cta-title {
-  position: relative;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(26px, 4vw, 52px);
-  line-height: 1;
-  letter-spacing: -0.01em;
-  color: #fafaf8;
-}
-.mbp-cta-title em {
-  font-style: italic;
-  color: #8aa0ff;
-}
-.mbp-cta-desc {
-  position: relative;
-  max-width: 42ch;
-  font-family: var(--font-body);
-  font-size: clamp(12px, 1.3vw, 15px);
-  line-height: 1.55;
-  color: rgba(250, 250, 248, 0.74);
-}
-.mbp-open--cta {
-  position: relative;
-  margin-top: clamp(4px, 1vh, 10px);
-  background: var(--color-warm);
-  color: var(--color-ink);
-  border-color: transparent;
-  padding: clamp(10px, 1.2vw, 13px) clamp(18px, 2vw, 24px);
-}
-@media (hover: hover) {
-  .mbp-slide--cta:hover .mbp-open--cta,
-  .mbp-open--cta:focus-visible {
-    background: var(--color-accent);
-    color: #fafaf8;
-  }
-  .mbp-slide--cta:hover .mbp-open--cta .mbp-open-arrow {
-    transform: translateX(3px);
-  }
-}
-
-/* La BASE del laptop (deck in alluminio, cerniera, tastiera, trackpad) ora fa
-   parte del modello glTF renderizzato in WebGL: niente più CSS qui. */
-
-/* ---- TAB — indicatore di fase + controllo diretto (switch / jump scroll) ---- */
-.mbp-tabs {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: clamp(8px, 1vw, 14px);
-  width: 100%;
-}
-.mbp-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: clamp(9px, 1.1vw, 13px);
-  cursor: pointer;
-  font-family: var(--font-body);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  padding: clamp(9px, 1vw, 11px) clamp(15px, 1.8vw, 20px);
-  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
-}
-.mbp-tab-n {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-muted);
-  transition: color 0.3s ease;
-}
-.mbp-tab-name {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(13px, 1.3vw, 15px);
-  line-height: 1;
-  color: var(--color-ink);
-}
-.mbp-tab-name em {
-  font-style: italic;
-  color: var(--color-accent);
-}
-.mbp-tab-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-border);
-  transition: background 0.3s ease, box-shadow 0.3s ease;
-}
-@media (hover: hover) {
-  .mbp-tab:hover {
-    border-color: var(--color-accent);
-    background: rgba(59, 91, 219, 0.04);
-  }
-}
-.mbp-tab.is-active {
-  border-color: var(--color-accent);
-  background: rgba(59, 91, 219, 0.06);
-  box-shadow: 0 8px 22px -12px rgba(59, 91, 219, 0.55);
-}
-.mbp-tab.is-active .mbp-tab-n { color: var(--color-accent); }
-.mbp-tab.is-active .mbp-tab-dot {
-  background: var(--color-accent);
-  box-shadow: 0 0 0 4px rgba(59, 91, 219, 0.16);
-}
-.mbp-tab:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
-}
-
-/* ---- Desktop: la sezione riempie lo schermo per il pin (classe da JS) ---- */
-@media (min-width: 769px) {
-  .projects-section.is-pin-mode {
-    min-height: 100svh;
-    display: flex;
-    align-items: center;
-    /* Più aria sopra (sotto la nav), poco sotto: il contenuto si posa in basso
-       e sparisce il vuoto eccessivo prima della sezione successiva. */
-    padding: clamp(64px, 9vh, 120px) 0 clamp(18px, 2.6vh, 40px);
-    /* La sezione pinnata (position:fixed durante lo scrub) è TRASPARENTE: senza
-       questo, la sezione successiva — posizionata e più avanti nel DOM — dipinge
-       sopra il monitor per un istante al bordo del pin. Tenendola sopra, dietro
-       resta solo il canvas continuo, niente flash di "Chi siamo". */
-    z-index: 6;
-  }
-  .projects-section.is-pin-mode .works-screen {
-    width: 100%;
-    /* Respiro tra il titolo e il MacBook (prima era troppo vicino). */
-    gap: clamp(26px, 4.5vh, 56px);
-  }
-  /* DIMENSIONAMENTO per ALTEZZA: header + tab occupano ~260px; lo stage 3D
-     prende il resto del viewport bloccato, così la scena sta SEMPRE dentro.
-     La grandezza del laptop nell'inquadratura si regola dalla camera R3F
-     (TUNING.camera in MacBook3D.jsx). */
-  .projects-section.is-pin-mode .mbp-scene {
-    gap: clamp(18px, 2.6vh, 34px);
-  }
-  .projects-section.is-pin-mode .mbp-stage {
-    height: clamp(360px, calc(100svh - 260px), 760px);
-  }
-}
-
-/* ---- Tablet ---- */
-@media (max-width: 1024px) {
-  .mbp-stage { height: clamp(300px, 46vh, 520px); }
-}
-
-/* ---- Mobile: niente pin; laptop aperto statico, tab impilate a piena riga ---- */
-@media (max-width: 640px) {
-  .mbp-stage { height: clamp(260px, 42vh, 420px); }
-  .mbp-tabs { flex-direction: column; }
-  .mbp-tab {
-    width: 100%;
-    justify-content: flex-start;
-  }
-  .mbp-caption-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-}
-
-/* ---- Reduced motion: crossfade minimo tra le slide ---- */
-@media (prefers-reduced-motion: reduce) {
-  .mbp-slide {
-    transition: opacity 0.25s linear;
-    transform: none;
-  }
-  .mbp-slide.is-active { transform: none; }
-}
-
-/* ---- Fallback statico (SEO / no-JS / pre-mount): lista dei progetti; il CSS
-   la nasconde appena l'isola 3D monta (.is-live). ---- */
-.mbp-fallback {
-  width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-}
-.mbp-mount.is-live .mbp-fallback {
-  display: none;
-}
-.mbp-fallback-list {
-  list-style: none;
+.deck-title {
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.mbp-fallback-link {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  flex-wrap: wrap;
-  text-decoration: none;
-  padding: 16px 20px;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(34px, 5.6vw, 88px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
   color: var(--color-ink);
-  transition: border-color 0.3s ease, background 0.3s ease;
 }
-@media (hover: hover) {
-  .mbp-fallback-link:hover {
-    border-color: var(--color-accent);
-    background: rgba(59, 91, 219, 0.04);
+.deck-sub {
+  margin: clamp(10px, 1.4vh, 18px) 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(13px, 1.05vw, 16px);
+  line-height: 1.5;
+  color: var(--color-secondary);
+}
+
+/* ---- Le carte ---- */
+.deck-cards {
+  position: absolute;
+  inset: 0;
+  z-index: 2; /* sopra al testo: passandoci davanti lo "scoprono" */
+  pointer-events: none;
+}
+.deck-card {
+  /* Legata anche all'altezza: su uno schermo basso una carta dimensionata solo
+     sulla larghezza finirebbe sul titolo e fuori dai bordi. Il tetto è 21vh
+     perché una carta 5:7 è alta ~1.4× la sua larghezza. */
+  --card: clamp(116px, min(12.6vw, 21vh), 200px);
+  /* Set desktop delle posizioni. Il componente scrive inline i due set
+     (--x-d/--y-d e --x-m/--y-m): qui si sceglie quale usare, e siccome --x/--y
+     vivono SOLO nel foglio, la media query può ribaltarli senza perdere contro
+     lo style inline. */
+  --x: var(--x-d);
+  --y: var(--y-d);
+  position: absolute;
+  z-index: var(--z);
+  /* Posizione finale: centro dello stage + scostamento in frazioni di stage. */
+  left: calc(50% + var(--x) * var(--sx) * 100%);
+  top: calc(50% + var(--y) * var(--sy) * 100%);
+  width: var(--card);
+  /* Proporzione di una carta da gioco vera (63×88mm). */
+  aspect-ratio: 5 / 7;
+  transform: translate(-50%, -50%) rotate(var(--r));
+  /* Il layer .deck-cards non prende il puntatore; le singole carte sì. */
+  pointer-events: auto;
+  will-change: transform;
+}
+/* La carta in hover passa sopra a tutte: lo z di partenza è una var proprio
+   perché una regola :hover non batterebbe uno z-index scritto inline. */
+.deck-card:hover {
+  z-index: 40;
+}
+
+/* Livello 2 — la fluttuazione. Un transform tutto suo, così non litiga né con
+   l'apertura del mazzo (GSAP, sul livello sopra) né con l'hover (sotto).
+   Parte solo a mazzo aperto: la classe la mette main.ts a fine animazione. */
+.deck-card-float {
+  width: 100%;
+  height: 100%;
+}
+.deck.is-open .deck-card-float {
+  animation: deck-float var(--fd) ease-in-out var(--fdelay) infinite;
+}
+@keyframes deck-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, var(--fy), 0) rotate(var(--fr));
   }
 }
-.mbp-fallback-n {
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-muted);
+@media (prefers-reduced-motion: reduce) {
+  .deck.is-open .deck-card-float {
+    animation: none;
+  }
 }
-.mbp-fallback-title {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 500;
+
+/* Livello 3 — la carta vera e propria: superficie, ombra, reazione al mouse. */
+.deck-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #FCFAF6;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 0 0 1px var(--color-border),
+    0 22px 46px -24px rgba(23, 19, 16, 0.42),
+    0 3px 10px rgba(23, 19, 16, 0.05);
+  transition:
+    transform 0.42s cubic-bezier(0.22, 0.8, 0.3, 1),
+    box-shadow 0.42s cubic-bezier(0.22, 0.8, 0.3, 1);
 }
-.mbp-fallback-title em { font-style: italic; color: var(--color-accent); }
-.mbp-fallback-meta {
-  font-family: var(--font-body);
-  font-size: 12px;
-  color: var(--color-muted);
+/* Immagini/mock futuri: riempiono la carta senza deformarsi. */
+.deck-card-inner > img,
+.deck-card-inner > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
-.mbp-fallback-cta {
-  margin-left: auto;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-accent);
+/* Hover — la carta si stacca dal tavolo: sale, cresce appena, l'ombra si
+   allunga e il filo del bordo si scalda. Basta a dire "sono cliccabile"
+   senza aggiungere etichette. */
+@media (hover: hover) and (pointer: fine) {
+  .deck-card {
+    cursor: pointer;
+  }
+  .deck-card:hover .deck-card-inner {
+    transform: translateY(-10px) scale(1.045);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.9) inset,
+      0 0 0 1px var(--color-border-strong),
+      0 40px 64px -28px rgba(23, 19, 16, 0.5),
+      0 6px 16px rgba(23, 19, 16, 0.08);
+  }
+  /* Il tocco da tastiera merita lo stesso stacco visivo dell'hover. */
+  .deck-card:focus-visible .deck-card-inner {
+    transform: translateY(-10px) scale(1.045);
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+}
+
+/* ---- Stato MAZZO (prima che l'animazione parta) ----
+   Serve solo a evitare il lampo di carte già sparpagliate tra il parsing
+   dell'HTML e l'esecuzione di main.ts, che poi toglie .is-js. */
+.deck.is-js .deck-card {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(var(--dr)) translate(var(--dx), var(--dy));
+}
+/* Il titolo dei Progetti non ha comparsa: è già lì sotto al mazzo, e le carte
+   se ne vanno scoprendolo. */
+
+/* ---- Mobile: carte più piccole e SET DI POSIZIONI diverso — tre sopra,
+   quattro sotto, con la fascia centrale libera per il titolo. Un anello tondo
+   su schermo stretto finirebbe inevitabilmente sul testo. ---- */
+@media (max-width: 768px) {
+  .deck-card {
+    --x: var(--x-m);
+    --y: var(--y-m);
+    --card: clamp(96px, min(27vw, 17vh), 140px);
+  }
+  .deck-card-inner {
+    border-radius: 12px;
+  }
 }
 
 
@@ -1326,32 +1013,38 @@ button {
 }
 
 /* ----------------------------------------------------------------------
-   COSA FACCIAMO — banda NAVY pinnata: arrivati alla sezione lo scroll la
-   "blocca" a tutta schermata e i servizi si avvicendano come SCENE, uno
-   alla volta (vedi main.ts). Ogni scena: titolo dalla maschera,
-   descrizione, chip di competenze e placeholder immagine.
+   COSA FACCIAMO — sezione pinnata: arrivati qui lo scroll si blocca e i tre
+   servizi si avvicendano come scene (vedi main.ts + ServicesSwap.astro).
+   Il fondale è NUDO: solo la carta bianca della pagina, nessun alone,
+   nessun crinale, nessun indicatore di scroll. Il titolo sta al centro,
+   sopra al palco.
 -------------------------------------------------------------------------- */
-/* Superficie navy — il colore "vero" lo porta il canvas .post-reveal,
-   tinto in scrub dal JS (lo schermo si scurisce verso il navy scrollando
-   da "Lavori selezionati" a qui). Il background statico qui sotto è il
-   fallback per reduced-motion e no-JS; con JS attivo viene reso trasparente. */
 .services-section {
   position: relative;
   padding: clamp(90px, 13vh, 170px) 0;
-  /* Sezione CHIARA (come il blocco Aceternity di riferimento): lo sfondo resta
-     il warm white del sito — niente banda navy. Il canvas .post-reveal non
-     vira più qui (vedi main.ts); questo background è il fallback no-JS. */
+  /* Il colore lo dà il canvas .post-reveal; questo è il fallback no-JS. */
   background-color: var(--color-bg);
-  /* NB: niente overflow:clip qui — con il pin GSAP della sezione finirebbe per
-     ritagliare lo stage pinnato. Lo sbordo orizzontale dei glow è già
-     contenuto dall'overflow-x:hidden del body, quindi non serve. */
+  /* NB: niente overflow:clip qui — con il pin GSAP della sezione finirebbe
+     per ritagliare lo stage pinnato. */
 }
 .services-section .works-screen {
   max-width: 110rem;
 }
 
+/* GIUNZIONE con "Chi siamo" — la sezione RISALE dentro alla coda della
+   precedente. Quella coda è vuota (la frase, che scorre più veloce della
+   pagina, è già uscita) e prima restava una fascia morta di quasi mezza
+   schermata prima che i Servizi arrivassero. Con la risalita le due scene si
+   passano il testimone senza vuoto: la frase esce dall'alto mentre il palco
+   dei Servizi sale da sotto, come nel passaggio hero → Chi siamo. Sta su
+   .is-pin-mode (quindi solo con JS attivo) perché senza JS la sezione ha
+   fondo opaco e coprirebbe la coda invece di sovrapporsi in trasparenza. */
+.services-section.is-pin-mode {
+  margin-top: -30svh;
+}
+
 /* Desktop — la sezione riempie esattamente lo schermo per il pin:
-   header in alto, palco delle scene sotto, tutto centrato in verticale. */
+   titolo centrato in alto, palco sotto, tutto centrato in verticale. */
 @media (min-width: 1024px) {
   .services-section {
     min-height: 100svh;
@@ -1359,548 +1052,540 @@ button {
     align-items: center;
     padding: clamp(40px, 6vh, 90px) 0;
   }
+  .services-section.is-pin-mode {
+    margin-top: -35vh;
+  }
   .services-section .works-screen {
     width: 100%;
   }
 }
 
-/* Sezione chiara: header, kicker e link ereditano gli stili base (testo scuro
-   + accent), gli stessi dei Lavori. Nessun override di palette qui. */
-
-/* ---- Palco a due colonne ----
-   Testo a sinistra, torre isometrica persistente a destra. Sotto 1024px la
-   composizione diventa colonna: torre in alto (compatta), testo sotto. */
-.services-stage-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(20px, 4vh, 40px);
-}
-.services-stage-wrap .services-visual { order: -1; }
-@media (min-width: 1024px) {
-  .services-stage-wrap {
-    display: grid;
-    grid-template-columns: 1.05fr 1fr;
-    gap: clamp(24px, 4vw, 72px);
-    align-items: center;
-  }
-  .services-stage-wrap .services-visual { order: 0; }
-}
-
-/* ---- Palco delle scene ----
-   Flusso normale: colonna di scene distanziate (reduced motion / no-JS).
-   Con il pin attivo (classe .is-pinned aggiunta dal JS) le scene si
-   impilano nello stesso spazio e si avvicendano in dissolvenza. */
-.services-stage {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(56px, 9vh, 110px);
-}
-.services-stage.is-pinned {
-  display: block;
-  height: clamp(340px, 56vh, 480px);
-}
-@media (min-width: 1024px) {
-  .services-stage.is-pinned { height: min(62vh, 640px); }
-}
-.services-stage.is-pinned .service-slide {
-  position: absolute;
-  inset: 0;
-  /* Scena testo centrata in verticale nel palco → allineata alla torre. */
-  display: flex;
-  align-items: center;
-}
-
-/* Con il pin attivo la sezione riempie lo schermo anche sotto 1024px
-   (dove la regola desktop qui sopra non arriva): la classe la aggiunge il
-   JS solo quando pinna, così il fallback reduced-motion/no-JS resta a
-   flusso con i padding di banda originali. */
+/* Mobile — con il pin attivo TUTTO deve stare in una schermata sola:
+   altezza bloccata a 100svh e spazi in svh, così titolo, card, testo e
+   puntini entrano senza scroll interno. */
+/* Mobile — la sezione diventa una SCHERMATA PIENA: niente margini, la clip
+   del servizio fa da fondale a tutto schermo con sopra la descrizione e i
+   pallini (vedi .svc, modo "reel"). */
 @media (max-width: 1023px) {
   .services-section.is-pin-mode {
-    min-height: 100svh;
+    height: 100svh;
+    min-height: 0;
     display: flex;
-    align-items: center;
-    padding: clamp(76px, 11vh, 110px) 0 clamp(30px, 5vh, 60px);
+    align-items: stretch;
+    padding: 0;
+    overflow: hidden;
   }
   .services-section.is-pin-mode .works-screen {
     width: 100%;
-    gap: clamp(18px, 3vh, 32px);
+    height: 100%;
+    padding: 0;
+    gap: 0;
   }
 }
 
-.service-slide {
-  display: grid;
-  gap: clamp(24px, 4vw, 72px);
-  align-items: center;
-}
 
-.slide-body {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: clamp(14px, 2.4vh, 24px);
-}
-
-/* Numerale "ghost" — grande cifra editoriale in filigrana dietro alla scena:
-   dà impatto e ancora l'occhio senza aggiungere UI. È decorativo (aria-hidden),
-   dietro al testo, e appare/scompare con la scena via .is-active. */
-.slide-ghost {
-  position: absolute;
-  left: clamp(-8px, -1vw, -18px);
-  top: clamp(-46px, -8vh, -96px);
-  z-index: 0;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-style: italic;
-  font-size: clamp(112px, 18vw, 300px);
-  line-height: 0.8;
-  letter-spacing: -0.04em;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(59, 91, 219, 0.16);
-  pointer-events: none;
-  user-select: none;
-}
-.slide-body > * { position: relative; z-index: 1; }
-
-.slide-title {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(38px, 5.2vw, 82px);
-  line-height: 0.98;
-  letter-spacing: -0.025em;
-  color: var(--color-text);
-}
-.slide-title em {
-  font-style: italic;
-  color: var(--color-accent);
-}
-.slide-desc {
-  font-family: var(--font-body);
-  font-size: clamp(14px, 1.15vw, 17px);
-  line-height: 1.65;
-  color: var(--color-text-secondary);
-  max-width: 46ch;
-}
-/* Feature card — al posto del ledger: sotto il testo del servizio, tre
-   piccole box editoriali (una per feature) che spiegano in più dettaglio cosa
-   comprende il servizio. Numero mono accent, titolo display compatto e una
-   riga di dettaglio; bordo hairline con hover che alza la box e accende
-   l'accent (stesso linguaggio delle card Progetti). Su desktop stanno in riga
-   nella colonna di sinistra; sotto 640px si impilano. */
-.slide-cards {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  width: 100%;
-  max-width: 42ch;
-}
-@media (min-width: 640px) {
-  .slide-cards {
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(12px, 1vw, 16px);
-    max-width: none;
-  }
-}
-.slide-card {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: clamp(15px, 1.3vw, 20px);
-  border: 1px solid var(--color-border);
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.5);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease;
-}
-@media (hover: hover) {
-  .slide-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(59, 91, 219, 0.35);
-    box-shadow: var(--shadow-premium);
-    background: rgba(255, 255, 255, 0.86);
-  }
-}
-.slide-card-num {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: var(--color-accent);
-  font-variant-numeric: tabular-nums;
-}
-.slide-card-title {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(15px, 1.15vw, 18px);
-  line-height: 1.16;
-  letter-spacing: -0.01em;
-  color: var(--color-text);
-}
-.slide-card-text {
-  font-family: var(--font-body);
-  font-size: clamp(12.5px, 0.92vw, 14px);
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-}
-/* Reveal d'ingresso: le card entrano come gruppo con la scena (gated da
-   .has-reveal, così senza JS / reduced-motion restano visibili). Il reveal sta
-   sul contenitore per non entrare in conflitto con il transform dell'hover. */
-.has-reveal .slide-cards {
-  opacity: 0;
-  transform: translateY(22px);
-  transition: opacity 0.5s ease, transform 0.65s var(--ease-cb-3);
-}
-.has-reveal .is-active .slide-cards {
-  opacity: 1;
-  transform: translateY(0);
-  transition-delay: 0.12s;
-}
-@media (prefers-reduced-motion: reduce) {
-  .slide-card { transition: none !important; }
-  .has-reveal .slide-cards {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-}
-
-/* Reveal a righe sul testo delle service card — il testo emerge dal basso da
-   una maschera (overflow:hidden) quando la card diventa .is-active. Lo stato
-   "nascosto" iniziale è gated dietro .has-reveal (aggiunta da JS): senza JS o
-   sotto reduced-motion il testo resta visibile. Il titolo di sezione e il
-   titolo-card (.sn-mask/.sn) non sono coinvolti. */
+/* Easing condivisa dei reveal (curva "in-out" lunga, usata anche altrove). */
 :root {
   --ease-cb-3: cubic-bezier(0.77, 0, 0.175, 1);
 }
-.title-line {
-  display: block;
-  overflow: hidden;
-}
-.title-line > span {
-  display: inline-block;
-  will-change: transform;
-}
-.has-reveal .title-line > span {
-  transform: translate3d(0, 140%, 0);
-  opacity: 0;
-  transition: transform 0.45s ease, opacity 0.6s ease;
-}
-.has-reveal .is-active .title-line > span {
-  transform: translate3d(0, 0, 0);
-  opacity: 1;
-  transition: transform 0.6s var(--ease-cb-3), opacity 0.25s ease;
-  transition-delay: calc(var(--ln, 0) * 0.12s);
-}
-@media (prefers-reduced-motion: reduce) {
-  .title-line > span {
-    transform: none !important;
-    opacity: 1 !important;
-    transition: none !important;
-  }
-}
 
-/* Maschera del titolo — il nome "emerge" dal basso dentro un overflow
-   hidden (yPercent via GSAP); il padding evita il taglio dei discendenti. */
-.sn-mask {
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: bottom;
-  /* Come .tw-mask: respiro su tutti i lati per non tagliare gli italici. */
-  padding: 0.1em 0.16em 0.16em;
-  margin: -0.1em -0.16em -0.16em;
-}
-.sn {
-  display: inline-block;
-  will-change: transform;
-}
+/* ======================================================================
+   SERVIZI (vedi src/components/ServicesSwap.astro)
 
-/* ---- TORRE ISOMETRICA — visual persistente della sezione ----
-   Tre box isometrici impilati (uno per servizio) che si sovrappongono in
-   wrapper bassi formando un'unica torre. Il JS (onUpdate del pin) toggla
-   .is-active sul layer del servizio a fuoco e .is-lifted sui layer sopra:
-   il layer attivo "esce" (si solleva + coperchio estruso + accent
-   periwinkle), quelli sopra si alzano per fargli spazio, gli inattivi
-   restano in trattamento hairline leggero. Tutte le transizioni sono CSS
-   (stesso contratto di .title-line: GSAP toggla classi, il tempo lo fa la
-   transizione → reversibile e fluido in entrambe le direzioni).
-   Geometria dal blocco Aceternity "Stacked Isometric Boxes", palette del
-   sito: navy + warm white a bassa opacità + periwinkle #8aa0ff. */
-.services-visual {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.services-tower {
-  --tower-size: clamp(150px, 40vw, 200px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+   Due impaginazioni diverse, stessa regia:
+
+   DESKTOP — modo "swap". Due POSTI affiancati, uno per la card e uno per il
+   testo, che a ogni scena si scambiano: card destra → sinistra → destra, il
+   testo l'opposto. I pannelli immagine stanno FERMI, uno per posto: a
+   spostarsi è solo la card, che mentre viaggia fa da cornice e scopre il
+   pannello dell'altro posto (a metà corsa se ne vedono due affiancati). A
+   card ferma non scorre niente.
+
+   MOBILE — modo "reel". Niente card e niente titolo di sezione: la clip del
+   servizio riempie tutta la schermata come fondale, la descrizione sta in
+   basso sopra a una velatura che la tiene leggibile, e i pallini dicono a
+   che punto siamo. Scorrendo, il fondale successivo sale a tutta schermata.
+
+   Contratto con il JS (main.ts):
+     --svc-mode   swap = i due posti si scambiano · reel = fondale che scorre
+     --svc-axis   x = movimento orizzontale · y = verticale
+     .is-live     aggiunta dal JS: attiva lo stato animato. Senza JS o con
+                  reduced-motion resta una griglia statica (fallback in fondo).
+   Le distanze le MISURA il JS dal layout: nessuna geometria duplicata qui.
+   ====================================================================== */
+.svc {
+  --svc-mode: reel;
+  --svc-axis: y;
+  --svc-radius: clamp(16px, 1.4vw, 26px);
+  /* Desktop: larghezza della colonna testo, spazio fra le colonne e altezza
+     del palco. L'altezza è limitata anche da 44vw così la card (3/4) non
+     diventa più larga della colonna testo: i due posti devono restare
+     distanti almeno quanto la card è larga, altrimenti i due pannelli si
+     sovrapporrebbero durante lo scambio. */
+  --svc-copy-w: clamp(280px, 32vw, 440px);
+  --svc-col-gap: clamp(36px, 4vw, 72px);
+  /* Senza titolo di sezione il palco può respirare di più e prendersi la
+     schermata: resta comunque limitato da 43vw perché la card (3/4) non
+     diventi più larga della colonna testo — i due posti devono restare
+     distanti almeno quanto la card, altrimenti i pannelli si
+     sovrapporrebbero durante lo scambio. */
+  --svc-stage-h: min(68vh, 640px, 43vw);
+  --svc-frame-w: calc(var(--svc-stage-h) * 0.75);
+  position: relative;
+  width: 100%;
+  /* Mobile: il palco prende tutta l'altezza che avanza nella schermata. */
+  flex: 1;
+  min-height: 0;
 }
 @media (min-width: 1024px) {
-  .services-tower { --tower-size: clamp(220px, 22vw, 300px); }
-}
-.tower-layer {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Wrapper basso + SVG pieno = i box si compenetrano in verticale. */
-  height: calc(var(--tower-size) * 0.3);
-  width: var(--tower-size);
-  transition:
-    transform 0.65s var(--ease-cb-3),
-    opacity 0.5s ease,
-    filter 0.5s ease;
-}
-.tower-layer:nth-child(1) { z-index: 3; }
-.tower-layer:nth-child(2) { z-index: 2; margin-top: calc(var(--tower-size) * 0.045); }
-.tower-layer:nth-child(3) { z-index: 1; margin-top: calc(var(--tower-size) * 0.045); }
-.tower-layer svg {
-  width: var(--tower-size);
-  height: var(--tower-size);
-  flex: none;
-  overflow: visible;
-}
-
-/* Trattamento base (inattivo): hairline warm white, facce appena tinte —
-   la faccia sinistra più scura per la lettura di profondità. */
-.tower-layer path,
-.tower-layer rect,
-.tower-layer circle {
-  transition:
-    fill 0.5s ease,
-    stroke 0.5s ease,
-    opacity 0.5s ease;
-}
-.tower-layer .t-top   { fill: rgba(13, 13, 13, 0.015); stroke: rgba(13, 13, 13, 0.22); }
-.tower-layer .t-in    { fill: rgba(13, 13, 13, 0.04);   stroke: rgba(13, 13, 13, 0.14); }
-.tower-layer .t-left  { fill: rgba(13, 13, 13, 0.07);   stroke: rgba(13, 13, 13, 0.22); }
-.tower-layer .t-right { fill: rgba(13, 13, 13, 0.02);   stroke: rgba(13, 13, 13, 0.2); }
-.tower-layer .t-dash  { stroke: rgba(13, 13, 13, 0.12); }
-.tower-layer .t-glyph-a { fill: var(--color-accent); opacity: 0.35; }
-.tower-layer .t-glyph-s { fill: rgba(13, 13, 13, 0.32); }
-
-/* Il coperchio (faccia superiore + rombo interno + glifo) può estrudersi
-   da solo: transizione dedicata, leggermente ritardata rispetto al
-   sollevamento del layer per un feel "a molla". */
-.tower-layer .t-cap {
-  transition: transform 0.65s var(--ease-cb-3) 0.06s;
-}
-
-/* Solo in pin-mode gli inattivi si attenuano (il default resta pieno e
-   leggibile per no-JS / reduced-motion). */
-.services-section.is-pin-mode .tower-layer { opacity: 0.42; }
-
-/* Layer sopra quello attivo: si alzano di più per "aprire" la pila e far
-   leggere chiaramente il movimento del box attivo che emerge sotto. */
-.tower-layer.is-lifted {
-  transform: translateY(calc(var(--tower-size) * -0.09));
-}
-
-/* Layer ATTIVO: piena opacità, sollevamento, COPERCHIO estruso in modo marcato
-   (il "lato" del cubo che si sposta, richiesto più evidente), line work e facce
-   in accent, alone morbido accent. Tutto in transizione CSS → reversibile. */
-.services-section.is-pin-mode .tower-layer.is-active { opacity: 1; }
-.tower-layer.is-active {
-  transform: translateY(calc(var(--tower-size) * -0.05));
-  filter: drop-shadow(0 18px 30px rgba(13, 13, 13, 0.13))
-    drop-shadow(0 0 18px rgba(59, 91, 219, 0.18));
-}
-/* Estrusione del coperchio proporzionale alla torre (≈18px @300, ≈9px @150):
-   marcata a sufficienza da leggersi come "lato che si solleva", scalata bene
-   su mobile. */
-.tower-layer.is-active .t-cap    { transform: translateY(calc(var(--tower-size) * -0.06)); }
-.tower-layer.is-active .t-top    { fill: rgba(59, 91, 219, 0.1);  stroke: var(--color-accent); }
-.tower-layer.is-active .t-in     { fill: rgba(59, 91, 219, 0.06); stroke: rgba(59, 91, 219, 0.55); }
-.tower-layer.is-active .t-left   { fill: rgba(59, 91, 219, 0.13); stroke: rgba(59, 91, 219, 0.6); }
-.tower-layer.is-active .t-right  { fill: rgba(59, 91, 219, 0.04); stroke: rgba(59, 91, 219, 0.45); }
-.tower-layer.is-active .t-dash   { stroke: rgba(59, 91, 219, 0.4); }
-.tower-layer.is-active .t-glyph-a { opacity: 1; }
-.tower-layer.is-active .t-glyph-s { fill: rgba(13, 13, 13, 0.72); }
-
-/* Viewport bassi (telefoni piccoli / landscape) in composizione colonna:
-   torre e palco più compatti per non sforare la schermata pinnata. */
-@media (max-width: 1023px) and (max-height: 720px) {
-  .services-tower { --tower-size: clamp(120px, 26vw, 150px); }
-  .services-stage.is-pinned { height: clamp(300px, 52vh, 400px); }
-  .slide-title { font-size: clamp(28px, 4.6vw, 40px); }
-  .slide-cards { gap: 8px; }
-  .slide-card { padding: 12px 14px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tower-layer,
-  .tower-layer .t-cap,
-  .tower-layer path,
-  .tower-layer rect,
-  .tower-layer circle {
-    transition: none !important;
+  .svc {
+    --svc-mode: swap;
+    --svc-axis: x;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(16px, 2.6svh, 30px);
+    flex: none;
   }
 }
 
-/* ----------------------------------------------------------------------
-   CHI SIAMO — scena cinematografica: il video dello Sciliar in bianco e
-   nero come fondale sticky, lo statement pinnato che si riempie lettera
-   per lettera, i nomi del duo come firma. Il colore della sezione vive
-   sul canvas (vedi morph in main.ts): il background qui è solo fallback
-   per no-JS / reduced-motion.
--------------------------------------------------------------------------- */
-.about-section {
-  position: relative;
-  background: var(--color-warm-deeper);
-  overflow: clip;
-}
-/* Il contenuto sta sopra il fondale video. */
-.about-content {
-  position: relative;
-  z-index: 2;
-}
-
-/* BACKDROP — video sticky a tutta viewport dietro al contenuto, pura
-   scenografia (pointer-events: none). La mask verticale fa nascere e
-   morire il video dentro il colore del canvas — qualunque esso sia
-   durante i morph — così la fusione con lo sfondo è sempre perfetta. */
-.about-backdrop {
+/* ---- Palco ----
+   Mobile: strato a tutta schermata (fondale + testo + pallini sovrapposti).
+   Desktop: blocco centrato con i due posti affiancati. */
+.svc-scene {
   position: absolute;
   inset: 0;
-  z-index: 0;
-  pointer-events: none;
+}
+@media (min-width: 1024px) {
+  .svc-scene {
+    position: relative;
+    inset: auto;
+    height: var(--svc-stage-h);
+    width: calc(var(--svc-copy-w) + var(--svc-col-gap) + var(--svc-frame-w));
+    margin-inline: auto;
+  }
 }
 
-.services-scroll-hint {
+/* ---- Il fondale (mobile) / la card (desktop) ----
+   È lo stesso elemento: a tutta schermata sotto i 1024px, cornice verticale
+   sopra. `translate` centra la card su desktop restando separata dal
+   `transform`, che è dell'animazione. */
+.svc-frame {
   position: absolute;
-  right: 34px;
-  bottom: 34px;
+  inset: 0;
+  overflow: hidden;
+  will-change: transform;
+}
+/* Velatura di leggibilità: la clip sfuma verso la carta della pagina in
+   basso (dove sta il testo) e appena in alto, così la sezione non ha bordi
+   netti e la descrizione resta leggibile su qualsiasi immagine. */
+.svc-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    var(--color-bg) 0%,
+    rgba(252, 250, 246, 0) 12%,
+    rgba(252, 250, 246, 0) 34%,
+    rgba(252, 250, 246, 0.62) 58%,
+    rgba(252, 250, 246, 0.94) 78%,
+    var(--color-bg) 100%
+  );
+}
+@media (min-width: 1024px) {
+  .svc-frame {
+    inset: 0 auto 0 calc(var(--svc-copy-w) + var(--svc-col-gap));
+    height: 100%;
+    width: var(--svc-frame-w);
+    border-radius: var(--svc-radius);
+  }
+  .svc-frame::after { content: none; }
+}
+
+/* Il muro di pannelli. In modo "swap" si controtrasla rispetto alla card
+   (i pannelli restano fermi nello spazio); in modo "reel" avanza di una
+   schermata per scena. */
+.svc-track {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+/* Ogni pannello riempie la cornice; a metterlo al suo posto è il transform
+   scritto dal JS. Chi arriva sta sopra a chi esce. */
+.svc-shot {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  z-index: var(--z, 0);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+@media (min-width: 1024px) {
+  .svc-shot {
+    border-radius: var(--svc-radius);
+  }
+}
+.svc-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Pannello segnaposto — carta tiepida velata dalla tinta del servizio, trama
+   a punti e numerale grande: si distingue a colpo d'occhio dagli altri due
+   durante il cambio (è il segnale che rende leggibile il movimento). */
+.svc-ph {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  border-radius: inherit;
+  background-color: var(--color-surface);
+  background-image:
+    radial-gradient(120% 90% at 50% 0%, rgba(var(--tint), 0.16) 0%, transparent 62%),
+    radial-gradient(rgba(var(--tint), 0.16) 1px, transparent 1px);
+  background-size: auto, 22px 22px;
 }
-.services-scroll-label {
+/* A tutta schermata il numerale sta nella metà alta, sopra alla velatura. */
+@media (max-width: 1023px) {
+  .svc-ph {
+    justify-content: flex-start;
+    padding-top: 26svh;
+  }
+}
+@media (min-width: 1024px) {
+  .svc-ph { border: 1px solid rgba(var(--tint), 0.18); }
+}
+.svc-ph-num {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(52px, 6vw, 104px);
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(var(--tint), 0.42);
+}
+.svc-ph-label {
   font-family: var(--font-body);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-}
-.services-scroll-line {
-  position: relative;
-  width: 1px;
-  height: 44px;
-  background: rgba(13, 13, 13, 0.14);
-  overflow: hidden;
-}
-.services-scroll-line::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 14px;
-  background: var(--color-accent);
-  animation: scroll-dash 1.9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  color: var(--color-text-muted);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .services-scroll-line::after {
-    animation: none;
+/* ---- Le descrizioni ----
+   Mobile: in basso sopra al fondale, sopra alla velatura. Desktop: nel posto
+   lasciato libero dalla card (a traslarle nel posto giusto è il JS). */
+.svc-copies {
+  position: absolute;
+  z-index: 6;
+  left: clamp(20px, 6vw, 34px);
+  right: clamp(20px, 6vw, 34px);
+  bottom: clamp(74px, 12svh, 116px);
+  height: clamp(150px, 24svh, 210px);
+}
+@media (min-width: 1024px) {
+  .svc-copies {
+    inset: 0 auto 0 0;
+    width: var(--svc-copy-w);
+    height: 100%;
+  }
+}
+.svc-copy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+  gap: clamp(8px, 1.4svh, 16px);
+  will-change: transform, opacity;
+}
+@media (min-width: 1024px) {
+  .svc-copy {
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+    gap: clamp(10px, 1.6vh, 18px);
   }
 }
 
+/* Numerale — sempre arancio, come tutte le cifre del sito. */
+.svc-index {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--color-orange-deep);
+  font-variant-numeric: tabular-nums;
+}
+.svc-index-total {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+.svc-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(26px, 3.4vw, 52px);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+}
+.svc-title em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+.svc-desc {
+  font-family: var(--font-body);
+  font-size: clamp(13.5px, 1.05vw, 17px);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  max-width: 42ch;
+}
+.svc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+  border-bottom: 1px solid rgba(23, 19, 16, 0.18);
+  padding-bottom: 3px;
+  transition: color 0.35s ease, border-color 0.35s ease;
+}
+.svc-link > [aria-hidden] {
+  transition: transform 0.35s var(--ease-cb-3);
+}
+@media (hover: hover) {
+  .svc-link:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .svc-link:hover > [aria-hidden] {
+    transform: translate(3px, -3px);
+  }
+}
+
+/* ---- Puntini di avanzamento — centrati in fondo alla schermata ---- */
+.svc-dots {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  bottom: clamp(26px, 5svh, 46px);
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+@media (min-width: 1024px) {
+  .svc-dots {
+    position: relative;
+    inset: auto;
+  }
+}
+.svc-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(23, 19, 16, 0.12);
+}
+.svc-dot-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-accent);
+  transform: scale(0);
+  transform-origin: center;
+}
+
+/* ---- Fallback statico (no-JS / reduced-motion) ----
+   Niente pin e niente cambi: tutto torna a flusso, una card sopra l'altra
+   con la sua descrizione a fianco. */
+.svc:not(.is-live),
+.svc:not(.is-live) .svc-scene {
+  flex: none;
+}
+.svc:not(.is-live) .svc-scene {
+  position: relative;
+  inset: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(28px, 5vh, 56px);
+  width: 100%;
+  height: auto;
+  margin: 0;
+}
+.svc:not(.is-live) .svc-frame,
+.svc:not(.is-live) .svc-shot,
+.svc:not(.is-live) .svc-copies,
+.svc:not(.is-live) .svc-copy {
+  position: relative;
+  inset: auto;
+  height: auto;
+  width: 100%;
+  translate: none;
+}
+.svc:not(.is-live) .svc-frame {
+  overflow: visible;
+  max-width: 340px;
+  margin-inline: auto;
+}
+.svc:not(.is-live) .svc-frame::after { content: none; }
+.svc:not(.is-live) .svc-track {
+  position: static;
+  display: grid;
+  gap: clamp(28px, 5vh, 56px);
+}
+.svc:not(.is-live) .svc-shot {
+  aspect-ratio: 3 / 4;
+  border-radius: var(--svc-radius);
+}
+.svc:not(.is-live) .svc-ph {
+  justify-content: center;
+  padding-top: 0;
+  border: 1px solid rgba(var(--tint), 0.18);
+}
+.svc:not(.is-live) .svc-copies {
+  display: grid;
+  gap: clamp(28px, 5vh, 56px);
+}
+.svc:not(.is-live) .svc-copy {
+  justify-content: flex-start;
+  gap: 12px;
+}
+.svc:not(.is-live) .svc-dots {
+  display: none;
+}
+@media (min-width: 768px) {
+  .svc:not(.is-live) .svc-scene {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+  .svc:not(.is-live) .svc-frame { order: 2; }
+}
+
+/* Viewport bassi: il palco si accorcia per restare dentro la schermata. */
+@media (min-width: 1024px) and (max-height: 780px) {
+  .svc { --svc-stage-h: min(66vh, 470px, 43vw); }
+  .svc-title { font-size: clamp(26px, 2.6vw, 40px); }
+}
 /* ----------------------------------------------------------------------
-   CHI SIAMO — scena cinematografica: il video dello Sciliar in bianco e
-   nero come fondale sticky, lo statement pinnato che si riempie lettera
-   per lettera, i nomi del duo come firma. Il colore della sezione vive
-   sul canvas (vedi morph in main.ts): il background qui è solo fallback
-   per no-JS / reduced-motion.
+   CHI SIAMO — due strati indipendenti che scorrono a velocità diverse.
+   Il video dello Sciliar in bianco e nero è un fondale che sale PIÙ LENTO
+   della pagina; la frase sale più VELOCE, quindi ci scivola sopra. I due
+   compaiono sfalsati mentre la hero esce (regia in main.ts): prima la
+   montagna, poco dopo il testo. I bordi del fondale sfumano con una rampa
+   lunga e a più tappe, così la sezione nasce e muore dentro il colore del
+   canvas senza nessun bordo percepibile. Nessun pin: la pagina non si
+   blocca mai, la sezione è solo lunga. Il colore vive sul canvas (vedi
+   morph in main.ts): il background qui è fallback no-JS / reduced-motion.
 -------------------------------------------------------------------------- */
 .about-section {
   position: relative;
-  background: var(--color-warm-deeper);
-  overflow: clip;
+  /* Stesso identico colore della hero e del resto della pagina: la carta non
+     cambia mai tono passando da una sezione all'altra, così la giunzione non
+     ha nessuno scalino (il vecchio morph verso la sabbia è stato tolto). */
+  background: var(--color-bg);
+  /* Il fondale DEVE poter sbordare in alto: è così che resta incollato al
+     bordo della hero invece di staccarsene man mano che rallenta (vedi
+     main.ts). Quindi niente clip verticale — resta solo quello orizzontale,
+     che è l'unico che serviva davvero. `clip` e `visible` sono l'unica
+     combinazione mista ammessa dalle specifiche: con `hidden` il browser
+     forzerebbe anche l'altro asse. */
+  overflow-x: clip;
+  overflow-y: visible;
 }
-/* Il contenuto sta sopra il fondale video. */
 .about-content {
   position: relative;
   z-index: 2;
 }
 
-/* BACKDROP — video sticky a tutta viewport dietro al contenuto, pura
-   scenografia (pointer-events: none). La mask verticale fa nascere e
-   morire il video dentro il colore del canvas — qualunque esso sia
-   durante i morph — così la fusione con lo sfondo è sempre perfetta. */
-.about-backdrop {
+/* SALDATURA — la giunzione hero → Chi Siamo non è un bordo ma un alone caldo
+   centrato sul confine, che sfuma verso l'alto dentro la hero e verso il
+   basso dentro la sezione. Semitrasparente: non copre né l'una né l'altra,
+   le impasta. Sta sopra il video (z 0) e sotto il testo (z 2). */
+.about-seam {
   position: absolute;
-  inset: 0;
-  z-index: 0;
+  top: -18vh;
+  left: 0;
+  right: 0;
+  height: 54vh;
+  z-index: 1;
   pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(252, 250, 246, 0) 0%,
+    rgba(252, 250, 246, 0.28) 18%,
+    rgba(252, 250, 246, 0.6) 33%,
+    rgba(252, 250, 246, 0.42) 50%,
+    rgba(252, 250, 246, 0.18) 74%,
+    rgba(252, 250, 246, 0) 100%
+  );
 }
-.about-video-frame {
-  /* Bloccato durante la sezione dal pin GSAP (vedi main.ts), non più da
-     position:sticky — l'overflow-x sugli antenati lo neutralizzava. */
-  position: relative;
-  top: 0;
-  height: 100vh;
+
+/* FONDALE — più alto della sezione visibile in modo da poter derivare in Y
+   (parallasse lenta) restando sempre dentro i bordi della sezione: se ne
+   uscisse, l'overflow:clip gli taglierebbe di netto la sfumatura. */
+.about-media {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 140vh;
+  margin-top: -70vh;
+  z-index: 0;
   overflow: hidden;
-  /* Fascia di dissolvenza lunga e a più tappe sopra e sotto: il video non ha
-     mai un bordo netto, sfuma nel colore della pagina su quasi metà altezza
-     per lato (curva morbida, non lineare). */
-  /* Dissolvenza LINEARE e lunga: una rampa a pendenza costante non ha punti
-     d'inflessione, così il video emerge dal canvas senza nessun bordo
-     percepibile (le rampe "a curva" di prima creavano una linea lieve dove la
-     pendenza cambiava). Piccolo tratto trasparente in cima (0–6%) come cuscinetto
-     pulito esattamente sulla giunzione con i Risultati. */
+  pointer-events: none;
+  will-change: transform, opacity;
+  /* Rampa lunga e a più tappe (non lineare): il video non ha mai un bordo,
+     si dissolve nel colore della pagina su quasi un terzo dell'altezza per
+     lato. Le tappe intermedie ammorbidiscono il punto in cui la pendenza
+     cambia, che con una rampa secca si legge come una linea. */
   --about-mask: linear-gradient(
     to bottom,
     transparent 0%,
-    transparent 6%,
-    #000 44%,
-    #000 64%,
+    rgba(0, 0, 0, 0.12) 6%,
+    rgba(0, 0, 0, 0.55) 14%,
+    #000 24%,
+    #000 76%,
+    rgba(0, 0, 0, 0.55) 86%,
+    rgba(0, 0, 0, 0.12) 94%,
     transparent 100%
   );
   -webkit-mask-image: var(--about-mask);
   mask-image: var(--about-mask);
 }
-/* Bianco e nero via filter; lo scale lo anima GSAP in scrub (la montagna
-   "si assesta" mentre la sezione attraversa il viewport). */
+/* Bianco e nero via filter, niente altro: nessun velo sopra. Il video gira in
+   loop e basta; l'ingrandimento che si vede è il ritaglio necessario a
+   riempire un fondale più alto dello schermo, più la scala d'ingresso che
+   main.ts rilascia (parte ingrandito come l'ultimo frame della hero e si
+   distende a 1 mentre la sezione entra: è la staffetta tra i due video). */
 .about-video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(1) contrast(1.05) brightness(1.05);
+  transform-origin: 50% 42%;
   will-change: transform;
-}
-/* VELO — radiale denso al centro (leggibilità dello statement) che si
-   dirada verso i bordi: la montagna respira in periferia. Durante il pin
-   GSAP lo dirada ulteriormente, in sincrono col riempimento delle lettere. */
-.about-video-veil {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(
-      ellipse 68% 56% at 50% 46%,
-      rgba(232, 232, 229, 0.94) 0%,
-      rgba(232, 232, 229, 0.66) 46%,
-      rgba(232, 232, 229, 0.22) 74%,
-      rgba(232, 232, 229, 0) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      /* Top trasparente: il bordo superiore di Chi siamo mostra solo il canvas
-         continuo (lo stesso fondo dei Risultati, che vira in scrub), senza più
-         il blocco pieno #E8E8E5 che creava la cucitura tra le due sezioni. Il
-         grigio caldo e le nuvole affiorano gradualmente più in basso. */
-      rgba(232, 232, 229, 0) 0%,
-      rgba(232, 232, 229, 0) 30%,
-      rgba(232, 232, 229, 0) 70%,
-      rgba(232, 232, 229, 0.7) 88%,
-      rgba(232, 232, 229, 1) 100%
-    );
+  /* Un filo più chiaro dell'originale: senza velo davanti, è questo a far
+     staccare l'inchiostro del testo anche sulle rocce scure. */
+  filter: grayscale(1) contrast(1.02) brightness(1.14);
 }
 
 /* GLOW TEXT — testo spezzato in lettere da main.ts ([data-glow]): ogni
@@ -1918,122 +1603,156 @@ button {
   display: inline;
 }
 
-/* INTRO PINNATA — scena a tutta altezza: kicker + statement centrati come
-   gruppo sopra il video. Mentre è pinnata (GSAP), lo scroll riempie le
-   lettere dello statement da grigio a colorato. Vive come figlia diretta
-   della sezione (genitore block): il pin-spacer di ScrollTrigger non
-   spinge i fratelli se il genitore è flex. */
+/* CORSA — la sezione è volutamente LUNGA: i due strati la attraversano per
+   tutta la sua altezza invece di comparire e sparire in una schermata.
+   Nessun pin: si scrolla sempre normalmente, è solo la distanza a essere
+   "stretchata". Le due velocità le imposta main.ts: il fondale ~0.82× della
+   pagina, la frase ~1.13×, e la differenza è lo scivolamento del testo sulla
+   montagna. L'altezza qui deve lasciare al fondale (140vh) lo spazio per
+   derivare restando dentro il bordo BASSO della sezione: 168 − 140 = 28vh di
+   gioco, cioè ±14vh di deriva (in alto sborda apposta, vedi main.ts). Il
+   vincolo vero è fondale ≥ 0.82 × sezione: sotto quella soglia la coda della
+   corsa resterebbe senza video, quindi la sezione non va allungata senza
+   allungare anche .about-media.
+
+   La frase è CENTRATA nella corsa, con lo stesso respiro sopra e sotto
+   (padding-block simmetrico): il fondale è anch'esso centrato sulla sezione
+   (top 50% / −70vh), quindi i due strati partono concentrici e l'unica cosa
+   che li separa è la parallasse. Il respiro è volutamente ampio ma non
+   enorme: meno del vecchio anticipo di 40vh in cima, così la frase entra
+   comunque presto mentre la hero esce, ma senza lasciare mezza schermata
+   vuota in coda. Se il blocco di testo è più alto della corsa, la sezione
+   cresce e i due padding restano identici: la simmetria non si rompe mai. */
 .about-intro {
   position: relative;
-  min-height: 100vh;
+  min-height: 168vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* Respiro sotto la navbar fissa + padding-bottom SIMMETRICO: con solo il
-     padding-top il blocco centrato (justify-content:center) risultava ~38px più
-     in basso del centro reale. Bilanciandolo, kicker+testo+CTA tornano centrati
-     nella viewport su desktop, restando corretti anche su mobile/tablet. */
-  padding-top: 76px;
-  padding-bottom: 76px;
-}
-.about-intro-screen {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(20px, 4vh, 38px);
-}
-.about-kicker {
-  align-self: center;
+  padding-block: clamp(80px, 18vh, 220px);
+  padding-inline: clamp(20px, 5vw, 48px);
 }
 
-/* Lo statement è il protagonista della scena: grande, centrato, sopra il
-   cuore chiaro del velo radiale. */
+/* Lo statement è l'unica cosa in scena sopra il fondale. Ha la sua
+   trasformazione, indipendente da quella del video. */
 .about-statement {
+  position: relative;
+  z-index: 1;
   font-weight: 500;
-  font-size: clamp(30px, 4.6vw, 70px);
-  line-height: 1.12;
-  letter-spacing: -0.015em;
+  /* La misura NON la decide più il wrap automatico ma le andate a capo scritte
+     nel dizionario (vedi it.ts): le righe sono state bilanciate sulla
+     larghezza REALE in pixel (non sul numero di lettere — il corsivo è molto
+     più stretto del tondo), e stanno tutte dentro uno scarto di ~25%, quindi
+     i due lati del blocco sono quasi dritti. Qui la
+     dimensione serve solo a far arrivare la riga più lunga vicino al bordo
+     della colonna senza toccarlo — se lo tocca, quella riga si spezza e la
+     composizione salta. La max-width in ch è il fermo di sicurezza. */
+  font-size: clamp(38px, 7.5vw, 118px);
+  /* Interlinea larga: la frase respira e si allunga in verticale, così lo
+     scorrimento sopra la montagna dura e si legge riga per riga. */
+  line-height: 1.28;
+  letter-spacing: -0.012em;
+  word-spacing: 0.02em;
   color: var(--color-ink);
-  max-width: 23ch;
+  max-width: 26ch;
   margin-inline: auto;
   text-align: center;
+  text-wrap: balance;
+  will-change: transform, opacity;
+}
+/* VELO — gradiente morbido SOTTO le parole: alza il contrasto del testo sulle
+   rocce senza mettere un pannello davanti al video. È un'ellisse di carta che
+   sfuma a zero prima dei bordi (nessuna linea, nessun riquadro) e vive dentro
+   lo statement, quindi viaggia con lui nella parallasse invece di restare
+   incollata alla sezione. Volutamente leggero: al centro non arriva alla metà
+   dell'opacità, la montagna si legge sempre attraverso. */
+.about-statement::before {
+  content: "";
+  position: absolute;
+  inset: -11% -9%;
+  z-index: -1;
+  pointer-events: none;
+  /* Non è un'ellisse ma una FASCIA verticale: il blocco è alto otto righe e
+     un alone radiale avrebbe schiarito solo quelle centrali, lasciando la
+     prima e l'ultima scoperte. Il gradiente dà la stessa velatura a tutte le
+     righe e si spegne in alto e in basso; la maschera fa la stessa cosa sui
+     lati, così il velo non ha nessun bordo su nessuno dei quattro fronti. */
+  background: linear-gradient(
+    to bottom,
+    rgba(252, 250, 246, 0) 0%,
+    rgba(252, 250, 246, 0.3) 13%,
+    rgba(252, 250, 246, 0.42) 50%,
+    rgba(252, 250, 246, 0.3) 87%,
+    rgba(252, 250, 246, 0) 100%
+  );
+  --scrim-mask: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.6) 9%,
+    #000 22%,
+    #000 78%,
+    rgba(0, 0, 0, 0.6) 91%,
+    transparent 100%
+  );
+  -webkit-mask-image: var(--scrim-mask);
+  mask-image: var(--scrim-mask);
 }
 .about-statement em {
   font-style: italic;
   color: var(--color-accent);
 }
 
-/* CTA teaser → /chi-siamo. Vive come terzo elemento del gruppo centrato
-   (.about-intro-screen): aggiungendola, kicker+statement salgono naturalmente
-   e lei occupa lo spazio sotto — senza toccare il pin né lo spacing tra eyebrow
-   e testo. Stile link raffinato, non invasivo: underline che "wipe-a" in accent
-   da sinistra + freccia che scorre all'hover. */
-.about-teaser-cta {
-  align-self: center;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55em;
-  /* Distacco proprio dallo statement, indipendente dal gap eyebrow↔testo. */
-  margin-top: clamp(10px, 1.6vh, 22px);
-  font-family: var(--font-body);
-  font-size: clamp(14px, 1.1vw, 16px);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: var(--color-ink);
-  text-decoration: none;
-  padding-bottom: 2px;
-  transition: color 0.3s ease;
+/* MOBILE — la frase è più alta dello schermo: lo scorrimento la fa leggere
+   a scaglioni mentre la montagna sale più lenta sotto. */
+@media (max-width: 900px) {
+  /* Sotto i 900px la composizione a mano non ci sta più in larghezza: si
+     spengono i <br> e il testo torna a impaginarsi da solo dentro la sua
+     misura. Gli spazi lasciati prima di ogni \n nel dizionario sono lì
+     apposta perché, tolta l'andata a capo, le parole restino separate. */
+  .about-statement br {
+    display: none;
+  }
+  .about-statement {
+    /* Misura stretta: senza composizione a mano è questa a tenere il blocco
+       alto e le righe di lunghezza simile. */
+    max-width: 14ch;
+  }
 }
-.about-teaser-cta-text {
-  position: relative;
+
+@media (max-width: 700px) {
+  .about-intro {
+    min-height: 160vh;
+    /* Su portrait la frase è più alta: meno respiro sopra e sotto, altrimenti
+       la corsa si allunga a vuoto. Resta comunque simmetrico. */
+    padding-block: clamp(72px, 16vh, 180px);
+  }
+  .about-media {
+    /* Su portrait un fondale altissimo ritaglia troppo il video (si vedrebbe
+       solo una striscia di roccia): qui basta meno. */
+    height: 130vh;
+    margin-top: -65vh;
+  }
+  .about-statement {
+    font-size: clamp(36px, 13.2vw, 66px);
+    line-height: 1.24;
+    max-width: 10ch;
+  }
 }
-/* Linea base tenue (affordance) sempre presente. */
-.about-teaser-cta-text::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -3px;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.28;
-}
-/* Linea accent che entra da sinistra all'hover (effetto slide). */
-.about-teaser-cta-text::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -3px;
-  height: 1px;
-  background: var(--color-accent);
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.about-teaser-cta-arrow {
-  display: inline-block;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.about-teaser-cta:hover {
-  color: var(--color-accent);
-}
-.about-teaser-cta:hover .about-teaser-cta-text::after {
-  transform: scaleX(1);
-}
-.about-teaser-cta:hover .about-teaser-cta-arrow {
-  transform: translateX(4px);
-}
-.about-teaser-cta:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 6px;
-  border-radius: 4px;
-}
+
+/* Senza motion niente scorrimento né comparse: una schermata sola, frase
+   piena e ferma sul fondale. */
 @media (prefers-reduced-motion: reduce) {
-  .about-teaser-cta-text::after,
-  .about-teaser-cta-arrow {
-    transition: none;
+  .about-intro {
+    min-height: 100vh;
+    justify-content: center;
+    padding-block: 76px;
+  }
+  .about-media {
+    /* Niente parallasse da compensare: il fondale copre esattamente la
+       sezione, qualunque altezza prenda il blocco di testo. */
+    top: 0;
+    height: 100%;
+    margin-top: 0;
   }
 }
 
@@ -2083,7 +1802,7 @@ button {
   text-transform: uppercase;
   color: var(--color-text-secondary);
   padding-bottom: 7px;
-  border-bottom: 1px solid rgba(13, 13, 13, 0.14);
+  border-bottom: 1px solid rgba(23, 19, 16, 0.14);
   transition: color 0.25s ease, border-color 0.25s ease;
 }
 .duo-cta [aria-hidden] {
@@ -2121,7 +1840,7 @@ button {
   grid-template-columns: repeat(12, 1fr);
   gap: clamp(16px, 2vw, 28px);
   padding: clamp(38px, 7vh, 84px) 0;
-  border-top: 1px solid rgba(13, 13, 13, 0.1);
+  border-top: 1px solid rgba(23, 19, 16, 0.1);
 }
 .chapter-head {
   grid-column: span 5;
@@ -2173,7 +1892,7 @@ button {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-ink);
-  border: 1px solid rgba(13, 13, 13, 0.16);
+  border: 1px solid rgba(23, 19, 16, 0.16);
   border-radius: 9999px;
   padding: 8px 16px;
   transition: border-color 0.25s ease, color 0.25s ease;
@@ -2210,21 +1929,21 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(250, 250, 248, 0.06);
+  border: 1px solid rgba(252, 250, 246, 0.06);
   box-shadow:
-    0 2px 4px rgba(13, 13, 13, 0.05),
-    0 24px 60px rgba(13, 13, 13, 0.12);
+    0 2px 4px rgba(23, 19, 16, 0.05),
+    0 24px 60px rgba(23, 19, 16, 0.12);
   transition: box-shadow 0.5s ease;
 }
 .founder-card:hover .founder-media {
   box-shadow:
-    0 2px 4px rgba(13, 13, 13, 0.06),
-    0 34px 80px rgba(13, 13, 13, 0.18);
+    0 2px 4px rgba(23, 19, 16, 0.06),
+    0 34px 80px rgba(23, 19, 16, 0.18);
 }
 .founder-initial {
   font-weight: 500;
   font-size: clamp(90px, 9vw, 150px);
-  color: rgba(250, 250, 248, 0.14);
+  color: rgba(252, 250, 246, 0.14);
   transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .founder-card:hover .founder-initial {
@@ -2240,9 +1959,9 @@ button {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.75);
-  background: rgba(13, 13, 13, 0.3);
-  border: 1px solid rgba(250, 250, 248, 0.18);
+  color: rgba(252, 250, 246, 0.75);
+  background: rgba(23, 19, 16, 0.3);
+  border: 1px solid rgba(252, 250, 246, 0.18);
   border-radius: 9999px;
   padding: 5px 12px;
   -webkit-backdrop-filter: blur(6px);
@@ -2341,17 +2060,18 @@ button {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  border: 1px solid rgba(250, 250, 248, 0.08);
+  border: 1px solid rgba(252, 250, 246, 0.08);
   box-shadow:
-    0 2px 4px rgba(13, 13, 13, 0.08),
-    0 40px 100px rgba(13, 13, 13, 0.28);
+    0 2px 4px rgba(23, 19, 16, 0.08),
+    0 40px 100px rgba(23, 19, 16, 0.28);
   /* Aurora dark — mesh di radiali su base ink, deriva lenta.
-     Tinte solo dalla palette: accent, navy e muted. */
+     Blu e navy come struttura, un braccio ARANCIO in basso a destra: il
+     pannello scuro è il punto in cui le due famiglie si incontrano. */
   background-color: var(--color-cta-bg);
   background-image:
     radial-gradient(60% 52% at 14% 18%, rgba(59, 91, 219, 0.40), transparent 70%),
     radial-gradient(56% 48% at 88% 8%, rgba(26, 35, 64, 0.85), transparent 70%),
-    radial-gradient(64% 56% at 82% 92%, rgba(59, 91, 219, 0.22), transparent 70%),
+    radial-gradient(64% 56% at 82% 92%, rgba(240, 162, 75, 0.26), transparent 70%),
     radial-gradient(48% 42% at 22% 96%, rgba(154, 163, 178, 0.14), transparent 70%),
     radial-gradient(46% 40% at 52% 50%, rgba(26, 35, 64, 0.45), transparent 70%);
   background-repeat: no-repeat;
@@ -2365,7 +2085,7 @@ button {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  box-shadow: inset 0 1px 0 rgba(250, 250, 248, 0.1);
+  box-shadow: inset 0 1px 0 rgba(252, 250, 246, 0.1);
   border-radius: inherit;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2398,10 +2118,10 @@ button {
 
 /* Kicker — variante chiara su pannello scuro. */
 .cta-kicker {
-  color: rgba(250, 250, 248, 0.6);
+  color: rgba(252, 250, 246, 0.6);
 }
 .cta-kicker::before {
-  background: rgba(138, 160, 255, 0.65);
+  background: var(--color-amber);
 }
 
 .cta-title {
@@ -2410,19 +2130,20 @@ button {
   font-size: clamp(40px, 6.4vw, 104px);
   line-height: 1.0;
   letter-spacing: -0.02em;
-  color: #fafaf8;
+  color: #FCFAF6;
   margin-top: clamp(22px, 3vh, 36px);
 }
+/* Sul buio il corsivo caldo diventa AMBRA (l'arancio pieno vibrerebbe). */
 .cta-title em {
   font-style: italic;
-  color: #8aa0ff;
+  color: var(--color-amber);
 }
 
 .cta-sub {
   font-family: var(--font-body);
   font-size: clamp(14px, 1.15vw, 17px);
   line-height: 1.65;
-  color: rgba(250, 250, 248, 0.72);
+  color: rgba(252, 250, 246, 0.72);
   max-width: 52ch;
   margin-top: clamp(18px, 2.5vh, 28px);
 }
@@ -2445,10 +2166,10 @@ button {
   font-size: clamp(13px, 1vw, 15px);
   font-weight: 500;
   padding: 17px 32px;
-  background: #fafaf8;
-  color: #0d0d0d;
+  background: #FCFAF6;
+  color: #171310;
   text-decoration: none;
-  box-shadow: 0 10px 40px rgba(13, 13, 13, 0.35);
+  box-shadow: 0 10px 40px rgba(23, 19, 16, 0.35);
   transition:
     background-color 0.3s ease,
     color 0.3s ease,
@@ -2458,9 +2179,9 @@ button {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .cta-pill:hover {
-  background: var(--color-accent);
-  color: #fafaf8;
-  box-shadow: 0 14px 50px rgba(59, 91, 219, 0.45);
+  background: var(--color-orange);
+  color: #FCFAF6;
+  box-shadow: 0 14px 50px rgba(226, 99, 47, 0.45);
 }
 .cta-pill:hover > [aria-hidden] {
   transform: translate(2px, -2px);
@@ -2470,15 +2191,15 @@ button {
   font-family: var(--font-body);
   font-size: 13px;
   letter-spacing: 0.03em;
-  color: rgba(250, 250, 248, 0.66);
+  color: rgba(252, 250, 246, 0.66);
   text-decoration: none;
   padding-bottom: 3px;
-  border-bottom: 1px solid rgba(250, 250, 248, 0.25);
+  border-bottom: 1px solid rgba(252, 250, 246, 0.25);
   transition: color 0.3s ease, border-color 0.3s ease;
 }
 .cta-mail:hover {
-  color: #fafaf8;
-  border-color: #fafaf8;
+  color: #FCFAF6;
+  border-color: #FCFAF6;
 }
 
 .cta-foot {
@@ -2492,7 +2213,7 @@ button {
   font-weight: 500;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.5);
+  color: rgba(252, 250, 246, 0.5);
 }
 .cta-foot-dot {
   width: 4px;
@@ -2508,7 +2229,7 @@ button {
   right: clamp(30px, 4.5vw, 70px);
   z-index: 2;
   font-size: clamp(26px, 2.6vw, 44px);
-  color: rgba(154, 163, 178, 0.85);
+  color: rgba(240, 162, 75, 0.9);
   animation: cta-star-spin 14s linear infinite;
 }
 @keyframes cta-star-spin {
@@ -2565,7 +2286,7 @@ button {
   color: var(--color-ink);
   font-size: clamp(34px, 5vw, 72px);
 }
-.cscroll-headline em { color: var(--color-accent); }
+.cscroll-headline em { color: var(--color-orange-deep); }
 .cscroll-sub {
   margin-top: 0;
   color: var(--color-text-secondary);
@@ -2579,12 +2300,12 @@ button {
   width: 100%;
   border-radius: clamp(22px, 2.4vw, 34px);
   padding: clamp(8px, 1vw, 14px);
-  border: 1px solid rgba(250, 250, 248, 0.1);
+  border: 1px solid rgba(252, 250, 246, 0.1);
   background-color: var(--color-cta-bg);
   background-image:
     radial-gradient(60% 52% at 14% 18%, rgba(59, 91, 219, 0.40), transparent 70%),
     radial-gradient(56% 48% at 88% 8%, rgba(26, 35, 64, 0.85), transparent 70%),
-    radial-gradient(64% 56% at 82% 92%, rgba(59, 91, 219, 0.22), transparent 70%),
+    radial-gradient(64% 56% at 82% 92%, rgba(240, 162, 75, 0.24), transparent 70%),
     radial-gradient(46% 40% at 52% 50%, rgba(26, 35, 64, 0.45), transparent 70%);
   background-repeat: no-repeat;
   background-size: 165% 165%, 150% 150%, 172% 172%, 140% 140%;
@@ -2604,7 +2325,7 @@ button {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  box-shadow: inset 0 1px 0 rgba(250, 250, 248, 0.12);
+  box-shadow: inset 0 1px 0 rgba(252, 250, 246, 0.12);
   border-radius: inherit;
 }
 .cscroll-glow {
@@ -2645,7 +2366,7 @@ button {
   display: flex;
   flex-direction: column;
   padding: clamp(26px, 3.4vw, 52px);
-  color: #fafaf8;
+  color: #FCFAF6;
   background:
     radial-gradient(120% 90% at 0% 0%, rgba(138, 160, 255, 0.5), transparent 55%),
     radial-gradient(120% 120% at 100% 100%, rgba(26, 35, 64, 0.7), transparent 60%),
@@ -2656,7 +2377,7 @@ button {
   top: clamp(18px, 2vw, 30px);
   right: clamp(20px, 2.4vw, 36px);
   font-size: clamp(26px, 3vw, 44px);
-  color: rgba(250, 250, 248, 0.55);
+  color: rgba(252, 250, 246, 0.55);
   animation: cta-star-spin 16s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2668,7 +2389,7 @@ button {
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.72);
+  color: rgba(252, 250, 246, 0.72);
 }
 .cform-aside-title {
   font-weight: 500;
@@ -2677,7 +2398,7 @@ button {
   letter-spacing: -0.02em;
   margin-top: 14px;
 }
-.cform-aside-title em { font-style: italic; color: #cdd6ff; }
+.cform-aside-title em { font-style: italic; color: var(--color-amber); }
 .cform-steps {
   list-style: none;
   margin: clamp(24px, 3vh, 40px) 0 0;
@@ -2697,14 +2418,14 @@ button {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.12em;
-  color: rgba(250, 250, 248, 0.65);
+  color: rgba(252, 250, 246, 0.65);
   font-variant-numeric: tabular-nums;
 }
 .cform-step-text {
   font-family: var(--font-body);
   font-size: clamp(13px, 1vw, 15px);
   line-height: 1.45;
-  color: rgba(250, 250, 248, 0.92);
+  color: rgba(252, 250, 246, 0.92);
 }
 .cform-aside-contact {
   margin-top: auto;
@@ -2717,21 +2438,21 @@ button {
   font-family: var(--font-display);
   font-size: clamp(15px, 1.4vw, 20px);
   font-weight: 500;
-  color: #fafaf8;
+  color: #FCFAF6;
   text-decoration: none;
-  border-bottom: 1px solid rgba(250, 250, 248, 0.3);
+  border-bottom: 1px solid rgba(252, 250, 246, 0.3);
   padding-bottom: 4px;
   align-self: flex-start;
   transition: border-color 0.3s ease;
 }
-.cform-aside-mail:hover { border-color: #fafaf8; }
+.cform-aside-mail:hover { border-color: #FCFAF6; }
 .cform-aside-note {
   font-family: var(--font-body);
   font-size: 10.5px;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.6);
+  color: rgba(252, 250, 246, 0.6);
 }
 
 .cform {
@@ -2758,26 +2479,26 @@ button {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.62);
+  color: rgba(252, 250, 246, 0.62);
 }
 .cform-optional {
   text-transform: none;
-  letter-spacing: 0.02em;
-  color: rgba(250, 250, 248, 0.38);
+  letter-spacing: 0.06em;
+  color: rgba(252, 250, 246, 0.38);
 }
 .cform-input {
   font-family: var(--font-body);
   font-size: 15px;
-  color: #fafaf8;
-  background: rgba(250, 250, 248, 0.04);
-  border: 1px solid rgba(250, 250, 248, 0.16);
+  color: #FCFAF6;
+  background: rgba(252, 250, 246, 0.04);
+  border: 1px solid rgba(252, 250, 246, 0.16);
   border-radius: 12px;
   padding: 13px 15px;
   width: 100%;
   transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
 }
-.cform-input::placeholder { color: rgba(250, 250, 248, 0.3); }
-.cform-input:hover { border-color: rgba(250, 250, 248, 0.28); }
+.cform-input::placeholder { color: rgba(252, 250, 246, 0.3); }
+.cform-input:hover { border-color: rgba(252, 250, 246, 0.28); }
 .cform-input:focus {
   outline: none;
   border-color: var(--color-accent);
@@ -2822,8 +2543,8 @@ button {
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.03em;
-  color: rgba(250, 250, 248, 0.7);
-  border: 1px solid rgba(250, 250, 248, 0.2);
+  color: rgba(252, 250, 246, 0.7);
+  border: 1px solid rgba(252, 250, 246, 0.2);
   border-radius: 9999px;
   padding: 8px 15px;
   transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
@@ -2838,7 +2559,7 @@ button {
 .cform-chip input:checked + span {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: #fafaf8;
+  color: #FCFAF6;
 }
 
 .cform-actions {
@@ -2859,25 +2580,25 @@ button {
   font-size: clamp(13px, 1vw, 15px);
   font-weight: 500;
   padding: 16px 30px;
-  background: #fafaf8;
-  color: #0d0d0d;
-  box-shadow: 0 10px 40px rgba(13, 13, 13, 0.35);
+  background: #FCFAF6;
+  color: #171310;
+  box-shadow: 0 10px 40px rgba(23, 19, 16, 0.35);
   transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 .cform-submit > [aria-hidden] {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .cform-submit:hover {
-  background: var(--color-accent);
-  color: #fafaf8;
-  box-shadow: 0 14px 50px rgba(59, 91, 219, 0.45);
+  background: var(--color-orange);
+  color: #FCFAF6;
+  box-shadow: 0 14px 50px rgba(226, 99, 47, 0.45);
 }
 .cform-submit:hover > [aria-hidden] { transform: translate(2px, -2px); }
 .cform-note {
   font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.08em;
-  color: rgba(250, 250, 248, 0.5);
+  color: rgba(252, 250, 246, 0.5);
 }
 .cform-status {
   font-family: var(--font-body);
@@ -2915,7 +2636,7 @@ button {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: radial-gradient(46% 46% at 50% 34%, rgba(59, 91, 219, 0.1), transparent 70%);
+  background: radial-gradient(46% 46% at 50% 34%, rgba(240, 162, 75, 0.16), transparent 70%);
 }
 .about-cta > * { position: relative; z-index: 1; }
 .about-cta-kicker { align-self: center; color: var(--color-text-secondary); }
@@ -2928,7 +2649,7 @@ button {
   margin-top: clamp(20px, 3vh, 34px);
   max-width: 16ch;
 }
-.about-cta-title em { font-style: italic; color: var(--color-accent); }
+.about-cta-title em { font-style: italic; color: var(--color-orange-deep); }
 .about-cta-sub {
   font-family: var(--font-body);
   font-size: clamp(15px, 1.2vw, 18px);
@@ -2957,15 +2678,15 @@ button {
   background: var(--color-cta-bg);
   color: var(--color-cta-text);
   text-decoration: none;
-  box-shadow: 0 14px 40px rgba(13, 13, 13, 0.22);
+  box-shadow: 0 14px 40px rgba(23, 19, 16, 0.22);
   transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 .about-cta-btn > [aria-hidden] {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .about-cta-btn:hover {
-  background: var(--color-accent);
-  box-shadow: 0 18px 50px rgba(59, 91, 219, 0.4);
+  background: var(--color-orange);
+  box-shadow: 0 18px 50px rgba(226, 99, 47, 0.4);
 }
 .about-cta-btn:hover > [aria-hidden] { transform: translate(2px, -2px); }
 .about-cta-mail {
@@ -3008,8 +2729,8 @@ button {
   bottom: -200%;
   background: linear-gradient(
     to bottom,
-    rgba(250, 250, 248, 0.08) 0%,
-    rgba(250, 250, 248, 0.04) 35%,
+    rgba(252, 250, 246, 0.08) 0%,
+    rgba(252, 250, 246, 0.04) 35%,
     transparent 100%
   );
   opacity: 0;
@@ -3056,11 +2777,11 @@ button {
 .nav-logo {
   filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7))
     drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))
-    drop-shadow(0 1px 4px rgba(13, 13, 13, 0.22));
+    drop-shadow(0 1px 4px rgba(23, 19, 16, 0.22));
 }
 .nav-logo-reversed {
   opacity: 0;
-  filter: drop-shadow(0 1px 6px rgba(13, 13, 13, 0.35));
+  filter: drop-shadow(0 1px 6px rgba(23, 19, 16, 0.35));
 }
 .nav-logo,
 .nav-logo-reversed {
@@ -3069,29 +2790,29 @@ button {
 nav.nav-on-dark .nav-logo { opacity: 0; }
 nav.nav-on-dark .nav-logo-reversed { opacity: 1; }
 nav.nav-on-dark #burger-menu span {
-  background-color: #fafaf8;
+  background-color: #FCFAF6;
 }
 nav.nav-on-dark .pill {
-  background: #fafaf8;
-  border-color: #fafaf8;
-  color: #0d0d0d;
+  background: #FCFAF6;
+  border-color: #FCFAF6;
+  color: #171310;
 }
 nav.nav-on-dark .pill:hover {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: #fafaf8;
+  color: #FCFAF6;
 }
 /* Con il menu mobile aperto la nav galleggia sul pannello CHIARO del menu:
    l'inversione va sospesa qualunque cosa ci sia dietro. */
 nav:has(#burger-menu.is-open) .nav-logo { opacity: 1; }
 nav:has(#burger-menu.is-open) .nav-logo-reversed { opacity: 0; }
 nav:has(#burger-menu.is-open) #burger-menu span {
-  background-color: #0d0d0d;
+  background-color: #171310;
 }
 nav:has(#burger-menu.is-open) .pill {
-  background: #0d0d0d;
-  border-color: #0d0d0d;
-  color: #fafaf8;
+  background: #171310;
+  border-color: #171310;
+  color: #FCFAF6;
 }
 
 /* ----------------------------------------------------------------------
@@ -3193,7 +2914,7 @@ nav:has(#burger-menu.is-open) .pill {
   color: var(--color-muted);
 }
 .footer-star {
-  color: var(--color-accent);
+  color: var(--color-orange);
 }
 .footer-ghost {
   font-weight: 500;
@@ -3205,8 +2926,8 @@ nav:has(#burger-menu.is-open) .pill {
   margin-bottom: -0.12em;
   background: linear-gradient(
     to bottom,
-    rgba(13, 13, 13, 0.1) 0%,
-    rgba(13, 13, 13, 0.02) 80%,
+    rgba(23, 19, 16, 0.1) 0%,
+    rgba(23, 19, 16, 0.02) 80%,
     transparent 100%
   );
   -webkit-background-clip: text;
@@ -3276,7 +2997,7 @@ nav:has(#burger-menu.is-open) .pill {
   position: relative;
   width: 1px;
   height: 44px;
-  background: rgba(13, 13, 13, 0.18);
+  background: rgba(23, 19, 16, 0.18);
   overflow: hidden;
 }
 .hero-scroll-line::after {
@@ -3286,7 +3007,7 @@ nav:has(#burger-menu.is-open) .pill {
   left: 0;
   width: 100%;
   height: 14px;
-  background: var(--color-accent);
+  background: var(--color-orange);
   animation: scroll-dash 1.9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 @keyframes scroll-dash {
@@ -3340,12 +3061,15 @@ nav:has(#burger-menu.is-open) .pill {
   content: "";
   position: absolute;
   inset: -20%;
+  /* I nastri portano anche l'ambra: l'aurora "boreale" del brand ha una coda
+     calda, così l'hero non è una tinta sola. */
   background-image: repeating-linear-gradient(
     100deg,
     #3b5bdb 10%,
-    #8aa0ff 15%,
-    #9fb4ff 20%,
-    #cdd8ff 25%,
+    #8aa0ff 14%,
+    #f0a24b 18%,
+    #e2632f 21%,
+    #cdd8ff 26%,
     #5a78ff 30%
   );
   background-size: 200% 200%;
@@ -3428,7 +3152,7 @@ nav:has(#burger-menu.is-open) .pill {
    "dietro i pixel" non si spezza mai. */
 .ap-hero-accent {
   font-style: italic;
-  color: var(--color-accent);
+  color: var(--color-orange-deep);
   margin-left: clamp(36px, 15vw, 240px);
 }
 .ap-hero-accent::before {
@@ -3438,7 +3162,7 @@ nav:has(#burger-menu.is-open) .pill {
   height: 0.075em;
   margin-right: 0.22em;
   vertical-align: 0.26em;
-  background: var(--color-accent);
+  background: var(--color-orange);
   border-radius: 999px;
 }
 .ap-hero-sub {
@@ -3450,10 +3174,11 @@ nav:has(#burger-menu.is-open) .pill {
   margin: 0;
   max-width: 44ch;
 }
-/* HERO SPLIT — variante "one-shot" a 2 colonne con il robot Spline: la
-   sezione occupa ESATTAMENTE un viewport (height 100svh + overflow clip già
-   sul .ap-hero), copy centrata in verticale a sinistra, palco 3D a destra.
-   Tutto visibile senza scroll; la pagina prosegue pulita sotto la piega.
+/* HERO SPLIT — variante "one-shot": la sezione occupa ESATTAMENTE un viewport
+   (height 100svh + overflow clip già sul .ap-hero) con una sola colonna
+   editoriale allineata a sinistra, centrata in verticale. Tutto visibile senza
+   scroll; la pagina prosegue pulita sotto la piega. Lo spazio negativo a
+   destra lo tiene l'aurora di fondo — nessun asset 3D da caricare.
    Il padding-bottom > padding-top posiziona il contenuto un filo SOPRA il
    centro reale del viewport (equilibrio ottico). */
 .ap-hero--split {
@@ -3461,14 +3186,52 @@ nav:has(#burger-menu.is-open) .pill {
   min-height: 660px;
   padding: clamp(76px, 10vh, 112px) clamp(24px, 5vw, 48px) clamp(96px, 14vh, 152px);
 }
-.ap-hero-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
-  align-items: center;
-  gap: clamp(28px, 4vw, 72px);
-}
+/* Senza la seconda colonna il titolo può respirare (le righe sono nowrap dal
+   dizionario, quindi è il titolo a dare la misura del blocco); la sub resta
+   su una misura di lettura corta e non attraversa mai tutta la pagina. */
 .ap-hero--split .ap-hero-title {
-  font-size: clamp(44px, 6.2vw, 96px);
+  font-size: clamp(48px, 7.4vw, 124px);
+}
+/* Velo sotto la colonna editoriale.
+
+   La maschera dell'aurora la concentra IN ALTO A DESTRA: sopra le prime righe
+   il fondo è già carta pura, e il punto critico è invece l'estremità destra
+   delle righe lunghe del titolo, dove i nastri mordono davvero. Il tedesco è
+   il caso peggiore (titolo ~1290px, arriva più a destra di tutti): misurato su
+   tutto il ciclo di 55s, senza velo il sub sta a 4.12:1 e il corsivo arancio a
+   2.61:1 — entrambi sotto soglia.
+
+   Da qui la geometria: l'ellisse copre tutta la colonna invece di concentrarsi
+   al centro, dove non serviva nulla. Peggiore del ciclo con il velo:
+   ink 12.2 · sub 5.6 · accento 3.5 in de, 14.5 / 6.6 / 4.2 in it.
+
+   `farthest-side` + scatola alta non sono un dettaglio: legano lo zero del
+   gradiente ESATTAMENTE ai bordi della scatola. Con raggi arbitrari il velo
+   arrivava al bordo ancora a ~0.55 di opacità e si tagliava di netto, con una
+   riga orizzontale visibile in mezzo all'aurora. Il picco resta a 0.74 di
+   carta sulla stessa carta: nessun colore nuovo, nessun bordo, l'aurora
+   continua a brillare intorno. */
+.ap-hero-copy {
+  position: relative;
+}
+.ap-hero-copy::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  /* Deborda molto oltre il testo: è dentro questo margine che la sfumatura ha
+     lo spazio per spegnersi del tutto. Più aria sotto che sopra — il blocco è
+     otticamente centrato sul testo, non sulla sua scatola. */
+  inset: calc(-1 * clamp(110px, 15vh, 180px)) calc(-1 * clamp(48px, 7vw, 120px))
+         calc(-1 * clamp(120px, 16vh, 196px));
+  background: radial-gradient(
+    ellipse farthest-side at 50% 50%,
+    rgba(252, 250, 246, 0.74) 0%,
+    rgba(252, 250, 246, 0.72) 66%,
+    rgba(252, 250, 246, 0.56) 82%,
+    rgba(252, 250, 246, 0.26) 93%,
+    rgba(252, 250, 246, 0) 100%
+  );
+  pointer-events: none;
 }
 /* Niente barra né indent prima dell'accento: l'ultima riga chiude il blocco
    tipografico pulita — solo corsivo + colore brand. */
@@ -3478,110 +3241,38 @@ nav:has(#burger-menu.is-open) .pill {
 .ap-hero--split .ap-hero-accent::before {
   display: none;
 }
+/* Sub — misura tarata sul BILANCIAMENTO, non sulla riga più lunga possibile.
+   A 46ch il testo cadeva su due righe molto diverse fra loro (bordo destro a
+   zig-zag: 13% di scarto in it, 16% in en). A 38ch `text-wrap: balance` trova
+   tre righe quasi pari in tutte e tre le lingue e lo scarto scende al 6-7%:
+   il lato destro legge dritto senza ricorrere alla giustificazione, che a
+   questa misura aprirebbe buchi bianchi fra le parole. */
 .ap-hero--split .ap-hero-sub {
-  margin-top: clamp(20px, 3.2vh, 34px);
+  max-width: 38ch;
+  text-wrap: balance;
+  line-height: 1.6;
+  margin-top: clamp(22px, 3.4vh, 34px);
 }
+/* Il salto verso la CTA è 1.4× quello fra titolo e sub: il sub resta legato al
+   titolo, il bottone si stacca come terzo tempo. */
 .ap-hero-cta {
-  margin-top: clamp(24px, 4vh, 42px);
+  margin-top: clamp(31px, 4.8vh, 48px);
 }
 .ap-hero-btn {
   padding: 15px 30px;
 }
 
-/* Palco del robot: altezza FISSA (nessun layout shift quando la scena
-   arriva), glow azzurro radiale dietro il soggetto, canvas contenuto
-   (overflow clip → mai sbordi sopra il testo). Niente card/bordo: il robot
-   abita lo spazio negativo della composizione. */
-.ap-hero-robot {
-  position: relative;
-  height: clamp(340px, 56vh, 560px);
-  overflow: clip;
-}
-/* Fondale morbido dietro il soggetto: radiale azzurro chiaro che fonde il
-   3D col tema light della pagina. */
-.ap-hero-robot::before {
-  content: "";
-  position: absolute;
-  inset: 2%;
-  background:
-    radial-gradient(56% 50% at 50% 46%, rgba(147, 176, 255, 0.28), rgba(59, 91, 219, 0.10) 52%, transparent 74%),
-    radial-gradient(40% 34% at 64% 68%, rgba(120, 160, 255, 0.16), transparent 72%);
-  filter: blur(8px);
-  pointer-events: none;
-}
-/* Il riquadro Spline è più ALTO e LARGO del palco (inset negativo
-   simmetrico → il soggetto resta centrato): il watermark, ancorato al suo
-   angolo basso-destro, finisce oltre il bordo e l'overflow clip del palco
-   lo taglia via. */
-.ap-robot {
-  position: absolute;
-  inset: -64px -20px;
-}
-/* Il canvas sfuma dentro solo a scena caricata (classe dal componente):
-   la dissolvenza è sul canvas, NON sul wrapper, così l'overlay di
-   caricamento resta visibile fino all'onLoad. Il filtro sposta il viola
-   della scena (hue ~265°) sul blu brand (~228°) e la fonde col tema
-   chiaro. */
-.ap-robot canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-  opacity: 0;
-  transition: opacity 0.9s ease;
-  filter: hue-rotate(-40deg) saturate(1.18) brightness(1.05);
-}
-.ap-robot--ready canvas {
-  opacity: 1;
-}
-.ap-robot-loading {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-.ap-robot-spinner {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 3px solid rgba(59, 91, 219, 0.18);
-  border-top-color: var(--color-accent);
-  animation: ap-robot-spin 0.9s linear infinite;
-}
-@keyframes ap-robot-spin {
-  to { transform: rotate(360deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ap-robot canvas { transition: none; }
-  .ap-robot-spinner { animation: none; }
-}
-/* Su touch il canvas non intercetta i gesti: lo scroll della pagina non
-   viene mai rubato dalla scena (il robot resta un elemento scenografico). */
-@media (hover: none) {
-  .ap-hero-robot { pointer-events: none; }
-}
-/* Stack mobile: copy sopra, robot sotto. Il vincolo one-shot si rilassa
-   (height auto — il contenuto impilato non va mai clippato). */
+/* Mobile: il vincolo one-shot si rilassa (height auto — il contenuto non va
+   mai clippato) e il titolo torna a una scala da colonna stretta. */
 @media (max-width: 960px) {
   .ap-hero--split {
     height: auto;
     min-height: 100svh;
-    /* In colonna il bias ottico desktop non serve: si torna al ritmo
-       verticale precedente. */
     padding-top: clamp(88px, 12vh, 132px);
     padding-bottom: clamp(48px, 7vh, 72px);
   }
-  .ap-hero-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: clamp(18px, 3.5vh, 32px);
-  }
-  .ap-hero-robot {
-    height: clamp(300px, 42vh, 430px);
-    /* La camera della scena non copre l'aspect stretto: il piedistallo esce
-       dal bordo basso — la sfumatura rende il taglio intenzionale. */
-    -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
+  .ap-hero--split .ap-hero-title {
+    font-size: clamp(44px, 10vw, 76px);
   }
 }
 
@@ -3610,8 +3301,8 @@ nav:has(#burger-menu.is-open) .pill {
 }
 .ap-manifesto-mark {
   font-size: clamp(20px, 2vw, 28px);
-  color: var(--color-accent);
-  opacity: 0.55;
+  color: var(--color-orange);
+  opacity: 0.7;
   animation: ap-mark-spin 22s linear infinite;
 }
 .ap-statement {
@@ -3626,7 +3317,7 @@ nav:has(#burger-menu.is-open) .pill {
 }
 .ap-statement em {
   font-style: italic;
-  color: var(--color-accent);
+  color: var(--color-orange-deep);
 }
 /* Nota di rinforzo — colonna stretta nello spazio negativo a destra, pesi
    misti: lead-in in grassetto ink, resto in secondario, keyword in accento. */
@@ -3644,7 +3335,7 @@ nav:has(#burger-menu.is-open) .pill {
   line-height: 1.55;
   color: var(--color-secondary);
   padding-left: 16px;
-  border-left: 1px solid rgba(13, 13, 13, 0.12);
+  border-left: 1px solid rgba(23, 19, 16, 0.12);
 }
 .ap-manifesto-note strong {
   color: var(--color-ink);
@@ -3652,7 +3343,7 @@ nav:has(#burger-menu.is-open) .pill {
 }
 .ap-manifesto-note em {
   font-style: italic;
-  color: var(--color-accent);
+  color: var(--color-orange-deep);
 }
 @media (max-width: 900px) {
   .ap-statement { grid-column: 1 / -1; max-width: 20ch; }
@@ -3679,8 +3370,8 @@ nav:has(#burger-menu.is-open) .pill {
 .ap-duo {
   display: flex;
   align-items: stretch;
-  border-top: 1px solid rgba(13, 13, 13, 0.1);
-  border-bottom: 1px solid rgba(13, 13, 13, 0.1);
+  border-top: 1px solid rgba(23, 19, 16, 0.1);
+  border-bottom: 1px solid rgba(23, 19, 16, 0.1);
 }
 .ap-person {
   position: relative;
@@ -3694,7 +3385,7 @@ nav:has(#burger-menu.is-open) .pill {
   transition: opacity 0.6s ease, filter 0.6s ease;
 }
 .ap-person + .ap-person {
-  border-left: 1px solid rgba(13, 13, 13, 0.1);
+  border-left: 1px solid rgba(23, 19, 16, 0.1);
 }
 /* Glow radiale della metà attiva (dietro a tutto, disegnato dalla GPU). */
 .ap-person::after {
@@ -3832,14 +3523,14 @@ nav:has(#burger-menu.is-open) .pill {
   width: 100%;
   max-width: 52ch;
   margin-top: 8px;
-  border-top: 1px solid rgba(13, 13, 13, 0.1);
+  border-top: 1px solid rgba(23, 19, 16, 0.1);
 }
 .ap-focus li {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 12px 0;
-  border-bottom: 1px solid rgba(13, 13, 13, 0.1);
+  border-bottom: 1px solid rgba(23, 19, 16, 0.1);
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 500;
@@ -3847,11 +3538,12 @@ nav:has(#burger-menu.is-open) .pill {
   text-transform: uppercase;
   color: var(--color-text-secondary);
 }
+/* Stessa hairline arancio dei kicker: il segno caldo ricorrente. */
 .ap-focus li::before {
   content: "";
   width: 18px;
   height: 1px;
-  background: var(--color-accent);
+  background: var(--color-orange);
 }
 /* Sotto i 900px lo split impila le due metà (bordo orizzontale tra loro). */
 @media (max-width: 900px) {
@@ -3860,7 +3552,7 @@ nav:has(#burger-menu.is-open) .pill {
   }
   .ap-person + .ap-person {
     border-left: none;
-    border-top: 1px solid rgba(13, 13, 13, 0.1);
+    border-top: 1px solid rgba(23, 19, 16, 0.1);
   }
 }
 
@@ -3888,8 +3580,8 @@ nav:has(#burger-menu.is-open) .pill {
   z-index: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(13, 13, 13, 0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(13, 13, 13, 0.5) 1px, transparent 1px);
+    linear-gradient(rgba(23, 19, 16, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 19, 16, 0.5) 1px, transparent 1px);
   background-size: 72px 72px;
   opacity: 0.16;
   -webkit-mask-image: radial-gradient(
@@ -3919,7 +3611,9 @@ nav:has(#burger-menu.is-open) .pill {
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--color-muted);
-  opacity: 0.6;
+  /* Niente opacity: a 10px con 0.28em di spaziatura il testo era già al limite,
+     e il velo lo portava a 1.8:1 — illeggibile. Il muted pieno basta a tenerlo
+     defilato senza farlo sparire. */
   pointer-events: none;
   transition: color 0.6s ease;
 }
@@ -4024,7 +3718,7 @@ nav:has(#burger-menu.is-open) .pill {
   width: 2px;
   margin-left: -1px;
   border-radius: 2px;
-  background: rgba(13, 13, 13, 0.1);
+  background: rgba(23, 19, 16, 0.1);
 }
 /* Barra di progressione — accent → periwinkle, alone soft, cresce dall'alto
    (scaleY 0→1 in scrub via main.ts). transform-origin top: parte dal vertice. */
@@ -4036,8 +3730,10 @@ nav:has(#burger-menu.is-open) .pill {
   width: 2px;
   margin-left: -1px;
   border-radius: 2px;
-  background: linear-gradient(to bottom, var(--color-accent), #8aa0ff);
-  box-shadow: 0 0 18px rgba(59, 91, 219, 0.45);
+  /* Il riempimento va dal blu (l'inizio, la tecnica) all'arancio (l'oggi):
+     stessa logica cromatica della barra di scroll. */
+  background: linear-gradient(to bottom, var(--color-accent), var(--color-orange));
+  box-shadow: 0 0 18px rgba(59, 91, 219, 0.35);
   transform-origin: top;
   z-index: 1;
 }
@@ -4061,7 +3757,7 @@ nav:has(#burger-menu.is-open) .pill {
   display: grid;
   place-items: center;
   border-radius: 9999px;
-  color: #fafaf8;
+  color: #FCFAF6;
   background:
     radial-gradient(125% 125% at 30% 20%, rgba(59, 91, 219, 0.55), transparent 62%),
     var(--color-navy);
@@ -4077,7 +3773,7 @@ nav:has(#burger-menu.is-open) .pill {
   position: absolute;
   inset: -1px;
   border-radius: 9999px;
-  background: conic-gradient(from 0deg, var(--color-accent), #8aa0ff, #1a2340, var(--color-accent));
+  background: conic-gradient(from 0deg, var(--color-accent), var(--color-accent-soft), var(--color-amber), var(--color-orange), var(--color-navy), var(--color-accent));
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
   mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
   z-index: 1;
@@ -4101,7 +3797,7 @@ nav:has(#burger-menu.is-open) .pill {
   top: 50%;
   width: clamp(24px, 4vw, 60px);
   height: 1px;
-  background: rgba(13, 13, 13, 0.14);
+  background: rgba(23, 19, 16, 0.14);
 }
 .ap-step--left .ap-step-art::after { right: 100%; }
 .ap-step--right .ap-step-art::after { left: 100%; }
@@ -4130,7 +3826,7 @@ nav:has(#burger-menu.is-open) .pill {
   font-weight: 500;
   font-size: clamp(13px, 1.1vw, 15px);
   letter-spacing: 0.04em;
-  color: var(--color-accent);
+  color: var(--color-orange-deep);
 }
 .ap-step-kicker {
   font-family: var(--font-body);
@@ -4391,7 +4087,7 @@ nav:has(#burger-menu.is-open) .pill {
   font-weight: 500;
   font-size: clamp(13px, 1.1vw, 15px);
   letter-spacing: 0.04em;
-  color: var(--color-accent);
+  color: var(--color-orange-deep);
 }
 .ajx-step-kicker {
   font-family: var(--font-body);
@@ -4505,15 +4201,15 @@ nav:has(#burger-menu.is-open) .pill {
   border-radius: clamp(24px, 3vw, 40px);
   overflow: hidden;
   padding: clamp(56px, 8vw, 120px) clamp(24px, 5vw, 96px) clamp(60px, 9vw, 120px);
-  border: 1px solid rgba(250, 250, 248, 0.08);
+  border: 1px solid rgba(252, 250, 246, 0.08);
   box-shadow:
-    0 2px 4px rgba(13, 13, 13, 0.08),
-    0 40px 100px rgba(13, 13, 13, 0.28);
+    0 2px 4px rgba(23, 19, 16, 0.08),
+    0 40px 100px rgba(23, 19, 16, 0.28);
   background-color: var(--color-cta-bg);
   background-image:
     radial-gradient(60% 52% at 14% 18%, rgba(59, 91, 219, 0.38), transparent 70%),
     radial-gradient(56% 48% at 88% 8%, rgba(26, 35, 64, 0.85), transparent 70%),
-    radial-gradient(64% 56% at 82% 92%, rgba(59, 91, 219, 0.2), transparent 70%),
+    radial-gradient(64% 56% at 82% 92%, rgba(240, 162, 75, 0.22), transparent 70%),
     radial-gradient(46% 40% at 52% 50%, rgba(26, 35, 64, 0.45), transparent 70%);
   background-repeat: no-repeat;
   background-size: 165% 165%, 150% 150%, 172% 172%, 140% 140%;
@@ -4528,7 +4224,7 @@ nav:has(#burger-menu.is-open) .pill {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(250, 250, 248, 0.05), transparent 30%);
+  background: linear-gradient(180deg, rgba(252, 250, 246, 0.05), transparent 30%);
 }
 .ap-flow-inner {
   position: relative;
@@ -4537,13 +4233,13 @@ nav:has(#burger-menu.is-open) .pill {
   flex-direction: column;
   gap: clamp(40px, 6vh, 72px);
 }
-.ap-flow-kicker { color: rgba(250, 250, 248, 0.6); }
-.ap-flow-kicker::before { background: #8aa0ff; }
+.ap-flow-kicker { color: rgba(252, 250, 246, 0.6); }
+.ap-flow-kicker::before { background: var(--color-amber); }
 .ap-flow-title {
   color: var(--color-cta-text);
   max-width: 18ch;
 }
-.ap-flow-title em { color: #8aa0ff; }
+.ap-flow-title em { color: var(--color-amber); }
 
 /* Bento asimmetrico: card larga / stretta alternate (7+5, 5+7). */
 .ap-flow-grid {
@@ -4559,8 +4255,8 @@ nav:has(#burger-menu.is-open) .pill {
   gap: 18px;
   padding: clamp(28px, 3vw, 48px);
   border-radius: clamp(18px, 2vw, 26px);
-  border: 1px solid rgba(250, 250, 248, 0.1);
-  background: rgba(250, 250, 248, 0.035);
+  border: 1px solid rgba(252, 250, 246, 0.1);
+  background: rgba(252, 250, 246, 0.035);
   -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
   transition:
@@ -4575,7 +4271,7 @@ nav:has(#burger-menu.is-open) .pill {
 .flow-card:hover {
   transform: translateY(-6px);
   border-color: rgba(138, 160, 255, 0.45);
-  background: rgba(250, 250, 248, 0.06);
+  background: rgba(252, 250, 246, 0.06);
 }
 /* Spotlight che segue il cursore (var --mx/--my via JS). */
 .flow-card-spot {
@@ -4601,7 +4297,7 @@ nav:has(#burger-menu.is-open) .pill {
   font-weight: 700;
   font-size: clamp(90px, 11vw, 170px);
   line-height: 1;
-  color: rgba(250, 250, 248, 0.04);
+  color: rgba(252, 250, 246, 0.04);
   pointer-events: none;
   user-select: none;
 }
@@ -4619,7 +4315,7 @@ nav:has(#burger-menu.is-open) .pill {
   font-weight: 500;
   font-size: 13px;
   letter-spacing: 0.1em;
-  color: #8aa0ff;
+  color: var(--color-amber);
 }
 .flow-card-tag {
   font-family: var(--font-body);
@@ -4627,9 +4323,9 @@ nav:has(#burger-menu.is-open) .pill {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.55);
+  color: rgba(252, 250, 246, 0.55);
   padding: 5px 12px;
-  border: 1px solid rgba(250, 250, 248, 0.14);
+  border: 1px solid rgba(252, 250, 246, 0.14);
   border-radius: 9999px;
 }
 .flow-card-title {
@@ -4641,13 +4337,13 @@ nav:has(#burger-menu.is-open) .pill {
 }
 .flow-card-title em {
   font-style: italic;
-  color: #8aa0ff;
+  color: var(--color-amber);
 }
 .flow-card-text {
   font-family: var(--font-body);
   font-size: clamp(14px, 1.05vw, 16px);
   line-height: 1.65;
-  color: rgba(250, 250, 248, 0.62);
+  color: rgba(252, 250, 246, 0.62);
   max-width: 52ch;
 }
 @media (max-width: 900px) {
@@ -4668,9 +4364,11 @@ nav:has(#burger-menu.is-open) .pill {
   user-select: none;
 }
 .deco-accent { color: var(--color-accent); }
-.deco-peri { color: #8aa0ff; }
+.deco-peri { color: var(--color-accent-soft); }
 .deco-navy { color: var(--color-navy); }
 .deco-muted { color: var(--color-muted); }
+.deco-orange { color: var(--color-orange); }
+.deco-amber { color: var(--color-amber); }
 
 .deco--star {
   font-size: 15px;
@@ -4751,59 +4449,6 @@ nav:has(#burger-menu.is-open) .pill {
   }
 }
 
-
-/* ---- Aura chiara — bagliori accent appena percettibili in deriva lenta:
-   danno profondità alla sezione chiara senza sporcare il fondo warm white. ---- */
-.services-glow {
-  position: absolute;
-  z-index: 0;
-  border-radius: 9999px;
-  pointer-events: none;
-}
-/* I glow restano nella scena visibile (parte alta della sezione): la sezione
-   è pinnata e diventa alta ~5 viewport, quindi qualunque ancoraggio a bottom
-   finirebbe proprio sul confine coi Lavori, dove overflow:clip lo taglierebbe
-   in un arco blu netto. Ancorati in alto (e con bleed solo orizzontale, sul
-   bordo schermo) non toccano mai le cuciture tra sezioni. */
-.services-glow--1 {
-  width: 46vw;
-  height: 46vw;
-  left: -14vw;
-  top: 2vh;
-  background: radial-gradient(circle, rgba(59, 91, 219, 0.06), transparent 70%);
-  animation: glow-drift-a 26s ease-in-out infinite alternate;
-}
-.services-glow--2 {
-  width: 40vw;
-  height: 40vw;
-  right: -12vw;
-  top: 26vh;
-  background: radial-gradient(circle, rgba(59, 91, 219, 0.05), transparent 70%);
-  animation: glow-drift-b 32s ease-in-out infinite alternate;
-}
-@keyframes glow-drift-a {
-  from { transform: translate(0, 0) scale(1); }
-  to { transform: translate(7vw, 5vh) scale(1.18); }
-}
-@keyframes glow-drift-b {
-  from { transform: translate(0, 0) scale(1.1); }
-  to { transform: translate(-6vw, -6vh) scale(0.94); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .services-glow { animation: none; }
-}
-
-/* ---- Crinale alpino — doppia cresta hairline in fondo alla banda navy ---- */
-.services-ridge {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: clamp(70px, 10vh, 120px);
-  z-index: 0;
-  pointer-events: none;
-}
 
 /* ---- Retino CTA — griglia di punti periwinkle con bordi sfumati ---- */
 .cta-dots {
@@ -4900,7 +4545,7 @@ nav:has(#burger-menu.is-open) .pill {
   border: 3px solid #cfd3dd;
   border-radius: 7px;
   background: linear-gradient(160deg, #f2f3f7 0%, #aeb4c2 100%);
-  box-shadow: 0 4px 10px rgba(13, 13, 13, 0.18);
+  box-shadow: 0 4px 10px rgba(23, 19, 16, 0.18);
   z-index: 2;
 }
 .hang-card {
@@ -4913,8 +4558,26 @@ nav:has(#burger-menu.is-open) .pill {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
-    0 2px 6px rgba(13, 13, 13, 0.12),
-    0 34px 80px rgba(13, 13, 13, 0.32);
+    0 2px 6px rgba(23, 19, 16, 0.12),
+    0 34px 80px rgba(23, 19, 16, 0.32);
+}
+/* Velatura bassa — la didascalia cadeva direttamente sul mesh della cover, che
+   sotto (grad-2, Alice) vira all'arancio chiaro: nome e ruolo ci si scioglievano
+   dentro. Questo scrim dà al blocco testo un fondo scuro costante qualunque sia
+   il gradiente della card, senza appiattirla: sfuma da trasparente e si ferma a
+   0.68 sul bordo, cioè legge come la vignettatura naturale di un badge. */
+.hang-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 42%;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 8, 6, 0) 0%,
+    rgba(10, 8, 6, 0.34) 46%,
+    rgba(10, 8, 6, 0.68) 100%
+  );
+  pointer-events: none;
 }
 /* Foro punzonato in alto, dove "passa" la clip. */
 .hang-hole {
@@ -4964,6 +4627,8 @@ nav:has(#burger-menu.is-open) .pill {
   color: rgba(255, 255, 255, 0.92);
 }
 .hang-id {
+  position: relative;
+  z-index: 1; /* sopra lo scrim di .hang-card::after */
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -4981,7 +4646,7 @@ nav:has(#burger-menu.is-open) .pill {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.86);
 }
 .hang-id-brand {
   margin-top: 8px;
@@ -4990,7 +4655,9 @@ nav:has(#burger-menu.is-open) .pill {
   font-weight: 600;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: rgba(138, 160, 255, 0.85);
+  /* Periwinkle schiarito e senza alpha: a 9px con 0.3em di spaziatura l'accent
+     soft su fondo caldo stava a 2.8:1 e la firma spariva del tutto. */
+  color: #AEBEFF;
 }
 @media (max-width: 900px) {
   .hang {
@@ -5030,7 +4697,7 @@ nav:has(#burger-menu.is-open) .pill {
   font-family: var(--font-body);
   font-size: clamp(15px, 1.2vw, 18px);
   line-height: 1.7;
-  color: rgba(250, 250, 248, 0.66);
+  color: rgba(252, 250, 246, 0.66);
   max-width: 44ch;
   margin: 0;
 }
@@ -5104,13 +4771,13 @@ nav:has(#burger-menu.is-open) .pill {
   color: var(--color-muted);
 }
 .ap-flow--plain .ap-flow-kicker::before {
-  background: var(--color-accent);
+  background: var(--color-orange);
 }
 .ap-flow--plain .ap-flow-title {
   color: var(--color-ink);
 }
 .ap-flow--plain .ap-flow-title em {
-  color: var(--color-accent);
+  color: var(--color-orange-deep);
 }
 .ap-flow--plain .ap-flow-lead {
   color: var(--color-secondary);
@@ -5124,17 +4791,16 @@ nav:has(#burger-menu.is-open) .pill {
    La sillabazione automatica sfrutta l'attributo lang su <html>.
    ============================================================ */
 
-/* Ripristina l'accento corsivo dell'em nel titolo hero (prima era inline). */
+/* Corsivo del titolo hero — ARANCIO: la pagina si apre in caldo (vedi
+   "assegnazione per sezione" nel blocco @theme). */
 .hero-section h1 em {
   font-style: italic;
-  color: #3b5bdb;
+  color: var(--color-orange-deep);
 }
 
 /* Titoli e display: spezzano le parole troppo lunghe invece di sfondare. */
 .works-title,
 .slide-title,
-.mbp-caption-title,
-.mbp-cta-title,
 .ap-hero-title,
 .ap-bio-name,
 .ap-step-title,
@@ -5154,8 +4820,7 @@ nav:has(#burger-menu.is-open) .pill {
 .pill-outline,
 .about-cta-btn,
 .cform-submit,
-.works-head-link,
-.about-teaser-cta {
+.works-head-link {
   white-space: normal;
   text-align: center;
   overflow-wrap: break-word;
@@ -5199,7 +4864,7 @@ html.apd-skip-loader #apd-loader {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fafaf8;
+  background: #FCFAF6;
   /* L'animazione di uscita usa autoAlpha + y; evita ripaint pesanti. */
   will-change: opacity, transform;
 }
@@ -5244,9 +4909,10 @@ html.apd-skip-loader #apd-loader {
   --delay: 0.4s;
   --rotation-y: -24;
   --rotation-x: 28;
+  /* Le tre facce portano le tre famiglie: navy, blu brand, arancio. */
   --color-one: #1a2340;
   --color-two: #3b5bdb;
-  --color-three: #8aa0ff;
+  --color-three: #e2632f;
   display: grid;
   place-items: center;
   width: 180px;
@@ -5288,7 +4954,7 @@ html.apd-skip-loader #apd-loader {
   transform: rotateX(90deg)
     translate3d(0, 0, calc((var(--size) * (var(--coefficient) * -0.5)) - 1px))
     scale(0.96);
-  background: rgba(13, 13, 13, 0.55);
+  background: rgba(23, 19, 16, 0.55);
   animation: apd-cube-squish var(--timeline) var(--delay) infinite,
     apd-cube-fade var(--timeline) var(--delay) infinite;
 }
@@ -5487,7 +5153,7 @@ html.apd-skip-loader #apd-loader {
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: var(--color-orange-deep);
   margin-bottom: 18px;
 }
 .faq-title {
@@ -5653,7 +5319,7 @@ html.apd-skip-loader #apd-loader {
   transition: background 0.25s ease, transform 0.25s ease;
 }
 .faq-cta-btn:hover {
-  background: var(--color-accent);
+  background: var(--color-orange);
   transform: translateY(-2px);
 }
 .faq-cta-arrow {

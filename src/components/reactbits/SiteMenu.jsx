@@ -91,8 +91,8 @@ export default function SiteMenu({ home = false, lang = defaultLang, route = '/'
       logoUrl="/logo/wordmark.svg"
       logoReversedUrl="/logo/wordmark-reversed.svg"
       accentColor="#3B5BDB"
-      menuButtonColor="#0D0D0D"
-      openMenuButtonColor="#0D0D0D"
+      menuButtonColor="#171310"
+      openMenuButtonColor="#171310"
       changeMenuColorOnOpen={false}
       homeUrl={homeHref}
       menuLabel={t.nav.toggleOpen}

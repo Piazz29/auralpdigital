@@ -177,7 +177,7 @@ const it = {
     },
     services: {
       kicker: "Cosa facciamo",
-      title: "Servizi che fanno crescere.",
+      title: "Costruiamo",
       link: "Parliamone",
       scroll: "Scorri",
       items: [
@@ -241,35 +241,18 @@ const it = {
       ],
     },
     projects: {
-      kicker: "Risultati reali",
-      title: "Cosa abbiamo creato.",
-      link: "Il prossimo è il tuo",
-      previewLabel: "Anteprima",
-      ctaAddress: "il-tuo-progetto",
-      items: [
-        {
-          type: "Beauty · Permanent Make-up",
-          desc: "Sito editoriale fotografia-first per studio di trucco permanente.",
-          cta: "Apri il sito",
-        },
-        {
-          type: "Sport · Golf Coaching",
-          desc: "Sito personale per un maestro di golf e giocatore professionista: esperienza, lezioni e clinic.",
-          cta: "Apri il sito",
-        },
-        {
-          title: "Il",
-          titleEm: "prossimo.",
-          type: "Spazio libero",
-          desc: "Questo spazio è libero: il prossimo caso studio potrebbe essere il tuo.",
-          cta: "Inizia da qui",
-        },
-      ],
+      title: "Progetti Online",
+      sub: "Esplora i nostri lavori",
     },
     aboutTeaser: {
       kicker: "Chi siamo",
+      // Andata a capo COMPOSTA a mano (\n → <br>, vedi Rich.astro): le righe
+      // hanno tutte più o meno la stessa misura, così il blocco ha i lati
+      // dritti invece della scaletta irregolare del wrap automatico. Lo spazio
+      // prima di ogni \n serve al mobile, dove i <br> vengono nascosti e il
+      // testo torna a impaginarsi da solo: senza, le parole si attaccherebbero.
       statement:
-        "Uno studio indipendente che unisce *rigore universitario* e strumenti di nuova generazione: ogni progetto seguito *dalle stesse mani*, dal primo sketch al lancio",
+        "Uno studio indipendente \nche unisce il *rigore* \n*universitario* con gli \nstrumenti di nuova \ngenerazione: ogni \nprogetto seguito *dalle* \n*stesse mani*, dal primo \nsketch fino al lancio",
       cta: "Scopri il nostro approccio",
     },
     contact: {
@@ -340,7 +323,6 @@ const it = {
       title: "Le persone\ndietro *i pixel.*",
       sub: "Uno studio indipendente di due persone, dall'Alto Adige. Niente intermediari: chi ti risponde è chi progetta e costruisce.",
       cta: "Parla con noi",
-      robotAlt: "Robot 3D interattivo — muovi il cursore per interagire",
     },
     manifesto: {
       kicker: "Il manifesto",

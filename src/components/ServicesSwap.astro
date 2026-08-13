@@ -1,0 +1,105 @@
+---
+// SERVIZI — la card si scambia di posto con la descrizione.
+//
+// Card e testo occupano due posti affiancati (desktop) o sovrapposti
+// (mobile) e a ogni scena se li SCAMBIANO: la card fa destra → sinistra →
+// destra (mobile: sopra → sotto → sopra), il testo l'opposto.
+//
+// I pannelli immagine NON si muovono mai: stanno fermi nello spazio, uno per
+// posto. È la card a spostarsi, e mentre si sposta funziona da CORNICE che
+// scopre il pannello dell'altro posto — a metà corsa si vede il pannello che
+// esce e quello che entra affiancati, come nello screenshot di riferimento.
+// A card ferma, invece, la cornice inquadra un pannello solo e nulla scorre.
+// La descrizione non viaggia: compare in dissolvenza nel posto liberato.
+//
+// La regia (pin, scrub, misure dei posti) è in src/scripts/main.ts.
+//
+// CONTENUTO: tutto SEGNAPOSTO — titoli, descrizioni e immagini arrivano dopo.
+// Per mettere un'immagine vera basta valorizzare `src` nel dato qui sotto:
+// il pannello passa da placeholder a <img> senza toccare altro.
+
+interface Service {
+  n: string;
+  title: string;
+  titleEm: string;
+  desc: string;
+  /** Immagine reale del servizio; se assente si vede il pannello segnaposto. */
+  src?: string;
+  /** Tinta del segnaposto — solo per distinguere i pannelli durante lo scambio. */
+  tint: string;
+}
+
+const services: Service[] = [
+  {
+    n: "01",
+    title: "Titolo del primo",
+    titleEm: "servizio.",
+    desc: "Descrizione segnaposto del primo servizio: due o tre righe che raccontano il valore per il cliente, non l'elenco delle cose che facciamo. Il testo definitivo arriva dopo il design.",
+    tint: "59, 91, 219",
+  },
+  {
+    n: "02",
+    title: "Titolo del secondo",
+    titleEm: "servizio.",
+    desc: "Descrizione segnaposto del secondo servizio. Stessa lunghezza della prima, così il palco non cambia altezza passando da una scena all'altra e lo scambio resta stabile.",
+    tint: "226, 99, 47",
+  },
+  {
+    n: "03",
+    title: "Titolo del terzo",
+    titleEm: "servizio.",
+    desc: "Descrizione segnaposto del terzo servizio. Chiude la sequenza: la card torna a destra e il testo torna a sinistra, come nella prima scena.",
+    tint: "26, 35, 64",
+  },
+];
+
+const total = String(services.length).padStart(2, "0");
+---
+
+<div class="svc" data-svc style={`--svc-count:${services.length}`}>
+  <div class="svc-scene" data-svc-scene>
+    <!-- LA FINESTRA — una sola, persistente: è lei a spostarsi di lato. -->
+    <div class="svc-frame" data-svc-frame>
+      <div class="svc-track" data-svc-track>
+        {services.map((s, i) => (
+          <figure class="svc-shot" data-svc-shot data-i={i} style={`--tint:${s.tint}; --z:${i}`}>
+            {s.src ? (
+              <img src={s.src} alt="" loading="lazy" decoding="async" />
+            ) : (
+              <div class="svc-ph" aria-hidden="true">
+                <span class="svc-ph-num">{s.n}</span>
+                <span class="svc-ph-label">Immagine segnaposto</span>
+              </div>
+            )}
+          </figure>
+        ))}
+      </div>
+    </div>
+
+    <!-- LE DESCRIZIONI — impilate nello stesso spazio, si danno il cambio. -->
+    <div class="svc-copies" data-svc-copies>
+      {services.map((s, i) => (
+        <article class="svc-copy" data-svc-copy data-i={i}>
+          <span class="svc-index">
+            {s.n}<span class="svc-index-total">/{total}</span>
+          </span>
+          <h3 class="svc-title">{s.title} <em>{s.titleEm}</em></h3>
+          <p class="svc-desc">{s.desc}</p>
+          <a class="svc-link" href="#contatti">
+            Parliamone <span aria-hidden="true">↗</span>
+          </a>
+        </article>
+      ))}
+    </div>
+  </div>
+
+  <!-- Segnaposto della sequenza: tre puntini centrati che si riempiono uno
+       per card, seguendo lo scroll. -->
+  <div class="svc-dots" aria-hidden="true">
+    {services.map((_, i) => (
+      <span class="svc-dot" data-i={i}>
+        <span class="svc-dot-fill" data-svc-fill></span>
+      </span>
+    ))}
+  </div>
+</div>

@@ -101,13 +101,15 @@
   justify-content: center;
   min-width: 1.9em;
   padding: 0.32em 0.42em;
-  font-family: var(--font-body, 'Inter', sans-serif);
+  font-family: var(--font-body, 'Satoshi', sans-serif);
   font-weight: 600;
   font-size: 12px;
   letter-spacing: 0.06em;
   line-height: 1;
-  color: #0d0d0d;
-  opacity: 0.5;
+  color: #171310;
+  /* Era 0.5 → 3.4:1: sotto soglia per un controllo cliccabile. 0.72 li tiene
+     comunque secondari rispetto alla lingua attiva, che resta a piena opacità. */
+  opacity: 0.72;
   border-radius: 6px;
   text-decoration: none;
   transition: opacity 0.25s ease, color 0.25s ease, background 0.25s ease;
@@ -148,8 +150,8 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #0d0d0d;
-  font-family: var(--font-body, 'Inter', sans-serif);
+  color: #171310;
+  font-family: var(--font-body, 'Satoshi', sans-serif);
   font-weight: 500;
   font-size: 13px;
   letter-spacing: 0.02em;
@@ -246,11 +248,11 @@
 
 .staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-toggle {
   /* Vince sul color inline impostato da GSAP sul bottone. */
-  color: #fafaf8 !important;
+  color: #FCFAF6 !important;
 }
 
 .staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-lang-link {
-  color: #fafaf8;
+  color: #FCFAF6;
 }
 
 .staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-lang-link.is-active {
@@ -264,7 +266,7 @@
   right: 0;
   width: 100vw;
   height: 100%;
-  background: #fafaf8;
+  background: #FCFAF6;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex;
@@ -328,7 +330,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1.5rem 3rem;
-  border-top: 1px solid #e8e8e5;
+  border-top: 1px solid #e8e3d9;
 }
 
 .sm-socials {
@@ -340,7 +342,7 @@
 
 .sm-socials-title {
   margin: 0;
-  font-family: var(--font-body, 'Inter', sans-serif);
+  font-family: var(--font-body, 'Satoshi', sans-serif);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.18em;
@@ -385,10 +387,10 @@
 }
 
 .sm-socials-link {
-  font-family: var(--font-body, 'Inter', sans-serif);
+  font-family: var(--font-body, 'Satoshi', sans-serif);
   font-size: 1rem;
   font-weight: 500;
-  color: #0d0d0d;
+  color: #171310;
   text-decoration: none;
   position: relative;
   padding: 2px 0;
@@ -411,8 +413,8 @@
   height: 48px;
   padding: 0;
   border-radius: 9999px;
-  border: 1px solid #e8e8e5;
-  color: #0d0d0d;
+  border: 1px solid #e8e3d9;
+  color: #171310;
   background: rgba(255, 255, 255, 0.5);
   transition:
     color 0.25s ease,
@@ -428,7 +430,7 @@
 }
 
 .sm-socials-link--icon:hover {
-  color: #fafaf8;
+  color: #FCFAF6;
   background: var(--sm-accent, #3b5bdb);
   border-color: var(--sm-accent, #3b5bdb);
   transform: translateY(-2px);
@@ -439,7 +441,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  font-family: var(--font-body, 'Inter', sans-serif);
+  font-family: var(--font-body, 'Satoshi', sans-serif);
   font-size: 15px;
 }
 
@@ -466,7 +468,7 @@
 }
 
 .sm-panel-extra .sm-panel-place {
-  color: #4a4a4a;
+  color: #544C40;
   line-height: 1.7;
 }
 
@@ -474,7 +476,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #0d0d0d;
+  color: #171310;
   text-transform: uppercase;
 }
 
@@ -489,8 +491,8 @@
 
 .sm-panel-item {
   position: relative;
-  color: #0d0d0d;
-  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  color: #171310;
+  font-family: var(--font-display, 'Satoshi', sans-serif);
   font-weight: 600;
   font-size: clamp(2.8rem, 9vw, 6rem);
   cursor: pointer;
@@ -543,7 +545,7 @@
   position: absolute;
   top: 0.1em;
   right: 2.2em;
-  font-family: var(--font-body, 'Inter', sans-serif);
+  font-family: var(--font-body, 'Satoshi', sans-serif);
   font-size: 16px;
   font-weight: 400;
   color: var(--sm-accent, #3b5bdb);

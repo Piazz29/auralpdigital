@@ -1,0 +1,91 @@
+---
+// ProjectsShowcase — sezione Progetti, versione "mazzo di carte".
+//
+// Sette carte con le proporzioni di una carta da gioco (5:7) partono impilate
+// al centro come un mazzo buttato sul tavolo — intero, ma con le carte storte
+// una sopra l'altra. Quando la sezione entra in vista si sparpagliano sullo
+// schermo con un movimento morbido, scoprendo il titolo che stava sotto di
+// loro; poi restano a fluttuare piano e reagiscono al passaggio del mouse.
+//
+// Le carte sono VUOTE: sono i contenitori dei mock dei progetti, che
+// arriveranno dopo. Niente aloni né ombre di scena: sotto c'è il warm white
+// nudo della pagina.
+//
+// Geometria: ogni carta porta la sua posizione FINALE in frazioni dello stage
+// (0 = centro, ±0.5 = bordo). Due set, perché su uno schermo stretto un anello
+// tondo finirebbe addosso al titolo:
+//   --x-d / --y-d  desktop (anello largo attorno al testo)
+//   --x-m / --y-m  mobile  (tre carte sopra, quattro sotto, testo nel mezzo)
+// A scegliere il set è il CSS (media query in global.css), non questo file.
+// Lo stato sparpagliato è quindi quello di base: regge anche senza JS.
+//
+// dx/dy/dr = lo "scompiglio" del mazzo chiuso: pochi px di sfalsamento e
+// qualche grado di rotazione, così la pila non sembra un blocco perfetto.
+// L'animazione (src/scripts/main.ts) misura da sé quanto serve per riportare
+// ogni carta al centro, quindi qui non c'è matematica duplicata.
+
+interface Props {
+  /** Titolo nero al centro, tradotto. */
+  title: string;
+  /** Riga piccola sotto il titolo. */
+  sub: string;
+}
+
+const { title, sub } = Astro.props;
+
+// Valori spaziati a mano: sembrano casuali, ma nessuna carta cade nella fascia
+// centrale occupata dal testo e nessuna esce dai bordi dello stage.
+//
+// fy/fr/fd/fdelay = la fluttuazione a mazzo aperto: di quanto respira la carta
+// (px e gradi), in quanto tempo e con che ritardo. Ampiezze e durate tutte
+// diverse così le sette carte non oscillano mai all'unisono.
+const cards = [
+  { x: -0.36, y: -0.28, mx: -0.27, my: -0.36, r: -7, dx: -8, dy: 6, dr: -6, fy: -9, fr: 1.1, fd: 6.4, fdelay: 0 },
+  { x: -0.06, y: -0.37, mx: 0.04, my: -0.4, r: 5, dx: 5, dy: -4, dr: 4, fy: 7, fr: -0.8, fd: 7.6, fdelay: 0.5 },
+  { x: 0.29, y: -0.29, mx: 0.29, my: -0.33, r: -4, dx: -3, dy: -8, dr: 9, fy: -6, fr: -1.3, fd: 5.6, fdelay: 1.1 },
+  { x: 0.4, y: 0.02, mx: -0.3, my: -0.19, r: 8, dx: 9, dy: 3, dr: -3, fy: 10, fr: 0.9, fd: 8.2, fdelay: 0.3 },
+  { x: 0.21, y: 0.31, mx: 0.3, my: 0.2, r: -6, dx: -6, dy: -2, dr: 7, fy: -8, fr: 1.4, fd: 6.9, fdelay: 0.9 },
+  { x: -0.13, y: 0.37, mx: -0.19, my: 0.36, r: 4, dx: 2, dy: 8, dr: -8, fy: 6, fr: -1.1, fd: 5.9, fdelay: 1.4 },
+  { x: -0.39, y: 0.09, mx: 0.14, my: 0.4, r: -9, dx: 7, dy: -6, dr: 2, fy: -7, fr: 0.7, fd: 7.2, fdelay: 0.7 },
+];
+---
+
+<div class="deck" data-deck>
+  <!-- Il testo sta SOTTO al mazzo: si scopre man mano che le carte se ne vanno. -->
+  <div class="deck-copy" data-deck-copy>
+    <h2 class="deck-title">{title}</h2>
+    <p class="deck-sub">{sub}</p>
+  </div>
+
+  <div class="deck-cards">
+    {
+      /* Tre livelli, uno per effetto — così nessuno si sovrascrive il transform:
+         .deck-card       posizione e apertura del mazzo (la muove GSAP)
+         .deck-card-float fluttuazione a riposo (@keyframes CSS)
+         .deck-card-inner la carta vera: superficie, ombra, reazione all'hover.
+         I mock dei progetti vanno DENTRO .deck-card-inner. */
+      cards.map((c, i) => (
+        <article
+          class="deck-card"
+          data-deck-card
+          data-dx={c.dx}
+          data-dy={c.dy}
+          data-dr={c.dr}
+          style={`--x-d:${c.x}; --y-d:${c.y}; --x-m:${c.mx}; --y-m:${c.my}; --r:${c.r}deg; --dx:${c.dx}px; --dy:${c.dy}px; --dr:${c.dr}deg; --fy:${c.fy}px; --fr:${c.fr}deg; --fd:${c.fd}s; --fdelay:${c.fdelay}s; --z:${cards.length - i}`}
+        >
+          <div class="deck-card-float">
+            <div class="deck-card-inner" />
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</div>
+
+<script is:inline>
+  // Marca il mazzo come "animabile" mentre la pagina viene ancora letta: senza
+  // questo, prima che main.ts parta si vedrebbe un lampo di carte già
+  // sparpagliate. Con .is-js il CSS le tiene impilate al centro; main.ts
+  // toglie la classe nello stesso frame in cui scrive lo stato iniziale.
+  document.querySelector("[data-deck]")?.classList.add("is-js");
+</script>

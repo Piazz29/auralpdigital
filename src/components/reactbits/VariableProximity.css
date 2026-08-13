@@ -1,5 +1,5 @@
 /* VariableProximity — adattato: NIENTE import di Roboto Flex e NIENTE override
-   del font-family, così il testo eredita il font display del sito (Space Grotesk
+   del font-family, così il testo eredita il font display del sito (Satoshi
    variabile). Resta solo la utility .sr-only per l'accessibilità. */
 
 .variable-proximity {

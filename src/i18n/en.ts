@@ -172,7 +172,7 @@ const en = {
     },
     services: {
       kicker: "What we do",
-      title: "Services that make you grow.",
+      title: "We build",
       link: "Let's talk",
       scroll: "Scroll",
       items: [
@@ -236,35 +236,14 @@ const en = {
       ],
     },
     projects: {
-      kicker: "Real results",
-      title: "What we've created.",
-      link: "The next one is yours",
-      previewLabel: "Preview",
-      ctaAddress: "your-project",
-      items: [
-        {
-          type: "Beauty · Permanent Make-up",
-          desc: "Photography-first editorial site for a permanent make-up studio.",
-          cta: "Open the site",
-        },
-        {
-          type: "Sport · Golf Coaching",
-          desc: "Personal site for a golf instructor and professional player: experience, lessons and clinics.",
-          cta: "Open the site",
-        },
-        {
-          title: "The",
-          titleEm: "next one.",
-          type: "Open spot",
-          desc: "This spot is open: the next case study could be yours.",
-          cta: "Start here",
-        },
-      ],
+      title: "Projects Online",
+      sub: "Explore our work",
     },
     aboutTeaser: {
       kicker: "About us",
+      // Righe composte a mano, stessa misura per tutte (vedi it.ts).
       statement:
-        "An independent studio that blends *academic rigor* with next-generation tools: every project handled by *the same hands*, from first sketch to launch",
+        "An independent \nstudio that blends \n*academic rigor* with \nnext-generation \ntools: every project \nhandled by *the same* \n*hands*, from first \nsketch to launch",
       cta: "Discover our approach",
     },
     contact: {
@@ -335,7 +314,6 @@ const en = {
       title: "The people\nbehind *the pixels.*",
       sub: "An independent two-person studio from South Tyrol. No middlemen: whoever replies to you is the one who designs and builds.",
       cta: "Talk to us",
-      robotAlt: "Interactive 3D robot — move your cursor to interact",
     },
     manifesto: {
       kicker: "The manifesto",

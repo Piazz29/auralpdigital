@@ -20,13 +20,13 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-family: var(--font-body, 'Inter', sans-serif);
+  font-family: var(--font-body, 'Satoshi', sans-serif);
   font-size: 12.5px;
   font-weight: 500;
   letter-spacing: 0.04em;
   white-space: nowrap;
-  color: rgba(250, 250, 248, 0.68);
-  text-shadow: 0 1px 6px rgba(13, 13, 13, 0.5);
+  color: rgba(252, 250, 246, 0.68);
+  text-shadow: 0 1px 6px rgba(23, 19, 16, 0.5);
   pointer-events: none;
   /* La skewY allinea l'hint alla pendenza del bordo inferiore della card. */
   transform: translateX(-50%) skewY(var(--flow-hint-skew, 5deg));
@@ -38,7 +38,7 @@
 .flow-swap-hint svg {
   width: 16px;
   height: 16px;
-  color: #8aa0ff;
+  color: #f0a24b;
   opacity: 0.9;
 }
 .flow-swap-hint.is-hidden {
@@ -61,14 +61,15 @@
   flex-direction: column;
   gap: 16px;
   padding: clamp(26px, 2.4vw, 40px);
-  color: var(--color-cta-text, #fafaf8);
+  color: var(--color-cta-text, #FCFAF6);
   background:
     radial-gradient(120% 90% at 12% 0%, rgba(59, 91, 219, 0.32), transparent 60%),
+    radial-gradient(100% 80% at 100% 100%, rgba(226, 99, 47, 0.26), transparent 62%),
     radial-gradient(120% 120% at 100% 100%, rgba(26, 35, 64, 0.9), transparent 70%),
-    #0d0d0d;
-  border: 1px solid rgba(250, 250, 248, 0.14);
+    #171310;
+  border: 1px solid rgba(252, 250, 246, 0.14);
   border-radius: 14px;
-  box-shadow: 0 30px 70px rgba(13, 13, 13, 0.45);
+  box-shadow: 0 30px 70px rgba(23, 19, 16, 0.45);
 }
 
 .flow-swap-top {
@@ -78,27 +79,27 @@
 }
 
 .flow-swap-n {
-  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-family: var(--font-display, 'Satoshi', sans-serif);
   font-weight: 600;
   font-size: 15px;
   letter-spacing: 0.1em;
-  color: #8aa0ff;
+  color: #f0a24b;
 }
 
 .flow-swap-tag {
-  font-family: var(--font-body, 'Inter', sans-serif);
+  font-family: var(--font-body, 'Satoshi', sans-serif);
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(250, 250, 248, 0.6);
+  color: rgba(252, 250, 246, 0.6);
   padding: 5px 12px;
-  border: 1px solid rgba(250, 250, 248, 0.16);
+  border: 1px solid rgba(252, 250, 246, 0.16);
   border-radius: 9999px;
 }
 
 .flow-swap-title {
-  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-family: var(--font-display, 'Satoshi', sans-serif);
   font-weight: 500;
   font-size: clamp(26px, 2.4vw, 38px);
   line-height: 1.04;
@@ -108,13 +109,13 @@
 
 .flow-swap-title em {
   font-style: italic;
-  color: #8aa0ff;
+  color: #f0a24b;
 }
 
 .flow-swap-text {
-  font-family: var(--font-body, 'Inter', sans-serif);
+  font-family: var(--font-body, 'Satoshi', sans-serif);
   font-size: clamp(14px, 1vw, 16px);
   line-height: 1.6;
-  color: rgba(250, 250, 248, 0.66);
+  color: rgba(252, 250, 246, 0.66);
   margin: 0;
 }

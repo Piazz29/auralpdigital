@@ -21,18 +21,20 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.fontshare.com" />
+    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
     <!-- La wordmark è la maschera del loader: preload così è disponibile dal
          primo frame (niente logo vuoto all'avvio). -->
     <link rel="preload" as="image" href="/logo/wordmark.svg" type="image/svg+xml" />
-    <!-- Sistema tipografico: Space Grotesk (display/tech) + Inter (body/UI).
-         display=swap evita il FOIT. Space Grotesk è caricato come font VARIABILE
-         (asse wght 300..700) così l'effetto VariableProximity della hero può
-         interpolare il peso; i pesi 500/600/700 usati altrove restano identici. -->
+    <!-- Sistema tipografico: Satoshi (Fontshare) su tutto il sito — display e
+         body sulla stessa famiglia. display=swap evita il FOIT.
+         `satoshi@1,2` chiede le due varianti VARIABILI (tondo + corsivo, asse
+         wght 300..900) invece dei pesi statici: due soli woff2 in tutto, e
+         l'effetto VariableProximity della hero può interpolare il peso.
+         Il corsivo è vero, non simulato: i titoli lo usano come accento. -->
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@400;500;600&display=swap"
+      href="https://api.fontshare.com/v2/css?f%5B%5D=satoshi@1,2&display=swap"
     />
     <title>{title}</title>
 
@@ -53,7 +55,7 @@ const {
       })();
     </script>
   </head>
-  <body class="bg-[#FAFAF8] text-[#0D0D0D] overflow-x-hidden">
+  <body class="bg-[#FCFAF6] text-[#171310] overflow-x-hidden">
     <!-- First-load loader: wordmark del brand (colori identici al logo SVG) e,
          sotto, un loader 3D a cuboide. Primo figlio del body così copre tutto
          fin da subito; rimosso dallo script dopo un minimo di 3s. -->
@@ -90,8 +92,6 @@ const {
       </div>
     </div>
 
-    <div class="cursor-dot" id="cursor-dot"></div>
-    <div class="cursor-ring" id="cursor-ring"><span class="cursor-ring-circle"></span></div>
 
     <!-- Barra di avanzamento scroll — lato destro -->
     <div id="scroll-track">

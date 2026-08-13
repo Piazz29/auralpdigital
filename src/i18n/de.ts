@@ -173,7 +173,7 @@ const de = {
     },
     services: {
       kicker: "Was wir tun",
-      title: "Leistungen, die wachsen lassen.",
+      title: "Wir bauen",
       link: "Sprechen wir darüber",
       scroll: "Scrollen",
       items: [
@@ -237,35 +237,14 @@ const de = {
       ],
     },
     projects: {
-      kicker: "Echte Ergebnisse",
-      title: "Was wir geschaffen haben.",
-      link: "Das nächste ist deins",
-      previewLabel: "Vorschau",
-      ctaAddress: "dein-projekt",
-      items: [
-        {
-          type: "Beauty · Permanent Make-up",
-          desc: "Redaktionelle, fotografie-orientierte Website für ein Permanent-Make-up-Studio.",
-          cta: "Website öffnen",
-        },
-        {
-          type: "Sport · Golf-Coaching",
-          desc: "Persönliche Website für einen Golflehrer und Profispieler: Erfahrung, Lektionen und Clinics.",
-          cta: "Website öffnen",
-        },
-        {
-          title: "Das",
-          titleEm: "nächste.",
-          type: "Freier Platz",
-          desc: "Dieser Platz ist frei: die nächste Fallstudie könnte deine sein.",
-          cta: "Hier beginnen",
-        },
-      ],
+      title: "Projekte Online",
+      sub: "Entdecke unsere Arbeiten",
     },
     aboutTeaser: {
       kicker: "Über uns",
+      // Righe composte a mano, stessa misura per tutte (vedi it.ts).
       statement:
-        "Ein unabhängiges Studio, das *universitäre Strenge* mit Werkzeugen der neuen Generation verbindet: jedes Projekt aus *einer Hand*, vom ersten Sketch bis zum Launch",
+        "Ein unabhängiges \nStudio, das *universitäre* \n*Strenge* mit Werkzeugen \nder neuen Generation \nverbindet: jedes \nProjekt aus *einer* \n*Hand*, vom ersten \nSketch bis zum Launch",
       cta: "Unseren Ansatz entdecken",
     },
     contact: {
@@ -336,7 +315,6 @@ const de = {
       title: "Die Menschen\nhinter *den Pixeln.*",
       sub: "Ein unabhängiges Zwei-Personen-Studio aus Südtirol. Keine Zwischenhändler: Wer dir antwortet, ist der, der entwirft und baut.",
       cta: "Sprich mit uns",
-      robotAlt: "Interaktiver 3D-Roboter — bewege den Cursor, um zu interagieren",
     },
     manifesto: {
       kicker: "Das Manifest",

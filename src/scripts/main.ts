@@ -15,6 +15,19 @@ const reduceMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 ).matches;
 
+// ---------- Ritardo unico dello scroll ----------
+// Ogni animazione agganciata allo scroll (uscita della hero, zoom del suo
+// video, passaggio di Chi Siamo, virata di colore del canvas) insegue lo
+// scroll con un filo di inerzia. Se ognuna usa un ritardo diverso le scene si
+// slegano: una arriva prima, l'altra dopo, e la pagina sembra fatta di pezzi
+// indipendenti. Con un valore SOLO, condiviso, tutto viaggia con lo stesso
+// respiro e le sezioni si passano la scena senza scalini.
+const SCRUB = 0.6;
+// Stessa inerzia, ma per le animazioni che pilotiamo a mano frame per frame
+// (il riempimento delle lettere): un lerp con questo coefficiente ha la
+// costante di tempo di uno scrub SCRUB, quindi decelera insieme al resto.
+const SCRUB_LERP = 1 - Math.exp(-1 / (60 * (SCRUB / 2)));
+
 // ---------- Lenis smooth scroll ----------
 const lenis = new Lenis({
   // Durata più lunga + easing expo con coda lunga: quando si smette di
@@ -29,8 +42,34 @@ const lenis = new Lenis({
 
 lenis.on("scroll", ScrollTrigger.update);
 
+// ---------- Scroll programmati "bloccanti" + valvola di sicurezza ----------
+// Alcuni movimenti li facciamo fare a Lenis bloccando l'input per la loro
+// durata (`lock`): serve a non far sommare l'inerzia dell'utente al movimento
+// — è quello che tiene netti i cambi di scena nei Servizi.
+//
+// PERÒ Lenis toglie il lock SOLO quando l'animazione arriva in fondo: se
+// viene interrotta a metà (un refresh di ScrollTrigger, un resize, un'altra
+// scrollTo) `isLocked` resta acceso per sempre. E siccome da bloccato la
+// rotella viene ignorata, non arriva nessun evento di scroll: la pagina
+// sembra congelata e non c'è niente che possa rimetterla in moto.
+//
+// Quindi: ogni scroll bloccante dichiara fino a quando è lecito restare
+// bloccati, e un controllo a ogni frame libera il lock appena quella
+// finestra è scaduta. Costa un confronto per frame e rende impossibile
+// restare inchiodati.
+let lockedUntil = 0;
+const lockedScrollTo = (
+  target: number | HTMLElement,
+  duration: number,
+  extra: Record<string, unknown> = {}
+) => {
+  lockedUntil = performance.now() + duration * 1000 + 400;
+  lenis.scrollTo(target, { duration, lock: true, force: true, ...extra });
+};
+
 gsap.ticker.add((time) => {
   lenis.raf(time * 1000);
+  if (lenis.isLocked && performance.now() > lockedUntil) lenis.isLocked = false;
 });
 gsap.ticker.lagSmoothing(0);
 
@@ -50,7 +89,7 @@ document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
     // l'offset resta corretto perché il pin-spacer è già nel DOM.
     const isHeroToProjects = href === "#projects" && !!a.closest(".hero-section");
     if (isHeroToProjects) {
-      lenis.scrollTo(target, { duration: 0.7, lock: true });
+      lockedScrollTo(target, 0.7);
     } else {
       lenis.scrollTo(target, { duration: 1.5 });
     }
@@ -88,39 +127,6 @@ if (navBluBg) {
     s.backdropFilter = blurVal;
     s.webkitBackdropFilter = blurVal;
     s.opacity = String(q);
-  });
-}
-
-// ---------- Custom cursor ----------
-const dot = document.getElementById("cursor-dot");
-const ring = document.getElementById("cursor-ring");
-
-if (dot && ring && window.matchMedia("(min-width: 769px)").matches) {
-  let mouseX = window.innerWidth / 2;
-  let mouseY = window.innerHeight / 2;
-  let ringX = mouseX;
-  let ringY = mouseY;
-
-  // Higher = the ring catches up to the cursor faster (less lag).
-  const RING_EASE = 0.35;
-
-  window.addEventListener("mousemove", (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
-  });
-
-  const animateRing = () => {
-    ringX += (mouseX - ringX) * RING_EASE;
-    ringY += (mouseY - ringY) * RING_EASE;
-    ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
-    requestAnimationFrame(animateRing);
-  };
-  animateRing();
-
-  document.querySelectorAll("a, button, .menu-link").forEach((el) => {
-    el.addEventListener("mouseenter", () => ring.classList.add("is-hover"));
-    el.addEventListener("mouseleave", () => ring.classList.remove("is-hover"));
   });
 }
 
@@ -329,7 +335,7 @@ if (heroVideo) {
           trigger: ".hero-section",
           start: "top top",
           end: "bottom top",
-          scrub: 0.8, // lag morbido, in coppia con Lenis
+          scrub: SCRUB, // ritardo condiviso con tutto il resto della pagina
         },
       }
     );
@@ -368,17 +374,34 @@ if (document.querySelector(".hero-section")) {
   // Scrollando via dalla hero il blocco testo sale più veloce del video e
   // sfuma: la pagina "consegna" la scena alla sezione successiva. L'hint sta
   // dentro al blocco, quindi sparisce gratis.
+  //
+  // La corsa è la STESSA dello zoom del video qui sopra (tutta la hero) e la
+  // stessa su cui Chi Siamo comincia a salire: le tre animazioni condividono
+  // inizio, fine e ritardo, quindi la consegna tra le due sezioni è un gesto
+  // unico invece di tre movimenti scollegati. Il testo resta comunque più
+  // veloce del video — la parallasse è nella differenza di spostamento, non
+  // in una durata diversa.
   if (!reduceMotion) {
+    const heroExit = {
+      trigger: ".hero-section",
+      start: "top top",
+      end: "bottom top",
+      scrub: SCRUB,
+    };
+    // Il MOVIMENTO occupa tutta la corsa della hero: è questo che va a tempo
+    // con l'ingresso di Chi Siamo.
     gsap.to("[data-anim='hero-content']", {
       yPercent: -28,
-      opacity: 0,
       ease: "none",
-      scrollTrigger: {
-        trigger: ".hero-section",
-        start: "top top",
-        end: "70% top",
-        scrub: 0.6,
-      },
+      scrollTrigger: { ...heroExit },
+    });
+    // La DISSOLVENZA invece si consuma subito (power2.out) sulla stessa corsa:
+    // il blocco continua a salire in sincrono, ma è già trasparente prima di
+    // passare sotto la navbar, senza lasciarci sopra un fantasma di testo.
+    gsap.to("[data-anim='hero-content']", {
+      opacity: 0,
+      ease: "power2.out",
+      scrollTrigger: { ...heroExit },
     });
   }
 }
@@ -433,7 +456,12 @@ const splitTitleWords = (title: HTMLElement): HTMLElement[] => {
   return words;
 };
 
-if (!reduceMotion) {
+// HOME — i titoli NON hanno comparse: sono già lì, fermi, dal primo scroll.
+// Il marcatore lo mette HomePage.astro sul contenitore del contenuto; le altre
+// pagine (chi-siamo, faq) conservano il reveal parola per parola.
+const isHome = !!document.querySelector("[data-home]");
+
+if (!reduceMotion && !isHome) {
   document
     .querySelectorAll<HTMLElement>(
       ".works-title:not(.split-parent), .cta-title:not(.split-parent)"
@@ -517,21 +545,10 @@ const revealRise = (targets: gsap.DOMTarget, opts: RiseOpts = {}) => {
   );
 };
 
-// ---------- Lavori selezionati — entrata header dello stage MacBook ----------
-// L'header sale all'ingresso in viewport; il "reveal" del laptop è l'apertura
-// del coperchio guidata dallo scroll (vedi lo stage MacBook più in basso).
-revealRise("[data-anim='works-head']", {
-  trigger: ".mbp-mount",
-  start: "top 90%",
-  stagger: 0.12,
-  y: 26,
-  duration: 0.9,
-});
-
 // ---------- Header di sezione — stesso reveal per Servizi e Chi Siamo ----------
 // Riusa il linguaggio dell'header "Lavori selezionati": fade + rise con
 // stagger tra titolo e meta-strip, agganciato alla sezione che li contiene.
-const revealHead = (selector: string, trigger: string) => {
+const revealHead = (selector: string, trigger: string, start = "top 80%") => {
   if (!document.querySelector(selector)) return;
   gsap.fromTo(
     selector,
@@ -542,11 +559,11 @@ const revealHead = (selector: string, trigger: string) => {
       duration: 0.9,
       ease: "power2.out",
       stagger: 0.12,
-      scrollTrigger: { trigger, start: "top 80%", once: true },
+      scrollTrigger: { trigger, start, once: true },
     }
   );
 };
-revealHead("[data-anim='services-head']", "#cosa-facciamo");
+// (In home il titolo dei Servizi non ha reveal: vedi `isHome` più sopra.)
 
 // ---------- "Il punto" — sequenza scroll-driven (logo zoom + reveal testo) ---
 // La sezione si BLOCCA (pin) e lo scroll guida una timeline:
@@ -701,9 +718,9 @@ if (pointSection && pointLogo && pointText && pointInk && pointAccent && !reduce
       invalidateOnRefresh: true,
       // Priorità massima: è il PRIMO pin della pagina, dev'essere ricalcolato
       // per primo così il suo spacer è in posizione quando i trigger a valle
-      // (morph colore canvas, pin Servizi/Progetti/Chi-siamo) leggono le
-      // coordinate. Scala per posizione: pointSection 4 > servizi 3 >
-      // progetti 2 > chi-siamo 1 > morph 0.
+      // (morph colore canvas, pin Servizi/Progetti) leggono le coordinate.
+      // Scala per posizione: pointSection 4 > servizi 3 > progetti 2 >
+      // morph 0. Chi Siamo non pinna più nulla: non entra in questa scala.
       refreshPriority: 4,
       onUpdate: (self) => {
         // Reveal a tempo (sempre fluido), lo scroll fa solo da grilletto. Soglie
@@ -764,210 +781,289 @@ if (pointSection && pointLogo && pointText && pointInk && pointAccent && !reduce
   });
 }
 
-// ---------- Canvas — lo schermo cambia colore tra le sezioni ----------
-// I colori di sezione non stanno sulle sezioni ma sul canvas .post-reveal:
-// quattro scrub lo tingono in sequenza — warm white → navy (entrando in Cosa
-// Facciamo), navy → warm white (entrando nei Lavori), warm → grigio bordo
-// (entrando in Chi Siamo), poi di nuovo warm white (verso il separatore e la
-// CTA). Tutti valori della palette. I background statici delle sezioni vengono
-// resi trasparenti: restano solo come fallback per reduced-motion / no-JS.
+// ---------- Canvas — UN SOLO colore per tutta la fascia sotto la hero --------
+// Il canvas (.post-reveal) resta sempre sulla CARTA base (--color-bg): niente
+// più virata verso la sabbia avorio entrando in Chi Siamo e ritorno al warm
+// white nei Servizi. Quel morph era l'unico punto in cui il fondo cambiava
+// tono, e proprio sulla giunzione con la hero: toglierlo è ciò che rende il
+// passaggio hero → Chi Siamo continuo (stesso identico bianco carta sopra e
+// sotto il confine). Le sezioni scure che servono (CTA, footer) hanno il
+// proprio fondo e non passano di qui.
+// Le sezioni restano trasparenti: il colore lo dà il canvas sotto.
 if (!reduceMotion) {
-  const canvas = document.querySelector<HTMLElement>(".post-reveal");
-  if (canvas) {
-    gsap.set(["#cosa-facciamo", "#projects", "#chi-siamo"], { backgroundColor: "transparent" });
-
-    const morph = (
-      trigger: string,
-      start: string,
-      end: string,
-      from: string,
-      to: string
-    ) => {
-      gsap.fromTo(
-        canvas,
-        { backgroundColor: from },
-        {
-          backgroundColor: to,
-          ease: "none",
-          immediateRender: false,
-          // Scrub un filo più morbido: la virata di colore insegue lo scroll
-          // con leggera inerzia invece di "scattare" al fermarsi della rotella.
-          scrollTrigger: { trigger, start, end, scrub: 0.6 },
-        }
-      );
-    };
-
-    // Ordine sezioni: Problema(warm) → Servizi(CHIARO) → Lavori(warm) →
-    // Chi Siamo(grigio) → CTA(warm). Servizi ora è chiaro come il resto: il
-    // canvas resta warm white per tutta la fascia Problema→Servizi→Lavori
-    // (niente virata navy), poi vira verso il grigio bordo entrando in Chi Siamo.
-    morph("#chi-siamo", "top 70%", "top 20%", "#FAFAF8", "#E8E8E5");
-    morph(".section-rule", "top 95%", "top 50%", "#E8E8E5", "#FAFAF8");
-  }
+  gsap.set(["#cosa-facciamo", "#projects", "#chi-siamo"], {
+    backgroundColor: "transparent",
+  });
 }
 
-// ---------- Cosa Facciamo — scene a tutta schermata, una per servizio ----------
-// La sezione si "blocca" (pin) e i servizi si avvicendano come scene:
-// l'indice sale, il titolo emerge dalla maschera, descrizione e ledger
-// seguono; la scena uscente sfuma verso l'alto mentre entra la successiva.
-// A destra (sopra, su mobile) la TORRE ISOMETRICA resta ferma per tutta la
-// sequenza: l'onUpdate del pin accende il layer del servizio a fuoco
-// (.is-active) e alza quelli sopra (.is-lifted); il movimento lo fanno le
-// transizioni CSS (vedi global.css). Con reduced-motion niente pin: scene
-// in colonna statiche e torre in trattamento pieno.
-const servicesStage = document.querySelector<HTMLElement>(".services-stage");
-const serviceSlides = gsap.utils.toArray<HTMLElement>(".service-slide");
-const towerLayers = gsap.utils.toArray<HTMLElement>(".tower-layer");
-const servicesScrollHint = document.querySelector<HTMLElement>(".services-scroll-hint");
-
-// Distanza di scroll della sezione pinnata: ~140vh per scena su desktop
-// (~110vh su mobile, dove lo swipe "costa" di più) + coda finale. Più lunga
-// della distanza "naturale" → lo scroll è meno sensibile, ogni servizio ha
-// il tempo di essere percepito e uno scroll veloce non salta più scene
-// insieme (in coppia con lo scrub morbido qui sotto).
-const servicesPinDistance = () => {
-  const perScene = window.matchMedia("(min-width: 1024px)").matches ? 1.4 : 1.1;
-  const tail = perScene === 1.4 ? 0.6 : 0.4;
-  return Math.round(window.innerHeight * (serviceSlides.length * perScene + tail));
-};
-
-// La sezione Servizi è ora CHIARA come il resto della fascia: la navbar non si
-// inverte più qui (nessuna banda navy da scavalcare). L'inversione resta solo
-// dove serve davvero — hero e fondale video di Chi Siamo (vedi il trigger con
-// toggleClass "is-on-dark" più in alto).
+// ---------- Cosa Facciamo — due modi, una regia sola ----------
+// La sezione si blocca (pin) e lo scroll avanza di scena in scena. Come si
+// vede il cambio dipende dall'impaginazione (la sceglie il CSS con
+// --svc-mode, qui si legge e basta):
+//
+//   SWAP (desktop)  card e testo si scambiano i due posti del palco: card
+//                   destra → sinistra → destra, testo l'opposto. I pannelli
+//                   immagine NON si muovono — ce n'è uno fermo per posto (il
+//                   muro si controtrasla rispetto alla card). A spostarsi è
+//                   solo la card, che durante il viaggio fa da cornice e
+//                   scopre il pannello dell'altro posto: a metà corsa se ne
+//                   vedono due affiancati. A card ferma non scorre niente.
+//
+//   REEL (mobile)   niente card: la clip riempie la schermata e il fondale
+//                   successivo sale a tutta altezza, con la descrizione
+//                   ferma in basso che si dà il cambio in dissolvenza.
+//
+// Le distanze sono misurate dal layout a ogni refresh (offset* degli strati,
+// che ignorano i transform): nessuna geometria duplicata nel JS.
+//
+// Con reduced-motion niente pin: il componente resta senza `.is-live` e il
+// CSS lo mostra come griglia statica (card + testi in colonna).
+const svcRoot = document.querySelector<HTMLElement>("[data-svc]");
+const svcScene = document.querySelector<HTMLElement>("[data-svc-scene]");
+const svcFrame = document.querySelector<HTMLElement>("[data-svc-frame]");
+const svcTrack = document.querySelector<HTMLElement>("[data-svc-track]");
+const svcShots = gsap.utils.toArray<HTMLElement>("[data-svc-shot]");
+// Il CONTENITORE delle descrizioni (il secondo posto del palco) e le singole
+// descrizioni: il primo serve a misurare la distanza fra i due posti.
+const svcCopyWrap = document.querySelector<HTMLElement>("[data-svc-copies]");
+const svcCopies = gsap.utils.toArray<HTMLElement>("[data-svc-copy]");
+const svcFills = gsap.utils.toArray<HTMLElement>("[data-svc-fill]");
 const servicesSection = document.querySelector<HTMLElement>("#cosa-facciamo");
 
-// Coreografia d'ingresso di una scena, agganciata alla timeline `tl` a
-// partire da `at` (unità di timeline: con lo scrub diventano scroll).
-const slideReveal = (
-  tl: gsap.core.Timeline,
-  slide: HTMLElement,
-  at: number
-) => {
-  const ghost = slide.querySelector(".slide-ghost");
-  const name = slide.querySelector(".sn");
-  // .slide-desc / .slide-ledger NON sono più animati qui: il loro testo usa il
-  // reveal a righe via CSS (.title-line / .is-active), per evitare doppia
-  // animazione. Restano i contenitori (visibili con la slide).
-
-  tl.fromTo(
-    slide,
-    { autoAlpha: 0, y: 28 },
-    { autoAlpha: 1, y: 0, duration: 0.3 },
-    at
-  );
-  // Numerale ghost — entrata morbida (deriva + fade) dietro alla scena.
-  if (ghost) {
-    tl.fromTo(
-      ghost,
-      { autoAlpha: 0, y: 18, xPercent: -4 },
-      { autoAlpha: 1, y: 0, xPercent: 0, duration: 0.5 },
-      at + 0.04
-    );
-  }
-  if (name) {
-    tl.fromTo(
-      name,
-      { yPercent: 115 },
-      { yPercent: 0, duration: 0.6, ease: "power4.out" },
-      at + 0.08
-    );
-  }
-};
-
-if (servicesStage && serviceSlides.length && !reduceMotion) {
-  // Le scene si impilano nello stesso spazio (vedi CSS .is-pinned); la
-  // sezione riempie lo schermo anche sotto 1024px (.is-pin-mode).
-  servicesStage.classList.add("is-pinned");
+if (
+  svcRoot &&
+  svcScene &&
+  svcFrame &&
+  svcTrack &&
+  svcCopyWrap &&
+  svcShots.length &&
+  !reduceMotion
+) {
+  const N = svcShots.length;
+  svcRoot.classList.add("is-live");
   servicesSection?.classList.add("is-pin-mode");
-  // Abilita il reveal a righe del testo card (stato nascosto iniziale gated da
-  // .has-reveal: senza JS / reduced-motion il testo resta visibile).
-  servicesStage.classList.add("has-reveal");
 
-  // STEP = durata di una scena in unità di timeline (ingresso + sosta);
-  // l'end mappa il tutto sulla distanza calcolata sopra.
-  const STEP = 1.5;
-  const tl = gsap.timeline({
-    defaults: { ease: "power3.out" },
-    scrollTrigger: {
-      trigger: "#cosa-facciamo",
-      start: "top top",
-      end: () => "+=" + servicesPinDistance(),
-      pin: true,
-      // Sincronizza .is-active (reveal testo + layer torre) con lo step a
-      // fuoco. Calcolo idempotente dal progress → corretto anche scrollando
-      // all'indietro. La torre non viene mai ricreata: cambiano solo le
-      // classi, le transizioni CSS fanno il movimento.
-      onUpdate: (self) => {
-        const time = self.progress * tl.duration();
-        const idx = Math.max(
-          0,
-          Math.min(serviceSlides.length - 1, Math.floor(time / STEP))
-        );
-        serviceSlides.forEach((s, i) =>
-          s.classList.toggle("is-active", i === idx)
-        );
-        towerLayers.forEach((layer, i) => {
-          layer.classList.toggle("is-active", i === idx);
-          layer.classList.toggle("is-lifted", i < idx);
-        });
-      },
-      // Scrub più morbido = più "resistenza/lag": il movimento delle scene
-      // insegue lo scroll con inerzia, così uno scatto veloce non fa avanzare
-      // di colpo più servizi.
-      scrub: 1,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-      // Il pin sposta in basso tutto ciò che lo segue (chi-siamo, marquee,
-      // CTA…). I morph del colore e l'inversione nav sono creati PRIMA di
-      // questo pin nel codice: con priorità più alta il pin si ricalcola
-      // per primo, così quei trigger leggono le posizioni già spostate e
-      // il navy resta pieno per tutta la sezione, tornando chiaro solo
-      // entrando in chi-siamo.
-      // Priorità 3: è il PRIMO pin della pagina, deve ricalcolarsi prima di
-      // tutti (progetti=2, chi-siamo=1, morph=0), così ogni spacer a valle
-      // legge le posizioni già spostate. Vedi nota sul pin dei progetti.
-      refreshPriority: 3,
+  // Contratto con il CSS (vedi .svc in global.css).
+  let reel = false; // modo fondale a tutta schermata (mobile)?
+  let vertical = false; // movimento sull'asse y?
+  let travel = 0; // swap: px fra il posto della card e quello del testo
+  let pitch = 0; // reel: px di avanzamento del fondale per scena
+
+  // Modo SWAP — spostamento della card nella scena i: posto di partenza (0)
+  // sulle scene pari, posto dell'altro sulle dispari. Nel modo REEL la
+  // cornice non si muove mai.
+  const frameAt = (i: number) => {
+    if (reel) return 0;
+    return i % 2 === 0 ? 0 : vertical ? travel : -travel;
+  };
+
+  const measure = () => {
+    const cs = getComputedStyle(svcRoot);
+    reel = cs.getPropertyValue("--svc-mode").trim() === "reel";
+    vertical = cs.getPropertyValue("--svc-axis").trim() === "y";
+    // Letti dal layout: offset* ignora i transform, quindi le misure restano
+    // corrette anche a scena già mossa.
+    travel = vertical
+      ? svcCopyWrap.offsetTop - svcFrame.offsetTop
+      : svcFrame.offsetLeft - svcCopyWrap.offsetLeft;
+    pitch = vertical ? svcFrame.offsetHeight : svcFrame.offsetWidth;
+
+    // Posizione di riposo di ogni pannello:
+    //  · swap → resta FERMO nel posto della sua scena (non si muove mai);
+    //  · reel → è in fila, una schermata più in là del precedente.
+    svcShots.forEach((el, k) => {
+      const at = reel ? k * pitch : frameAt(k);
+      el.style.transform = vertical
+        ? `translate3d(0, ${at}px, 0)`
+        : `translate3d(${at}px, 0, 0)`;
+    });
+    // L'asse inattivo resta a zero (il movimento avviene su uno solo).
+    gsap.set([svcFrame, svcTrack], vertical ? { x: 0 } : { y: 0 });
+  };
+
+  const setFrame = (v: number) =>
+    gsap.set(svcFrame, vertical ? { y: v } : { x: v });
+  const setTrack = (v: number) =>
+    gsap.set(svcTrack, vertical ? { y: v } : { x: v });
+
+  // `p` = indice continuo della scena (0 → N-1): lo muove la timeline in
+  // scrub, tutto il resto è calcolato da qui (idempotente, quindi corretto
+  // anche scrollando all'indietro).
+  const state = { p: 0 };
+
+  const apply = () => {
+    const p = state.p;
+    const i = Math.max(0, Math.min(N - 2, Math.floor(p)));
+    const t = gsap.utils.clamp(0, 1, p - i);
+    const pos = frameAt(i) + (frameAt(i + 1) - frameAt(i)) * t;
+
+    setFrame(pos);
+    // swap → controtraslazione: i pannelli restano fermi nello spazio e la
+    // card ci scorre sopra come una finestra.
+    // reel → il muro avanza di una schermata per scena dentro alla cornice
+    // ferma: il fondale successivo sale.
+    setTrack(reel ? -p * pitch : -pos);
+
+    // Le scene pari condividono lo stesso posto (01 e 03): fuori dalla propria
+    // corsa il pannello si spegne, così non copre mai quello di turno. Lo
+    // stacco avviene quando è già fuori dalla cornice, quindi non si vede.
+    svcShots.forEach((el, k) => {
+      el.style.opacity = Math.abs(p - k) < 1.001 ? "1" : "0";
+    });
+
+    // Descrizioni: nel modo swap stanno nel posto lasciato libero dalla card
+    // (pari = posto di partenza, dispari = l'altro), nel modo reel sempre in
+    // basso sul fondale. In entrambi i casi non viaggiano: si danno il cambio
+    // in dissolvenza con una deriva di pochi px.
+    svcCopies.forEach((el, k) => {
+      // Finestra di dissolvenza stretta (0.3 di scena): la descrizione entra
+      // solo quando la card ha ormai liberato il suo posto, così le due cose
+      // non si sovrappongono mai a metà corsa.
+      const a = 1 - gsap.utils.clamp(0, 1, Math.abs(p - k) / 0.3);
+      const eased = a * a * (3 - 2 * a); // smoothstep: niente stacchi secchi
+      const slot = -frameAt(k); // opposto a quello della card
+      const drift = (p - k) * -18;
+      el.style.opacity = String(eased);
+      el.style.transform = vertical
+        ? `translate3d(0, ${(slot + drift).toFixed(2)}px, 0)`
+        : `translate3d(${slot}px, ${drift.toFixed(2)}px, 0)`;
+      // La scena fuori fuoco esce anche dal tab order e dallo screen reader
+      // (inert): non ci sono tre link "Parliamone" sovrapposti e invisibili.
+      const off = eased <= 0.5;
+      el.style.pointerEvents = off ? "none" : "auto";
+      el.inert = off;
+    });
+
+    // Puntini: quello della scena a fuoco si riempie mentre la corsa avanza.
+    svcFills.forEach((el, k) => {
+      el.style.transform = `scale(${gsap.utils.clamp(0, 1, p - k + 1).toFixed(3)})`;
+    });
+  };
+
+  measure();
+  apply();
+
+  // ---- Passi discreti: una scrollata = un cambio intero ----
+  // Dentro alla sezione lo scroll NON pilota più l'animazione fotogramma per
+  // fotogramma (niente scrub): fa da INTERRUTTORE. Basta un accenno di scroll
+  // e la transizione parte e arriva in fondo da sola, sempre alla stessa
+  // velocità; finché non ha finito, altri scroll non fanno niente. Così non
+  // esistono stati "a metà" — la scena è sempre o una o l'altra, il che conta
+  // ancora di più quando dentro alle card ci saranno delle clip.
+  //
+  // Lo scroll però deve restare coerente con la scena a fuoco, altrimenti al
+  // giro dopo la sezione ripartirebbe da un punto sbagliato: a ogni cambio il
+  // pin viene riportato all'ancora della nuova scena con lenis.scrollTo in
+  // `lock` (input bloccato per la durata), quindi un colpo di rotella vale un
+  // cambio solo e la coda d'inerzia non ne fa scattare un secondo.
+  const STEP_VH = 0.7; // quanto scroll "occupa" una scena dentro al pin
+  const STEP_TIME = 0.75; // durata del cambio, in secondi
+  const TRIGGER_PX = 16; // scroll minimo che fa scattare il cambio
+  // Cuscinetto ai due estremi del pin: le ancore della prima e dell'ultima
+  // scena NON stanno sul bordo, se no il minimo sussulto uscirebbe e
+  // rientrerebbe nella sezione (e ogni rientro la ri-ancorerebbe, bloccando
+  // di fatto ogni avanzamento). Con il cuscinetto per uscire serve una
+  // scrollata vera, e dentro si cambia scena e basta.
+  const EDGE_PAD = 90;
+
+  const svcPinDistance = () =>
+    Math.round(window.innerHeight * STEP_VH) * (N - 1) + EDGE_PAD * 2;
+
+  let st: ScrollTrigger | null = null;
+  let index = 0; // scena a fuoco
+  // "Cambio in corso" è una SCADENZA, non un interruttore: si spegne da sé al
+  // passare del tempo. Un flag booleano dipenderebbe da una callback per
+  // tornare false, e se quella non arrivasse (animazione interrotta) la
+  // sezione resterebbe sorda a ogni scroll.
+  let busyUntil = 0;
+  const isBusy = () => performance.now() < busyUntil;
+
+  const anchorOf = (i: number) => {
+    if (!st) return 0;
+    const span = st.end - st.start - EDGE_PAD * 2;
+    return st.start + EDGE_PAD + (span * i) / (N - 1);
+  };
+
+  // Ignora l'input per la durata del movimento (più un filo di margine).
+  const holdFor = (seconds: number) => {
+    busyUntil = performance.now() + seconds * 1000 + 120;
+  };
+
+  const goTo = (target: number) => {
+    const next = gsap.utils.clamp(0, N - 1, target);
+    if (next === index || isBusy()) return;
+    index = next;
+    holdFor(STEP_TIME);
+    gsap.to(state, {
+      p: next,
+      duration: STEP_TIME,
+      ease: "power2.inOut",
+      overwrite: true,
+      onUpdate: apply,
+    });
+    lockedScrollTo(anchorOf(next), STEP_TIME, {
+      easing: (t: number) =>
+        t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
+    });
+  };
+
+  // Atterraggio all'ingresso: scena e scroll allineati di netto, senza
+  // animazione — la sezione "accoglie" l'inerzia con cui la si raggiunge
+  // invece di lasciarsene attraversare mezza.
+  const land = (i: number) => {
+    index = i;
+    state.p = i;
+    apply();
+    holdFor(0.3);
+    lockedScrollTo(anchorOf(i), 0.3);
+  };
+
+  st = ScrollTrigger.create({
+    trigger: "#cosa-facciamo",
+    start: "top top",
+    end: () => "+=" + svcPinDistance(),
+    pin: true,
+    anticipatePin: 1,
+    invalidateOnRefresh: true,
+    // Primo pin della pagina: si ricalcola prima di progetti (2), chi-siamo
+    // (1) e morph (0), così ogni spacer a valle legge posizioni già spostate.
+    refreshPriority: 3,
+    onRefresh: () => {
+      measure();
+      apply();
     },
+    onUpdate: (self) => {
+      if (isBusy()) return;
+      const delta = self.scroll() - anchorOf(index);
+      if (delta > TRIGGER_PX) goTo(index + 1);
+      else if (delta < -TRIGGER_PX) goTo(index - 1);
+    },
+    onEnter: () => land(0),
+    onEnterBack: () => land(N - 1),
   });
 
-  // La torre entra UNA volta, insieme alla prima scena, e poi resta ferma
-  // per tutta la sequenza (l'oggetto è persistente, non per-scena).
-  tl.fromTo(
-    ".services-visual",
-    { autoAlpha: 0, y: 40 },
-    { autoAlpha: 1, y: 0, duration: 0.5 },
-    0
+  // Arrivo ammortizzato: il palco sale e si accende PRIMA che la sezione si
+  // blocchi, in scrub condiviso — così il pin non arriva di colpo su una
+  // scena ferma, ma chiude un movimento già in corso. Parte appena il palco
+  // spunta dal bordo basso (la sezione risale dentro alla coda di "Chi
+  // siamo", vedi il margine negativo in global.css): mentre la frase esce
+  // dall'alto, questo sale da sotto — nessuna fascia vuota fra le due.
+  gsap.fromTo(
+    svcScene,
+    { autoAlpha: 0, y: 56 },
+    {
+      autoAlpha: 1,
+      y: 0,
+      ease: "none",
+      scrollTrigger: {
+        trigger: svcScene,
+        start: "top bottom",
+        end: "top 52%",
+        scrub: SCRUB,
+      },
+    }
   );
 
-  serviceSlides.forEach((slide, i) => {
-    const at = i * STEP;
-    // La scena precedente esce appena prima che entri questa.
-    if (i > 0) {
-      tl.to(
-        serviceSlides[i - 1],
-        { autoAlpha: 0, y: -36, duration: 0.32, ease: "power2.in" },
-        at - 0.34
-      );
-    }
-    slideReveal(tl, slide, at);
-  });
-  tl.to({}, { duration: 0.7 }); // respiro finale: l'ultima scena resta ferma
-
-  if (servicesScrollHint) {
-    const totalDuration = serviceSlides.length * STEP + 0.7;
-    tl.fromTo(
-      servicesScrollHint,
-      { autoAlpha: 0, y: 24 },
-      { autoAlpha: 1, y: 0, duration: 0.3, ease: "power2.out" },
-      0
-    );
-    tl.to(
-      servicesScrollHint,
-      { autoAlpha: 0, y: -24, duration: 0.32, ease: "power2.in" },
-      totalDuration - 0.4
-    );
-  }
 }
 
 // ---------- Glow text — illuminazione lettera per lettera in scrub ----------
@@ -1040,110 +1136,279 @@ if (!reduceMotion) {
   });
 }
 
-// ---------- Chi Siamo — intro pinnata con riempimento per lettera ----------
-// Quando l'intro (titolo + statement) raggiunge il viewport la sezione si
-// blocca (pin): lo scroll non muove più la pagina ma riempie le lettere
-// dello statement, da grigio "vuoto" a colorato (ink, accent per i corsivi),
-// una a una in ordine di lettura. Colorata l'ultima lettera, una breve coda
-// lascia leggere la frase piena e poi lo scroll riprende normale.
-// Con reduced motion niente pin: il testo resta pieno e statico.
-const pinStatement = document.querySelector<HTMLElement>("[data-glow-pin]");
-if (pinStatement && !reduceMotion) {
-  const chars = splitGlowChars(pinStatement);
+// ---------- Chi Siamo — la frase scivola sopra la montagna ----------------
+// NIENTE PIN: la pagina non si blocca mai. La sezione è lunga (vedi
+// .about-intro in global.css) e la attraversano DUE STRATI INDIPENDENTI a
+// velocità diverse:
+//   · il fondale video sale più LENTO della pagina (≈0.82×)
+//   · la frase sale più VELOCE (≈1.13×)
+// La differenza tra le due è lo scivolamento: il testo scorre sopra la
+// montagna invece di essere incollato ad essa. Mentre scorre, le lettere
+// passano da grigio "vuoto" a colorato (ink, accent per i corsivi), una a una
+// in ordine di lettura.
+//
+// L'ENTRATA (blocco "staffetta" più sotto) NON è una comparsa: il fondale è
+// pieno da subito, si vede appena la sezione entra da sotto la hero. L'unica
+// cosa che compare è il TESTO, che sale con una parallasse tutta sua mentre la
+// hero esce. Il fondale intanto non sfuma: si MUOVE — parallasse lenta più una
+// scala che raccoglie lo zoom del video della hero (1.12 → 1) e lo scarica.
+//
+// Il riempimento NON è agganciato alla progress della sezione ma alla
+// posizione REALE della frase nel viewport: così si autoregola su qualunque
+// schermo, qualunque sia l'altezza che il blocco di testo finisce per avere
+// (desktop, mobile, lingue più lunghe come il tedesco).
+// Con reduced motion non parte nulla: frase piena e statica sul fondale.
+const aboutStatement = document.querySelector<HTMLElement>(
+  "[data-about-statement]"
+);
+const aboutSection = document.querySelector<HTMLElement>("#chi-siamo");
+if (aboutStatement && aboutSection && !reduceMotion) {
+  const chars = splitGlowChars(aboutStatement);
   if (chars.length) {
-    const GRAY = "rgba(13, 13, 13, 0.16)";
-    const INK = "#0D0D0D";
+    // Un filo più marcato del vecchio 0.16: senza velo davanti al video le
+    // lettere "vuote" sparivano del tutto sul mosso della montagna.
+    const GRAY = "rgba(23, 19, 16, 0.22)";
+    const INK = "#171310";
     const ACCENT = "#3B5BDB";
     gsap.set(chars, { color: GRAY });
 
-    // Corsa proporzionale al numero di lettere: più corta (≈7px di scroll a
-    // lettera) per un passaggio tra le sezioni più immediato. Condivisa tra il
-    // pin dello statement e quello del fondale video, così restano sincronizzati.
-    const pinEnd = () => "+=" + Math.max(560, Math.round(chars.length * 7));
+    // Timeline del riempimento, in PAUSA: la posizione non la decide uno
+    // scrub ma noi (vedi il ticker più sotto). Un tween per lettera, in
+    // sequenza: 1 unità di timeline = 1 lettera, duration < 1 → ogni lettera
+    // "scatta" piena prima che parta la successiva, niente sovrapposizioni.
+    const fillTl = gsap.timeline({ paused: true, defaults: { ease: "none" } });
+    chars.forEach((c, i) => {
+      const isEm = c.parentElement?.classList.contains("gw-em");
+      fillTl.to(c, { color: isEm ? ACCENT : INK, duration: 0.6 }, i);
+    });
 
-    const tl = gsap.timeline({
-      defaults: { ease: "none" },
-      scrollTrigger: {
-        trigger: ".about-intro",
-        start: "top top",
-        end: pinEnd,
-        pin: true,
-        // Scrub più morbido: il riempimento delle lettere "decelera" invece di
-        // bloccarsi netto quando si smette di scrollare.
-        scrub: 0.55,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        // Come il pin dei servizi: ricalcolato prima dei trigger a valle,
-        // così morph colore e marquee leggono le posizioni già spostate.
-        refreshPriority: 1,
+    // Corsa condivisa dai due strati: tutta la traversata della sezione.
+    const pass = {
+      trigger: aboutSection,
+      start: "top bottom",
+      end: "bottom top",
+      scrub: SCRUB,
+      invalidateOnRefresh: true,
+    };
+
+    // FONDALE — più lento della pagina, di una frazione decisa qui.
+    //
+    // Un fondale che rallenta si STACCA dal bordo della sezione: mentre la
+    // pagina sale di 1, lui sale di MEDIA_SPEED, quindi tra la fine della hero
+    // e la cima del video si apre una fascia di pagina nuda che vale, al
+    // massimo, esattamente (1 − MEDIA_SPEED) × viewport. Non è un margine da
+    // togliere: è aritmetica, l'unico modo per chiuderla senza rinunciare alla
+    // parallasse è far PARTIRE il video più in alto del bordo della sezione,
+    // di quella stessa quantità. Con quell'anticipo il video resta incollato
+    // sotto la hero — anzi la scavalca un po' — per tutto il tempo in cui il
+    // confine tra le due sezioni è sullo schermo, e arriva a filo esattamente
+    // quando quel confine esce dall'inquadratura.
+    // (Perché possa sbordare, .about-section non ha più il clip verticale.)
+    const MEDIA_SPEED = 0.82;
+    const aboutMedia = document.querySelector<HTMLElement>(".about-media");
+    if (aboutMedia) {
+      const rest = () =>
+        (aboutSection.offsetHeight - aboutMedia.offsetHeight) / 2;
+      const from = () =>
+        -(rest() + (1 - MEDIA_SPEED) * window.innerHeight);
+      const to = () =>
+        from() +
+        (1 - MEDIA_SPEED) * (aboutSection.offsetHeight + window.innerHeight);
+      gsap.fromTo(
+        aboutMedia,
+        { y: from },
+        { y: to, ease: "none", scrollTrigger: { ...pass } }
+      );
+    }
+
+    // FRASE — più veloce della pagina: guadagna terreno sul fondale per tutta
+    // la traversata, ed è questo scarto che si legge come "il testo scivola
+    // sulla montagna".
+    //
+    // L'escursione è tutta verso l'ALTO (da 0 a −2×lead) invece che simmetrica
+    // (da +lead a −lead): la velocità relativa è identica, ma il blocco sta
+    // mediamente più in alto e quindi ENTRA PRIMA nell'inquadratura. Far salire
+    // solo l'opacità non bastava — la frase era già opaca ma ancora sotto il
+    // bordo dello schermo, quindi non si vedeva comunque.
+    const lead = () => window.innerHeight * 0.18;
+    gsap.fromTo(
+      aboutStatement,
+      { y: 0 },
+      { y: () => -2 * lead(), ease: "none", scrollTrigger: { ...pass } }
+    );
+
+    // ---- ENTRATA — la staffetta hero → Chi Siamo -------------------------
+    // Tre gesti sfalsati, tutti agganciati alla GEOMETRIA DELLA SEZIONE (non
+    // alla hero): così le soglie restano vere qualunque sia l'altezza della
+    // hero, e sono espresse nell'unica scala che conta, cioè quanto la sezione
+    // è già salita nell'inquadratura. Le percentuali sono la posizione del
+    // bordo alto della sezione nel viewport: "top 65%" = il confine con la
+    // hero è ai due terzi dello schermo (hero per un terzo fuori).
+    //
+    // ORDINE (questo è il punto): prima il TESTO, poi la montagna.
+    //   1. il blocco di testo sale e si accende mentre la hero esce
+    //   2. solo dopo il fondale si materializza DIETRO la frase, già in scena
+    // Prima era il contrario e la sezione arrivava come un secondo video
+    // attaccato al primo; ora tra i due c'è un respiro di carta.
+    const entryPass = (start: string, end: string) => ({
+      trigger: aboutSection,
+      start,
+      end,
+      scrub: SCRUB,
+      invalidateOnRefresh: true,
+    });
+
+    // 1a — PARALLASSE D'INGRESSO del blocco di testo: parte più in basso e
+    // recupera. È un secondo strato di velocità SOPRA la corsa costante qui
+    // sopra (che sta sulla frase, questo sul contenitore: due transform su due
+    // elementi, si compongono senza pestarsi). L'effetto è che il testo entra
+    // "inseguendo" la hero che se ne va, invece di scorrere con la pagina.
+    const aboutContent =
+      aboutSection.querySelector<HTMLElement>(".about-content");
+    if (aboutContent) {
+      gsap.fromTo(
+        aboutContent,
+        { y: () => window.innerHeight * 0.1 },
+        {
+          y: 0,
+          ease: "none",
+          scrollTrigger: entryPass("top 85%", "top 15%"),
+        }
+      );
+    }
+
+    // 1b — ACCENSIONE della frase: finita poco dopo che è entrata dal bordo
+    // basso, così si legge subito (il riempimento lettera per lettera più
+    // sotto è un'altra cosa: quello dura tutta la traversata).
+    gsap.fromTo(
+      aboutStatement,
+      { opacity: 0 },
+      {
+        opacity: 1,
+        ease: "none",
+        scrollTrigger: entryPass("top 68%", "top 28%"),
+      }
+    );
+
+    // 1c — USCITA della frase, in ANTICIPO sul bordo della sezione. I Servizi
+    // ora risalgono dentro alla coda di "Chi siamo" (margine negativo in
+    // global.css): senza questa dissolvenza le due scene resterebbero piene
+    // insieme sullo stesso schermo. Così invece la frase si spegne mentre il
+    // palco sale — una scena lascia, l'altra prende.
+    gsap.fromTo(
+      aboutStatement,
+      { opacity: 1 },
+      {
+        opacity: 0,
+        ease: "none",
+        immediateRender: false,
+        scrollTrigger: entryPass("bottom 120%", "bottom 62%"),
+      }
+    );
+
+    // 2 — FONDALE: NESSUNA dissolvenza in entrata. La montagna è già lì, piena,
+    // fin dal primo pixel della sezione: quello che la fa "arrivare" è solo il
+    // movimento — la parallasse lenta del contenitore più una scala che si
+    // DISTENDE da 1.12 a 1 sul <video>. 1.12 è esattamente il valore a cui la
+    // hero lascia il suo video (vedi lo zoom d'uscita più in alto): la montagna
+    // raccoglie il movimento dove l'altro lo ha lasciato e lo scarica, senza
+    // che nulla debba comparire. Scala e y stanno sul <video>, la parallasse
+    // sul contenitore: due transform su due elementi, non si pestano.
+    if (aboutMedia) {
+      // USCITA del fondale, anticipata insieme a quella della frase: la
+      // montagna si scioglie mentre i Servizi salgono da sotto, non dopo.
+      // Senza questa dissolvenza il video sbordava, scuro, sopra la sezione
+      // seguente (la maschera CSS da sola non basta: lì la sua coda è ancora
+      // quasi opaca).
+      gsap.fromTo(
+        aboutMedia,
+        { opacity: 1 },
+        {
+          opacity: 0,
+          ease: "none",
+          immediateRender: false,
+          scrollTrigger: entryPass("bottom 125%", "bottom 65%"),
+        }
+      );
+      const aboutVideoEl = aboutMedia.querySelector<HTMLElement>(".about-video");
+      if (aboutVideoEl) {
+        gsap.fromTo(
+          aboutVideoEl,
+          { scale: 1.12, y: () => window.innerHeight * 0.05 },
+          {
+            scale: 1,
+            y: 0,
+            ease: "none",
+            // Tiene 1.12 finché la hero è in scena (sta zoomando fino a quel
+            // valore); molla appena il confine tra le due sezioni tocca il
+            // bordo alto dello schermo. È lì che avviene il cambio di mano.
+            scrollTrigger: entryPass("top 15%", "top -80%"),
+          }
+        );
+      }
+    }
+
+    // RIEMPIMENTO — progress letta dalla geometria: 0 quando la frase entra
+    // dal bordo basso, 1 quando è appena uscita da quello alto. La finestra
+    // utile è ristretta ai due estremi (0.18 → 0.64): la frase entra già
+    // "viva" e arriva PIENA proprio quando comincia a uscire dall'alto, invece
+    // di completarsi fuori schermo.
+    const clamp01 = gsap.utils.clamp(0, 1);
+    const toWindow = gsap.utils.mapRange(0.18, 0.64, 0, 1);
+    const readProgress = () => {
+      const vh = window.innerHeight;
+      const r = aboutStatement.getBoundingClientRect();
+      return clamp01(toWindow((vh - r.top) / (vh + r.height)));
+    };
+
+    // Il valore letto viene inseguito con un lerp tarato su SCRUB_LERP: il
+    // riempimento ha ESATTAMENTE la stessa inerzia dello scrub che muove la
+    // scena, la hero e il colore del canvas. Prima correva con un ritardo di
+    // circa un sesto rispetto a tutto il resto, e le lettere si accendevano
+    // "in anticipo" sul movimento — è quello che rompeva il sincrono.
+    // Il ticker legge la geometria SOLO mentre la sezione è in scena.
+    let inView = false;
+    let snap = true;
+    let current = 0;
+    const tick = () => {
+      if (!inView) return;
+      const target = readProgress();
+      current = snap ? target : current + (target - current) * SCRUB_LERP;
+      snap = false;
+      if (Math.abs(target - current) < 0.001) current = target;
+      fillTl.progress(current);
+    };
+    gsap.ticker.add(tick);
+
+    ScrollTrigger.create({
+      trigger: aboutSection,
+      start: "top bottom",
+      end: "bottom top",
+      onToggle: (self) => {
+        inView = self.isActive;
+        // Entrando ci si allinea al volo (niente rincorsa visibile); uscendo
+        // la frase resta coerente: piena sopra, vuota sotto.
+        snap = self.isActive;
+        if (!self.isActive) {
+          current = self.direction === 1 ? 1 : 0;
+          fillTl.progress(current);
+        }
       },
     });
 
-    // Fondale video — bloccato ESATTAMENTE come lo statement (stesso
-    // trigger/start/end), pinnato via GSAP. Non si usa più position:sticky:
-    // è neutralizzato dall'overflow-x sugli antenati (body/html), quindi il
-    // video scrollava via mentre il testo restava fermo. pinSpacing:false →
-    // non aggiunge spazio (lo spazio lo riserva già il pin dello statement).
-    const aboutVideoFrame =
-      document.querySelector<HTMLElement>(".about-video-frame");
-    if (aboutVideoFrame) {
-      ScrollTrigger.create({
-        trigger: ".about-intro",
-        start: "top top",
-        end: pinEnd,
-        pin: aboutVideoFrame,
-        pinSpacing: false,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        refreshPriority: 1,
-      });
-    }
-
-    // Un tween per lettera, in sequenza: 1 unità di timeline = 1 lettera.
-    // duration < 1 → ogni lettera "scatta" piena prima che parta la
-    // successiva, niente dissolvenze sovrapposte.
-    chars.forEach((c, i) => {
-      const isEm = c.parentElement?.classList.contains("gw-em");
-      tl.to(c, { color: isEm ? ACCENT : INK, duration: 0.6 }, i);
+    window.addEventListener("astro:before-swap", () => {
+      gsap.ticker.remove(tick);
+      fillTl.kill();
     });
-    // La montagna emerge: mentre le lettere si riempiono, il velo radiale
-    // sul video si dirada — testo e fondale si "sviluppano" insieme.
-    const aboutVeil = document.querySelector<HTMLElement>("[data-about-veil]");
-    if (aboutVeil) {
-      tl.fromTo(
-        aboutVeil,
-        { opacity: 1 },
-        { opacity: 0.55, duration: chars.length },
-        0
-      );
-    }
-    // Coda: la frase resta piena e ferma prima dello sblocco (breve, così lo
-    // sblocco verso la sezione successiva arriva subito).
-    tl.to({}, { duration: chars.length * 0.06 });
   }
-}
-
-// ---------- Chi Siamo — kicker dell'intro ----------
-if (document.querySelector("[data-anim='about-kicker']")) {
-  gsap.fromTo(
-    "[data-anim='about-kicker']",
-    { opacity: 0, y: 14 },
-    {
-      opacity: 1,
-      y: 0,
-      duration: 0.8,
-      ease: "power2.out",
-      scrollTrigger: { trigger: ".about-intro", start: "top 70%", once: true },
-    }
-  );
 }
 
 // ---------- Chi Siamo — fondale video Sciliar ----------
 // Il bianco e nero e la fusione col canvas sono CSS (filter + mask + velo);
-// qui solo la regia:
-//   • play/pause legati alla visibilità della sezione (batteria, decode);
-//   • lenta zoomata-out in scrub: la montagna parte più "vicina" e si
-//     assesta mentre la sezione attraversa il viewport.
+// qui solo la regia: il video gira SEMPRE in loop, senza legarlo allo scroll.
+// Niente più pausa alla visibilità (le chiamate play/pause incrociate lo
+// lasciavano fermo sul primo frame) e niente zoomata in scrub: la montagna
+// resta alla sua scala naturale, il movimento lo fa solo il video.
 // Con reduced motion il video resta fermo sul primo frame: un fondale
 // fotografico statico.
 const aboutVideo = document.querySelector<HTMLVideoElement>(
@@ -1156,32 +1421,18 @@ if (aboutVideo) {
   } else {
     // Ping-pong fluido: il file -boomerang contiene già andata + ritorno
     // concatenati, quindi basta il loop nativo (riproduzione liscia in
-    // entrambi i versi). Play/pause solo quando la sezione è a schermo.
-    ScrollTrigger.create({
-      trigger: "#chi-siamo",
-      start: "top bottom",
-      end: "bottom top",
-      onEnter: () => void aboutVideo.play(),
-      onEnterBack: () => void aboutVideo.play(),
-      onLeave: () => aboutVideo.pause(),
-      onLeaveBack: () => aboutVideo.pause(),
+    // entrambi i versi).
+    aboutVideo.loop = true;
+    const keepPlaying = () => {
+      if (aboutVideo.paused) void aboutVideo.play().catch(() => {});
+    };
+    keepPlaying();
+    aboutVideo.addEventListener("canplay", keepPlaying);
+    aboutVideo.addEventListener("pause", keepPlaying);
+    // Al ritorno sulla scheda alcuni browser lasciano il video in pausa.
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) keepPlaying();
     });
-
-    gsap.fromTo(
-      aboutVideo,
-      { scale: 1.16 },
-      {
-        scale: 1,
-        ease: "none",
-        transformOrigin: "center center",
-        scrollTrigger: {
-          trigger: "#chi-siamo",
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 1,
-        },
-      }
-    );
   }
 }
 
@@ -1213,6 +1464,119 @@ document.querySelectorAll<HTMLElement>(".about-chapter").forEach((ch) => {
     );
   }
 });
+
+// ---------- Progetti — il mazzo che si sparpaglia ----------
+// Le carte partono impilate al centro come un mazzo buttato sul tavolo e si
+// aprono verso le loro posizioni finali. Quelle posizioni le tiene già il CSS
+// (left/top in percentuale dello stage): qui si anima solo un OFFSET in
+// transform che le riporta al centro e poi torna a zero — nessun ricalcolo di
+// layout per frame, tutto sul compositor. Mentre le carte se ne vanno, il
+// titolo che stava sotto entra in dissolvenza.
+//
+// La scena si RIARMA: appena il mazzo esce dallo schermo (in su o in giù) le
+// carte tornano impilate, così ripassando la sezione l'apertura si rivede da
+// capo. Il riarmo avviene solo fuori dal viewport, quindi non si vede mai.
+const deck = document.querySelector<HTMLElement>("[data-deck]");
+if (deck) {
+  const deckCards = gsap.utils.toArray<HTMLElement>("[data-deck-card]", deck);
+  const deckCopy = deck.querySelector<HTMLElement>("[data-deck-copy]");
+  const num = (v: string | undefined) => Number(v ?? 0);
+  // Rotazione a mazzo aperto: sta nella var CSS --r, unica fonte con le
+  // posizioni finali (il fallback senza JS usa la stessa).
+  const finalRotation = (card: HTMLElement) =>
+    parseFloat(getComputedStyle(card).getPropertyValue("--r")) || 0;
+
+  if (reduceMotion || !deckCards.length) {
+    // Niente animazione: il CSS di base è già lo stato sparpagliato.
+    deck.classList.remove("is-js");
+  } else {
+    // Stato MAZZO — l'offset che riporta ogni carta al centro dello stage si
+    // MISURA (posa CSS → centro stage), non si ricalcola: così le posizioni
+    // finali restano una cosa sola del CSS e qualsiasi media query funziona
+    // senza duplicare qui la matematica.
+    let opened = false;
+    const stackCards = () => {
+      gsap.set(deckCards, { clearProps: "transform" }); // torna alla posa CSS
+      const r = deck.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const offsets = deckCards.map((card) => {
+        const b = card.getBoundingClientRect();
+        return { x: cx - (b.left + b.width / 2), y: cy - (b.top + b.height / 2) };
+      });
+      deckCards.forEach((card, i) => {
+        const d = card.dataset;
+        gsap.set(card, {
+          xPercent: -50,
+          yPercent: -50,
+          x: offsets[i].x + num(d.dx),
+          y: offsets[i].y + num(d.dy),
+          rotation: num(d.dr),
+        });
+      });
+      // Il titolo dei Progetti resta sempre visibile (niente comparsa in
+      // home): le carte gli si aprono davanti, non lo accendono.
+      // Spegne la fluttuazione: da chiuse le carte devono stare ferme.
+      deck.classList.remove("is-open");
+      opened = false;
+    };
+
+    // Togliere .is-js e scrivere lo stato mazzo nello stesso blocco sincrono:
+    // il browser non dipinge in mezzo, quindi nessun lampo di carte già aperte.
+    deck.classList.remove("is-js");
+    stackCards();
+
+    // Finché il mazzo è chiuso l'offset dipende dalla dimensione dello stage:
+    // a mazzo aperto x/y valgono 0 e le posizioni le tiene il CSS, quindi non
+    // c'è più niente da ricalcolare.
+    window.addEventListener("resize", () => {
+      if (!opened) stackCards();
+    });
+
+    // A sparpagliamento finito le carte iniziano a fluttuare (@keyframes CSS,
+    // su un layer proprio: non tocca il transform che gestisce GSAP).
+    const deckTl = gsap.timeline({
+      paused: true,
+      onComplete: () => deck.classList.add("is-open"),
+    });
+    deckTl.to(deckCards, {
+      x: 0,
+      y: 0,
+      rotation: (_i, target: HTMLElement) => finalRotation(target),
+      duration: 1.35,
+      ease: "power3.out",
+      // Ordine sparso: il mazzo si sfalda, non si apre a ventaglio ordinato.
+      stagger: { each: 0.075, from: "random" },
+    });
+
+    // Il range è quello del MAZZO, non della sezione: agli estremi le carte
+    // sono già fuori dal viewport, quindi il rimescolamento resta invisibile
+    // sia scendendo sia risalendo.
+    ScrollTrigger.create({
+      trigger: deck,
+      start: "top 85%",
+      end: "bottom 15%",
+      onEnter: () => {
+        opened = true;
+        // invalidate: dopo un riarmo (o un resize) i valori di partenza sono
+        // cambiati, vanno riletti invece di riusare quelli del giro prima.
+        deckTl.invalidate().restart();
+      },
+      onEnterBack: () => {
+        opened = true;
+        deckTl.invalidate().restart();
+      },
+      onLeave: () => {
+        deckTl.pause(0);
+        stackCards();
+      },
+      onLeaveBack: () => {
+        deckTl.pause(0);
+        stackCards();
+      },
+    });
+  }
+}
 
 // ---------- Chi Siamo — i nomi del duo ----------
 // I nomi entrano dalla maschera parola per parola — stesso linguaggio dei
@@ -1292,32 +1656,9 @@ revealRise(".cta-panel", {
   duration: 1.1,
 });
 
-// Il titolo (contact-headline) non è più in questa lista: lo rivela il
-// reveal parola-per-parola qui sopra, che ha già trigger e delay propri.
-const ctaInner: { sel: string; delay: number; y?: number }[] = [
-  { sel: "[data-anim='contact-kicker']", delay: 0.2, y: 16 },
-  { sel: "[data-anim='contact-sub']", delay: 0.46, y: 20 },
-  { sel: "[data-anim='contact-cta']", delay: 0.58, y: 18 },
-];
-ctaInner.forEach(({ sel, delay, y = 16 }) => {
-  if (!document.querySelector(sel)) return;
-  gsap.fromTo(
-    sel,
-    { opacity: 0, y },
-    {
-      opacity: 1,
-      y: 0,
-      duration: 0.9,
-      ease: "power2.out",
-      delay,
-      scrollTrigger: {
-        trigger: "[data-anim='contact']",
-        start: "top 78%",
-        once: true,
-      },
-    }
-  );
-});
+// Il testo dentro al pannello (kicker, titolo, sottotitolo) NON ha comparse:
+// sale insieme al pannello ed è già leggibile. In home nessun titolo entra in
+// scena da solo — vedi `isHome` più sopra.
 
 // ---------- CTA /chi-siamo — reveal dell'invito (non più card) ----------
 {
@@ -1458,110 +1799,6 @@ if (
   }
 }
 
-// ---------- Progetti — stage MacBook Scroll (reimplementazione GSAP) ----------
-// Reimplementazione del componente Aceternity "MacBook Scroll": la sezione si
-// BLOCCA (pin) e lo scroll guida una timeline che (1) apre il coperchio
-// (rotateX) scalando il laptop, poi (2) fa avvicendare sullo schermo le slide
-// dei progetti — una attiva per volta (crossfade CSS) — fino alla scena CTA.
-// La parte continua (coperchio + scale) è scrubbata; l'indice attivo è discreto
-// e sincronizzato dall'onUpdate (idempotente → corretto anche scrollando su).
-// Le tab sotto il laptop indicano la fase e permettono il salto diretto
-// (lenis.scrollTo su desktop, switch immediato su mobile/touch).
-// Senza pin (mobile o reduced-motion): laptop aperto statico, tab = switch.
-{
-  // Stage MacBook 3D — il laptop è ora un modello glTF renderizzato in WebGL
-  // dall'isola React MacBook3D (client-only). main.ts NON tocca più il DOM del
-  // laptop (coperchio, slide, tastiera): resta l'UNICO driver di scroll
-  // (Lenis + ScrollTrigger) e pilota la scena tramite lo store globale
-  // window.__mbp, letto dall'isola:
-  //   • store.open  (0→1) = apertura del coperchio (letto in useFrame → rotazione)
-  //   • store.index (int) = slide attiva (→ window.__mbpApi.setIndex → React)
-  // Il numero di slide arriva da data-mbp-count sul wrapper statico (subito
-  // disponibile, prima ancora che l'isola idrati → niente race sul pin).
-  const mount = document.querySelector<HTMLElement>("[data-mbp-mount]");
-  const projectsSection = document.querySelector<HTMLElement>("#projects");
-  const slideCount = Math.max(
-    1,
-    parseInt(mount?.dataset.mbpCount ?? "0", 10) || 0
-  );
-
-  interface MbpStore {
-    open: number;
-    index: number;
-    count?: number;
-  }
-  const win = window as unknown as {
-    __mbp?: MbpStore;
-    __mbpApi?: { setIndex: (i: number) => void };
-    __mbpSeek?: (i: number) => void;
-  };
-
-  if (mount && projectsSection) {
-    const store: MbpStore = (win.__mbp ??= { open: 0, index: 0 });
-    store.count = slideCount;
-
-    const setIndex = (idx: number) => {
-      const i = Math.max(0, Math.min(slideCount - 1, idx));
-      if (store.index === i) return;
-      store.index = i;
-      win.__mbpApi?.setIndex(i); // idempotente lato isola
-    };
-
-    const canPin =
-      window.matchMedia("(min-width: 769px)").matches && !reduceMotion;
-
-    if (canPin) {
-      projectsSection.classList.add("is-pin-mode");
-      store.open = 0;
-      store.index = 0;
-
-      // Unità di timeline = "vh scrollati": mapping 1:1 con la distanza di pin.
-      const INTRO = 0.95; // apertura del coperchio (frazione iniziale)
-      const STEP = 1.1; // permanenza per progetto
-      const TAIL = 0.3; // coda finale sulla CTA (breve: niente scroll morto)
-      const total = INTRO + STEP * slideCount + TAIL;
-
-      const st = ScrollTrigger.create({
-        trigger: "#projects",
-        start: "top top",
-        end: () => "+=" + Math.round(window.innerHeight * total),
-        pin: true,
-        scrub: true,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        // CRITICO: questo pin sta TRA servizi (priority 3) e chi-siamo
-        // (priority 1). Deve ricalcolarsi PRIMA di chi-siamo, altrimenti il
-        // suo pin-spacer viene inserito dopo che le posizioni di chi-siamo
-        // sono già fissate → chi-siamo (video + testo) si sblocca troppo
-        // presto e si sovrappone al monitor. Priority 2 impone l'ordine
-        // corretto: servizi → progetti → chi-siamo.
-        refreshPriority: 2,
-        onUpdate: (self) => {
-          const time = self.progress * total;
-          // Apertura coperchio mappata sulla prima frazione (INTRO) dello scroll.
-          store.open = Math.max(0, Math.min(1, time / INTRO));
-          // Indice slide sul resto (discreto, idempotente → corretto anche su).
-          setIndex(Math.floor((time - INTRO) / STEP));
-        },
-      });
-
-      // Tab → salto diretto alla fase corrispondente (centro della slide).
-      // Esposto all'isola: al click di una tab chiama window.__mbpSeek(i).
-      win.__mbpSeek = (i: number) => {
-        const frac = (INTRO + STEP * i + STEP * 0.5) / total;
-        const y = st.start + (st.end - st.start) * frac;
-        lenis.scrollTo(y, { duration: 1.1 });
-      };
-    } else {
-      // Statico (mobile / reduced-motion): coperchio aperto, prima slide attiva.
-      // Lo switch via tab è gestito dall'isola stessa (fallback senza pin);
-      // qui niente __mbpSeek, così l'isola cambia slide immediatamente.
-      store.open = 1;
-      store.index = 0;
-    }
-  }
-}
-
 // ---------- Pagina /chi-siamo ----------
 // Le coreografie condivise (glow, capitoli, tilt founder, outro, CTA,
 // footer) si agganciano da sole alle stesse classi; qui vive solo ciò che
@@ -1585,30 +1822,20 @@ if (aboutPage) {
     );
   });
 
-  // Hero — entrata del palco robot: dissolvenza + risalita morbida, un filo
-  // dopo il titolo (il canvas dentro sfuma poi da solo all'onLoad della
-  // scena Spline — due tempi che si compongono senza conflitto).
-  if (aboutPage.querySelector(".ap-hero-robot")) {
-    gsap.fromTo(
-      ".ap-hero-robot",
-      { opacity: 0, y: 30 },
-      { opacity: 1, y: 0, duration: 1.2, ease: "power2.out", delay: 0.7 }
-    );
-  }
-
   // Hero — parallax editoriale in scrub: uscendo dalla hero il blocco
-  // tipografico sale un filo più veloce della pagina mentre il robot resta
-  // leggermente indietro (yPercent positivo dentro l'inner che sale) →
-  // profondità tra copy e scena 3D. Solo transform, costo nullo.
+  // tipografico sale un filo più veloce della pagina → profondità rispetto
+  // all'aurora di fondo. Solo transform, costo nullo.
   if (!reduceMotion && aboutPage.querySelector(".ap-hero")) {
-    const heroScrub = {
-      trigger: ".ap-hero",
-      start: "top top",
-      end: "bottom top",
-      scrub: true,
-    };
-    gsap.to(".ap-hero-inner", { yPercent: -9, ease: "none", scrollTrigger: { ...heroScrub } });
-    gsap.to(".ap-hero-robot", { yPercent: 8, ease: "none", scrollTrigger: { ...heroScrub } });
+    gsap.to(".ap-hero-inner", {
+      yPercent: -9,
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".ap-hero",
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+      },
+    });
   }
 
   // Duo — ogni riga è una scena indipendente: il badge cala dall'alto come da

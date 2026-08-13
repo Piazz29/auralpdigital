@@ -9,7 +9,6 @@ import Navbar from "../Navbar.astro";
 import Footer from "../Footer.astro";
 import Rich from "../Rich.astro";
 import BlurText from "../reactbits/BlurText.jsx";
-import InteractiveRobotSpline from "../reactbits/InteractiveRobotSpline.jsx";
 import HangBadge from "../HangBadge.astro";
 import FlowCardSwap from "../reactbits/FlowCardSwap.jsx";
 import JourneyPath from "../reactbits/JourneyPath.jsx";
@@ -22,9 +21,6 @@ interface Props {
 const { lang = defaultLang } = Astro.props;
 const t = getDict(lang);
 const ta = t.about;
-
-// Scena Spline del robot interattivo della hero (hostata da Spline).
-const ROBOT_SCENE = "https://prod.spline.design/PyzDhpQ9E5f1E3MT/scene.splinecode";
 
 // Hero — il titolo usa la sintassi "Normale *accento*" con "\n" come a-capo
 // ESPLICITO: ogni riga del dizionario è una riga tipografica (nowrap, mai
@@ -106,50 +102,32 @@ const journeyArt: Record<string, string> = {
   <Navbar lang={lang} route="/chi-siamo" />
 
   <main class="aboutpage">
-    <!-- HERO — split 2 colonne "one-shot": copy editoriale a sinistra, robot
-         Spline interattivo a destra, tutto dentro esattamente un viewport
-         (100svh, overflow clip). -->
+    <!-- HERO — colonna editoriale "one-shot": titolo, sub e CTA dentro
+         esattamente un viewport (100svh, overflow clip). Lo spazio negativo
+         lo tiene l'aurora di fondo, nessun asset 3D. -->
     <section class="ap-hero ap-hero--split">
       <div class="ap-hero-aurora" aria-hidden="true"></div>
 
       <div class="ap-hero-inner">
-        <div class="ap-hero-grid">
-          <div class="ap-hero-copy">
-            <!-- opacity:0 inline = anti-flash (stesso pattern di badge/sub):
-                 la riespone l'island HeroProximityTitle quando parte la
-                 cascata split-text delle lettere (o subito, con
-                 reduced-motion). -->
-            <h1 class="ap-hero-title font-display" style="opacity: 0;">
-              <HeroProximityTitle client:load parts={heroTitleParts} radius={140} />
-            </h1>
+        <div class="ap-hero-copy">
+          <!-- opacity:0 inline = anti-flash (stesso pattern di badge/sub):
+               la riespone l'island HeroProximityTitle quando parte la
+               cascata split-text delle lettere (o subito, con
+               reduced-motion). -->
+          <h1 class="ap-hero-title font-display" style="opacity: 0;">
+            <HeroProximityTitle client:load parts={heroTitleParts} radius={140} />
+          </h1>
 
-            <p class="ap-hero-sub" style="opacity: 0;">
-              {ta.hero.sub}
-            </p>
+          <p class="ap-hero-sub" style="opacity: 0;">
+            {ta.hero.sub}
+          </p>
 
-            <div class="ap-hero-cta" style="opacity: 0;">
-              <a href="#contatti" class="about-cta-btn ap-hero-btn magnetic">
-                {ta.hero.cta} <span aria-hidden="true">↗</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Il robot vive in un "palco" a colonna: glow azzurro dietro,
-               canvas Spline dentro. Interattivo col mouse su desktop; su
-               touch il canvas è pointer-events:none (via CSS) così non ruba
-               lo scroll. L'altezza è fissa → nessun layout shift quando la
-               scena arriva. -->
-          <div class="ap-hero-robot" style="opacity: 0;">
-            <InteractiveRobotSpline
-              client:only="react"
-              scene={ROBOT_SCENE}
-              label={ta.hero.robotAlt}
-              hidden={["Plane"]}
-              cameraOffsetY={-15}
-            />
+          <div class="ap-hero-cta" style="opacity: 0;">
+            <a href="#contatti" class="about-cta-btn ap-hero-btn magnetic">
+              {ta.hero.cta} <span aria-hidden="true">↗</span>
+            </a>
           </div>
         </div>
-
       </div>
     </section>
 
