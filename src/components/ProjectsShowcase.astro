@@ -1,52 +1,74 @@
 ---
 // ProjectsShowcase — sezione Progetti, versione "mazzo di carte".
 //
-// Sette carte con le proporzioni di una carta da gioco (5:7) partono impilate
-// al centro come un mazzo buttato sul tavolo — intero, ma con le carte storte
-// una sopra l'altra. Quando la sezione entra in vista si sparpagliano sullo
-// schermo con un movimento morbido, scoprendo il titolo che stava sotto di
-// loro; poi restano a fluttuare piano e reagiscono al passaggio del mouse.
+// Quattro carte GRANDI, in formato orizzontale 4:3 (la proporzione giusta per
+// gli screenshot dei siti), partono impilate al centro come un mazzo buttato
+// sul tavolo. Quando la sezione entra in vista si aprono verso i quattro
+// angoli della scena, scoprendo il titolo che stava sotto, e riempiono lo
+// spazio attorno a lui; poi restano a fluttuare piano.
 //
-// Le carte sono VUOTE: sono i contenitori dei mock dei progetti, che
-// arriveranno dopo. Niente aloni né ombre di scena: sotto c'è il warm white
-// nudo della pagina.
+// HOVER: la carta si ingrandisce appena, sul posto, e si stacca dal tavolo
+// (ombra più profonda). Tutto CSS, solo transform + opacity.
+//
+// CONTENUTO: le prime due carte sono i siti online (screenshot della home,
+// link al sito vero); la terza è lo slot vuoto "+ crea il tuo progetto", che
+// porta al form contatti; la quarta è il "coming soon" (wireframe di un sito
+// in costruzione, sul navy).
 //
 // Geometria: ogni carta porta la sua posizione FINALE in frazioni dello stage
-// (0 = centro, ±0.5 = bordo). Due set, perché su uno schermo stretto un anello
-// tondo finirebbe addosso al titolo:
-//   --x-d / --y-d  desktop (anello largo attorno al testo)
-//   --x-m / --y-m  mobile  (tre carte sopra, quattro sotto, testo nel mezzo)
+// (0 = centro, ±0.5 = bordo). Due set:
+//   --x-d / --y-d  desktop (una carta per angolo, titolo al centro)
+//   --x-m / --y-m  mobile  (due sopra, due sotto, titolo nel mezzo)
 // A scegliere il set è il CSS (media query in global.css), non questo file.
 // Lo stato sparpagliato è quindi quello di base: regge anche senza JS.
 //
 // dx/dy/dr = lo "scompiglio" del mazzo chiuso: pochi px di sfalsamento e
 // qualche grado di rotazione, così la pila non sembra un blocco perfetto.
-// L'animazione (src/scripts/main.ts) misura da sé quanto serve per riportare
-// ogni carta al centro, quindi qui non c'è matematica duplicata.
+
+import { Picture } from "astro:assets";
+import alessiaShot from "../assets/projects/alessiapmu.png";
+import dimitriShot from "../assets/projects/dimitricavazzana.png";
 
 interface Props {
-  /** Titolo nero al centro, tradotto. */
-  title: string;
-  /** Riga piccola sotto il titolo. */
-  sub: string;
+  /** Testi della sezione, tradotti (t.home.projects). */
+  copy: {
+    title: string;
+    sub: string;
+    soon: string;
+    soonSub: string;
+    create: string;
+    visit: string;
+  };
 }
 
-const { title, sub } = Astro.props;
+const { copy } = Astro.props;
+const { title, sub } = copy;
 
-// Valori spaziati a mano: sembrano casuali, ma nessuna carta cade nella fascia
-// centrale occupata dal testo e nessuna esce dai bordi dello stage.
+// Cosa c'è su ogni carta, nello stesso ordine delle posizioni qui sotto
+// (alto-sx, alto-dx, basso-dx, basso-sx).
+type Content =
+  | { kind: "site"; img: ImageMetadata; name: string; url: string }
+  | { kind: "soon" }
+  | { kind: "create" };
+const contents: Content[] = [
+  { kind: "site", img: alessiaShot, name: "Alessia PMU", url: "https://www.alessiapmu.de/" },
+  { kind: "site", img: dimitriShot, name: "Dimitri Cavazzana", url: "https://www.dimitricavazzana.com/" },
+  { kind: "create" },
+  { kind: "soon" },
+];
+const domain = (url: string) => url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+
+// Una carta per angolo: abbastanza lontane dal centro da lasciare libero il
+// titolo, abbastanza grandi (vedi --card in global.css) da riempire la scena.
 //
 // fy/fr/fd/fdelay = la fluttuazione a mazzo aperto: di quanto respira la carta
 // (px e gradi), in quanto tempo e con che ritardo. Ampiezze e durate tutte
-// diverse così le sette carte non oscillano mai all'unisono.
+// diverse così le quattro carte non oscillano mai all'unisono.
 const cards = [
-  { x: -0.36, y: -0.28, mx: -0.27, my: -0.36, r: -7, dx: -8, dy: 6, dr: -6, fy: -9, fr: 1.1, fd: 6.4, fdelay: 0 },
-  { x: -0.06, y: -0.37, mx: 0.04, my: -0.4, r: 5, dx: 5, dy: -4, dr: 4, fy: 7, fr: -0.8, fd: 7.6, fdelay: 0.5 },
-  { x: 0.29, y: -0.29, mx: 0.29, my: -0.33, r: -4, dx: -3, dy: -8, dr: 9, fy: -6, fr: -1.3, fd: 5.6, fdelay: 1.1 },
-  { x: 0.4, y: 0.02, mx: -0.3, my: -0.19, r: 8, dx: 9, dy: 3, dr: -3, fy: 10, fr: 0.9, fd: 8.2, fdelay: 0.3 },
-  { x: 0.21, y: 0.31, mx: 0.3, my: 0.2, r: -6, dx: -6, dy: -2, dr: 7, fy: -8, fr: 1.4, fd: 6.9, fdelay: 0.9 },
-  { x: -0.13, y: 0.37, mx: -0.19, my: 0.36, r: 4, dx: 2, dy: 8, dr: -8, fy: 6, fr: -1.1, fd: 5.9, fdelay: 1.4 },
-  { x: -0.39, y: 0.09, mx: 0.14, my: 0.4, r: -9, dx: 7, dy: -6, dr: 2, fy: -7, fr: 0.7, fd: 7.2, fdelay: 0.7 },
+  { x: -0.33, y: -0.25, mx: -0.24, my: -0.31, r: -4, dx: -8, dy: 6, dr: -6, fy: -8, fr: 0.8, fd: 6.4, fdelay: 0 },
+  { x: 0.34, y: -0.27, mx: 0.25, my: -0.28, r: 3, dx: 5, dy: -4, dr: 4, fy: 7, fr: -0.6, fd: 7.6, fdelay: 0.5 },
+  { x: 0.32, y: 0.26, mx: 0.24, my: 0.31, r: -3, dx: -3, dy: -8, dr: 9, fy: -6, fr: -0.9, fd: 5.9, fdelay: 1.1 },
+  { x: -0.34, y: 0.27, mx: -0.25, my: 0.28, r: 4, dx: 9, dy: 3, dr: -3, fy: 8, fr: 0.7, fd: 8.2, fdelay: 0.3 },
 ];
 ---
 
@@ -59,25 +81,92 @@ const cards = [
 
   <div class="deck-cards">
     {
-      /* Tre livelli, uno per effetto — così nessuno si sovrascrive il transform:
+      /* Quattro livelli, uno per effetto — così nessuno si sovrascrive il
+         transform:
          .deck-card       posizione e apertura del mazzo (la muove GSAP)
          .deck-card-float fluttuazione a riposo (@keyframes CSS)
-         .deck-card-inner la carta vera: superficie, ombra, reazione all'hover.
-         I mock dei progetti vanno DENTRO .deck-card-inner. */
-      cards.map((c, i) => (
-        <article
-          class="deck-card"
-          data-deck-card
-          data-dx={c.dx}
-          data-dy={c.dy}
-          data-dr={c.dr}
-          style={`--x-d:${c.x}; --y-d:${c.y}; --x-m:${c.mx}; --y-m:${c.my}; --r:${c.r}deg; --dx:${c.dx}px; --dy:${c.dy}px; --dr:${c.dr}deg; --fy:${c.fy}px; --fr:${c.fr}deg; --fd:${c.fd}s; --fdelay:${c.fdelay}s; --z:${cards.length - i}`}
-        >
-          <div class="deck-card-float">
-            <div class="deck-card-inner" />
-          </div>
-        </article>
-      ))
+         .deck-card-lift  ingrandimento in hover (transition CSS) + ombra
+         .deck-card-inner la carta vera: superficie, bordo, contenuto. */
+      cards.map((c, i) => {
+        const content = contents[i];
+        // Le carte con una destinazione sono link; il "coming soon" no.
+        const Tag = content.kind === "soon" ? "article" : "a";
+        const link =
+          content.kind === "site"
+            ? { href: content.url, target: "_blank", rel: "noopener", "aria-label": `${content.name} — ${copy.visit}` }
+            : content.kind === "create"
+              ? { href: "#contatti" }
+              : {};
+        return (
+          <Tag
+            class={`deck-card deck-card--${content.kind}`}
+            data-deck-card
+            data-dx={c.dx}
+            data-dy={c.dy}
+            data-dr={c.dr}
+            style={`--x-d:${c.x}; --y-d:${c.y}; --x-m:${c.mx}; --y-m:${c.my}; --r:${c.r}deg; --dx:${c.dx}px; --dy:${c.dy}px; --dr:${c.dr}deg; --fy:${c.fy}px; --fr:${c.fr}deg; --fd:${c.fd}s; --fdelay:${c.fdelay}s; --z:${cards.length - i}`}
+            {...link}
+          >
+            <div class="deck-card-float">
+              <div class="deck-card-lift">
+                <div class="deck-card-inner">
+                  {content.kind === "site" && (
+                    <>
+                      <Picture
+                        src={content.img}
+                        alt=""
+                        formats={["avif", "webp"]}
+                        widths={[480, 720, 960]}
+                        sizes="(max-width: 768px) 44vw, 470px"
+                        loading="lazy"
+                        decoding="async"
+                        draggable="false"
+                        class="deck-shot"
+                      />
+                      <span class="deck-shot-tag" aria-hidden="true">
+                        {domain(content.url)}
+                        <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                          <path d="M3.5 8.5l5-5M4.5 3.5h4v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </span>
+                    </>
+                  )}
+                  {content.kind === "soon" && (
+                    <div class="deck-soon">
+                      {/* Un sito che si sta ancora disegnando: solo scheletri. */}
+                      <div class="deck-soon-site" aria-hidden="true">
+                        <span class="deck-soon-bar"><i /><i /><i /></span>
+                        <span class="deck-soon-sk deck-soon-sk--kicker" />
+                        <span class="deck-soon-sk deck-soon-sk--title" />
+                        <span class="deck-soon-sk deck-soon-sk--title deck-soon-sk--short" />
+                        <span class="deck-soon-sk deck-soon-sk--btn" />
+                        <span class="deck-soon-sk deck-soon-sk--media" />
+                      </div>
+                      <div class="deck-soon-copy">
+                        <span class="deck-soon-status">
+                          <span class="deck-soon-dot" aria-hidden="true" />
+                          {copy.soonSub}
+                        </span>
+                        <p class="deck-soon-title">{copy.soon}</p>
+                      </div>
+                    </div>
+                  )}
+                  {content.kind === "create" && (
+                    <div class="deck-create">
+                      <span class="deck-create-plus" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        </svg>
+                      </span>
+                      <span class="deck-create-label">{copy.create}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Tag>
+        );
+      })
     }
   </div>
 </div>

@@ -87,10 +87,10 @@ export default function SiteMenu({ home = false, lang = defaultLang, route = '/'
       displayItemNumbering
       socialsLabel={t.nav.socialsLabel}
       extraPanelContent={extraPanelContent}
-      colors={['#3B5BDB', '#1A2340']}
+      colors={['#2748A5', '#1C2B5F']}
       logoUrl="/logo/wordmark.svg"
       logoReversedUrl="/logo/wordmark-reversed.svg"
-      accentColor="#3B5BDB"
+      accentColor="#2748A5"
       menuButtonColor="#171310"
       openMenuButtonColor="#171310"
       changeMenuColorOnOpen={false}

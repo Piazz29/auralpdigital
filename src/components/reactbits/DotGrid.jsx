@@ -52,6 +52,13 @@ const DotGrid = ({
   const wrapperRef = useRef(null);
   const canvasRef = useRef(null);
   const dotsRef = useRef([]);
+  // Disegno ON DEMAND: il canvas è fisso a tutto schermo e prima veniva
+  // ridisegnato (tutti i punti) a ogni frame anche a mouse fermo. Ora il loop
+  // gira solo finché c'è qualcosa che si muove — mouse, click, rimbalzo dei
+  // punti — e poi si spegne da solo. `kick` richiede un frame, `wake` tiene
+  // vivo il loop per la durata di un'interazione (inerzia + ritorno elastico).
+  const awakeUntilRef = useRef(0);
+  const kickRef = useRef(() => {});
   const pointerRef = useRef({
     x: 0,
     y: 0,
@@ -120,12 +127,14 @@ const DotGrid = ({
     }
 
     dotsRef.current = dots;
+    // Ridimensionare il canvas lo svuota: va ridisegnato subito.
+    kickRef.current();
   }, [dotSize, gap]);
 
   useEffect(() => {
     if (!circlePath) return;
 
-    let rafId;
+    let rafId = 0;
     const proxSq = proximity * proximity;
 
     const draw = () => {
@@ -163,13 +172,25 @@ const DotGrid = ({
         ctx.fill(circlePath);
         ctx.restore();
       }
-
-      rafId = requestAnimationFrame(draw);
     };
 
-    draw();
+    const frame = () => {
+      rafId = 0;
+      draw();
+      if (performance.now() < awakeUntilRef.current) {
+        rafId = requestAnimationFrame(frame);
+      }
+    };
+    kickRef.current = () => {
+      if (!rafId) rafId = requestAnimationFrame(frame);
+    };
+    kickRef.current();
 
-    return () => cancelAnimationFrame(rafId);
+    return () => {
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+      kickRef.current = () => {};
+    };
   }, [proximity, baseColor, activeRgb, baseRgb, circlePath]);
 
   useEffect(() => {
@@ -192,6 +213,13 @@ const DotGrid = ({
 
   useEffect(() => {
     if (!interactive) return;
+
+    // Quanto resta vivo il loop dopo l'ultimo input: copre la spinta
+    // d'inerzia più il ritorno elastico dei punti.
+    const wake = () => {
+      awakeUntilRef.current = performance.now() + 4000 + returnDuration * 1000;
+      kickRef.current();
+    };
 
     const onMove = e => {
       const now = performance.now();
@@ -221,6 +249,7 @@ const DotGrid = ({
       const rect = canvasRef.current.getBoundingClientRect();
       pr.x = e.clientX - rect.left;
       pr.y = e.clientY - rect.top;
+      wake();
 
       for (const dot of dotsRef.current) {
         const dist = Math.hypot(dot.cx - pr.x, dot.cy - pr.y);
@@ -253,6 +282,7 @@ const DotGrid = ({
     };
 
     const onClick = e => {
+      wake();
       const rect = canvasRef.current.getBoundingClientRect();
       const cx = e.clientX - rect.left;
       const cy = e.clientY - rect.top;

@@ -26,7 +26,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import * as THREE from 'three';
-import StepAssets from './JourneyStepAssets.jsx';
+import StepAssets, { prewarm } from './JourneyStepAssets.jsx';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -55,7 +55,7 @@ const YAW_SMOOTH = 0.09; // smoothing dello yaw
 const STEP_PULSE = 0.05; // +scala sobria all'arrivo su uno step
 
 // --- Materiale blu glossy ------------------------------------------------
-const MAT_COLOR = '#3b5bdb';
+const MAT_COLOR = '#2748A5';
 const MAT_ROUGHNESS = 0.12;
 const MAT_METALNESS = 0.15;
 const MAT_CLEARCOAT = 1.0;
@@ -111,10 +111,6 @@ const STEP_PARAMS = [0.16, 0.43, 0.69, 0.95];
 // ---------------------------------------------------------------------------
 // Utility
 // ---------------------------------------------------------------------------
-const prefersReduced = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 function hasWebGL() {
   if (typeof window === 'undefined') return false;
   try {
@@ -140,7 +136,7 @@ function makeGlossyMaterial() {
     clearcoatRoughness: MAT_CLEARCOAT_ROUGHNESS,
     envMapIntensity: MAT_ENV_INTENSITY,
     sheen: 0.3,
-    sheenColor: new THREE.Color('#9db4ff'),
+    sheenColor: new THREE.Color('#A9B6CE'),
   });
 }
 
@@ -172,6 +168,10 @@ function ArrowModel(props) {
     wrap.scale.setScalar(TARGET_SIZE / maxDim);
     return wrap;
   }, [scene]);
+  // Materiale fisico (clearcoat + sheen): shader pesante, meglio compilarlo
+  // appena caricato che al primo frame in vista.
+  const { gl, camera, scene: rootScene } = useThree();
+  useEffect(() => prewarm(gl, prepared, camera, rootScene), [gl, camera, rootScene, prepared]);
   return <primitive object={prepared} {...props} />;
 }
 
@@ -193,7 +193,7 @@ function PlaceholderArrow(props) {
       <mesh position={[0, -0.35, 0]}>
         <cylinderGeometry args={[0.16, 0.16, 1, 24]} />
         <meshPhysicalMaterial
-          color="#1a2340"
+          color="#1C2B5F"
           metalness={0.2}
           roughness={0.4}
           clearcoat={0.6}
@@ -237,7 +237,7 @@ function StudioEnv() {
       <Lightformer
         form="rect"
         intensity={1.4}
-        color="#9db4ff"
+        color="#A9B6CE"
         position={[-4, 1, 1]}
         scale={[5, 8, 1]}
       />
@@ -283,7 +283,7 @@ function PathLine({ curve, progressRef }) {
     const fullObj = new THREE.Line(
       fullGeometry,
       new THREE.LineBasicMaterial({
-        color: '#3b5bdb',
+        color: '#2748A5',
         transparent: true,
         opacity: 0.13,
       })
@@ -291,7 +291,7 @@ function PathLine({ curve, progressRef }) {
     const growObj = new THREE.Line(
       growGeometry,
       new THREE.LineBasicMaterial({
-        color: '#3b5bdb',
+        color: '#2748A5',
         transparent: true,
         opacity: 0.62,
       })
@@ -328,6 +328,29 @@ function PathLine({ curve, progressRef }) {
 // Scena che scorre: trasla curva+linea+cursore in Y in sincrono col progress,
 // così il percorso (alto) scorre nel viewport e appare lungo e verticale.
 // ---------------------------------------------------------------------------
+// Il canvas non ha un suo requestAnimationFrame (frameloop "never"): disegna
+// dentro il ticker di GSAP, DOPO lenis.raf (registrato prima, in main.ts).
+// Così il 3D legge lo stesso progresso di scroll del testo nello stesso frame:
+// niente frame di ritardo tra percorso e pagina, niente tremolio. Fuori vista
+// il ticker si stacca e il canvas non costa nulla.
+function TickerDriver({ active }) {
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    if (!active) return;
+    let first = true;
+    const tick = (time) => {
+      const state = get();
+      // Alla ripresa niente delta enorme: si riparte da un frame normale.
+      if (first) state.clock.elapsedTime = time - 1 / 60;
+      first = false;
+      state.advance(time);
+    };
+    gsap.ticker.add(tick);
+    return () => gsap.ticker.remove(tick);
+  }, [active, get]);
+  return null;
+}
+
 function JourneyScene({ progressRef, children }) {
   const g = useRef();
   useFrame(() => {
@@ -545,7 +568,7 @@ function Cursor({ curve, progressRef, mobile }) {
 // ---------------------------------------------------------------------------
 // Stage: canvas sticky + step nel flusso + ScrollTrigger scrub (niente pin).
 // ---------------------------------------------------------------------------
-function JourneyStage({ steps, mobile }) {
+function JourneyStage({ steps, mobile, webgl }) {
   const root = useRef(null);
   const viz = useRef(null);
   const stepsWrap = useRef(null);
@@ -653,27 +676,30 @@ function JourneyStage({ steps, mobile }) {
   return (
     <div className="ajx-root" ref={root}>
       <div className="ajx-viz" ref={viz}>
-        <Canvas
-          dpr={mobile ? [1, 1.5] : [1, 2]}
-          gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-          camera={{ position: [0, 0, 6.5], fov: 40 }}
-          frameloop={inView ? 'always' : 'never'}
-        >
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[3, 4, 5]} intensity={1.1} />
-          <directionalLight position={[-4, -2, 2]} intensity={0.4} color="#3b5bdb" />
-          <StudioEnv />
-          <JourneyScene progressRef={progressRef}>
-            <PathLine curve={curve} progressRef={progressRef} />
-            <Cursor curve={curve} progressRef={progressRef} mobile={mobile} />
-            <StepAssets
-              progressRef={progressRef}
-              stepParams={STEP_PARAMS}
-              anchorsRef={anchorsRef}
-              mobile={mobile}
-            />
-          </JourneyScene>
-        </Canvas>
+        {webgl && (
+          <Canvas
+            dpr={mobile ? [1, 1.5] : [1, 2]}
+            gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+            camera={{ position: [0, 0, 6.5], fov: 40 }}
+            frameloop="never"
+          >
+            <ambientLight intensity={0.6} />
+            <directionalLight position={[3, 4, 5]} intensity={1.1} />
+            <directionalLight position={[-4, -2, 2]} intensity={0.4} color="#2748A5" />
+            <TickerDriver active={inView} />
+            <StudioEnv />
+            <JourneyScene progressRef={progressRef}>
+              <PathLine curve={curve} progressRef={progressRef} />
+              <Cursor curve={curve} progressRef={progressRef} mobile={mobile} />
+              <StepAssets
+                progressRef={progressRef}
+                stepParams={STEP_PARAMS}
+                anchorsRef={anchorsRef}
+                mobile={mobile}
+              />
+            </JourneyScene>
+          </Canvas>
+        )}
       </div>
 
       <div className="ajx-steps" ref={stepsWrap}>
@@ -719,20 +745,16 @@ function JourneyStage({ steps, mobile }) {
 }
 
 // ---------------------------------------------------------------------------
-// Entry: decide se attivare l'esperienza 3D. Se non idoneo (no WebGL o
-// reduced-motion) resta la timeline statica (fallback in AboutPage).
+// Entry: le tappe sono sempre renderizzate (anche lato server → testo e altezza
+// della sezione presenti da subito); il canvas 3D si monta dopo l'idratazione,
+// se il browser ha WebGL.
 // ---------------------------------------------------------------------------
 export default function JourneyPath({ steps = [] }) {
-  const [mode, setMode] = useState('idle'); // idle | on | off
+  const [webgl, setWebgl] = useState(false);
   const [mobile, setMobile] = useState(false);
-  const holder = useRef(null);
 
   useEffect(() => {
-    const eligible = hasWebGL() && !prefersReduced();
-    setMode(eligible ? 'on' : 'off');
-
-    const section = holder.current?.closest('.ap-journey-3d');
-    if (section && eligible) section.classList.add('ap-journey-3d--on');
+    setWebgl(hasWebGL());
 
     // `mobile` REATTIVO: la curva (STATIONS_MOBILE/DESKTOP) e la scala del cursore
     // dipendono dal breakpoint. Letto una sola volta al mount, restava sbagliato
@@ -743,20 +765,12 @@ export default function JourneyPath({ steps = [] }) {
     const sync = () => setMobile(mq.matches);
     sync();
     mq.addEventListener('change', sync);
-
-    return () => {
-      mq.removeEventListener('change', sync);
-      if (section) section.classList.remove('ap-journey-3d--on');
-    };
+    return () => mq.removeEventListener('change', sync);
   }, []);
 
-  if (mode !== 'on') {
-    return <div ref={holder} className="ajx-holder" aria-hidden="true" />;
-  }
-
   return (
-    <div ref={holder} className="ajx-holder">
-      <JourneyStage steps={steps} mobile={mobile} />
+    <div className="ajx-holder">
+      <JourneyStage steps={steps} mobile={mobile} webgl={webgl} />
     </div>
   );
 }

@@ -9,11 +9,12 @@ import { defaultLang, getDict } from "../../i18n";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Navbar from "../Navbar.astro";
 import Footer from "../Footer.astro";
-import ContainerScroll from "../ContainerScroll.astro";
 import ContactForm from "../ContactForm.astro";
 import Rich from "../Rich.astro";
 import ServicesSwap from "../ServicesSwap.astro";
 import ProjectsShowcase from "../ProjectsShowcase.astro";
+import { Picture } from "astro:assets";
+import sciliarBw from "../../assets/point/sciliar-bw.png";
 import "../../styles/global.css";
 
 interface Props {
@@ -23,9 +24,9 @@ const { lang = defaultLang } = Astro.props;
 const t = getDict(lang);
 
 // SERVIZI — la sezione è stata rifatta da zero (ServicesSwap): card e
-// descrizione che si scambiano di posto, senza titolo di sezione. I contenuti
-// sono ancora SEGNAPOSTO dentro al componente; quando il design sarà chiuso
-// torneranno dal dizionario (`t.home.services.items`) come le altre sezioni.
+// descrizione che si scambiano di posto, senza titolo di sezione. Titoli e
+// descrizioni vengono dal dizionario (`t.home.services`); le immagini sono
+// ancora segnaposto.
 ---
 
 <BaseLayout lang={lang} title={t.meta.home.title} description={t.meta.home.description}>
@@ -42,7 +43,7 @@ const t = getDict(lang);
       class="hero-video absolute inset-0 w-full h-full object-cover"
       style="opacity: 0;"
     >
-      <source src="/videos/hf_20260530_204233_c0117512-9162-41ec-a063-b269b29ab4e7.mp4" type="video/mp4" />
+      <source src="/videos/hero.mp4" type="video/mp4" />
     </video>
 
     <!-- Layer 1 — overlay caldo: scalda il grigio freddo del video verso il warm white -->
@@ -62,7 +63,7 @@ const t = getDict(lang);
       <span class="deco deco--star deco-amber deco-float-2" style="right: 19%; bottom: 30%;">✦</span>
     </div>
 
-    <div data-anim="hero-content" class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center" style="background: radial-gradient(ellipse 50% 38% at 50% 50%, rgba(252, 250, 246, 0.85) 0%, rgba(252, 250, 246, 0.7) 35%, rgba(252, 250, 246, 0.35) 65%, transparent 90%);">
+    <div data-anim="hero-content" class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center" style="background: radial-gradient(ellipse 50% 38% at 50% 50%, rgba(254, 253, 236, 0.72) 0%, rgba(254, 253, 236, 0.55) 35%, rgba(254, 253, 236, 0.22) 65%, transparent 90%);">
       <span
         data-anim="hero-label"
         class="hero-badge text-[11px] font-medium tracking-[0.15em] uppercase"
@@ -73,7 +74,7 @@ const t = getDict(lang);
 
       <h1
         class="font-display font-medium text-[#171310] mt-6"
-        style="font-size: clamp(38px, 5vw, 80px); line-height: 0.98; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);"
+        style="font-size: clamp(38px, 5vw, 80px); line-height: 0.98; text-shadow: 0 0 18px rgba(254, 253, 236, 0.75), 0 0 42px rgba(254, 253, 236, 0.5);"
       >
         <span data-anim="hero-line-1" class="block" style="opacity: 0;">{t.home.hero.l1}</span>
         <span data-anim="hero-line-2" class="block" style="opacity: 0;"><Rich text={t.home.hero.l2} /></span>
@@ -83,7 +84,7 @@ const t = getDict(lang);
       <p
         data-anim="hero-subline"
         class="mt-5 text-[14px] tracking-[0.04em] text-[#544C40]"
-        style="opacity: 0; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);"
+        style="opacity: 0; text-shadow: 0 0 12px rgba(254, 253, 236, 0.9);"
       >
         {t.home.hero.sub}
       </p>
@@ -112,36 +113,39 @@ const t = getDict(lang);
   <!-- CONTENUTO — flusso normale -->
   <div class="post-reveal relative z-10" data-home>
 
-  <!-- SECTION — CHI SIAMO (teaser) -->
-  <section id="chi-siamo" class="about-section">
-    <!-- Fondale e testo sono due strati INDIPENDENTI: scorrono a velocità
-         diverse (il video più lento della frase, che quindi ci scivola sopra)
-         e compaiono sfalsati mentre la hero esce — prima la montagna, poco
-         dopo il testo. I bordi del fondale sfumano in gradiente lungo, così
-         la sezione nasce e muore dentro il colore della pagina. -->
-    <div class="about-media" aria-hidden="true">
-      <video
-        class="about-video"
-        data-about-video
-        autoplay
-        muted
-        loop
-        playsinline
-        preload="metadata"
-      >
-        <source src="/videos/sciliar-boomerang.mp4" type="video/mp4" />
-      </video>
-    </div>
+  <!-- SECTION — IL PUNTO: problema → svolta, subito dopo la hero.
+       Fondale e testo centrato scorrono insieme con la pagina: scorrendo
+       dalla hero il fondale compare in dissolvenza, il testo compare e si
+       accende mentre scorre (prima il problema, poi la svolta), poi la scena
+       svanisce mentre arrivano i Servizi. Regia in main.ts. -->
+  <section id="il-punto" class="point-scene" data-point-scene>
+    <div class="point-stage" data-point-stage>
+      <!-- Fondale: foto statica dello Sciliar in B/N (fotogramma 2560×1440
+           dall'originale, src/assets/point). Astro genera AVIF/WebP a più
+           larghezze; `sizes` è la larghezza reale a schermo: il blocco è alto
+           160vh, quindi una foto 16:9 in cover è larga max(100vw, 160vh × 16/9). -->
+      <div class="point-bg" aria-hidden="true">
+        <Picture
+          src={sciliarBw}
+          formats={["avif", "webp"]}
+          widths={[1280, 1920, 2560]}
+          sizes="max(100vw, 285vh)"
+          quality={82}
+          fallbackFormat="jpg"
+          alt=""
+          loading="eager"
+          decoding="async"
+        />
+      </div>
 
-    <!-- Saldatura: alone caldo centrato sulla giunzione con la hero, che sfuma
-         sia verso l'alto sia verso il basso. È il gradiente che separa (e
-         insieme fonde) le due sezioni: sta sopra il video ma sotto il testo. -->
-    <div class="about-seam" aria-hidden="true"></div>
-
-    <div class="about-intro about-content">
-      <p class="about-statement font-display" data-about-statement>
-        <Rich text={t.home.aboutTeaser.statement} />
-      </p>
+      <div class="point-copy" data-point-copy>
+        <p class="point-pain font-display" data-point-pain>
+          <Rich text={t.home.point.pain} />
+        </p>
+        <p class="point-turn font-display" data-point-turn>
+          <Rich text={t.home.point.turn} />
+        </p>
+      </div>
     </div>
   </section>
 
@@ -153,39 +157,36 @@ const t = getDict(lang);
     <div class="works-screen">
       <!-- Palco a scambio: card e descrizione si scambiano di posto a ogni
            scena, con la cornice che scopre il pannello durante il viaggio. -->
-      <ServicesSwap />
+      <ServicesSwap lang={lang} />
     </div>
   </section>
 
   <!-- SECTION — PROGETTI
-       Mazzo di 7 carte quadrate impilate al centro che si sparpagliano sullo
-       schermo scoprendo il titolo. Carte ancora vuote: sono i contenitori dei
-       mock dei progetti. -->
+       Mazzo di 4 carte impilate al centro che si sparpagliano sullo schermo
+       scoprendo il titolo: due siti online, un "coming soon" e lo slot
+       "+ crea il tuo progetto". -->
   <section id="projects" class="projects-section">
-    <ProjectsShowcase title={t.home.projects.title} sub={t.home.projects.sub} />
+    <ProjectsShowcase copy={t.home.projects} />
   </section>
 
-  <!-- SEPARATORE -->
-  <hr class="section-rule" aria-hidden="true" />
-
-  <!-- SECTION — CTA FINALE -->
-  <section id="contatti" class="contact-section" data-anim="contact">
-    <ContainerScroll>
-      <!-- Testo statico: in home nessun titolo entra in scena da solo, sale
-           soltanto il pannello che lo contiene. -->
-      <div slot="title" class="cscroll-title">
-        <span class="works-kicker cscroll-kicker">{t.home.contact.kicker}</span>
-        <h2 class="cta-title cscroll-headline">
+  <!-- FINALE — contatti e footer sono un blocco solo: un foglio navy che
+       sale sulla carta. In alto l'invito + il form a passi, sotto il footer
+       e, a chiudere la pagina, il wordmark gigante che emerge dal fondo. -->
+  <div class="finale">
+    <section id="contatti" class="finale-contact" data-anim="contact">
+      <header class="finale-head">
+        <span class="works-kicker finale-kicker">{t.home.contact.kicker}</span>
+        <h2 class="finale-title">
           <Rich text={t.home.contact.headline} />
         </h2>
-        <p class="cta-sub cscroll-sub">{t.home.contact.sub}</p>
-      </div>
+        <p class="finale-sub">{t.home.contact.sub}</p>
+      </header>
 
       <ContactForm lang={lang} />
-    </ContainerScroll>
-  </section>
+    </section>
 
-  <Footer home lang={lang} />
+    <Footer home lang={lang} />
+  </div>
 
   </div>
   <!-- /post-reveal -->

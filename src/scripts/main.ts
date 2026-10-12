@@ -3,6 +3,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Draggable } from "gsap/Draggable";
 import { SplitText } from "gsap/SplitText";
+import { initContactFlow } from "./contactFlow";
 
 gsap.registerPlugin(ScrollTrigger, Draggable, SplitText);
 
@@ -30,13 +31,15 @@ const SCRUB_LERP = 1 - Math.exp(-1 / (60 * (SCRUB / 2)));
 
 // ---------- Lenis smooth scroll ----------
 const lenis = new Lenis({
-  // Durata più lunga + easing expo con coda lunga: quando si smette di
-  // scrollare la pagina DECELERA dolcemente fino a fermarsi, invece di
-  // bloccarsi di colpo. Vale anche dentro le sezioni pinnate, dove lo scroll
-  // continua ad avanzare la timeline mentre rallenta → la scena "si posa"
-  // invece di scattare allo stop.
-  duration: 1.5,
-  easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+  // Modalità LERP (smorzamento esponenziale), NON `duration` fissa: con una
+  // durata fissa un colpo di rotella veloce copre molta strada nello stesso
+  // tempo → velocità alta, sembra non ammortizzato; lo scroll lento invece sì.
+  // Col lerp ogni frame recupera la stessa FRAZIONE della distanza residua:
+  // l'ammortizzamento è identico a qualunque velocità e la pagina DECELERA
+  // sempre dolcemente fino a fermarsi, anche dentro le sezioni pinnate.
+  // (Gli scroll programmati — ancore, cambi scena dei Servizi — passano una
+  // `duration` esplicita a scrollTo e restano a tempo.)
+  lerp: 0.075,
   smoothWheel: true,
 });
 
@@ -67,6 +70,18 @@ const lockedScrollTo = (
   lenis.scrollTo(target, { duration, lock: true, force: true, ...extra });
 };
 
+// ---------- Viaggi programmati che ATTRAVERSANO le sezioni ----------
+// Un salto verso un'ancora (CTA della hero, voci del menu) passa sopra alla
+// sezione pinnata dei Servizi, che all'ingresso "atterra" e si riprende lo
+// scroll: il viaggio si fermava lì (il CTA "Esplora il nostro lavoro"
+// arrivava sui Servizi invece che sui Progetti). Finché questa scadenza non
+// è passata, le sezioni a scatti si lasciano attraversare.
+let travelUntil = 0;
+const isTravelling = () => performance.now() < travelUntil;
+const travelFor = (seconds: number) => {
+  travelUntil = performance.now() + seconds * 1000 + 250;
+};
+
 gsap.ticker.add((time) => {
   lenis.raf(time * 1000);
   if (lenis.isLocked && performance.now() > lockedUntil) lenis.isLocked = false;
@@ -76,24 +91,35 @@ gsap.ticker.lagSmoothing(0);
 // ---------- Anchor links → scroll fluido via Lenis ----------
 // Senza intercettazione i link #ancora saltano di colpo; qui usano la stessa
 // easing dello smooth scroll, così la navigazione sembra un'unica gestualità.
-document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
-  a.addEventListener("click", (e) => {
-    const href = a.getAttribute("href");
-    if (!href || href === "#") return;
-    const target = document.querySelector<HTMLElement>(href);
-    if (!target) return;
-    e.preventDefault();
-    // Salto dalla hero verso i progetti: deve essere diretto, non un lento
-    // crawl che attraversa (e "accende" in modo brutto) la sezione servizi
-    // pinnata. Scroll breve e bloccato → arriva netto all'inizio dei progetti,
-    // l'offset resta corretto perché il pin-spacer è già nel DOM.
-    const isHeroToProjects = href === "#projects" && !!a.closest(".hero-section");
-    if (isHeroToProjects) {
-      lockedScrollTo(target, 0.7);
-    } else {
-      lenis.scrollTo(target, { duration: 1.5 });
-    }
-  });
+// Delegato sul documento (non agganciato link per link al caricamento): le
+// voci del menu sono un'isola React idratata DOPO questo script, e prima
+// sfuggivano — finivano nello scroll nativo del browser, che attraversando
+// i Servizi pinnati veniva catturato lì. Vale per "#id" e per "/#id" quando
+// punta alla pagina in cui si è già.
+document.addEventListener("click", (e) => {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  const a = (e.target as Element | null)?.closest?.<HTMLAnchorElement>("a[href*='#']");
+  if (!a) return;
+  const url = new URL(a.href, location.href);
+  const samePage =
+    url.origin === location.origin &&
+    url.pathname.replace(/\/$/, "") === location.pathname.replace(/\/$/, "");
+  if (!samePage || !url.hash || url.hash === "#") return;
+  const target = document.getElementById(decodeURIComponent(url.hash.slice(1)));
+  if (!target) return;
+  e.preventDefault();
+  // Salto dalla hero verso i progetti: deve essere diretto, non un lento
+  // crawl che attraversa (e "accende" in modo brutto) la sezione servizi
+  // pinnata. Scroll breve e bloccato → arriva netto all'inizio dei progetti,
+  // l'offset resta corretto perché il pin-spacer è già nel DOM.
+  const isHeroToProjects = url.hash === "#projects" && !!a.closest(".hero-section");
+  if (isHeroToProjects) {
+    travelFor(0.7);
+    lockedScrollTo(target, 0.7);
+  } else {
+    travelFor(1.5);
+    lenis.scrollTo(target, { duration: 1.5 });
+  }
 });
 
 // ---------- Scroll progress bar ----------
@@ -107,28 +133,13 @@ if (scrollFill) {
   });
 }
 
-// ---------- Navbar blur fade-in on scroll ----------
-// blur e opacity crescono insieme sui primi 150px di scroll:
-// zero blur → blur(20px), opacity 0 → 1. Nessuno stacco.
-const navBluBg = document.querySelector<HTMLElement>(".nav-blur-bg");
-if (navBluBg) {
-  const s = navBluBg.style as CSSStyleDeclaration & { webkitBackdropFilter: string };
-  // Riscrivere il backdrop-filter a OGNI frame di scroll è costosissimo (il
-  // blur viene ri-rasterizzato). Il valore però cambia solo nei primi 150px:
-  // quantizziamo `t` e aggiorniamo lo stile solo quando cambia davvero, così
-  // oltre i 150px (cioè per quasi tutta la pagina) non tocchiamo più lo stile.
-  let lastNavT = -1;
-  lenis.on("scroll", ({ scroll }: { scroll: number }) => {
-    const t = Math.min(1, scroll / 150);
-    const q = Math.round(t * 40) / 40; // 40 step impercettibili su 150px
-    if (q === lastNavT) return;
-    lastNavT = q;
-    const blurVal = `blur(${(q * 20).toFixed(2)}px) saturate(160%)`;
-    s.backdropFilter = blurVal;
-    s.webkitBackdropFilter = blurVal;
-    s.opacity = String(q);
-  });
-}
+// ---------- Navbar a pillola — scroll fermo a menu aperto ----------
+// PillNav (isola React) annuncia apertura/chiusura su window. L'evento arriva
+// in modo sincrono dentro il click, quindi Lenis è già ripartito quando
+// l'handler delle ancore qui sopra lancia lo scroll verso la sezione.
+window.addEventListener("pillnav:toggle", (e) => {
+  (e as CustomEvent<{ open: boolean }>).detail.open ? lenis.stop() : lenis.start();
+});
 
 // ---------- Mobile menu ----------
 // Apertura: il pannello si rivela con il mask radiale dal punto del burger,
@@ -233,42 +244,12 @@ if (burgerButton && mobileMenu) {
 }
 
 // ---------- Navbar entrance ----------
-gsap.fromTo(
-  "[data-anim='nav']",
-  { opacity: 0, y: -10 },
-  { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", delay: 0.4 }
-);
-
-// ---------- Navbar — inversione sulle superfici scure ----------
-// Mentre la nav fissa attraversa la banda navy di Cosa Facciamo o il
-// pannello CTA scuro, un toggle aggiunge .nav-on-dark: logo bianco, burger
-// e pill invertiti. È contrasto funzionale, quindi attivo anche con
-// reduced motion.
-const navEl = document.querySelector<HTMLElement>(".staggered-menu-wrapper");
-if (navEl) {
-  // La banda navy di Cosa Facciamo è gestita a parte (vedi sotto), perché il
-  // suo pin sposta tutto ciò che segue e l'inversione va ancorata a chi-siamo.
-  // In homepage la sezione contatti è chiara con una CARD scura al centro
-  // (ContainerScroll): l'inversione va ancorata alla card. In /chi-siamo la
-  // CTA finale è ora chiara (niente card), quindi NESSUNA zona scura: il logo
-  // bianco su fondo chiaro sparirebbe.
-  // La card scura (ContainerScroll) è CENTRATA e più stretta del viewport: il
-  // logo (estrema sinistra) e le icone/lingue (estrema destra) della navbar
-  // cadono sui MARGINI chiari della pagina, NON sopra la card. Invertire a
-  // bianco lì rendeva logo e icone invisibili su sfondo chiaro non appena la
-  // card saliva sotto la navbar. In tutta l'ultima parte della home lo sfondo
-  // dietro la navbar è chiaro → la navbar resta nella variante scura (default,
-  // leggibile). Nessun darkZone per la sezione form.
-  const darkZones: { sel: string; start: string; end: string }[] = [];
-  darkZones.forEach(({ sel, start, end }) => {
-    if (!document.querySelector(sel)) return;
-    ScrollTrigger.create({
-      trigger: sel,
-      start,
-      end,
-      toggleClass: { targets: navEl, className: "is-on-dark" },
-    });
-  });
+if (document.querySelector("[data-anim='nav']")) {
+  gsap.fromTo(
+    "[data-anim='nav']",
+    { opacity: 0, y: -10 },
+    { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", delay: 0.4 }
+  );
 }
 
 // ---------- Hero video ----------
@@ -286,7 +267,23 @@ if (heroVideo) {
 
   const easeOut = (t: number) => 1 - Math.pow(1 - t, 2.2);
 
+  // Il playbackRate si riscrive solo quando cambia davvero: ogni assegnazione
+  // fa riconfigurare il decoder, e farlo a ogni frame (anche col valore
+  // identico) fa singhiozzare la riproduzione proprio mentre la hero entra.
+  let lastRate = BASE_RATE;
+  const setRate = (r: number) => {
+    if (Math.abs(r - lastRate) < 0.01) return;
+    lastRate = r;
+    heroVideo.playbackRate = r;
+  };
+
+  // Il loop vive solo mentre il video sta davvero suonando: lo accende
+  // l'evento `playing`. Prima partiva al primo frame e, se il video era
+  // ancora in caricamento (in pausa), moriva subito → il rallentamento
+  // finale non scattava mai.
+  let rateLoop = 0;
   const tickPlaybackRate = () => {
+    rateLoop = 0;
     if (heroVideo.paused || heroVideo.ended) return;
     const d = heroVideo.duration;
     if (Number.isFinite(d) && d > 0) {
@@ -294,14 +291,18 @@ if (heroVideo) {
       if (remaining <= SLOWDOWN_WINDOW) {
         const t = 1 - remaining / SLOWDOWN_WINDOW; // 0 → 1 across the window
         const eased = easeOut(Math.min(1, Math.max(0, t)));
-        heroVideo.playbackRate = BASE_RATE - (BASE_RATE - MIN_RATE) * eased;
+        setRate(BASE_RATE - (BASE_RATE - MIN_RATE) * eased);
       } else {
-        heroVideo.playbackRate = BASE_RATE;
+        setRate(BASE_RATE);
       }
     }
-    requestAnimationFrame(tickPlaybackRate);
+    rateLoop = requestAnimationFrame(tickPlaybackRate);
   };
-  requestAnimationFrame(tickPlaybackRate);
+  const startRateLoop = () => {
+    if (!rateLoop) rateLoop = requestAnimationFrame(tickPlaybackRate);
+  };
+  heroVideo.addEventListener("playing", startRateLoop);
+  startRateLoop();
 
   // Freeze on last frame
   heroVideo.addEventListener("ended", () => {
@@ -565,222 +566,6 @@ const revealHead = (selector: string, trigger: string, start = "top 80%") => {
 };
 // (In home il titolo dei Servizi non ha reveal: vedi `isHome` più sopra.)
 
-// ---------- "Il punto" — sequenza scroll-driven (logo zoom + reveal testo) ---
-// La sezione si BLOCCA (pin) e lo scroll guida una timeline:
-//  1) hold      (0 → p1): il logo è subito NITIDO e GRANDE, a fuoco pieno;
-//     resta così (zoom appena accennato) → è la prima cosa che leggi;
-//  2) zoom+blur (p1 → p3): continuando a scrollare il logo ZOOMA e si SFOCA
-//     progressivamente, arretrando come alone dietro al testo; nel mentre il
-//     testo si rivela LETTERA PER LETTERA (fade-in + translateY, stagger);
-//  3) climax    (p3 → 1): zoom e blur al massimo (grande bagliore diffuso); il
-//     testo resta fermo e leggibile in primo piano; poi il pin si rilascia.
-// Tutto è agganciato allo scroll (scrub): scrollando indietro la sequenza si
-// riavvolge e le lettere si "ritirano". Senza motion / no-JS: blocco statico
-// leggibile (logo a fuoco + testo intero), nessun pin. Anima solo transform /
-// opacity / filter (con will-change) → niente reflow.
-const pointSection = document.querySelector<HTMLElement>("[data-point]");
-const pointLogo = pointSection?.querySelector<HTMLElement>("[data-point-logo]");
-const pointText = pointSection?.querySelector<HTMLElement>("[data-point-text]");
-const pointInk = pointSection?.querySelector<HTMLElement>("[data-point-ink]");
-const pointAccent =
-  pointSection?.querySelector<HTMLElement>("[data-point-accent]");
-
-if (pointSection && pointLogo && pointText && pointInk && pointAccent && !reduceMotion) {
-  // ----- PARAMETRI CALIBRABILI (range blur/scale per fase) ----------------
-  // Tutti qui in cima: questa sequenza richiede calibrazione fine, ritocca qui.
-  const PT = {
-    pinVh: 2.6, // lunghezza del pin in viewport (più alto = sequenza più lenta/deliberata).
-    // Confini di fase del LOGO sulla progress (0→1) dello ScrollTrigger.
-    p1: 0.18, // fine "hold": fin qui il logo resta nitido e grande
-    p3: 0.75, // inizio climax: da qui zoom + blur al massimo
-    // Logo — scala: parte GRANDE e nitido, poi zooma crescendo.
-    scaleStart: 1.0, // inizio: dimensione piena, nitida
-    scaleHold: 1.12, // fine hold: zoom appena accennato, ancora nitido
-    scaleReveal: 2.0, // mentre il testo si rivela: zoom marcato
-    scaleClimax: 3.0, // climax: zoom massimo, grande bagliore
-    // Logo — blur (px): NITIDO all'inizio, poi si sfoca crescendo.
-    blurStart: 0, // inizio: a fuoco pieno
-    blurReveal: 22, // a testo rivelato: alone sfocato dietro
-    blurClimax: 42, // climax: bagliore diffuso
-    // Logo — opacità: piena dall'inizio; resta visibile come alone al climax.
-    opacityClimax: 0.85,
-    // Testo — reveal lettera-per-lettera ORIZZONTALE e morbido: ogni lettera
-    // entra scorrendo in orizzontale (translateX) + fade. Animazione A TEMPO
-    // (smooth), NON scrubbata: cascata sempre fluida, indipendente dagli scatti
-    // dello scroll. Soglie ASIMMETRICHE (isteresi): scendendo il testo compare a
-    // `textRevealAt`; risalendo si ritira solo a `textHideAt`, cioè quando il
-    // logo TORNA NITIDO (≈ p1, dove il blur torna a 0).
-    textRevealAt: 0.42, // progress (0→1): scendendo, soglia di APPARIZIONE del testo
-    textHideAt: 0.36, // progress (0→1): risalendo, soglia di RITIRO — alzata così il testo inizia a dissolversi mentre il logo è ANCORA sfocato (no momento "entrambi nitidi"); resta < textRevealAt (isteresi)
-    charDur: 0.5, // durata (s) dell'ingresso di ogni lettera
-    charStaggerAmount: 0.9, // secondi su cui è distribuito lo stagger di TUTTE le lettere (più alto = cascata più lenta)
-    charFromX: -22, // px — scostamento orizzontale iniziale di ogni lettera (negativo = entra da sinistra)
-    charEase: "power3.out", // ease morbida del movimento di ogni lettera
-    // Uscita risalendo: dissolvenza MORBIDA (blur + opacità) dell'intero blocco
-    // testo, SENZA scorrimento laterale. Parte appena il logo torna verso il
-    // nitido e si completa prima che lo sia del tutto → mai "entrambi nitidi".
-    textHideDur: 0.55, // durata (s) della dissolvenza in uscita
-    textHideBlur: 12, // px — sfocatura raggiunta dal testo mentre svanisce
-  };
-  // -----------------------------------------------------------------------
-
-  // Attiva il layout pinnato (100vh, logo+testo centrati e sovrapposti): vedi
-  // .is-point-active in global.css. Solo da JS, così il fallback resta leggibile.
-  pointSection.classList.add("is-point-active");
-
-  // Split del testo in lettere. Le due parti restano nei rispettivi span colorati
-  // (ink scuro / accent blu+italic), così ogni lettera eredita il colore giusto.
-  // type "words,chars": i wrapper-parola tengono il wrapping ai confini di parola.
-  const splitInk = new SplitText(pointInk, {
-    type: "words,chars",
-    charsClass: "point-char",
-    wordsClass: "point-word",
-  });
-  const splitAccent = new SplitText(pointAccent, {
-    type: "words,chars",
-    charsClass: "point-char",
-    wordsClass: "point-word",
-  });
-  // Lettere in ordine di lettura: prima la parte ink, poi la parte accent.
-  const chars = [...splitInk.chars, ...splitAccent.chars];
-
-  // Stato iniziale: logo GRANDE e NITIDO (a fuoco, opacità piena); lettere
-  // nascoste poco sotto. Centratura del logo via left/top 50% (CSS) +
-  // xPercent/yPercent gestiti da GSAP, così lo scale si compone col translate.
-  gsap.set(pointLogo, {
-    xPercent: -50,
-    yPercent: -50,
-    scale: PT.scaleStart,
-    autoAlpha: 1,
-    filter: `blur(${PT.blurStart}px)`,
-    transformOrigin: "50% 50%",
-    force3D: true,
-  });
-  // Blocco testo: contenitore visibile e nitido; le singole lettere partono
-  // nascoste (scostate in orizzontale + trasparenti). La dissolvenza in uscita
-  // agisce sul CONTENITORE (blur + opacità), il reveal in entrata sulle lettere.
-  gsap.set(pointText, { autoAlpha: 1, filter: "blur(0px)", willChange: "filter, opacity" });
-  gsap.set(chars, { autoAlpha: 0, x: PT.charFromX });
-
-  // Reveal del testo come timeline A TEMPO, in pausa finché lo scroll non
-  // supera la soglia: cascata orizzontale lettera-per-lettera (entrata da
-  // sinistra + fade), sempre fluida e indipendente dagli scatti dello scroll.
-  const lettersTl = gsap.timeline({ paused: true });
-  lettersTl.to(chars, {
-    autoAlpha: 1,
-    x: 0,
-    duration: PT.charDur,
-    ease: PT.charEase,
-    stagger: { amount: PT.charStaggerAmount },
-  });
-  let textRevealed = false;
-  let hideTween: gsap.core.Tween | null = null;
-
-  // SCENDENDO: il testo entra (cascata laterale invariata). Reset esplicito del
-  // contenitore (nitido, opaco) e delle lettere allo stato iniziale, così la
-  // cascata riparte pulita anche dopo una dissolvenza in uscita.
-  const revealText = () => {
-    hideTween?.kill();
-    hideTween = null;
-    gsap.set(pointText, { autoAlpha: 1, filter: "blur(0px)" });
-    gsap.set(chars, { autoAlpha: 0, x: PT.charFromX });
-    lettersTl.play(0);
-  };
-
-  // RISALENDO: il testo NON si ritira di lato. Svanisce con una dissolvenza
-  // morbida (blur + opacità crescenti) di tutto il blocco, mentre il logo sotto
-  // sta tornando nitido → niente scorrimento laterale, niente "entrambi nitidi".
-  const hideText = () => {
-    lettersTl.pause();
-    hideTween?.kill();
-    hideTween = gsap.to(pointText, {
-      autoAlpha: 0,
-      filter: `blur(${PT.textHideBlur}px)`,
-      duration: PT.textHideDur,
-      ease: "power2.in",
-      overwrite: "auto",
-    });
-  };
-
-  const pinDistance = () => Math.round(window.innerHeight * PT.pinVh);
-
-  // Timeline normalizzata (durata totale = 1) mappata 1:1 sulla progress dello
-  // scroll: una posizione p nella timeline corrisponde alla progress p del pin.
-  const tl = gsap.timeline({
-    defaults: { ease: "none" },
-    scrollTrigger: {
-      trigger: pointSection,
-      start: "top top",
-      end: () => "+=" + pinDistance(),
-      pin: true,
-      scrub: 1, // scroll-driven con un filo d'inerzia (resta burroso con Lenis)
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-      // Priorità massima: è il PRIMO pin della pagina, dev'essere ricalcolato
-      // per primo così il suo spacer è in posizione quando i trigger a valle
-      // (morph colore canvas, pin Servizi/Progetti) leggono le coordinate.
-      // Scala per posizione: pointSection 4 > servizi 3 > progetti 2 >
-      // morph 0. Chi Siamo non pinna più nulla: non entra in questa scala.
-      refreshPriority: 4,
-      onUpdate: (self) => {
-        // Reveal a tempo (sempre fluido), lo scroll fa solo da grilletto. Soglie
-        // ASIMMETRICHE: scendendo il testo compare a `textRevealAt` (logo che si
-        // sfoca); risalendo si ritira solo a `textHideAt`, cioè quando il logo
-        // torna nitido. Tra le due soglie lo stato resta com'è (isteresi).
-        const p = self.progress;
-        if (!textRevealed && p >= PT.textRevealAt) {
-          textRevealed = true;
-          revealText();
-        } else if (textRevealed && p <= PT.textHideAt) {
-          textRevealed = false;
-          hideText();
-        }
-      },
-    },
-  });
-
-  // --- LOGO: nitido e grande all'inizio, poi zoom + blur crescenti ----------
-  // Fase 1 (0 → p1): hold — resta NITIDO (blur 0) e grande, zoom appena accennato.
-  tl.to(pointLogo, { scale: PT.scaleHold, duration: PT.p1 }, 0);
-  // Fase 2 (p1 → p3): ZOOMA e si SFOCA progressivamente, mentre il testo appare.
-  tl.to(
-    pointLogo,
-    {
-      scale: PT.scaleReveal,
-      filter: `blur(${PT.blurReveal}px)`,
-      duration: PT.p3 - PT.p1,
-      ease: "power1.in",
-    },
-    PT.p1
-  );
-  // Fase 3 (p3 → 1): climax — zoom e blur al massimo, grande bagliore diffuso.
-  tl.to(
-    pointLogo,
-    {
-      scale: PT.scaleClimax,
-      autoAlpha: PT.opacityClimax,
-      filter: `blur(${PT.blurClimax}px)`,
-      duration: 1 - PT.p3,
-      ease: "power1.in",
-    },
-    PT.p3
-  );
-
-  // (Il reveal del testo è la timeline a tempo `lettersTl` qui sopra, avviata
-  // dall'onUpdate dello ScrollTrigger — non è scrubbato, così resta fluido.)
-
-  // Pulizia listener/timeline al cambio pagina (utile anche in futuro con view
-  // transitions): killa lo ScrollTrigger, le timeline e ripristina il testo.
-  window.addEventListener("astro:before-swap", () => {
-    tl.scrollTrigger?.kill();
-    tl.kill();
-    lettersTl.kill();
-    hideTween?.kill();
-    splitInk.revert();
-    splitAccent.revert();
-  });
-}
-
 // ---------- Canvas — UN SOLO colore per tutta la fascia sotto la hero --------
 // Il canvas (.post-reveal) resta sempre sulla CARTA base (--color-bg): niente
 // più virata verso la sabbia avorio entrando in Chi Siamo e ritorno al warm
@@ -790,8 +575,8 @@ if (pointSection && pointLogo && pointText && pointInk && pointAccent && !reduce
 // sotto il confine). Le sezioni scure che servono (CTA, footer) hanno il
 // proprio fondo e non passano di qui.
 // Le sezioni restano trasparenti: il colore lo dà il canvas sotto.
-if (!reduceMotion) {
-  gsap.set(["#cosa-facciamo", "#projects", "#chi-siamo"], {
+if (!reduceMotion && isHome) {
+  gsap.set(["#cosa-facciamo", "#projects"], {
     backgroundColor: "transparent",
   });
 }
@@ -938,7 +723,70 @@ if (
     svcFills.forEach((el, k) => {
       el.style.transform = `scale(${gsap.utils.clamp(0, 1, p - k + 1).toFixed(3)})`;
     });
+
+    syncSvcVideos();
   };
+
+  // ---- Clip dei servizi ----
+  // Una sola fonte di verità: una clip suona solo se la sezione è vicina allo
+  // schermo E la sua scena è nella cornice (anche a metà cambio, così il
+  // passaggio mostra movimento vero); altrimenti è in pausa. play()/pause()
+  // si chiamano solo quando lo stato cambia davvero. Con reduced motion resta
+  // il poster. Il download parte (preload) quando la sezione si avvicina.
+  const svcVideos = svcShots.map((el) =>
+    el.querySelector<HTMLVideoElement>("[data-svc-video]")
+  );
+  // Due soglie diverse: `vicina` fa partire il DOWNLOAD in anticipo,
+  // `vista` fa partire la RIPRODUZIONE solo quando la sezione è davvero sullo
+  // schermo, così il racconto comincia sotto gli occhi di chi guarda.
+  let svcSeen = false;
+  // Ogni volta che una card torna in scena (da un'altra scena o rientrando
+  // nella sezione) la sua clip riparte DA CAPO: si vede sempre l'inizio del
+  // racconto, mai un punto a caso del loop. Il ritorno a 0 avviene mentre è
+  // ancora in pausa, quindi il primo fotogramma è già lì quando parte.
+  //
+  // Durante un cambio decodifica UNA clip sola: quella che esce continua a
+  // girare finché è nella cornice, quella che entra arriva ferma sul primo
+  // fotogramma e parte solo a card posata. Avviare il decoder di una clip
+  // (e farne girare due insieme) proprio mentre la card viaggia mangiava
+  // fotogrammi: il passaggio siti → social scendeva a 30 fps.
+  // Il ritorno a 0 si fa quando la clip ESCE dalla cornice (non si vede),
+  // così rientrando mostra già l'inizio e alla partenza non c'è nessun seek.
+  const svcWanted = svcVideos.map(() => false);
+  function syncSvcVideos() {
+    if (reduceMotion) return;
+    svcVideos.forEach((v, k) => {
+      if (!v) return;
+      const dist = Math.abs(state.p - k);
+      const inFrame = dist < 1;
+      const want =
+        svcSeen && !document.hidden && inFrame && (svcWanted[k] || dist < 0.02);
+      svcWanted[k] = want;
+      if (want && v.paused) void v.play().catch(() => {});
+      else if (!want && !v.paused) v.pause();
+      // Anche uscendo dalla sezione: rientrando la clip riparte da capo.
+      if ((!inFrame || !svcSeen) && v.paused && v.currentTime > 0) v.currentTime = 0;
+    });
+  }
+  if (svcVideos.some(Boolean) && "IntersectionObserver" in window) {
+    new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        svcVideos.forEach((v) => {
+          if (v && v.preload === "none") v.preload = "auto";
+        });
+      },
+      { rootMargin: "50% 0px 50% 0px" }
+    ).observe(svcRoot);
+    new IntersectionObserver(
+      ([entry]) => {
+        svcSeen = entry.isIntersecting;
+        syncSvcVideos();
+      },
+      { threshold: 0.35 }
+    ).observe(svcScene);
+    document.addEventListener("visibilitychange", syncSvcVideos);
+  }
 
   measure();
   apply();
@@ -1018,12 +866,53 @@ if (
     lockedScrollTo(anchorOf(i), 0.3);
   };
 
+  // ---- Aggancio ammortizzato ----
+  // Il pin ferma la sezione nel fotogramma esatto in cui la raggiunge: se ci
+  // si arriva scrollando a 15–20 px/frame, la scena passava da quella
+  // velocità a zero di colpo (più un salto dell'atterraggio), una frenata a
+  // mano. Ora, quando la sezione è a meno di APPROACH_VH dal suo posto, lo
+  // scroll viene preso in carico e accompagnato con una curva che decelera
+  // (easeOutCubic, partendo dalla velocità che aveva): la sezione si posa e
+  // arriva al pin già ferma. Lì il salto all'ancora interna è invisibile,
+  // perché la sezione è bloccata. Stessa cosa risalendo da sotto.
+  const APPROACH_VH = 0.42;
+  const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+  // Scadenza, non interruttore (come busyUntil): se la planata venisse
+  // interrotta, l'aggancio non resta disattivato per sempre.
+  let glideUntil = 0;
+  const isGliding = () => performance.now() < glideUntil;
+
+  const glideInto = (edge: number, i: number) => {
+    if (isGliding() || isTravelling() || lenis.isLocked) return;
+    const dist = Math.abs(edge - lenis.scroll);
+    if (dist < 2) return;
+    // Durata tarata sulla velocità attuale: con easeOutCubic la velocità
+    // iniziale è 3·dist/durata, quindi si riparte esattamente dall'inerzia
+    // dell'utente invece di accelerare o frenare bruscamente.
+    const v = Math.max(Math.abs(lenis.velocity) * 60, 1); // px/s
+    const duration = gsap.utils.clamp(0.55, 1.15, (3 * dist) / v);
+    glideUntil = performance.now() + duration * 1000 + 150;
+    index = i;
+    state.p = i;
+    apply();
+    holdFor(duration + 0.1);
+    lockedScrollTo(edge, duration, {
+      easing: easeOutCubic,
+      onComplete: () => {
+        // Dentro al pin: lo spostamento all'ancora non si vede.
+        lenis.scrollTo(anchorOf(i), { immediate: true, force: true });
+      },
+    });
+  };
+
   st = ScrollTrigger.create({
     trigger: "#cosa-facciamo",
     start: "top top",
     end: () => "+=" + svcPinDistance(),
     pin: true,
-    anticipatePin: 1,
+    // Niente anticipatePin: bloccava la sezione qualche frame PRIMA del suo
+    // posto (~25px) e la faceva scattare in posizione. L'arrivo lo ammortizza
+    // già glideInto, quindi la sezione arriva al pin praticamente ferma.
     invalidateOnRefresh: true,
     // Primo pin della pagina: si ricalcola prima di progetti (2), chi-siamo
     // (1) e morph (0), così ogni spacer a valle legge posizioni già spostate.
@@ -1033,50 +922,74 @@ if (
       apply();
     },
     onUpdate: (self) => {
-      if (isBusy()) return;
+      if (isBusy() || isTravelling()) return;
       const delta = self.scroll() - anchorOf(index);
       if (delta > TRIGGER_PX) goTo(index + 1);
       else if (delta < -TRIGGER_PX) goTo(index - 1);
     },
-    onEnter: () => land(0),
-    onEnterBack: () => land(N - 1),
+    // Niente atterraggio se si sta solo attraversando la sezione: durante un
+    // viaggio verso un'ancora, o con un salto diretto che è già oltre il
+    // pin (progress 1 entrando dall'alto, 0 rientrando dal basso — scattano
+    // onEnter e onLeave nello stesso aggiornamento).
+    onEnter: (self) => {
+      if (!isGliding() && !isTravelling() && self.progress < 1) land(0);
+    },
+    onEnterBack: (self) => {
+      if (!isGliding() && !isTravelling() && self.progress > 0) land(N - 1);
+    },
   });
 
-  // Arrivo ammortizzato: il palco sale e si accende PRIMA che la sezione si
-  // blocchi, in scrub condiviso — così il pin non arriva di colpo su una
-  // scena ferma, ma chiude un movimento già in corso. Parte appena il palco
-  // spunta dal bordo basso (la sezione risale dentro alla coda di "Chi
-  // siamo", vedi il margine negativo in global.css): mentre la frase esce
-  // dall'alto, questo sale da sotto — nessuna fascia vuota fra le due.
+  // Zone d'avvicinamento, appena prima e appena dopo il pin (posizioni di
+  // scroll assolute, ricalcolate dopo il pin che ha priorità di refresh 3).
+  ScrollTrigger.create({
+    start: () => (st ? st.start : 0) - window.innerHeight * APPROACH_VH,
+    end: () => (st ? st.start : 0),
+    refreshPriority: 3,
+    onEnter: () => {
+      if (st) glideInto(st.start + 1, 0);
+    },
+  });
+  ScrollTrigger.create({
+    start: () => (st ? st.end : 0),
+    end: () => (st ? st.end : 0) + window.innerHeight * APPROACH_VH,
+    refreshPriority: 3,
+    onEnterBack: () => {
+      if (st) glideInto(st.end - 1, N - 1);
+    },
+  });
+
+  // ARRIVO del palco: compare (con un filo di salita) mentre la scena del
+  // Punto svanisce, nella stessa finestra di scroll e con la stessa curva
+  // (vedi l'uscita nel blocco del Punto): un passaggio di mano senza vuoti.
   gsap.fromTo(
     svcScene,
-    { autoAlpha: 0, y: 56 },
+    { autoAlpha: 0, y: 48 },
     {
       autoAlpha: 1,
       y: 0,
-      ease: "none",
+      ease: "sine.inOut",
       scrollTrigger: {
         trigger: svcScene,
-        start: "top bottom",
-        end: "top 52%",
+        start: "top 100%",
+        end: "top 55%",
         scrub: SCRUB,
       },
     }
   );
-
 }
 
 // ---------- Glow text — illuminazione lettera per lettera in scrub ----------
 // Ogni elemento [data-glow] viene spezzato in lettere: le parole diventano
 // span inline-block (così non si spezzano a metà riga), ogni carattere uno
 // span che passa da quasi spento a pieno mentre l'elemento attraversa il
-// viewport. Gli <em> conservano corsivo + colore accent via .gw-em.
+// viewport. Gli <em> conservano corsivo + colore accent via .gw-em; gli
+// <strong> diventano parole chiave (.gw-key), colorate da chi le accende.
 // Con reduced motion il testo resta pieno (niente split, niente tween).
 const splitGlowChars = (el: HTMLElement): HTMLElement[] => {
   const chars: HTMLElement[] = [];
   const frag = document.createDocumentFragment();
 
-  const pushText = (text: string, em: boolean) => {
+  const pushText = (text: string, kind: "" | "em" | "key") => {
     text.split(/(\s+)/).forEach((tok) => {
       if (!tok) return;
       if (/^\s+$/.test(tok)) {
@@ -1084,7 +997,7 @@ const splitGlowChars = (el: HTMLElement): HTMLElement[] => {
         return;
       }
       const word = document.createElement("span");
-      word.className = em ? "gw gw-em" : "gw";
+      word.className = kind ? `gw gw-${kind}` : "gw";
       for (const ch of tok) {
         const c = document.createElement("span");
         c.className = "gc";
@@ -1098,13 +1011,16 @@ const splitGlowChars = (el: HTMLElement): HTMLElement[] => {
 
   el.childNodes.forEach((node) => {
     if (node.nodeType === Node.TEXT_NODE) {
-      pushText(node.textContent ?? "", false);
+      pushText(node.textContent ?? "", "");
     } else if (node instanceof HTMLElement) {
       if (node.tagName === "BR") {
         frag.appendChild(document.createElement("br"));
         return;
       }
-      pushText(node.textContent ?? "", node.tagName === "EM");
+      pushText(
+        node.textContent ?? "",
+        node.tagName === "EM" ? "em" : node.tagName === "STRONG" ? "key" : ""
+      );
     }
   });
 
@@ -1136,303 +1052,123 @@ if (!reduceMotion) {
   });
 }
 
-// ---------- Chi Siamo — la frase scivola sopra la montagna ----------------
-// NIENTE PIN: la pagina non si blocca mai. La sezione è lunga (vedi
-// .about-intro in global.css) e la attraversano DUE STRATI INDIPENDENTI a
-// velocità diverse:
-//   · il fondale video sale più LENTO della pagina (≈0.82×)
-//   · la frase sale più VELOCE (≈1.13×)
-// La differenza tra le due è lo scivolamento: il testo scorre sopra la
-// montagna invece di essere incollato ad essa. Mentre scorre, le lettere
-// passano da grigio "vuoto" a colorato (ink, accent per i corsivi), una a una
-// in ordine di lettura.
-//
-// L'ENTRATA (blocco "staffetta" più sotto) NON è una comparsa: il fondale è
-// pieno da subito, si vede appena la sezione entra da sotto la hero. L'unica
-// cosa che compare è il TESTO, che sale con una parallasse tutta sua mentre la
-// hero esce. Il fondale intanto non sfuma: si MUOVE — parallasse lenta più una
-// scala che raccoglie lo zoom del video della hero (1.12 → 1) e lo scarica.
-//
-// Il riempimento NON è agganciato alla progress della sezione ma alla
-// posizione REALE della frase nel viewport: così si autoregola su qualunque
-// schermo, qualunque sia l'altezza che il blocco di testo finisce per avere
-// (desktop, mobile, lingue più lunghe come il tedesco).
-// Con reduced motion non parte nulla: frase piena e statica sul fondale.
-const aboutStatement = document.querySelector<HTMLElement>(
-  "[data-about-statement]"
-);
-const aboutSection = document.querySelector<HTMLElement>("#chi-siamo");
-if (aboutStatement && aboutSection && !reduceMotion) {
-  const chars = splitGlowChars(aboutStatement);
+// ---------- Il punto — fondale e testo che scorrono insieme ----------------
+// Un unico blocco (160vh, vedi .point-scene.is-scene) con fondale Sciliar e
+// testo centrato: scorre con la pagina alla stessa velocità, niente
+// parallasse. Tutto in scrub, con la stessa inerzia del resto della pagina:
+//   1. dalla hero si scrolla → il fondale compare in dissolvenza (e la foto
+//      si distende da 1.08 a 1)
+//   2. il testo compare con un filo di salita
+//   3. mentre scorre si accende lettera per lettera: prima il PROBLEMA
+//      (inchiostro, parole chiave in arancio), poi la SVOLTA (inchiostro,
+//      corsivo e chiavi in blu). Il problema resta acceso: si legge tutto.
+//   4. in uscita la montagna si scioglie nella carta con la stessa sfumatura
+//      della hero, mentre il palco dei Servizi compare sotto.
+// Solo opacità, colore e una scala leggera: niente layout per frame.
+// Con reduced motion non parte nulla: schermata statica con testo pieno.
+const pointScene = document.querySelector<HTMLElement>("[data-point-scene]");
+const pointCopy = pointScene?.querySelector<HTMLElement>("[data-point-copy]");
+const pointBg = pointScene?.querySelector<HTMLElement>(".point-bg");
+const pointPain = pointScene?.querySelector<HTMLElement>("[data-point-pain]");
+const pointTurn = pointScene?.querySelector<HTMLElement>("[data-point-turn]");
+if (pointScene && pointCopy && pointBg && pointPain && pointTurn && !reduceMotion) {
+  pointScene.classList.add("is-scene");
+
+  const scrubbed = (trigger: Element, start: string, end: string) => ({
+    trigger,
+    start,
+    end,
+    scrub: SCRUB,
+    invalidateOnRefresh: true,
+  });
+
+  // 1 — ENTRATA: il fondale compare mentre la hero se ne va — dal primo
+  // pixel di scroll a hero uscita per il 60%. Agganciato alla hero, non al
+  // blocco: il blocco parte già sovrapposto alla sua sfumatura (vedi
+  // --point-overlap), quindi a pagina ferma è già in parte sullo schermo.
+  const heroEl = document.querySelector(".hero-section") ?? pointScene;
+  gsap.fromTo(
+    pointBg,
+    { autoAlpha: 0 },
+    { autoAlpha: 1, ease: "sine.inOut", scrollTrigger: scrubbed(heroEl, "top top", "60% top") }
+  );
+  const pointImg = pointBg.querySelector<HTMLElement>("img");
+  if (pointImg) {
+    gsap.fromTo(
+      pointImg,
+      { scale: 1.08 },
+      { scale: 1, ease: "sine.out", scrollTrigger: scrubbed(heroEl, "top top", "60% top") }
+    );
+  }
+
+  // 2 — il testo compare a fondale ormai pieno.
+  gsap.fromTo(
+    pointCopy,
+    { autoAlpha: 0, y: 28 },
+    { autoAlpha: 1, y: 0, ease: "sine.out", scrollTrigger: scrubbed(pointCopy, "top 95%", "top 62%") }
+  );
+
+  // 3 — RIEMPIMENTO lettera per lettera mentre il testo sale verso il centro:
+  // finisce quando il blocco è a metà schermo. Un tween per lettera in
+  // sequenza (1 unità di timeline = 1 lettera): ogni lettera "scatta" piena
+  // prima che parta la successiva, dal grigio al suo colore.
+  const painChars = splitGlowChars(pointPain);
+  const turnChars = splitGlowChars(pointTurn);
+  const chars = [...painChars, ...turnChars];
   if (chars.length) {
-    // Un filo più marcato del vecchio 0.16: senza velo davanti al video le
-    // lettere "vuote" sparivano del tutto sul mosso della montagna.
     const GRAY = "rgba(23, 19, 16, 0.22)";
     const INK = "#171310";
-    const ACCENT = "#3B5BDB";
+    const ACCENT = "#2748A5";
+    const EMBER = "#D84002";
+    const painSet = new Set(painChars);
     gsap.set(chars, { color: GRAY });
 
-    // Timeline del riempimento, in PAUSA: la posizione non la decide uno
-    // scrub ma noi (vedi il ticker più sotto). Un tween per lettera, in
-    // sequenza: 1 unità di timeline = 1 lettera, duration < 1 → ogni lettera
-    // "scatta" piena prima che parta la successiva, niente sovrapposizioni.
-    const fillTl = gsap.timeline({ paused: true, defaults: { ease: "none" } });
+    const fillTl = gsap.timeline({ defaults: { ease: "none" } });
     chars.forEach((c, i) => {
-      const isEm = c.parentElement?.classList.contains("gw-em");
-      fillTl.to(c, { color: isEm ? ACCENT : INK, duration: 0.6 }, i);
+      const cls = c.parentElement?.classList;
+      const color = cls?.contains("gw-em")
+        ? ACCENT
+        : cls?.contains("gw-key")
+          ? painSet.has(c) ? EMBER : ACCENT
+          : INK;
+      fillTl.to(c, { color, duration: 0.6 }, i);
     });
-
-    // Corsa condivisa dai due strati: tutta la traversata della sezione.
-    const pass = {
-      trigger: aboutSection,
-      start: "top bottom",
-      end: "bottom top",
-      scrub: SCRUB,
-      invalidateOnRefresh: true,
-    };
-
-    // FONDALE — più lento della pagina, di una frazione decisa qui.
-    //
-    // Un fondale che rallenta si STACCA dal bordo della sezione: mentre la
-    // pagina sale di 1, lui sale di MEDIA_SPEED, quindi tra la fine della hero
-    // e la cima del video si apre una fascia di pagina nuda che vale, al
-    // massimo, esattamente (1 − MEDIA_SPEED) × viewport. Non è un margine da
-    // togliere: è aritmetica, l'unico modo per chiuderla senza rinunciare alla
-    // parallasse è far PARTIRE il video più in alto del bordo della sezione,
-    // di quella stessa quantità. Con quell'anticipo il video resta incollato
-    // sotto la hero — anzi la scavalca un po' — per tutto il tempo in cui il
-    // confine tra le due sezioni è sullo schermo, e arriva a filo esattamente
-    // quando quel confine esce dall'inquadratura.
-    // (Perché possa sbordare, .about-section non ha più il clip verticale.)
-    const MEDIA_SPEED = 0.82;
-    const aboutMedia = document.querySelector<HTMLElement>(".about-media");
-    if (aboutMedia) {
-      const rest = () =>
-        (aboutSection.offsetHeight - aboutMedia.offsetHeight) / 2;
-      const from = () =>
-        -(rest() + (1 - MEDIA_SPEED) * window.innerHeight);
-      const to = () =>
-        from() +
-        (1 - MEDIA_SPEED) * (aboutSection.offsetHeight + window.innerHeight);
-      gsap.fromTo(
-        aboutMedia,
-        { y: from },
-        { y: to, ease: "none", scrollTrigger: { ...pass } }
-      );
-    }
-
-    // FRASE — più veloce della pagina: guadagna terreno sul fondale per tutta
-    // la traversata, ed è questo scarto che si legge come "il testo scivola
-    // sulla montagna".
-    //
-    // L'escursione è tutta verso l'ALTO (da 0 a −2×lead) invece che simmetrica
-    // (da +lead a −lead): la velocità relativa è identica, ma il blocco sta
-    // mediamente più in alto e quindi ENTRA PRIMA nell'inquadratura. Far salire
-    // solo l'opacità non bastava — la frase era già opaca ma ancora sotto il
-    // bordo dello schermo, quindi non si vedeva comunque.
-    const lead = () => window.innerHeight * 0.18;
-    gsap.fromTo(
-      aboutStatement,
-      { y: 0 },
-      { y: () => -2 * lead(), ease: "none", scrollTrigger: { ...pass } }
-    );
-
-    // ---- ENTRATA — la staffetta hero → Chi Siamo -------------------------
-    // Tre gesti sfalsati, tutti agganciati alla GEOMETRIA DELLA SEZIONE (non
-    // alla hero): così le soglie restano vere qualunque sia l'altezza della
-    // hero, e sono espresse nell'unica scala che conta, cioè quanto la sezione
-    // è già salita nell'inquadratura. Le percentuali sono la posizione del
-    // bordo alto della sezione nel viewport: "top 65%" = il confine con la
-    // hero è ai due terzi dello schermo (hero per un terzo fuori).
-    //
-    // ORDINE (questo è il punto): prima il TESTO, poi la montagna.
-    //   1. il blocco di testo sale e si accende mentre la hero esce
-    //   2. solo dopo il fondale si materializza DIETRO la frase, già in scena
-    // Prima era il contrario e la sezione arrivava come un secondo video
-    // attaccato al primo; ora tra i due c'è un respiro di carta.
-    const entryPass = (start: string, end: string) => ({
-      trigger: aboutSection,
-      start,
-      end,
-      scrub: SCRUB,
-      invalidateOnRefresh: true,
-    });
-
-    // 1a — PARALLASSE D'INGRESSO del blocco di testo: parte più in basso e
-    // recupera. È un secondo strato di velocità SOPRA la corsa costante qui
-    // sopra (che sta sulla frase, questo sul contenitore: due transform su due
-    // elementi, si compongono senza pestarsi). L'effetto è che il testo entra
-    // "inseguendo" la hero che se ne va, invece di scorrere con la pagina.
-    const aboutContent =
-      aboutSection.querySelector<HTMLElement>(".about-content");
-    if (aboutContent) {
-      gsap.fromTo(
-        aboutContent,
-        { y: () => window.innerHeight * 0.1 },
-        {
-          y: 0,
-          ease: "none",
-          scrollTrigger: entryPass("top 85%", "top 15%"),
-        }
-      );
-    }
-
-    // 1b — ACCENSIONE della frase: finita poco dopo che è entrata dal bordo
-    // basso, così si legge subito (il riempimento lettera per lettera più
-    // sotto è un'altra cosa: quello dura tutta la traversata).
-    gsap.fromTo(
-      aboutStatement,
-      { opacity: 0 },
-      {
-        opacity: 1,
-        ease: "none",
-        scrollTrigger: entryPass("top 68%", "top 28%"),
-      }
-    );
-
-    // 1c — USCITA della frase, in ANTICIPO sul bordo della sezione. I Servizi
-    // ora risalgono dentro alla coda di "Chi siamo" (margine negativo in
-    // global.css): senza questa dissolvenza le due scene resterebbero piene
-    // insieme sullo stesso schermo. Così invece la frase si spegne mentre il
-    // palco sale — una scena lascia, l'altra prende.
-    gsap.fromTo(
-      aboutStatement,
-      { opacity: 1 },
-      {
-        opacity: 0,
-        ease: "none",
-        immediateRender: false,
-        scrollTrigger: entryPass("bottom 120%", "bottom 62%"),
-      }
-    );
-
-    // 2 — FONDALE: NESSUNA dissolvenza in entrata. La montagna è già lì, piena,
-    // fin dal primo pixel della sezione: quello che la fa "arrivare" è solo il
-    // movimento — la parallasse lenta del contenitore più una scala che si
-    // DISTENDE da 1.12 a 1 sul <video>. 1.12 è esattamente il valore a cui la
-    // hero lascia il suo video (vedi lo zoom d'uscita più in alto): la montagna
-    // raccoglie il movimento dove l'altro lo ha lasciato e lo scarica, senza
-    // che nulla debba comparire. Scala e y stanno sul <video>, la parallasse
-    // sul contenitore: due transform su due elementi, non si pestano.
-    if (aboutMedia) {
-      // USCITA del fondale, anticipata insieme a quella della frase: la
-      // montagna si scioglie mentre i Servizi salgono da sotto, non dopo.
-      // Senza questa dissolvenza il video sbordava, scuro, sopra la sezione
-      // seguente (la maschera CSS da sola non basta: lì la sua coda è ancora
-      // quasi opaca).
-      gsap.fromTo(
-        aboutMedia,
-        { opacity: 1 },
-        {
-          opacity: 0,
-          ease: "none",
-          immediateRender: false,
-          scrollTrigger: entryPass("bottom 125%", "bottom 65%"),
-        }
-      );
-      const aboutVideoEl = aboutMedia.querySelector<HTMLElement>(".about-video");
-      if (aboutVideoEl) {
-        gsap.fromTo(
-          aboutVideoEl,
-          { scale: 1.12, y: () => window.innerHeight * 0.05 },
-          {
-            scale: 1,
-            y: 0,
-            ease: "none",
-            // Tiene 1.12 finché la hero è in scena (sta zoomando fino a quel
-            // valore); molla appena il confine tra le due sezioni tocca il
-            // bordo alto dello schermo. È lì che avviene il cambio di mano.
-            scrollTrigger: entryPass("top 15%", "top -80%"),
-          }
-        );
-      }
-    }
-
-    // RIEMPIMENTO — progress letta dalla geometria: 0 quando la frase entra
-    // dal bordo basso, 1 quando è appena uscita da quello alto. La finestra
-    // utile è ristretta ai due estremi (0.18 → 0.64): la frase entra già
-    // "viva" e arriva PIENA proprio quando comincia a uscire dall'alto, invece
-    // di completarsi fuori schermo.
-    const clamp01 = gsap.utils.clamp(0, 1);
-    const toWindow = gsap.utils.mapRange(0.18, 0.64, 0, 1);
-    const readProgress = () => {
-      const vh = window.innerHeight;
-      const r = aboutStatement.getBoundingClientRect();
-      return clamp01(toWindow((vh - r.top) / (vh + r.height)));
-    };
-
-    // Il valore letto viene inseguito con un lerp tarato su SCRUB_LERP: il
-    // riempimento ha ESATTAMENTE la stessa inerzia dello scrub che muove la
-    // scena, la hero e il colore del canvas. Prima correva con un ritardo di
-    // circa un sesto rispetto a tutto il resto, e le lettere si accendevano
-    // "in anticipo" sul movimento — è quello che rompeva il sincrono.
-    // Il ticker legge la geometria SOLO mentre la sezione è in scena.
-    let inView = false;
-    let snap = true;
-    let current = 0;
-    const tick = () => {
-      if (!inView) return;
-      const target = readProgress();
-      current = snap ? target : current + (target - current) * SCRUB_LERP;
-      snap = false;
-      if (Math.abs(target - current) < 0.001) current = target;
-      fillTl.progress(current);
-    };
-    gsap.ticker.add(tick);
 
     ScrollTrigger.create({
-      trigger: aboutSection,
-      start: "top bottom",
-      end: "bottom top",
-      onToggle: (self) => {
-        inView = self.isActive;
-        // Entrando ci si allinea al volo (niente rincorsa visibile); uscendo
-        // la frase resta coerente: piena sopra, vuota sotto.
-        snap = self.isActive;
-        if (!self.isActive) {
-          current = self.direction === 1 ? 1 : 0;
-          fillTl.progress(current);
-        }
-      },
-    });
-
-    window.addEventListener("astro:before-swap", () => {
-      gsap.ticker.remove(tick);
-      fillTl.kill();
+      animation: fillTl,
+      ...scrubbed(pointCopy, "top 72%", "top 18%"),
     });
   }
-}
 
-// ---------- Chi Siamo — fondale video Sciliar ----------
-// Il bianco e nero e la fusione col canvas sono CSS (filter + mask + velo);
-// qui solo la regia: il video gira SEMPRE in loop, senza legarlo allo scroll.
-// Niente più pausa alla visibilità (le chiamate play/pause incrociate lo
-// lasciavano fermo sul primo frame) e niente zoomata in scrub: la montagna
-// resta alla sua scala naturale, il movimento lo fa solo il video.
-// Con reduced motion il video resta fermo sul primo frame: un fondale
-// fotografico statico.
-const aboutVideo = document.querySelector<HTMLVideoElement>(
-  "[data-about-video]"
-);
-if (aboutVideo) {
-  if (reduceMotion) {
-    aboutVideo.removeAttribute("autoplay");
-    aboutVideo.pause();
-  } else {
-    // Ping-pong fluido: il file -boomerang contiene già andata + ritorno
-    // concatenati, quindi basta il loop nativo (riproduzione liscia in
-    // entrambi i versi).
-    aboutVideo.loop = true;
-    const keepPlaying = () => {
-      if (aboutVideo.paused) void aboutVideo.play().catch(() => {});
-    };
-    keepPlaying();
-    aboutVideo.addEventListener("canplay", keepPlaying);
-    aboutVideo.addEventListener("pause", keepPlaying);
-    // Al ritorno sulla scheda alcuni browser lasciano il video in pausa.
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) keepPlaying();
-    });
+  // 4 — USCITA: il fondale non svanisce in opacità ma si scioglie nella carta
+  // scorrendo, con la sua sfumatura bassa (identica a quella della hero, vedi
+  // .point-bg in global.css), mentre il palco dei Servizi sale dentro di lei.
+  // Il testo si spegne mentre esce dall'alto, legato alla sua posizione: si
+  // legge tutto prima che se ne vada.
+  gsap.fromTo(
+    pointCopy,
+    { autoAlpha: 1 },
+    {
+      autoAlpha: 0,
+      ease: "sine.in",
+      immediateRender: false,
+      scrollTrigger: scrubbed(pointCopy, "top 2%", "top -38%"),
+    }
+  );
+  // Coda: quando il palco dei Servizi è quasi arrivato, quel che resta della
+  // sfumatura svanisce, così la sezione si blocca su carta pulita (senza,
+  // la coda della montagna restava dietro la parte alta dei Servizi fermi).
+  if (svcScene) {
+    gsap.fromTo(
+      pointBg,
+      { autoAlpha: 1 },
+      {
+        autoAlpha: 0,
+        ease: "sine.in",
+        immediateRender: false,
+        scrollTrigger: scrubbed(svcScene, "top 70%", "top 22%"),
+      }
+    );
   }
 }
 
@@ -1469,17 +1205,22 @@ document.querySelectorAll<HTMLElement>(".about-chapter").forEach((ch) => {
 // Le carte partono impilate al centro come un mazzo buttato sul tavolo e si
 // aprono verso le loro posizioni finali. Quelle posizioni le tiene già il CSS
 // (left/top in percentuale dello stage): qui si anima solo un OFFSET in
-// transform che le riporta al centro e poi torna a zero — nessun ricalcolo di
-// layout per frame, tutto sul compositor. Mentre le carte se ne vanno, il
-// titolo che stava sotto entra in dissolvenza.
+// transform che le porta dalla pila al posto — nessun ricalcolo di layout per
+// frame, tutto sul compositor.
 //
-// La scena si RIARMA: appena il mazzo esce dallo schermo (in su o in giù) le
-// carte tornano impilate, così ripassando la sezione l'apertura si rivede da
-// capo. Il riarmo avviene solo fuori dal viewport, quindi non si vede mai.
+// Lo sparpagliamento è LEGATO ALLO SCROLL (scrub), non a tempo: le carte
+// seguono la rotella, già ammorbidita da Lenis, in avanti e all'indietro.
+// Ease simmetrica (sine.inOut) → scendendo e risalendo il movimento è identico:
+// le carte si staccano piano e si posano piano, in entrambi i sensi. Niente
+// soglie, niente tween che ripartono: se ti fermi a metà, il mazzo resta a
+// metà; se inverti, inverte da dove è.
+//
+// A mazzo tutto aperto le carte iniziano a fluttuare (@keyframes CSS, su un
+// layer proprio); appena si torna indietro la fluttuazione si posa in morbido.
 const deck = document.querySelector<HTMLElement>("[data-deck]");
 if (deck) {
   const deckCards = gsap.utils.toArray<HTMLElement>("[data-deck-card]", deck);
-  const deckCopy = deck.querySelector<HTMLElement>("[data-deck-copy]");
+  const deckFloats = deckCards.map((c) => c.querySelector<HTMLElement>(".deck-card-float"));
   const num = (v: string | undefined) => Number(v ?? 0);
   // Rotazione a mazzo aperto: sta nella var CSS --r, unica fonte con le
   // posizioni finali (il fallback senza JS usa la stessa).
@@ -1490,90 +1231,92 @@ if (deck) {
     // Niente animazione: il CSS di base è già lo stato sparpagliato.
     deck.classList.remove("is-js");
   } else {
-    // Stato MAZZO — l'offset che riporta ogni carta al centro dello stage si
-    // MISURA (posa CSS → centro stage), non si ricalcola: così le posizioni
-    // finali restano una cosa sola del CSS e qualsiasi media query funziona
-    // senza duplicare qui la matematica.
-    let opened = false;
-    const stackCards = () => {
-      gsap.set(deckCards, { clearProps: "transform" }); // torna alla posa CSS
+    // Offset che porta ogni carta dalla sua posa CSS al centro dello stage.
+    // Si MISURA (non si ricalcola) così le posizioni restano una cosa sola del
+    // CSS; togliendo l'x/y GSAP corrente la misura vale anche a metà corsa
+    // (serve al refresh dopo un resize). La rotazione non sposta il centro.
+    const pileOffsets = () => {
       const r = deck.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
-      const offsets = deckCards.map((card) => {
+      return deckCards.map((card) => {
         const b = card.getBoundingClientRect();
-        return { x: cx - (b.left + b.width / 2), y: cy - (b.top + b.height / 2) };
+        const x = Number(gsap.getProperty(card, "x")) || 0;
+        const y = Number(gsap.getProperty(card, "y")) || 0;
+        return {
+          x: cx - (b.left + b.width / 2 - x) + num(card.dataset.dx),
+          y: cy - (b.top + b.height / 2 - y) + num(card.dataset.dy),
+        };
       });
-      deckCards.forEach((card, i) => {
-        const d = card.dataset;
-        gsap.set(card, {
-          xPercent: -50,
-          yPercent: -50,
-          x: offsets[i].x + num(d.dx),
-          y: offsets[i].y + num(d.dy),
-          rotation: num(d.dr),
-        });
-      });
-      // Il titolo dei Progetti resta sempre visibile (niente comparsa in
-      // home): le carte gli si aprono davanti, non lo accendono.
-      // Spegne la fluttuazione: da chiuse le carte devono stare ferme.
-      deck.classList.remove("is-open");
-      opened = false;
     };
 
-    // Togliere .is-js e scrivere lo stato mazzo nello stesso blocco sincrono:
-    // il browser non dipinge in mezzo, quindi nessun lampo di carte già aperte.
+    // Fluttuazione: si accende a mazzo aperto; si spegne PORTANDOLA A RIPOSO,
+    // non strappandola (si congela il transform che l'@keyframes sta
+    // mostrando, si toglie .is-open e da lì si torna a zero in morbido).
+    const startFloat = () => {
+      if (deck.classList.contains("is-open")) return;
+      gsap.killTweensOf(deckFloats);
+      gsap.set(deckFloats, { clearProps: "transform" });
+      deck.classList.add("is-open");
+    };
+    const settleFloat = () => {
+      if (!deck.classList.contains("is-open")) return;
+      deckFloats.forEach((f) => f && gsap.set(f, { transform: getComputedStyle(f).transform }));
+      deck.classList.remove("is-open");
+      gsap.to(deckFloats, { x: 0, y: 0, rotation: 0, duration: 0.8, ease: "sine.out", overwrite: true });
+    };
+
+    // Il transform del CSS (translate(-50%,-50%) rotate(--r)) passa a GSAP.
+    // Togliere .is-js e scrivere lo stato pila nello stesso blocco sincrono:
+    // il browser non dipinge in mezzo, quindi nessun lampo di carte aperte.
     deck.classList.remove("is-js");
-    stackCards();
+    gsap.set(deckCards, { xPercent: -50, yPercent: -50 });
+    // Misura a .is-js tolta: le carte sono nella posa CSS (aperte).
+    let pile = pileOffsets();
 
-    // Finché il mazzo è chiuso l'offset dipende dalla dimensione dello stage:
-    // a mazzo aperto x/y valgono 0 e le posizioni le tiene il CSS, quindi non
-    // c'è più niente da ricalcolare.
-    window.addEventListener("resize", () => {
-      if (!opened) stackCards();
+    // Ordine sparso ma FISSO (stesso in andata e ritorno): il mazzo si
+    // sfalda, non si apre a ventaglio ordinato. Ogni carta parte un filo dopo
+    // l'altra e le corse si sovrappongono quasi del tutto: un'onda unica.
+    const order = [1, 3, 0, 2];
+    const STEP = 0.07;
+    const tl = gsap.timeline({
+      defaults: { ease: "sine.inOut", duration: 1 },
+      scrollTrigger: {
+        trigger: deck,
+        // Parte quando la pila (centro dello stage) affaccia dal fondo dello
+        // schermo e finisce col mazzo centrato: corsa lunga (~mezzo schermo)
+        // e sine.inOut, così ogni tacca di rotella sposta le carte di poco.
+        start: "center 100%",
+        end: "center 50%",
+        // Catch-up morbido sopra al lerp di Lenis: assorbe gli scatti della
+        // rotella senza far sembrare le carte in ritardo.
+        scrub: 0.9,
+        invalidateOnRefresh: true,
+        onRefreshInit: () => {
+          // Al refresh (resize) la pila va rimisurata sulla nuova scena.
+          pile = pileOffsets();
+        },
+        onUpdate: (st) => {
+          if (st.progress > 0.995) startFloat();
+          else settleFloat();
+        },
+      },
     });
-
-    // A sparpagliamento finito le carte iniziano a fluttuare (@keyframes CSS,
-    // su un layer proprio: non tocca il transform che gestisce GSAP).
-    const deckTl = gsap.timeline({
-      paused: true,
-      onComplete: () => deck.classList.add("is-open"),
-    });
-    deckTl.to(deckCards, {
-      x: 0,
-      y: 0,
-      rotation: (_i, target: HTMLElement) => finalRotation(target),
-      duration: 1.35,
-      ease: "power3.out",
-      // Ordine sparso: il mazzo si sfalda, non si apre a ventaglio ordinato.
-      stagger: { each: 0.075, from: "random" },
-    });
-
-    // Il range è quello del MAZZO, non della sezione: agli estremi le carte
-    // sono già fuori dal viewport, quindi il rimescolamento resta invisibile
-    // sia scendendo sia risalendo.
-    ScrollTrigger.create({
-      trigger: deck,
-      start: "top 85%",
-      end: "bottom 15%",
-      onEnter: () => {
-        opened = true;
-        // invalidate: dopo un riarmo (o un resize) i valori di partenza sono
-        // cambiati, vanno riletti invece di riusare quelli del giro prima.
-        deckTl.invalidate().restart();
-      },
-      onEnterBack: () => {
-        opened = true;
-        deckTl.invalidate().restart();
-      },
-      onLeave: () => {
-        deckTl.pause(0);
-        stackCards();
-      },
-      onLeaveBack: () => {
-        deckTl.pause(0);
-        stackCards();
-      },
+    deckCards.forEach((card, i) => {
+      tl.fromTo(
+        card,
+        {
+          x: () => pile[i].x,
+          y: () => pile[i].y,
+          rotation: num(card.dataset.dr),
+        },
+        {
+          x: 0,
+          y: 0,
+          rotation: () => finalRotation(card),
+        },
+        order.indexOf(i) * STEP
+      );
     });
   }
 }
@@ -1712,91 +1455,6 @@ if (
     ctaSpot.style.setProperty("--mx", `${e.clientX - r.left}px`);
     ctaSpot.style.setProperty("--my", `${e.clientY - r.top}px`);
   });
-}
-
-// ---------- Container Scroll — la card del form si "alza in piedi" ----------
-// Reimplementazione GSAP del componente Aceternity/21st: scrollando attraverso
-// il contenitore la card passa da inclinata (rotateX 20°) e scalata a dritta
-// (rotateX 0°, scale finale), mentre l'header si solleva. Su mobile scala
-// 0.7→0.9, su desktop 1.05→1, come nell'originale. Stato CSS di default =
-// piatto/leggibile; lo stato iniziale inclinato lo impone GSAP solo quando può
-// animare, così no-JS e reduced-motion mostrano il form dritto e usabile.
-{
-  const cscroll = document.querySelector<HTMLElement>("[data-cscroll]");
-  const card = cscroll?.querySelector<HTMLElement>("[data-cscroll-card]");
-  const header = cscroll?.querySelector<HTMLElement>("[data-cscroll-header]");
-  if (cscroll && card && !reduceMotion) {
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    const startScale = isMobile ? 0.72 : 1.1;
-    const endScale = isMobile ? 0.94 : 1;
-    // Tilt più marcato e corsa di scroll più lunga → l'effetto "schermo che
-    // si alza in piedi" è molto più evidente.
-    gsap.set(card, { rotateX: 38, scale: startScale, transformPerspective: 720 });
-    gsap.timeline({
-      scrollTrigger: {
-        // Ancorato alla CARD e concluso sul suo BORDO SUPERIORE: "top 42%"
-        // significa che la card è dritta (rotateX 0) quando il suo bordo alto
-        // arriva al 42% del viewport — cioè mentre la card è ben incorniciata
-        // e visibile, NON dopo averla superata. La card è alta (può eccedere il
-        // viewport): legare la fine al centro la raddrizzava troppo tardi,
-        // quando il bordo alto era già tagliato fuori in cima.
-        trigger: card,
-        start: "top 92%",
-        end: "top 42%",
-        scrub: 0.5,
-      },
-    })
-      .to(card, { rotateX: 0, scale: endScale, ease: "none" }, 0)
-      .to(header ?? card, { y: -120, ease: "none" }, 0);
-  }
-}
-
-// ---------- Form di contatto — submit → mailto precompilato ----------
-// Niente backend (sito statico): comporiamo un mailto verso lo studio con i
-// campi del form, preservando l'intento "manda sulla mail". Per passare a un
-// endpoint reale basterà togliere questo intercept e aggiungere action/method.
-{
-  const form = document.querySelector<HTMLFormElement>("[data-contact-form]");
-  if (form) {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
-      const fd = new FormData(form);
-      const get = (k: string) => (fd.get(k)?.toString() ?? "").trim();
-      // Etichette localizzate del mailto, esposte come data-* dal componente
-      // (fallback italiano se assenti).
-      const L = (k: string, fallback: string) =>
-        form.getAttribute(k) || fallback;
-      const empty = L("data-mail-empty", "—");
-      const nome = get("nome");
-      const budget = get("budget");
-      const subject = `${L("data-mail-subject", "Nuova richiesta di consulenza")} — ${
-        nome || "AuralpDigital"
-      }`;
-      const body = [
-        `${L("data-mail-name", "Nome")}: ${nome}`,
-        `${L("data-mail-email", "Email")}: ${get("email")}`,
-        `${L("data-mail-business", "Attività")}: ${get("attivita") || empty}`,
-        `${L("data-mail-budget", "Budget indicativo")}: ${budget || empty}`,
-        "",
-        L("data-mail-project", "Progetto:"),
-        get("messaggio"),
-      ].join("\n");
-      window.location.href = `mailto:hello@auralpdigital.com?subject=${encodeURIComponent(
-        subject
-      )}&body=${encodeURIComponent(body)}`;
-      const status = form.querySelector<HTMLElement>("[data-form-status]");
-      if (status) {
-        status.textContent = L(
-          "data-status-opening",
-          "Apriamo la tua email… se non parte, scrivici a hello@auralpdigital.com"
-        );
-      }
-    });
-  }
 }
 
 // ---------- Pagina /chi-siamo ----------
@@ -2001,38 +1659,6 @@ if (aboutPage) {
     );
   }
 
-  // Percorso — la linea si disegna in scrub lungo la timeline, le tappe
-  // entrano una a una.
-  if (!reduceMotion && aboutPage.querySelector(".ap-line")) {
-    gsap.fromTo(
-      ".ap-line",
-      { scaleY: 0 },
-      {
-        scaleY: 1,
-        ease: "none",
-        scrollTrigger: {
-          trigger: ".ap-timeline",
-          start: "top 75%",
-          end: "bottom 55%",
-          scrub: 0.5,
-        },
-      }
-    );
-  }
-  aboutPage.querySelectorAll<HTMLElement>(".ap-step").forEach((step) => {
-    // Il badge-nodo entra come unità; i pezzi della card salgono in cascata.
-    revealRise(
-      step.querySelectorAll(":scope > .ap-step-art, :scope > .ap-step-body > *"),
-      {
-        trigger: step,
-        start: "top 84%",
-        stagger: 0.08,
-        y: 30,
-        duration: 0.8,
-      }
-    );
-  });
-
   // Manifesto — la nota di rinforzo entra riga per riga nello spazio negativo.
   aboutPage.querySelectorAll<HTMLElement>("[data-ap-reveal]").forEach((el) => {
     revealRise(el.querySelectorAll(":scope > *"), {
@@ -2080,6 +1706,30 @@ if (aboutPage) {
   }
 }
 
+// ---------- Animazioni CSS infinite — in pausa fuori scena ----------
+// Aurora, segni fluttuanti, hint di scroll, carte che respirano: sono loop
+// CSS infiniti che il browser continua a far avanzare (style + composite, e
+// per l'aurora anche paint) anche quando la loro sezione è lontana. Un solo
+// observer aggiunge .is-offscreen ai contenitori fuori vista e il CSS mette
+// in pausa tutti i loro loop (animation-play-state). Riprendono dal punto in
+// cui erano, quindi rientrando non si vede nessuno stacco.
+if ("IntersectionObserver" in window) {
+  const loopHosts = document.querySelectorAll<HTMLElement>(
+    ".hero-section, .ap-hero, [data-deck]"
+  );
+  if (loopHosts.length) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) =>
+          e.target.classList.toggle("is-offscreen", !e.isIntersecting)
+        );
+      },
+      { rootMargin: "15% 0px 15% 0px" }
+    );
+    loopHosts.forEach((el) => io.observe(el));
+  }
+}
+
 // ---------- Deco — parallasse leggera dei segni decorativi ----------
 // Gli elementi [data-parallax] (curve di livello, segni di stampa) scorrono
 // a una frazione della velocità di scroll: il fattore è nel data-attribute.
@@ -2106,8 +1756,9 @@ if (!reduceMotion) {
 // ---------- Footer — il ghost wordmark emerge in parallasse ----------
 // Il wordmark gigante parte più in basso e risale a posto mentre il footer
 // entra: l'ultima riga della pagina è anche l'ultimo movimento.
-if (!reduceMotion) {
-  gsap.fromTo(
+let ghostTrigger: ScrollTrigger | undefined;
+if (!reduceMotion && document.querySelector(".footer-ghost")) {
+  ghostTrigger = gsap.fromTo(
     ".footer-ghost",
     { yPercent: 36 },
     {
@@ -2120,5 +1771,28 @@ if (!reduceMotion) {
         scrub: 0.6,
       },
     }
-  );
+  ).scrollTrigger;
 }
+
+// ---------- Footer — torna su ----------
+document.querySelector("[data-back-to-top]")?.addEventListener("click", () => {
+  travelFor(2);
+  lenis.scrollTo(0, { duration: 2 });
+});
+
+// ---------- Form a passi della sezione finale ----------
+// Quando un passo si apre sotto il bordo dello schermo lo si porta in vista
+// con lo stesso scroll morbido del resto del sito. Aprendosi, il form allunga
+// la pagina: si ricalcola solo il trigger del wordmark (l'unico più in basso),
+// senza un refresh globale che rilancerebbe le coreografie sopra.
+initContactFlow({
+  reveal: (el) => {
+    setTimeout(() => {
+      const top = el.getBoundingClientRect().top;
+      if (top > window.innerHeight * 0.62) {
+        lenis.scrollTo(el, { offset: -window.innerHeight * 0.3, duration: 1.2 });
+      }
+    }, 60);
+  },
+  onResize: () => ghostTrigger?.refresh(),
+});

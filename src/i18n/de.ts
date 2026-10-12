@@ -35,6 +35,10 @@ const de = {
     openMenu: "Menü öffnen",
     closeMenu: "Menü schließen",
     langLabel: "Sprache",
+    mainLabel: "Hauptnavigation",
+    whatsapp: "WhatsApp",
+    email: "E-Mail",
+    bookCall: "Call buchen",
   },
 
   faq: {
@@ -164,132 +168,112 @@ const de = {
       cta: "Unsere Arbeit entdecken",
       scroll: "Scrollen",
     },
-    problem: {
-      kicker: "Der Punkt",
-      // "Il punto" (logo bloom): vedi it.ts per la forma. textInk scura, textAccent blu+corsivo.
-      textInk:
-        "Eine Website, die keine Kunden bringt, ist ein Kostenfaktor, keine Investition.",
-      textAccent: "Wir bauen Systeme, die aus Suchenden Buchende machen.",
-    },
     services: {
-      kicker: "Was wir tun",
-      title: "Wir bauen",
+      // Drei Leistungen (vedi it.ts).
       link: "Sprechen wir darüber",
-      scroll: "Scrollen",
       items: [
         {
           name: "Websites,",
           nameEm: "die konvertieren.",
-          desc: "Ultramodern, schnell und tadellos auf dem Smartphone. Optimiert für Google und für KI-Suchen (SEO + GEO), mit integrierter künstlicher Intelligenz und jedem Detail darauf ausgelegt, Besucher zu Kunden zu machen.",
-          features: [
-            {
-              title: "Wirkung in 3 Sekunden",
-              text: "Der erste Blick entscheidet. Klares Design und sofortiges Laden halten den Besucher auf der Seite.",
-            },
-            {
-              title: "Überall gefunden",
-              text: "Technisches SEO und Optimierung für KI-Suchen (GEO): Man findet dich bei Google und den Assistenten.",
-            },
-            {
-              title: "Gebaut zum Konvertieren",
-              text: "Text und Struktur führen jeden Abschnitt auf eine einzige Aktion hin: den Kontakt.",
-            },
-          ],
+          desc: "Auf Google und in KI-Suchen gefunden, blitzschnell geladen und so gebaut, dass Besucher bis zur Buchung geführt werden. Dein bester Verkäufer, rund um die Uhr.",
+        },
+        {
+          name: "Social & Ads,",
+          nameEm: "die verkaufen.",
+          desc: "Inhalte, die das Scrollen stoppen, und gezielte Kampagnen für Menschen, die kaufbereit sind. Aufmerksamkeit wird zu Buchungen, nicht zu Nachrichten zum Hinterherlaufen.",
         },
         {
           name: "Management-Systeme",
           nameEm: "nach Maß.",
-          desc: "Systeme, die um deine Abläufe herum gebaut sind: zentrale Daten, jederzeit unter Kontrolle, jeder Lead bis zum Ende verfolgt. Von KI verstärkt, um mehr Arbeit in weniger Zeit zu schaffen.",
-          features: [
-            {
-              title: "Alles an einem Ort",
-              text: "Zentrale Daten, jederzeit unter Kontrolle: keine verstreuten Tabellen oder verlorenen Infos mehr.",
-            },
-            {
-              title: "Kein Lead verloren",
-              text: "Jeder Kontakt erfasst und bis zum Abschluss verfolgt, ganz ohne sich auf das Gedächtnis zu verlassen.",
-            },
-            {
-              title: "Weniger Handarbeit",
-              text: "Automatisierungen und KI nehmen dir wiederkehrende Aufgaben ab und schenken dir Stunden pro Woche.",
-            },
-          ],
-        },
-        {
-          name: "Social Media,",
-          nameEm: "das verkauft.",
-          desc: "Strategie und Inhalte für mehr organischen Traffic, gezielte Ad-Kampagnen, um ihn in Kunden zu verwandeln: deine Marke vor den richtigen Menschen, zur richtigen Zeit.",
-          features: [
-            {
-              title: "Stoppen den Scroll",
-              text: "Inhalte und Formate, die in den ersten, entscheidenden Sekunden Aufmerksamkeit fangen.",
-            },
-            {
-              title: "Ads auf Käufer",
-              text: "Gezielte Kampagnen für das richtige Publikum: das Budget geht an die, die kaufbereit sind.",
-            },
-            {
-              title: "Klare Zahlen",
-              text: "Transparente Monatsberichte: du weißt immer, was funktioniert und was es bringt.",
-            },
-          ],
+          desc: "Buchungen, Kontakte und Kunden an einem Ort, mit Automationen, die antworten, auch wenn du keine Zeit hast. Keine Anfrage geht verloren, jede Woche Stunden gewonnen.",
         },
       ],
     },
     projects: {
       title: "Projekte Online",
       sub: "Entdecke unsere Arbeiten",
+      soon: "Coming soon",
+      soonSub: "Das nächste entsteht gerade",
+      create: "Erstelle dein Projekt",
+      visit: "Website öffnen",
     },
-    aboutTeaser: {
-      kicker: "Über uns",
-      // Righe composte a mano, stessa misura per tutte (vedi it.ts).
-      statement:
-        "Ein unabhängiges \nStudio, das *universitäre* \n*Strenge* mit Werkzeugen \nder neuen Generation \nverbindet: jedes \nProjekt aus *einer* \n*Hand*, vom ersten \nSketch bis zum Launch",
-      cta: "Unseren Ansatz entdecken",
+    point: {
+      // Problem → Wendepunkt (vedi it.ts).
+      pain: "Du leistest hervorragende Arbeit.\nAber Kunden schreiben dir **per DM**, rufen **zu jeder Uhrzeit** an und buchen am Ende bei dem, den sie **zuerst auf Google** finden.",
+      turn: "Wir bauen **das System**, das sie zu dir bringt.\n*Und das arbeitet, während du arbeitest.*",
     },
     contact: {
       kicker: "Los geht's",
       headline: "Wir bauen dein *Wachstumssystem.*",
-      sub: "Eine kostenlose 30-Minuten-Beratung: keine Verpflichtung, nur klare Ideen, wie du dein Geschäft wachsen lässt.",
+      sub: "Drei kurze Fragen und wir wissen schon, wie wir helfen können. Dann entscheidest du: ein kostenloser 30-Minuten-Call oder eine direkte Nachricht.",
     },
   },
 
   contactForm: {
-    asideLabel: "Die Beratung",
-    asideTitle: "Hier *beginnt alles.*",
-    steps: [
-      "Du schreibst uns ein paar Zeilen zum Projekt",
-      "Wir antworten innerhalb von 24 Stunden",
-      "Kostenloser 30-Min-Call, ganz unverbindlich",
+    steps: {
+      service: { title: "Was brauchst du?", hint: "Auch mehrere Antworten möglich" },
+      profile: { title: "Für wen ist das Projekt?", hint: "So bereiten wir das passende Angebot vor" },
+      channel: { title: "Wie möchtest du uns erreichen?", hint: "Du entscheidest — antworten tun immer wir zwei" },
+    },
+    services: [
+      { value: "web", label: "Website", desc: "Präsenz, Buchungen, E-Commerce" },
+      { value: "social", label: "Social & Ads", desc: "Inhalte und Kampagnen, die verkaufen" },
+      { value: "gestionale", label: "Software nach Maß", desc: "Kunden, Termine, Automationen" },
+      { value: "unsure", label: "Weiß ich noch nicht", desc: "Ihr beratet mich" },
     ],
-    asideNote: "Klare Budgets von Anfang an · Unverbindlich",
+    profiles: [
+      { value: "solo", label: "Nur ich", desc: "Freelancer oder Selbstständig" },
+      { value: "team", label: "Kleines Team", desc: "2 bis 10 Personen" },
+      { value: "company", label: "Unternehmen", desc: "Mehr als 10 Personen" },
+      { value: "startup", label: "Ich starte gerade", desc: "Neues Geschäft oder Idee" },
+    ],
+    channels: {
+      call: { label: "Call buchen", desc: "30 Minuten kostenlos, Tag und Uhrzeit wählst du" },
+      write: { label: "Direkt schreiben", desc: "WhatsApp oder E-Mail, mit einem Tipp" },
+    },
+    calendar: {
+      prev: "Vorheriger Monat",
+      next: "Nächster Monat",
+      pickDay: "Wähle einen Tag, um die freien Zeiten zu sehen.",
+      timezone: "Italienische Zeit · 30 Min",
+    },
     fields: {
       name: "Name",
       email: "E-Mail",
-      business: "Dein Business",
-      project: "Das Projekt",
+      namePh: "Wie heißt du",
+      emailPh: "Wohin wir die Einladung schicken",
+      addMessage: "Nachricht hinzufügen",
+      messagePh: "Ein paar Zeilen zum Projekt (optional)",
     },
-    placeholders: {
-      name: "Wie heißt du",
-      email: "Wohin wir antworten",
-      business: "Studio, Marke, Branche…",
-      project: "Zwei Zeilen zu deiner Idee.",
+    book: "Call buchen",
+    errors: {
+      slot: "Wähle Tag und Uhrzeit.",
+      name: "Bitte gib deinen Namen ein.",
+      email: "Wir brauchen eine gültige E-Mail für die Einladung.",
     },
-    budgetLegend: "Ungefähres Budget",
-    budgetOptional: "— optional, in €",
-    budgets: ["< 1.5k", "1.5–3k", "3–6k", "6k+", "Weiß ich noch nicht"],
-    submit: "Beratung buchen",
-    submitNote: "Antwort innerhalb von 24 Stunden",
-    statusOpening:
-      "Wir öffnen deine E-Mail… falls nichts passiert, schreib uns an hello@auralpdigital.com",
-    mail: {
-      subject: "Neue Beratungsanfrage",
+    done: {
+      title: "Fast geschafft.",
+      text: "Wir haben die E-Mail mit deiner Anfrage vorbereitet: Klick auf Senden und wir bestätigen den Termin innerhalb von 24 Stunden.",
+      addToCal: "In deinen Kalender eintragen",
+      edit: "Zeit ändern",
+    },
+    direct: {
+      whatsapp: "WhatsApp",
+      whatsappNote: "Antwort am selben Tag",
+      email: "E-Mail",
+      note: "Die Nachricht ist mit deinen Antworten schon geschrieben: einfach senden.",
+    },
+    msg: {
+      hello: "Hallo AuralpDigital!",
+      interest: "Ich interessiere mich für",
+      profile: "Profil",
+      callSubject: "Call-Anfrage",
+      writeSubject: "Neues Projekt",
+      when: "Wann",
       name: "Name",
       email: "E-Mail",
-      business: "Business",
-      budget: "Ungefähres Budget",
-      projectHeading: "Projekt:",
-      empty: "—",
+      message: "Nachricht",
+      calTitle: "Call mit AuralpDigital",
     },
   },
 
@@ -306,6 +290,9 @@ const de = {
     muted: "Südtirol, Italien · 39100",
     location: "Südtirol, Italien",
     madeWith: "Mit Sorgfalt gemacht",
+    whatsapp: "WhatsApp",
+    email: "E-Mail",
+    backToTop: "Nach oben",
   },
 
   about: {

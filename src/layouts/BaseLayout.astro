@@ -54,8 +54,109 @@ const {
         }
       })();
     </script>
+    <!-- Page wipe (vedi scripts/pageWipe.ts): la View Transition tra pagine
+         parte SOLO se il cambio pagina è nato da un click su un link del sito
+         (navbar, footer, CTA, lingua…) — non da indietro/avanti o da un URL
+         digitato. Dev'essere uno script classico in <head>:
+         - il click si marca in CATTURA sul document, attivo dal primo istante:
+           non dipende dall'idratazione della navbar (cliccare prima che React
+           partisse faceva saltare le fasce);
+         - `pagereveal` scatta prima del primo render della pagina nuova, prima
+           che un modulo differito possa ascoltarlo.
+         Il flag si consuma subito, così non resta appeso nei browser senza
+         supporto. Passando sopra un link interno la pagina viene prefetchata:
+         la vecchia resta ferma il meno possibile prima della transizione. -->
+    <script is:inline>
+      (function () {
+        var KEY = "apd:wipe";
+        var wipe = false;
+        try {
+          // Vale solo se il click è recente: un click annullato non deve far
+          // partire le fasce su una navigazione successiva (indietro, URL…).
+          var at = Number(sessionStorage.getItem(KEY));
+          wipe = at > 0 && Date.now() - at < 15000;
+          sessionStorage.removeItem(KEY);
+        } catch (e) {}
+
+        // Link verso un'ALTRA pagina dello stesso sito (non ancore di questa).
+        function crossPage(a) {
+          if (!a || !a.href || a.hasAttribute("download")) return null;
+          if (a.target && a.target !== "_self") return null;
+          var url = new URL(a.href, location.href);
+          if (url.origin !== location.origin) return null;
+          if (url.pathname.replace(/\/$/, "") === location.pathname.replace(/\/$/, "")) return null;
+          return url;
+        }
+        document.addEventListener(
+          "click",
+          function (e) {
+            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+            if (!crossPage(a)) return;
+            try {
+              sessionStorage.setItem(KEY, String(Date.now()));
+            } catch (err) {}
+          },
+          true
+        );
+        var fetched = {};
+        function hint(e) {
+          var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+          var url = crossPage(a);
+          if (!url || fetched[url.pathname]) return;
+          fetched[url.pathname] = true;
+          var l = document.createElement("link");
+          l.rel = "prefetch";
+          l.href = url.pathname;
+          document.head.appendChild(l);
+        }
+        document.addEventListener("pointerover", hint, { passive: true });
+        document.addEventListener("focusin", hint);
+
+        // .vt-arrive mette in vista le fasce e dà i nomi alla transizione:
+        // non deve MAI restare addosso alla pagina fuori da una transizione,
+        // o le fasce coprirebbero tutto. Si toglie da più strade (la prima
+        // che arriva vince, le altre non fanno nulla).
+        var root = document.documentElement;
+        var safety = 0;
+        function endArrive() {
+          clearTimeout(safety);
+          root.classList.remove("vt-arrive");
+        }
+
+        window.addEventListener("pagereveal", function (e) {
+          var vt = e.viewTransition;
+          endArrive();
+          if (!vt) return;
+          if (!wipe || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            vt.skipTransition();
+            return;
+          }
+          wipe = false;
+          root.classList.add("vt-arrive");
+          // 1) fine normale (o transizione saltata/annullata dal browser);
+          vt.finished.then(endArrive, endArrive);
+          // 2) rete di sicurezza: se per qualunque motivo `finished` non
+          //    arrivasse, a animazioni finite (~1.4s dopo `ready`) si pulisce
+          //    comunque. Se `ready` fallisce la transizione non c'è: via subito.
+          vt.ready.then(function () {
+            safety = setTimeout(endArrive, 2400);
+          }, endArrive);
+        });
+        // 3) Si lascia la pagina mentre arriva ancora (indietro, un altro
+        //    link): la pagina vecchia deve farsi fotografare SENZA i nomi
+        //    della transizione d'arrivo, o la nuova li erediterebbe.
+        window.addEventListener("pageswap", endArrive);
+        // 4) Pagina messa in / ripresa dalla cache avanti-indietro: torna
+        //    sempre pulita.
+        window.addEventListener("pagehide", endArrive);
+        window.addEventListener("pageshow", function (e) {
+          if (e.persisted) endArrive();
+        });
+      })();
+    </script>
   </head>
-  <body class="bg-[#FCFAF6] text-[#171310] overflow-x-hidden">
+  <body class="bg-[#FEFDEC] text-[#171310] overflow-x-clip">
     <!-- First-load loader: wordmark del brand (colori identici al logo SVG) e,
          sotto, un loader 3D a cuboide. Primo figlio del body così copre tutto
          fin da subito; rimosso dallo script dopo un minimo di 3s. -->
@@ -92,6 +193,14 @@ const {
       </div>
     </div>
 
+
+    <!-- Transizione tra pagine: le due fasce blu del vecchio menu. Restano
+         fuori schermo a destra; solo durante la View Transition (.vt-arrive)
+         si mettono in vista per farsi fotografare intere (global.css). -->
+    <div class="page-wipe" aria-hidden="true">
+      <div class="page-wipe-layer" style="background:#2748A5"></div>
+      <div class="page-wipe-layer" style="background:#1C2B5F"></div>
+    </div>
 
     <!-- Barra di avanzamento scroll — lato destro -->
     <div id="scroll-track">

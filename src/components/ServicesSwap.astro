@@ -14,46 +14,41 @@
 //
 // La regia (pin, scrub, misure dei posti) è in src/scripts/main.ts.
 //
-// CONTENUTO: tutto SEGNAPOSTO — titoli, descrizioni e immagini arrivano dopo.
-// Per mettere un'immagine vera basta valorizzare `src` nel dato qui sotto:
-// il pannello passa da placeholder a <img> senza toccare altro.
+// CONTENUTO: titoli e descrizioni dal dizionario (`home.services`), nella
+// lingua della pagina. Il visual di ogni servizio sta in `media` qui sotto:
+// `video` (+ `poster`) per una clip in loop, `src` per un'immagine; senza
+// nessuno dei due si vede il pannello segnaposto. Le clip suonano SOLO
+// mentre la loro scena è nella cornice (regia in main.ts).
+import type { Lang } from "../i18n";
+import { defaultLang, getDict } from "../i18n";
 
-interface Service {
-  n: string;
-  title: string;
-  titleEm: string;
-  desc: string;
-  /** Immagine reale del servizio; se assente si vede il pannello segnaposto. */
-  src?: string;
-  /** Tinta del segnaposto — solo per distinguere i pannelli durante lo scambio. */
-  tint: string;
+interface Props {
+  lang?: Lang;
 }
+const { lang = defaultLang } = Astro.props;
+const t = getDict(lang).home.services;
 
-const services: Service[] = [
+// Dati strutturali per indice (stesso ordine del dizionario). `tint` serve
+// solo a distinguere i segnaposto durante lo scambio.
+const media: { video?: string; poster?: string; src?: string; tint: string }[] = [
   {
-    n: "01",
-    title: "Titolo del primo",
-    titleEm: "servizio.",
-    desc: "Descrizione segnaposto del primo servizio: due o tre righe che raccontano il valore per il cliente, non l'elenco delle cose che facciamo. Il testo definitivo arriva dopo il design.",
-    tint: "59, 91, 219",
+    // Clip originale (720×1280, con audio) in .video-originals/: qui lo
+    // stesso video senza traccia audio (copiato, nessuna ricompressione) +
+    // faststart. È 9:16: la cornice 4:5 la ritaglia in alto e in basso.
+    video: "/videos/services/siti.mp4?v=2",
+    poster: "/videos/services/siti-poster.jpg?v=2",
+    tint: "39, 72, 165",
   },
   {
-    n: "02",
-    title: "Titolo del secondo",
-    titleEm: "servizio.",
-    desc: "Descrizione segnaposto del secondo servizio. Stessa lunghezza della prima, così il palco non cambia altezza passando da una scena all'altra e lo scambio resta stabile.",
-    tint: "226, 99, 47",
+    // Stessa lavorazione della clip dei siti (originale in .video-originals/).
+    video: "/videos/services/social.mp4",
+    poster: "/videos/services/social-poster.jpg",
+    tint: "216, 64, 2",
   },
-  {
-    n: "03",
-    title: "Titolo del terzo",
-    titleEm: "servizio.",
-    desc: "Descrizione segnaposto del terzo servizio. Chiude la sequenza: la card torna a destra e il testo torna a sinistra, come nella prima scena.",
-    tint: "26, 35, 64",
-  },
+  { tint: "28, 43, 95" },
 ];
 
-const total = String(services.length).padStart(2, "0");
+const services = t.items.map((item, i) => ({ ...item, ...media[i] }));
 ---
 
 <div class="svc" data-svc style={`--svc-count:${services.length}`}>
@@ -63,11 +58,21 @@ const total = String(services.length).padStart(2, "0");
       <div class="svc-track" data-svc-track>
         {services.map((s, i) => (
           <figure class="svc-shot" data-svc-shot data-i={i} style={`--tint:${s.tint}; --z:${i}`}>
-            {s.src ? (
+            {s.video ? (
+              <video
+                data-svc-video
+                src={s.video}
+                poster={s.poster}
+                muted
+                loop
+                playsinline
+                preload="none"
+                aria-hidden="true"
+              />
+            ) : s.src ? (
               <img src={s.src} alt="" loading="lazy" decoding="async" />
             ) : (
               <div class="svc-ph" aria-hidden="true">
-                <span class="svc-ph-num">{s.n}</span>
                 <span class="svc-ph-label">Immagine segnaposto</span>
               </div>
             )}
@@ -80,13 +85,10 @@ const total = String(services.length).padStart(2, "0");
     <div class="svc-copies" data-svc-copies>
       {services.map((s, i) => (
         <article class="svc-copy" data-svc-copy data-i={i}>
-          <span class="svc-index">
-            {s.n}<span class="svc-index-total">/{total}</span>
-          </span>
-          <h3 class="svc-title">{s.title} <em>{s.titleEm}</em></h3>
+          <h3 class="svc-title">{s.name} <em>{s.nameEm}</em></h3>
           <p class="svc-desc">{s.desc}</p>
           <a class="svc-link" href="#contatti">
-            Parliamone <span aria-hidden="true">↗</span>
+            {t.link} <span aria-hidden="true">↗</span>
           </a>
         </article>
       ))}

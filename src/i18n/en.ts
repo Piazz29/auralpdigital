@@ -35,6 +35,10 @@ const en = {
     openMenu: "Open menu",
     closeMenu: "Close menu",
     langLabel: "Language",
+    mainLabel: "Main navigation",
+    whatsapp: "WhatsApp",
+    email: "Email",
+    bookCall: "Book a call",
   },
 
   faq: {
@@ -164,131 +168,112 @@ const en = {
       cta: "Explore our work",
       scroll: "Scroll",
     },
-    problem: {
-      kicker: "The point",
-      // "Il punto" (logo bloom): vedi it.ts per la forma. textInk scura, textAccent blu+corsivo.
-      textInk: "A site that doesn't bring clients is a cost, not an investment.",
-      textAccent: "We build systems that turn searchers into bookers.",
-    },
     services: {
-      kicker: "What we do",
-      title: "We build",
+      // Three services (vedi it.ts).
       link: "Let's talk",
-      scroll: "Scroll",
       items: [
         {
           name: "Websites",
           nameEm: "that convert.",
-          desc: "Ultra-modern, fast and flawless on mobile. Optimized for Google and for AI search (SEO + GEO), with built-in artificial intelligence and every detail designed to turn visitors into clients.",
-          features: [
-            {
-              title: "Impact in 3 seconds",
-              text: "The first glance decides. Clean design and instant loading keep visitors on the page.",
-            },
-            {
-              title: "Found everywhere",
-              text: "Technical SEO and AI-search optimization (GEO): people find you on Google and on assistants.",
-            },
-            {
-              title: "Built to convert",
-              text: "Copy and structure guide every section toward one action: getting in touch.",
-            },
-          ],
+          desc: "Found on Google and in AI search, fast to load and built to guide every visitor all the way to a booking. Your best salesperson, open 24 hours a day.",
+        },
+        {
+          name: "Social & Ads",
+          nameEm: "that sell.",
+          desc: "Content that stops the scroll and campaigns aimed at people ready to buy. Attention turns into bookings, not messages you have to chase one by one.",
         },
         {
           name: "Management systems",
           nameEm: "built to fit.",
-          desc: "Systems built around your processes: centralized data, always under control, every lead followed to the end. AI-powered, to get more done in less time.",
-          features: [
-            {
-              title: "All in one place",
-              text: "Centralized data, always under control: no more scattered spreadsheets or lost information.",
-            },
-            {
-              title: "No lead lost",
-              text: "Every contact tracked and followed to the close, without relying on memory.",
-            },
-            {
-              title: "Less manual work",
-              text: "Automation and AI remove repetitive tasks and give you back hours every week.",
-            },
-          ],
-        },
-        {
-          name: "Social",
-          nameEm: "that sells.",
-          desc: "Strategy and content to grow organic traffic, targeted ad campaigns to turn it into clients: your brand in front of the right people, at the right time.",
-          features: [
-            {
-              title: "Stop the scroll",
-              text: "Content and formats designed to catch attention in the first, decisive seconds.",
-            },
-            {
-              title: "Ads on buyers",
-              text: "Targeted campaigns for the right audience: budget goes to those ready to buy.",
-            },
-            {
-              title: "Clear numbers",
-              text: "Transparent monthly reports: you always know what works and what it returns.",
-            },
-          ],
+          desc: "Bookings, contacts and clients in one place, with automations that reply even when you can't. No request slips through, hours given back every week.",
         },
       ],
     },
     projects: {
       title: "Projects Online",
       sub: "Explore our work",
+      soon: "Coming soon",
+      soonSub: "The next one is in the works",
+      create: "Create your project",
+      visit: "Open the website",
     },
-    aboutTeaser: {
-      kicker: "About us",
-      // Righe composte a mano, stessa misura per tutte (vedi it.ts).
-      statement:
-        "An independent \nstudio that blends \n*academic rigor* with \nnext-generation \ntools: every project \nhandled by *the same* \n*hands*, from first \nsketch to launch",
-      cta: "Discover our approach",
+    point: {
+      // Problem → turn (vedi it.ts).
+      pain: "You do excellent work.\nBut clients **DM you**, call **at all hours** and end up booking whoever they find **first on Google**.",
+      turn: "We build **the system** that brings them to you.\n*And it works while you do.*",
     },
     contact: {
       kicker: "Let's start",
       headline: "Let's build your *growth system.*",
-      sub: "A free 30-minute consultation: no commitment, just clear ideas on how to grow your business.",
+      sub: "Three quick questions and we already know how to help. Then it's up to you: a free 30-minute call or a direct message.",
     },
   },
 
   contactForm: {
-    asideLabel: "The consultation",
-    asideTitle: "It all *starts here.*",
-    steps: [
-      "You write us a few lines about the project",
-      "We reply within 24 hours",
-      "Free 30-min call, zero commitment",
+    steps: {
+      service: { title: "What do you need?", hint: "Pick as many as you like" },
+      profile: { title: "Who is the project for?", hint: "So we can prepare the right proposal" },
+      channel: { title: "How would you like to talk?", hint: "Your call — it's always the two of us replying" },
+    },
+    services: [
+      { value: "web", label: "Website", desc: "Showcase, bookings, e-commerce" },
+      { value: "social", label: "Social & Ads", desc: "Content and campaigns that sell" },
+      { value: "gestionale", label: "Custom software", desc: "Clients, scheduling, automations" },
+      { value: "unsure", label: "Not sure yet", desc: "You tell us" },
     ],
-    asideNote: "Clear budgets from the start · No commitment",
+    profiles: [
+      { value: "solo", label: "Just me", desc: "Freelancer or professional" },
+      { value: "team", label: "Small team", desc: "2 to 10 people" },
+      { value: "company", label: "Company", desc: "More than 10 people" },
+      { value: "startup", label: "Just starting", desc: "New business or idea" },
+    ],
+    channels: {
+      call: { label: "Book a call", desc: "30 free minutes, you pick day and time" },
+      write: { label: "Message us now", desc: "WhatsApp or email, in one tap" },
+    },
+    calendar: {
+      prev: "Previous month",
+      next: "Next month",
+      pickDay: "Pick a day to see the free slots.",
+      timezone: "Italian time · 30 min",
+    },
     fields: {
       name: "Name",
       email: "Email",
-      business: "Your business",
-      project: "The project",
+      namePh: "Your name",
+      emailPh: "Where we send the invite",
+      addMessage: "Add a message",
+      messagePh: "A few lines about the project (optional)",
     },
-    placeholders: {
-      name: "What's your name",
-      email: "Where we reply to you",
-      business: "Studio, brand, industry…",
-      project: "A couple of lines on what you have in mind.",
+    book: "Book the call",
+    errors: {
+      slot: "Pick a day and a time.",
+      name: "Please enter your name.",
+      email: "We need a valid email to send you the invite.",
     },
-    budgetLegend: "Indicative budget",
-    budgetOptional: "— optional, in €",
-    budgets: ["< 1.5k", "1.5–3k", "3–6k", "6k+", "Not sure yet"],
-    submit: "Book the consultation",
-    submitNote: "Reply within 24 hours",
-    statusOpening:
-      "Opening your email… if nothing happens, write to us at hello@auralpdigital.com",
-    mail: {
-      subject: "New consultation request",
+    done: {
+      title: "Almost there.",
+      text: "We've prepared the email with your request: hit Send and we'll confirm the invite within 24 hours.",
+      addToCal: "Save it to your calendar",
+      edit: "Change time",
+    },
+    direct: {
+      whatsapp: "WhatsApp",
+      whatsappNote: "We reply the same day",
+      email: "Email",
+      note: "The message is already written with your choices: just send it.",
+    },
+    msg: {
+      hello: "Hi AuralpDigital!",
+      interest: "I'm interested in",
+      profile: "Profile",
+      callSubject: "Call request",
+      writeSubject: "New project",
+      when: "When",
       name: "Name",
       email: "Email",
-      business: "Business",
-      budget: "Indicative budget",
-      projectHeading: "Project:",
-      empty: "—",
+      message: "Message",
+      calTitle: "Call with AuralpDigital",
     },
   },
 
@@ -305,6 +290,9 @@ const en = {
     muted: "South Tyrol, Italy · 39100",
     location: "South Tyrol, Italy",
     madeWith: "Made with care",
+    whatsapp: "WhatsApp",
+    email: "Email",
+    backToTop: "Back to top",
   },
 
   about: {

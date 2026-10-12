@@ -1,0 +1,358 @@
+/* ======================================================================
+   NAVBAR A PILLOLA — vedi PillNav.jsx per la coreografia.
+   Una sola scatola fissa (.pnav-shell) che GSAP allarga e allunga; tutto il
+   resto vive dentro e viene tagliato dal suo overflow. Vetro crema
+   semi-trasparente: leggibile sia sulla carta sia sulle bande navy, quindi
+   niente più inversione del logo sulle superfici scure.
+   ====================================================================== */
+
+.pnav {
+  --pnav-bar-h: 56px;
+  --pnav-radius: calc(var(--pnav-bar-h) / 2);
+  --pnav-ink: var(--color-ink, #171310);
+  --pnav-ink-2: var(--color-text-secondary, #544C40);
+  --pnav-accent: var(--color-accent, #2748A5);
+  --pnav-ember: var(--color-orange, #D84002);
+  position: relative;
+  z-index: 60;
+}
+
+/* Velo sulla pagina a menu aperto: solo opacity, nessun blur a tutto schermo. */
+.pnav-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 27, 59, 0.28);
+  visibility: hidden;
+  opacity: 0;
+}
+
+.pnav-dock {
+  position: fixed;
+  top: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.pnav-shell {
+  --pnav-open-w: 780px;
+  position: relative;
+  height: var(--pnav-bar-h);
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: var(--pnav-radius);
+  background: rgba(254, 253, 236, 0.66);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(23, 19, 16, 0.08);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 10px 30px -12px rgba(17, 27, 59, 0.22);
+  pointer-events: auto;
+  /* Aperta, il vetro si fa più pieno: le voci grandi restano leggibili anche
+     sopra video e bande scure. */
+  transition: background-color 0.5s ease;
+}
+
+.pnav[data-open] .pnav-shell {
+  background: rgba(254, 253, 236, 0.9);
+}
+
+/* ---------- Barra (sempre visibile, anche da aperta) ---------- */
+
+.pnav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  height: var(--pnav-bar-h);
+  padding: 0 8px 0 22px;
+}
+
+.pnav-logo {
+  display: inline-flex;
+  flex: none;
+  border-radius: 6px;
+}
+
+.pnav-logo img {
+  display: block;
+  height: 22px;
+  width: auto;
+}
+
+.pnav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pnav-link {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  color: var(--pnav-ink-2);
+  text-decoration: none;
+  transition: color 0.25s ease, background-color 0.25s ease;
+}
+
+.pnav-link:hover {
+  color: var(--pnav-ink);
+  background: rgba(23, 19, 16, 0.06);
+}
+
+/* Burger: due linee che diventano una X. */
+.pnav-burger {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--pnav-ink);
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.pnav-burger:hover {
+  background: var(--pnav-ember);
+}
+
+.pnav-burger:active {
+  transform: scale(0.94);
+}
+
+.pnav-burger-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16px;
+  height: 1.5px;
+  margin-left: -8px;
+  border-radius: 2px;
+  background: var(--color-bg, #FEFDEC);
+  transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.pnav-burger-line:first-child {
+  transform: translateY(-3.5px);
+}
+
+.pnav-burger-line:last-child {
+  transform: translateY(3.5px);
+}
+
+.pnav[data-open] .pnav-burger-line:first-child {
+  transform: rotate(45deg);
+}
+
+.pnav[data-open] .pnav-burger-line:last-child {
+  transform: rotate(-45deg);
+}
+
+/* ---------- Pannello (rivelato dalla discesa) ---------- */
+
+.pnav-panel {
+  /* Fuori dal flusso, così non detta la larghezza della pillola chiusa; e
+     larghezza FINALE fin da subito (impostata via JS): mentre la scatola si
+     allarga il contenuto non si riflette, viene solo scoperto. */
+  position: absolute;
+  top: var(--pnav-bar-h);
+  left: 0;
+  width: var(--pnav-open-w);
+  max-width: calc(100vw - 32px);
+  max-height: calc(100svh - var(--pnav-bar-h) - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 22px 22px;
+}
+
+.pnav-big {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Maschera dell'entrata: la voce sale da sotto il proprio bordo. */
+.pnav-big-item {
+  overflow: hidden;
+}
+
+.pnav-big-link {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6.4vw, 4rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--pnav-ink);
+  text-decoration: none;
+  will-change: transform;
+}
+
+/* Hover: la parola "rotola" e lascia il posto alla copia in Ember. */
+.pnav-big-roll {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  /* Riga alta abbastanza da non tagliare le discendenti (g, p). */
+  height: 1.16em;
+  overflow: hidden;
+}
+
+.pnav-big-roll > span {
+  display: block;
+  line-height: 1.16;
+  transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.pnav-big-roll > span:last-child {
+  color: var(--pnav-ember);
+}
+
+.pnav-big-link:hover .pnav-big-roll > span,
+.pnav-big-link:focus-visible .pnav-big-roll > span {
+  transform: translateY(-100%);
+}
+
+.pnav-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-border, #E6E3C9);
+}
+
+.pnav-lang {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.pnav-lang-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--pnav-ink-2);
+  text-decoration: none;
+  transition: color 0.25s ease, background-color 0.25s ease;
+}
+
+.pnav-lang-link:hover {
+  color: var(--pnav-ink);
+}
+
+.pnav-lang-link.is-active {
+  color: var(--pnav-accent);
+  background: rgba(39, 72, 165, 0.1);
+}
+
+.pnav-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pnav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-strong, #D5D1B4);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--pnav-ink);
+  text-decoration: none;
+  transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.pnav-cta:hover {
+  border-color: var(--pnav-ink);
+}
+
+.pnav-cta--primary {
+  border-color: var(--pnav-ink);
+  background: var(--pnav-ink);
+  color: var(--color-bg, #FEFDEC);
+}
+
+.pnav-cta--primary:hover {
+  border-color: var(--pnav-ember);
+  background: var(--pnav-ember);
+}
+
+.pnav-cta--primary svg {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pnav-cta--primary:hover svg {
+  transform: translate(2px, -2px);
+}
+
+.pnav :focus-visible {
+  outline: 2px solid var(--pnav-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Mobile: la pillola chiusa tiene solo logo + burger ---------- */
+
+@media (max-width: 767px) {
+  .pnav-links {
+    display: none;
+  }
+  .pnav-bar {
+    gap: 48px;
+    padding-left: 20px;
+  }
+  .pnav-panel {
+    padding: 14px 20px 20px;
+  }
+  .pnav-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pnav-ctas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .pnav-cta {
+    justify-content: center;
+  }
+  .pnav-cta--primary {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pnav-burger-line,
+  .pnav-big-roll > span {
+    transition: none;
+  }
+}

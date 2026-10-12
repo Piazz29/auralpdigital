@@ -36,6 +36,10 @@ const it = {
     openMenu: "Apri il menu",
     closeMenu: "Chiudi il menu",
     langLabel: "Lingua",
+    mainLabel: "Navigazione principale",
+    whatsapp: "WhatsApp",
+    email: "Email",
+    bookCall: "Prenota una call",
   },
 
   faq: {
@@ -165,139 +169,122 @@ const it = {
       cta: "Esplora il nostro lavoro",
       scroll: "Scorri",
     },
-    problem: {
-      kicker: "Il punto",
-      // "Il punto" (logo bloom): il testo si rivela lettera per lettera sopra al
-      // logo sfocato. Diviso in due parti: `textInk` (scura) nomina il problema,
-      // `textAccent` (blu + corsivo) lo ribalta nella promessa.
-      textInk:
-        "Un sito che non porta clienti è un costo, non un investimento.",
-      textAccent:
-        "Costruiamo sistemi che trasformano chi cerca in chi prenota.",
-    },
     services: {
-      kicker: "Cosa facciamo",
-      title: "Costruiamo",
+      // COSA FACCIAMO — tre servizi, uno per ogni dolore nominato in "Il
+      // punto" (Google → siti, DM → social, a qualsiasi ora → gestionali).
+      // Descrizioni di lunghezza simile: il palco non cambia altezza tra una
+      // scena e l'altra. `name` tondo + `nameEm` corsivo blu.
       link: "Parliamone",
-      scroll: "Scorri",
       items: [
         {
           name: "Siti web",
           nameEm: "che convertono.",
-          desc: "Ultra-moderni, veloci e impeccabili su mobile. Ottimizzati per Google e per le ricerche AI (SEO + GEO), con intelligenza artificiale integrata e ogni dettaglio progettato per trasformare i visitatori in clienti.",
-          features: [
-            {
-              title: "Impatto in 3 secondi",
-              text: "Il primo sguardo decide. Design pulito e caricamento istantaneo tengono il visitatore sulla pagina.",
-            },
-            {
-              title: "Trovato ovunque",
-              text: "SEO tecnica e ottimizzazione per le ricerche AI (GEO): ti trovano su Google e sugli assistenti.",
-            },
-            {
-              title: "Costruito per convertire",
-              text: "Copy e struttura guidano ogni sezione verso un'unica azione: il contatto.",
-            },
-          ],
+          desc: "Ti trovano su Google e nelle ricerche AI, si aprono in un attimo e accompagnano chi arriva fino alla prenotazione. Il tuo miglior venditore, aperto 24 ore su 24.",
+        },
+        {
+          name: "Social & Ads",
+          nameEm: "che vendono.",
+          desc: "Contenuti che fermano lo scroll e campagne mirate su chi è pronto a comprare. L'attenzione diventa prenotazioni, non messaggi da rincorrere uno per uno.",
         },
         {
           name: "Gestionali",
           nameEm: "su misura.",
-          desc: "Sistemi costruiti attorno ai tuoi processi: dati centralizzati e sempre sotto controllo, ogni lead seguito fino in fondo. Potenziati dall'AI, per completare più lavoro in meno tempo.",
-          features: [
-            {
-              title: "Tutto in un posto",
-              text: "Dati centralizzati e sempre sotto controllo: niente più fogli sparsi o informazioni perse.",
-            },
-            {
-              title: "Nessun lead perso",
-              text: "Ogni contatto tracciato e seguito fino alla chiusura, senza affidarsi alla memoria.",
-            },
-            {
-              title: "Meno lavoro manuale",
-              text: "Automazioni e AI tolgono le attività ripetitive e ti restituiscono ore ogni settimana.",
-            },
-          ],
-        },
-        {
-          name: "Social",
-          nameEm: "che vendono.",
-          desc: "Strategia e contenuti per far crescere il traffico organico, campagne ads mirate per trasformarlo in clienti: il tuo brand davanti alle persone giuste, al momento giusto.",
-          features: [
-            {
-              title: "Fermano lo scroll",
-              text: "Contenuti e format pensati per catturare l'attenzione nei primi, decisivi secondi.",
-            },
-            {
-              title: "Ads su chi compra",
-              text: "Campagne mirate al pubblico giusto: il budget va su chi è pronto ad acquistare.",
-            },
-            {
-              title: "Numeri chiari",
-              text: "Report mensili trasparenti: sai sempre cosa funziona e quanto sta rendendo.",
-            },
-          ],
+          desc: "Prenotazioni, contatti e clienti in un unico posto, con automazioni che rispondono anche quando tu non puoi. Nessuna richiesta persa, ore restituite ogni settimana.",
         },
       ],
     },
     projects: {
       title: "Progetti Online",
       sub: "Esplora i nostri lavori",
+      soon: "Coming soon",
+      soonSub: "Il prossimo è in cantiere",
+      create: "Crea il tuo progetto",
+      visit: "Apri il sito",
     },
-    aboutTeaser: {
-      kicker: "Chi siamo",
-      // Andata a capo COMPOSTA a mano (\n → <br>, vedi Rich.astro): le righe
-      // hanno tutte più o meno la stessa misura, così il blocco ha i lati
-      // dritti invece della scaletta irregolare del wrap automatico. Lo spazio
-      // prima di ogni \n serve al mobile, dove i <br> vengono nascosti e il
-      // testo torna a impaginarsi da solo: senza, le parole si attaccherebbero.
-      statement:
-        "Uno studio indipendente \nche unisce il *rigore* \n*universitario* con gli \nstrumenti di nuova \ngenerazione: ogni \nprogetto seguito *dalle* \n*stesse mani*, dal primo \nsketch fino al lancio",
-      cta: "Scopri il nostro approccio",
+    point: {
+      // IL PUNTO — subito dopo la hero: prima il RICONOSCIMENTO (la giornata
+      // del cliente, in scuro), poi la SVOLTA (la promessa; *corsivo* = blu).
+      // **Parole chiave**: arancio nel problema, blu nella svolta.
+      // Mentre la svolta si accende il problema si spegne (regia in main.ts).
+      // \n solo tra una frase e l'altra; il resto lo impagina text-wrap: balance.
+      pain: "Fai un lavoro eccellente.\nMa i clienti ti scrivono **in DM**, ti chiamano **a qualsiasi ora** e alla fine prenotano da chi trovano **prima su Google**.",
+      turn: "Costruiamo **il sistema** che li porta da te.\n*E lavora mentre tu lavori.*",
     },
     contact: {
       kicker: "Iniziamo",
       headline: "Costruiamo il tuo *sistema di crescita.*",
-      sub: "Una consulenza gratuita di 30 minuti: nessun impegno, solo idee chiare su come far crescere la tua attività.",
+      sub: "Tre domande veloci e sappiamo già come aiutarti. Poi scegli tu: una call gratuita di 30 minuti o un messaggio diretto.",
     },
   },
 
   contactForm: {
-    asideLabel: "La consulenza",
-    asideTitle: "Da qui *parte tutto.*",
-    steps: [
-      "Ci scrivi due righe sul progetto",
-      "Ti rispondiamo entro 24 ore",
-      "Call gratuita di 30 min, zero impegno",
+    // FORM A PASSI — le domande si aprono una dopo l'altra: servizio →
+    // profilo → canale (call con calendario, oppure WhatsApp/email).
+    // `value` resta fisso in tutte le lingue: è ciò che arriva nel messaggio.
+    steps: {
+      service: { title: "Di cosa hai bisogno?", hint: "Anche più di una risposta" },
+      profile: { title: "Per chi è il progetto?", hint: "Così prepariamo la proposta giusta" },
+      channel: { title: "Come preferisci sentirci?", hint: "Scegli tu, rispondiamo sempre noi due" },
+    },
+    services: [
+      { value: "web", label: "Sito web", desc: "Vetrina, prenotazioni, e-commerce" },
+      { value: "social", label: "Social & Ads", desc: "Contenuti e campagne che vendono" },
+      { value: "gestionale", label: "Gestionale su misura", desc: "Clienti, agenda, automazioni" },
+      { value: "unsure", label: "Non lo so ancora", desc: "Ci consigliate voi" },
     ],
-    asideNote: "Budget chiari da subito · Nessun impegno",
+    profiles: [
+      { value: "solo", label: "Solo io", desc: "Freelance o professionista" },
+      { value: "team", label: "Piccolo team", desc: "Da 2 a 10 persone" },
+      { value: "company", label: "Azienda", desc: "Oltre 10 persone" },
+      { value: "startup", label: "Sto partendo", desc: "Nuova attività o idea" },
+    ],
+    channels: {
+      call: { label: "Prenota una call", desc: "30 minuti gratuiti, scegli giorno e ora" },
+      write: { label: "Scrivici subito", desc: "WhatsApp o email, in un tap" },
+    },
+    calendar: {
+      prev: "Mese precedente",
+      next: "Mese successivo",
+      pickDay: "Scegli un giorno per vedere gli orari liberi.",
+      timezone: "Ora italiana · 30 min",
+    },
     fields: {
       name: "Nome",
       email: "Email",
-      business: "La tua attività",
-      project: "Il progetto",
+      namePh: "Come ti chiami",
+      emailPh: "Dove ti mandiamo l'invito",
+      addMessage: "Aggiungi un messaggio",
+      messagePh: "Due righe sul progetto (facoltativo)",
     },
-    placeholders: {
-      name: "Come ti chiami",
-      email: "Dove ti rispondiamo",
-      business: "Studio, brand, settore…",
-      project: "Due righe su cosa hai in mente.",
+    book: "Prenota la call",
+    errors: {
+      slot: "Scegli giorno e orario.",
+      name: "Scrivi il tuo nome.",
+      email: "Serve un'email valida per mandarti l'invito.",
     },
-    budgetLegend: "Budget indicativo",
-    budgetOptional: "— opzionale, in €",
-    budgets: ["< 1.5k", "1.5–3k", "3–6k", "6k+", "Non so ancora"],
-    submit: "Prenota la consulenza",
-    submitNote: "Risposta entro 24 ore",
-    statusOpening:
-      "Apriamo la tua email… se non parte, scrivici a hello@auralpdigital.com",
-    mail: {
-      subject: "Nuova richiesta di consulenza",
+    done: {
+      title: "Ci siamo quasi.",
+      text: "Abbiamo preparato l'email con la tua richiesta: premi Invia e ti confermiamo l'invito entro 24 ore.",
+      addToCal: "Segna nel tuo calendario",
+      edit: "Cambia orario",
+    },
+    direct: {
+      whatsapp: "WhatsApp",
+      whatsappNote: "Rispondiamo in giornata",
+      email: "Email",
+      note: "Il messaggio è già scritto con le tue scelte: devi solo inviarlo.",
+    },
+    msg: {
+      hello: "Ciao AuralpDigital!",
+      interest: "Mi interessa",
+      profile: "Profilo",
+      callSubject: "Richiesta call",
+      writeSubject: "Nuovo progetto",
+      when: "Quando",
       name: "Nome",
       email: "Email",
-      business: "Attività",
-      budget: "Budget indicativo",
-      projectHeading: "Progetto:",
-      empty: "—",
+      message: "Messaggio",
+      calTitle: "Call con AuralpDigital",
     },
   },
 
@@ -314,6 +301,9 @@ const it = {
     muted: "Alto Adige, Italia · 39100",
     location: "Alto Adige, Italia",
     madeWith: "Fatto con cura",
+    whatsapp: "WhatsApp",
+    email: "Email",
+    backToTop: "Torna su",
   },
 
   about: {

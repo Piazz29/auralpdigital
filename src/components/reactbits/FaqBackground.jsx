@@ -52,8 +52,8 @@ export default function FaqBackground() {
     <DotGrid
       dotSize={cfg.dotSize}
       gap={cfg.gap}
-      baseColor="#DCD2C2"
-      activeColor="#E2632F"
+      baseColor="#D8D3B7"
+      activeColor="#D84002"
       proximity={cfg.proximity}
       shockRadius={cfg.shockRadius}
       shockStrength={cfg.shockStrength}

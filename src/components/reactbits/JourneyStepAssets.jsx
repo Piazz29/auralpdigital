@@ -40,7 +40,7 @@ import * as THREE from 'three';
 // `colors`. Senza né `materials` né `colors` i materiali restano quelli del GLB
 // (clonati per il fade) → asset "neutro", pronto a uno swap del file.
 // ---------------------------------------------------------------------------
-const BRAND_BLUE = '#3b5bdb'; // blu del sito (il glb del logo usa lo stesso)
+const BRAND_BLUE = '#2748A5'; // blu del sito (il glb del logo usa lo stesso)
 
 const ASSETS = [
   { url: '/assets/step1.glb', side: -1, y: 1.76,  z: -0.35, size: 1.7,  rot: [0.06, 0.55, 0] },
@@ -121,7 +121,7 @@ function makeGlossyMaterial(color) {
     clearcoatRoughness: 0.18,
     envMapIntensity: 1.25,
     sheen: 0.3,
-    sheenColor: new THREE.Color('#9db4ff'),
+    sheenColor: new THREE.Color('#A9B6CE'),
   });
 }
 
@@ -134,7 +134,7 @@ function makeGlossyMaterial(color) {
 // opaco — resta visibile attraverso il bulbo.
 function makeGlassMaterial() {
   return new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#eaf0ff'),
+    color: new THREE.Color('#EDF0F5'),
     metalness: 0,
     roughness: 0.05,
     transmission: 0,
@@ -153,7 +153,7 @@ function makeGlassMaterial() {
 function makeFilamentMaterial() {
   return new THREE.MeshStandardMaterial({
     color: new THREE.Color('#2a1403'),
-    emissive: new THREE.Color('#ff7d22'),
+    emissive: new THREE.Color('#FF6A1F'),
     emissiveIntensity: 3.6,
     roughness: 0.5,
     metalness: 0,
@@ -164,7 +164,7 @@ function makeFilamentMaterial() {
 // Attacco/contatti/isolante: metallo neutro leggermente freddo.
 function makeMetalMaterial() {
   return new THREE.MeshStandardMaterial({
-    color: new THREE.Color('#9a9ba3'),
+    color: new THREE.Color('#9EA1A6'),
     metalness: 0.9,
     roughness: 0.34,
     envMapIntensity: 1.2,
@@ -192,6 +192,24 @@ const noRaycast = () => null;
 // Singolo asset: carica (cache drei condivisa), normalizza (rotazione base →
 // centering → auto-scala, come ArrowModel), poi anima tutto in useFrame.
 // ---------------------------------------------------------------------------
+// Compila gli shader e carica le texture di `object` PRIMA che compaia:
+// altrimenti lo fa il primo frame in cui è visibile, cioè a metà scroll → scatto.
+// compileAsync usa KHR_parallel_shader_compile dove c'è (niente blocco del
+// thread principale); `scene` serve per luci ed environment, che fanno parte
+// della chiave del programma.
+export function prewarm(gl, object, camera, scene) {
+  const wasVisible = object.visible;
+  object.visible = true;
+  object.traverse((o) => {
+    for (const m of o.material ? [].concat(o.material) : []) {
+      for (const v of Object.values(m)) if (v?.isTexture) gl.initTexture(v);
+    }
+  });
+  if (gl.compileAsync) gl.compileAsync(object, camera, scene).catch(() => {});
+  else gl.compile(object, camera, scene);
+  object.visible = wasVisible;
+}
+
 function StepAsset({ cfg, index, params, progressRef, anchorsRef, mouseRef, mobile }) {
   const group = useRef();
   const hover = useRef(0); // 0..1, smorzato
@@ -257,6 +275,20 @@ function StepAsset({ cfg, index, params, progressRef, anchorsRef, mouseRef, mobi
       (Math.hypot(size.x, size.y, size.z) / 2) * k * 0.72;
     return { prepared: wrap, fadeMats, hitRadius };
   }, [scene, cfg]);
+
+  // L'asset resta invisibile fino alla sua tappa: shader e texture si preparano
+  // subito, in entrambe le varianti del materiale (trasparente durante il fade,
+  // opaca a regime).
+  const gl = useThree((s) => s.gl);
+  const rootScene = useThree((s) => s.scene);
+  useEffect(() => {
+    const g = group.current;
+    if (!g) return;
+    for (const rec of fadeMats) rec.mat.transparent = true;
+    prewarm(gl, g, camera, rootScene);
+    for (const rec of fadeMats) rec.mat.transparent = rec.baseTransparent;
+    prewarm(gl, g, camera, rootScene);
+  }, [gl, camera, rootScene, fadeMats]);
 
   // I materiali sono nostri (non della cache GLTF) → vanno rilasciati.
   // (Le texture restano della cache: material.dispose() non le tocca.)

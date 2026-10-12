@@ -1,12 +1,11 @@
 ---
-// NAVBAR — basata sul componente StaggeredMenu (React Bits), adattato al
-// brand: stesse voci, palette e contatti, ora multilingua. `home` decide il
-// prefisso dei link ancora; `lang` localizza voci/contatti e lo switcher di
-// lingua; `route` è la rotta base ('/' o '/chi-siamo') usata dallo switcher
-// per costruire l'equivalente nelle altre lingue.
+// NAVBAR — pillola semi-trasparente centrata (PillNav), multilingua.
+// `home` decide il prefisso dei link ancora; `lang` localizza voci/contatti e
+// lo switcher di lingua; `route` è la rotta base ('/', '/chi-siamo', '/faq')
+// usata dallo switcher per costruire l'equivalente nelle altre lingue.
 import type { Lang } from "../i18n";
 import { defaultLang } from "../i18n";
-import SiteMenu from "./reactbits/SiteMenu.jsx";
+import PillNav from "./reactbits/PillNav.jsx";
 
 interface Props {
   home?: boolean;
@@ -16,4 +15,4 @@ interface Props {
 const { home = false, lang = defaultLang, route = "/" } = Astro.props;
 ---
 
-<SiteMenu client:load home={home} lang={lang} route={route} />
+<PillNav client:load home={home} lang={lang} route={route} />

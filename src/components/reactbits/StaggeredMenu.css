@@ -121,12 +121,12 @@
 
 .sm-lang-link.is-active {
   opacity: 1;
-  color: var(--sm-accent, #3b5bdb);
-  background: rgba(59, 91, 219, 0.1);
+  color: var(--sm-accent, #2748A5);
+  background: rgba(39, 72, 165, 0.1);
 }
 
 .sm-lang-link:focus-visible {
-  outline: 2px solid var(--sm-accent, #3b5bdb);
+  outline: 2px solid var(--sm-accent, #2748A5);
   outline-offset: 2px;
 }
 
@@ -160,7 +160,7 @@
 }
 
 .sm-toggle:focus-visible {
-  outline: 2px solid var(--sm-accent, #3b5bdb);
+  outline: 2px solid var(--sm-accent, #2748A5);
   outline-offset: 4px;
   border-radius: 4px;
 }
@@ -248,11 +248,11 @@
 
 .staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-toggle {
   /* Vince sul color inline impostato da GSAP sul bottone. */
-  color: #FCFAF6 !important;
+  color: #FEFDEC !important;
 }
 
 .staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-lang-link {
-  color: #FCFAF6;
+  color: #FEFDEC;
 }
 
 .staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-lang-link.is-active {
@@ -266,9 +266,9 @@
   right: 0;
   width: 100vw;
   height: 100%;
-  background: #FCFAF6;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* Fondo pieno: un backdrop-filter qui sotto non si vedrebbe (niente
+     traspare) ma costerebbe comunque un blur a tutto schermo. */
+  background: #FEFDEC;
   display: flex;
   flex-direction: column;
   padding: clamp(7em, 14vh, 9em) clamp(1.5em, 7vw, 7em) clamp(2em, 5vh, 3.5em);
@@ -330,7 +330,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1.5rem 3rem;
-  border-top: 1px solid #e8e3d9;
+  border-top: 1px solid #E6E3C9;
 }
 
 .sm-socials {
@@ -347,7 +347,7 @@
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--sm-accent, #3b5bdb);
+  color: var(--sm-accent, #2748A5);
 }
 
 .sm-socials-list {
@@ -374,7 +374,7 @@
 }
 
 .sm-socials-link:focus-visible {
-  outline: 2px solid var(--sm-accent, #3b5bdb);
+  outline: 2px solid var(--sm-accent, #2748A5);
   outline-offset: 3px;
 }
 
@@ -401,7 +401,7 @@
 }
 
 .sm-socials-link:hover {
-  color: var(--sm-accent, #3b5bdb);
+  color: var(--sm-accent, #2748A5);
 }
 
 /* Variante a icona: pulsante circolare con SVG (currentColor). */
@@ -413,7 +413,7 @@
   height: 48px;
   padding: 0;
   border-radius: 9999px;
-  border: 1px solid #e8e3d9;
+  border: 1px solid #E6E3C9;
   color: #171310;
   background: rgba(255, 255, 255, 0.5);
   transition:
@@ -430,9 +430,9 @@
 }
 
 .sm-socials-link--icon:hover {
-  color: #FCFAF6;
-  background: var(--sm-accent, #3b5bdb);
-  border-color: var(--sm-accent, #3b5bdb);
+  color: #FEFDEC;
+  background: var(--sm-accent, #2748A5);
+  border-color: var(--sm-accent, #2748A5);
   transform: translateY(-2px);
 }
 
@@ -450,12 +450,12 @@
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--sm-accent, #3b5bdb);
+  color: var(--sm-accent, #2748A5);
   margin-bottom: 0.1rem;
 }
 
 .sm-panel-extra a {
-  color: var(--sm-accent, #3b5bdb);
+  color: var(--sm-accent, #2748A5);
   text-decoration: underline;
   text-underline-offset: 4px;
   text-decoration-thickness: 1px;
@@ -532,7 +532,7 @@
 }
 
 .sm-panel-item:hover {
-  color: var(--sm-accent, #3b5bdb);
+  color: var(--sm-accent, #2748A5);
 }
 
 .sm-panel-list[data-numbering] {
@@ -548,7 +548,7 @@
   font-family: var(--font-body, 'Satoshi', sans-serif);
   font-size: 16px;
   font-weight: 400;
-  color: var(--sm-accent, #3b5bdb);
+  color: var(--sm-accent, #2748A5);
   letter-spacing: 0;
   pointer-events: none;
   user-select: none;
