@@ -3885,18 +3885,7 @@ nav:has(#burger-menu.is-open) .pill {
    manifesto, ritratti, percorso, workflow (riusa i capitoli della home),
    marquee strumenti e CTA finale.
 -------------------------------------------------------------------------- */
-/* HERO — a tutta schermata sul mesh aurora del menu (stesso linguaggio). */
-.ap-hero {
-  position: relative;
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: clamp(130px, 17vh, 180px) clamp(24px, 5vw, 48px) clamp(104px, 13vh, 140px);
-  overflow: clip;
-}
+/* HERO — vedi "CHI SIAMO — HERO PIXEL" più sotto; qui resta l'aurora. */
 .ap-hero-aurora {
   position: absolute;
   inset: 0;
@@ -3974,587 +3963,12 @@ nav:has(#burger-menu.is-open) .pill {
 @media (prefers-reduced-motion: reduce) {
   .ap-hero-aurora::before { animation: none; }
 }
-.ap-hero > * {
-  position: relative;
-  z-index: 1;
-}
-/* Wrapper: composizione editoriale a piena larghezza — riga alta (kicker +
-   pill di stato), titolo display gigante con l'accento su una riga propria
-   indentata (righe sfalsate), e un "colophon" in basso: hairline full-width
-   con sub a sinistra e riga meta a destra. Lo spazio negativo lo abita il
-   fluido. */
-.ap-hero-inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  text-align: left;
-  width: 100%;
-  max-width: 1360px;
-}
-.ap-hero-title {
-  font-weight: 500;
-  font-size: clamp(48px, 9vw, 148px);
-  line-height: 0.94;
-  letter-spacing: -0.03em;
-  color: var(--color-ink);
-  margin: 0;
-}
-.ap-hero-title em {
-  font-style: italic;
-  color: var(--color-accent);
-}
-/* Hero "Chi siamo": il titolo usa VariableProximity (un'unica isola con
-   containerRef condiviso). L'accento conserva corsivo + colore brand; le lettere
-   variano il peso (asse 'wght') in base alla vicinanza del cursore.
-   Le righe sono ESPLICITE ("\n" nel dizionario → blocchi nowrap dal
-   componente): il titolo vive sempre su due righe esatte in it/de/en e
-   "dietro i pixel" non si spezza mai. */
-.ap-hero-accent {
-  font-style: italic;
-  color: var(--color-orange);
-  margin-left: clamp(36px, 15vw, 240px);
-}
-.ap-hero-accent::before {
-  content: "";
-  display: inline-block;
-  width: clamp(44px, 7.5vw, 120px);
-  height: 0.075em;
-  margin-right: 0.22em;
-  vertical-align: 0.26em;
-  background: var(--color-orange);
-  border-radius: 999px;
-}
-.ap-hero-sub {
-  font-family: var(--font-body);
-  font-size: clamp(15px, 1.25vw, 19px);
-  line-height: 1.65;
-  letter-spacing: 0.01em;
-  color: var(--color-secondary);
-  margin: 0;
-  max-width: 44ch;
-}
-/* HERO SPLIT — variante "one-shot": la sezione occupa ESATTAMENTE un viewport
-   (height 100svh + overflow clip già sul .ap-hero) con una sola colonna
-   editoriale allineata a sinistra, centrata in verticale. Tutto visibile senza
-   scroll; la pagina prosegue pulita sotto la piega. Lo spazio negativo a
-   destra lo tiene l'aurora di fondo — nessun asset 3D da caricare.
-   Il padding-bottom > padding-top posiziona il contenuto un filo SOPRA il
-   centro reale del viewport (equilibrio ottico). */
-.ap-hero--split {
-  height: 100svh;
-  min-height: 660px;
-  padding: clamp(76px, 10vh, 112px) clamp(24px, 5vw, 48px) clamp(96px, 14vh, 152px);
-}
-/* Senza la seconda colonna il titolo può respirare (le righe sono nowrap dal
-   dizionario, quindi è il titolo a dare la misura del blocco); la sub resta
-   su una misura di lettura corta e non attraversa mai tutta la pagina. */
-.ap-hero--split .ap-hero-title {
-  font-size: clamp(48px, 7.4vw, 124px);
-}
-/* Velo sotto la colonna editoriale.
-
-   La maschera dell'aurora la concentra IN ALTO A DESTRA: sopra le prime righe
-   il fondo è già carta pura, e il punto critico è invece l'estremità destra
-   delle righe lunghe del titolo, dove i nastri mordono davvero. Il tedesco è
-   il caso peggiore (titolo ~1290px, arriva più a destra di tutti): misurato su
-   tutto il ciclo di 55s, senza velo il sub sta a 4.12:1 e il corsivo arancio a
-   2.61:1 — entrambi sotto soglia.
-
-   Da qui la geometria: l'ellisse copre tutta la colonna invece di concentrarsi
-   al centro, dove non serviva nulla. Peggiore del ciclo con il velo:
-   ink 12.2 · sub 5.6 · accento 3.5 in de, 14.5 / 6.6 / 4.2 in it.
-
-   `farthest-side` + scatola alta non sono un dettaglio: legano lo zero del
-   gradiente ESATTAMENTE ai bordi della scatola. Con raggi arbitrari il velo
-   arrivava al bordo ancora a ~0.55 di opacità e si tagliava di netto, con una
-   riga orizzontale visibile in mezzo all'aurora. Il picco resta a 0.74 di
-   carta sulla stessa carta: nessun colore nuovo, nessun bordo, l'aurora
-   continua a brillare intorno. */
-.ap-hero-copy {
-  position: relative;
-}
-.ap-hero-copy::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  /* Deborda molto oltre il testo: è dentro questo margine che la sfumatura ha
-     lo spazio per spegnersi del tutto. Più aria sotto che sopra — il blocco è
-     otticamente centrato sul testo, non sulla sua scatola. */
-  inset: calc(-1 * clamp(110px, 15vh, 180px)) calc(-1 * clamp(48px, 7vw, 120px))
-         calc(-1 * clamp(120px, 16vh, 196px));
-  background: radial-gradient(
-    ellipse farthest-side at 50% 50%,
-    rgba(254, 253, 236, 0.74) 0%,
-    rgba(254, 253, 236, 0.72) 66%,
-    rgba(254, 253, 236, 0.56) 82%,
-    rgba(254, 253, 236, 0.26) 93%,
-    rgba(254, 253, 236, 0) 100%
-  );
-  pointer-events: none;
-}
-/* Niente barra né indent prima dell'accento: l'ultima riga chiude il blocco
-   tipografico pulita — solo corsivo + colore brand. */
-.ap-hero--split .ap-hero-accent {
-  margin-left: 0;
-}
-.ap-hero--split .ap-hero-accent::before {
-  display: none;
-}
-/* Sub — misura tarata sul BILANCIAMENTO, non sulla riga più lunga possibile.
-   A 46ch il testo cadeva su due righe molto diverse fra loro (bordo destro a
-   zig-zag: 13% di scarto in it, 16% in en). A 38ch `text-wrap: balance` trova
-   tre righe quasi pari in tutte e tre le lingue e lo scarto scende al 6-7%:
-   il lato destro legge dritto senza ricorrere alla giustificazione, che a
-   questa misura aprirebbe buchi bianchi fra le parole. */
-.ap-hero--split .ap-hero-sub {
-  max-width: 38ch;
-  text-wrap: balance;
-  line-height: 1.6;
-  margin-top: clamp(22px, 3.4vh, 34px);
-}
-/* Il salto verso la CTA è 1.4× quello fra titolo e sub: il sub resta legato al
-   titolo, il bottone si stacca come terzo tempo. */
-.ap-hero-cta {
-  margin-top: clamp(31px, 4.8vh, 48px);
-}
-.ap-hero-btn {
-  padding: 15px 30px;
-}
-
-/* Mobile: il vincolo one-shot si rilassa (height auto — il contenuto non va
-   mai clippato) e il titolo torna a una scala da colonna stretta. */
-@media (max-width: 960px) {
-  .ap-hero--split {
-    height: auto;
-    min-height: 100svh;
-    padding-top: clamp(88px, 12vh, 132px);
-    padding-bottom: clamp(48px, 7vh, 72px);
-  }
-  .ap-hero--split .ap-hero-title {
-    font-size: clamp(44px, 10vw, 76px);
-  }
-}
-
 /* Sezioni interne — stesso ritmo verticale della home. */
 .ap-section {
   padding: clamp(80px, 12vh, 150px) 0;
 }
 .ap-section--deeper {
   background: var(--color-warm-deeper);
-}
-
-/* MANIFESTO — statement gigante su griglia editoriale: kicker + segno a
-   sinistra, frase che riempie lo spazio, nota di rinforzo offset a destra.
-   Lo spazio negativo è strutturale, non riempito. */
-.ap-manifesto-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: clamp(24px, 3vw, 48px) clamp(20px, 3vw, 40px);
-  align-items: start;
-}
-.ap-manifesto-lead {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.ap-manifesto-mark {
-  font-size: clamp(20px, 2vw, 28px);
-  color: var(--color-orange);
-  opacity: 0.7;
-  animation: ap-mark-spin 22s linear infinite;
-}
-.ap-statement {
-  grid-column: 1 / span 9;
-  font-weight: 500;
-  font-size: clamp(32px, 5.2vw, 78px);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-  color: var(--color-ink);
-  max-width: 17ch;
-  text-wrap: balance;
-}
-.ap-statement em {
-  font-style: italic;
-  color: var(--color-orange);
-}
-/* Nota di rinforzo — colonna stretta nello spazio negativo a destra, pesi
-   misti: lead-in in grassetto ink, resto in secondario, keyword in accento. */
-.ap-manifesto-aside {
-  grid-column: 10 / -1;
-  align-self: end;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(16px, 2vh, 24px);
-  padding-top: clamp(8px, 2vh, 20px);
-}
-.ap-manifesto-note {
-  font-family: var(--font-body);
-  font-size: clamp(14px, 1.05vw, 16px);
-  line-height: 1.55;
-  color: var(--color-secondary);
-  padding-left: 16px;
-  border-left: 1px solid rgba(23, 19, 16, 0.12);
-}
-.ap-manifesto-note strong {
-  color: var(--color-ink);
-  font-weight: 600;
-}
-.ap-manifesto-note em {
-  font-style: italic;
-  color: var(--color-orange-deep);
-}
-@media (max-width: 900px) {
-  .ap-statement { grid-column: 1 / -1; max-width: 20ch; }
-  .ap-manifesto-aside {
-    grid-column: 1 / -1;
-    max-width: 46ch;
-  }
-}
-@keyframes ap-mark-spin {
-  to { transform: rotate(360deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ap-manifesto-mark { animation: none; }
-}
-
-/* DUO — un ritratto per riga, alternato: media da un lato, bio dall'altra.
-   Le card riusano founder-card/founder-media (tilt 3D incluso). */
-/* IL DUO — split-stage 50/50: due "palchi" affiancati, uno per persona.
-   Hover su una metà → quella si accende (glow radiale, watermark, bio+focus
-   che affiorano) e l'altra si spegne (dim + desaturazione). SOLO opacity/
-   transform/filter: nessuna variazione di geometria del documento, così gli
-   ScrollTrigger a valle (pin del Percorso) restano validi anche durante
-   l'interazione. Su touch (niente hover) tutto è sempre visibile. */
-.ap-duo {
-  display: flex;
-  align-items: stretch;
-  border-top: 1px solid rgba(23, 19, 16, 0.1);
-  border-bottom: 1px solid rgba(23, 19, 16, 0.1);
-}
-.ap-person {
-  position: relative;
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(24px, 3.6vh, 42px);
-  padding: clamp(30px, 4.5vh, 54px) clamp(18px, 3vw, 56px) clamp(36px, 5vh, 66px);
-  transition: opacity 0.6s ease, filter 0.6s ease;
-}
-.ap-person + .ap-person {
-  border-left: 1px solid rgba(23, 19, 16, 0.1);
-}
-/* Glow radiale della metà attiva (dietro a tutto, disegnato dalla GPU). */
-.ap-person::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    72% 56% at 50% 42%,
-    rgba(39, 72, 165, 0.09),
-    transparent 72%
-  );
-  opacity: 0;
-  transition: opacity 0.7s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-  .ap-person:hover::after {
-    opacity: 1;
-  }
-  /* Spotlight incrociato: la metà non attiva si ritira. */
-  .ap-duo:has(.ap-person:hover) .ap-person:not(:hover) {
-    opacity: 0.45;
-    filter: saturate(0.55);
-  }
-}
-/* Testa del palco: indice a sinistra, ruolo a destra. */
-.ap-duo-head {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px 20px;
-  flex-wrap: wrap;
-}
-.ap-duo-index {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(14px, 1.3vw, 19px);
-  color: var(--color-accent);
-}
-.ap-duo-head .ap-bio-role {
-  text-align: right;
-}
-.ap-bio {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(16px, 2.4vh, 26px);
-  width: 100%;
-  max-width: 56ch;
-  margin-inline: auto;
-}
-/* Il blocco bio/focus affiora al hover della metà (desktop); su touch è
-   sempre visibile. Occupa SEMPRE il suo spazio: niente shift di layout. */
-.ap-duo-more {
-  width: 100%;
-}
-.ap-duo-more-in {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(16px, 2.2vh, 24px);
-}
-@media (hover: hover) and (pointer: fine) {
-  .ap-duo-more {
-    position: relative;
-  }
-  /* Affordance: un "+" quieto segnala che il palco risponde al cursore;
-     ruota e svanisce quando la bio affiora al suo posto. */
-  .ap-duo-more::before {
-    content: "+";
-    position: absolute;
-    top: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: var(--font-display);
-    font-size: 22px;
-    line-height: 1;
-    color: var(--color-accent);
-    opacity: 0.55;
-    transition: opacity 0.4s ease, transform 0.5s ease;
-    pointer-events: none;
-  }
-  .ap-person:hover .ap-duo-more::before {
-    opacity: 0;
-    transform: translateX(-50%) rotate(90deg);
-  }
-  .ap-duo-more-in {
-    opacity: 0;
-    transform: translateY(16px);
-    transition:
-      opacity 0.55s ease 0.06s,
-      transform 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.06s;
-  }
-  .ap-person:hover .ap-duo-more-in {
-    opacity: 1;
-    transform: none;
-  }
-}
-.ap-bio-name {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(40px, 4.8vw, 84px);
-  line-height: 1;
-  color: var(--color-ink);
-  text-align: center;
-}
-.ap-bio-name em {
-  font-style: italic;
-  color: var(--color-accent);
-}
-.ap-bio-role {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-.ap-bio-text {
-  font-family: var(--font-body);
-  font-size: clamp(15px, 1.2vw, 18px);
-  line-height: 1.7;
-  color: var(--color-secondary);
-  max-width: 52ch;
-  text-align: left;
-}
-/* Aree di focus — righe hairline essenziali, non chip. */
-.ap-focus {
-  width: 100%;
-  max-width: 52ch;
-  margin-top: 8px;
-  border-top: 1px solid rgba(23, 19, 16, 0.1);
-}
-.ap-focus li {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(23, 19, 16, 0.1);
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-}
-/* Stessa hairline arancio dei kicker: il segno caldo ricorrente. */
-.ap-focus li::before {
-  content: "";
-  width: 18px;
-  height: 1px;
-  background: var(--color-orange);
-}
-/* Sotto i 900px lo split impila le due metà (bordo orizzontale tra loro). */
-@media (max-width: 900px) {
-  .ap-duo {
-    flex-direction: column;
-  }
-  .ap-person + .ap-person {
-    border-left: none;
-    border-top: 1px solid rgba(23, 19, 16, 0.1);
-  }
-}
-
-/* --- IL DUO: ambiente interattivo -----------------------------------------
-   Un "campo" tecnico dietro alle persone: gridlines hairline che si accendono
-   attorno al cursore (mask radiale su --gx/--gy, aggiornate da main.ts solo
-   con pointer fine), micro-coordinate agli angoli, iniziale watermark in
-   outline che affiora al passaggio del mouse sulla riga. Tutto pittorico
-   (background/mask/transform): zero layout, zero JS per-frame. */
-.ap-duo-env {
-  position: relative;
-  overflow: clip;
-  /* Bordo morbido col manifesto (bg) sopra: nessuno stacco netto. */
-  background: linear-gradient(
-    180deg,
-    var(--color-bg),
-    var(--color-warm-deeper) clamp(160px, 22vh, 300px)
-  );
-}
-.ap-duo-field {
-  --gx: 50%;
-  --gy: 35%;
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(23, 19, 16, 0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23, 19, 16, 0.5) 1px, transparent 1px);
-  background-size: 72px 72px;
-  opacity: 0.16;
-  -webkit-mask-image: radial-gradient(
-    480px circle at var(--gx) var(--gy),
-    rgba(0, 0, 0, 1),
-    rgba(0, 0, 0, 0.16) 62%,
-    rgba(0, 0, 0, 0.1) 100%
-  );
-  mask-image: radial-gradient(
-    480px circle at var(--gx) var(--gy),
-    rgba(0, 0, 0, 1),
-    rgba(0, 0, 0, 0.16) 62%,
-    rgba(0, 0, 0, 0.1) 100%
-  );
-  transition: opacity 0.6s ease;
-}
-/* Con una persona in hover il campo si accende appena: la scena "risponde". */
-.ap-duo-env:has(.ap-person:hover) .ap-duo-field {
-  opacity: 0.26;
-}
-.ap-duo-coord {
-  position: absolute;
-  z-index: 0;
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-  /* Niente opacity: a 10px con 0.28em di spaziatura il testo era già al limite,
-     e il velo lo portava a 1.8:1 — illeggibile. Il muted pieno basta a tenerlo
-     defilato senza farlo sparire. */
-  pointer-events: none;
-  transition: color 0.6s ease;
-}
-.ap-duo-env:has(.ap-person:hover) .ap-duo-coord {
-  color: var(--color-accent);
-}
-.ap-duo-coord--tl {
-  top: clamp(20px, 3.4vh, 34px);
-  left: clamp(20px, 3.5vw, 48px);
-}
-.ap-duo-coord--br {
-  bottom: clamp(20px, 3.4vh, 34px);
-  right: clamp(20px, 3.5vw, 48px);
-}
-/* Card e bio stanno SOPRA il campo e il watermark. */
-.ap-person > .hang {
-  position: relative;
-  z-index: 1;
-}
-/* Watermark: iniziale gigante in outline blu nella zona alta del palco
-   (l'area della corda, visivamente vuota), che affiora al hover. */
-.ap-duo-mark {
-  position: absolute;
-  z-index: 0;
-  top: 24%;
-  left: 50%;
-  font-size: clamp(200px, 20vw, 360px);
-  font-weight: 500;
-  line-height: 1;
-  color: transparent;
-  -webkit-text-stroke: 2px rgba(39, 72, 165, 0.2);
-  opacity: 0;
-  transform: translate(-50%, calc(-50% + 28px));
-  transition:
-    opacity 0.7s ease,
-    transform 1s cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-  user-select: none;
-}
-.ap-person:hover .ap-duo-mark {
-  opacity: 1;
-  transform: translate(-50%, -50%);
-}
-/* Micro-interazioni hover sulla bio: il trattino delle aree focus si allunga,
-   il ruolo prende l'accento, il punto del nome scatta di un filo. */
-.ap-focus li::before {
-  transition:
-    width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 0.45s ease;
-}
-.ap-person:hover .ap-focus li::before {
-  width: 34px;
-}
-.ap-bio-role {
-  transition: color 0.5s ease;
-}
-.ap-person:hover .ap-bio-role {
-  color: var(--color-accent);
-}
-.ap-bio-name em {
-  display: inline-block;
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.ap-person:hover .ap-bio-name em {
-  transform: translateX(0.06em) scale(1.12);
-}
-@media (max-width: 900px) {
-  /* Su mobile le righe sono impilate e non c'è hover: via il watermark. */
-  .ap-duo-mark {
-    display: none;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ap-duo-mark {
-    transform: translate(-50%, -50%);
-    transition: opacity 0.4s ease;
-  }
-  .ap-bio-name em {
-    transition: none;
-  }
 }
 
 /* ----------------------------------------------------------------------
@@ -5027,219 +4441,6 @@ nav:has(#burger-menu.is-open) .pill {
 }
 
 
-/* ======================================================================
-   REACT BITS — integrazioni (chi-siamo): statement blur, badge appesi
-   (Lanyard), stage CardSwap del metodo.
-   ====================================================================== */
-
-/* HERO — l'aurora sta dietro al testo. Higher specificity per battere
-   `.ap-hero > *` (che porterebbe i figli a z-index:1). */
-.ap-hero .ap-hero-aurora {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* MANIFESTO — BlurText rende un <p> flex; manteniamo la resa dello statement
-   e un'interlinea coerente tra le parole animate. */
-.ap-statement--blur {
-  align-content: start;
-  gap: 0;
-}
-.ap-statement--blur .inline-block {
-  display: inline-block;
-}
-
-/* DUO — badge "da pass" appeso a una corda (2D, scroll-driven). Sostituisce il
-   vecchio Canvas 3D: stesso concept, ma performante (solo transform/opacity),
-   con stato finale fisso e caduta indipendente per persona. La corda
-   (.hang-cord) nasce in cima al blocco; il badge (.hang-badge) cala dall'alto.
-   --cord-len è insieme l'altezza della corda E la distanza di caduta del badge
-   (vedi main.ts): tenerli identici fa sì che la corda resti agganciata al
-   badge per tutta la discesa. */
-.hang {
-  --cord-len: clamp(120px, 20vh, 240px);
-  position: relative;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-/* Pendolo: corda + badge ruotano insieme attorno all'aggancio in cima. Il
-   padding-top riserva lo spazio della corda; il pivot è il punto più alto. */
-.hang-swing {
-  position: relative;
-  width: min(100%, 360px);
-  padding-top: var(--cord-len);
-  transform-origin: top center;
-  /* Su touch lo scroll verticale della pagina resta libero (il drag è attivo
-     solo su desktop pointer:fine; questo è una rete di sicurezza). */
-  touch-action: pan-y;
-}
-.hang-swing.is-draggable { cursor: grab; }
-.hang-swing.is-dragging { cursor: grabbing; }
-/* Corda/lanyard: hairline a gradiente, pivot in alto, cresce verso il basso. */
-.hang-cord {
-  position: absolute;
-  top: 0;
-  left: calc(50% - 1.5px);
-  width: 3px;
-  height: var(--cord-len);
-  transform-origin: top center;
-  border-radius: 3px;
-  background: linear-gradient(180deg, var(--color-navy), var(--color-accent));
-}
-.hang-badge {
-  position: relative;
-  width: 100%;
-  transform-origin: top center;
-}
-/* Clip metallica che unisce corda e badge. */
-.hang-clip {
-  position: absolute;
-  top: -16px;
-  left: 50%;
-  width: 22px;
-  height: 30px;
-  transform: translateX(-50%);
-  border: 3px solid #CFD2D8;
-  border-radius: 7px;
-  background: linear-gradient(160deg, #F2F3F5 0%, #AAAFB8 100%);
-  box-shadow: 0 4px 10px rgba(23, 19, 16, 0.18);
-  z-index: 2;
-}
-.hang-card {
-  position: relative;
-  aspect-ratio: 5 / 6;
-  border-radius: 22px;
-  padding: clamp(16px, 2vw, 22px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 2px 6px rgba(23, 19, 16, 0.12),
-    0 34px 80px rgba(23, 19, 16, 0.32);
-}
-/* Velatura bassa — la didascalia cadeva direttamente sul mesh della cover, che
-   sotto (grad-2, Alice) vira all'arancio chiaro: nome e ruolo ci si scioglievano
-   dentro. Questo scrim dà al blocco testo un fondo scuro costante qualunque sia
-   il gradiente della card, senza appiattirla: sfuma da trasparente e si ferma a
-   0.68 sul bordo, cioè legge come la vignettatura naturale di un badge. */
-.hang-card::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 42%;
-  background: linear-gradient(
-    to bottom,
-    rgba(10, 8, 6, 0) 0%,
-    rgba(10, 8, 6, 0.34) 46%,
-    rgba(10, 8, 6, 0.68) 100%
-  );
-  pointer-events: none;
-}
-/* Foro punzonato in alto, dove "passa" la clip. */
-.hang-hole {
-  position: absolute;
-  top: 14px;
-  left: 50%;
-  width: 52px;
-  height: 9px;
-  transform: translateX(-50%);
-  border-radius: 99px;
-  background: rgba(0, 0, 0, 0.4);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
-}
-.hang-photo {
-  margin-top: 26px;
-  flex: 1;
-  border-radius: 14px;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  background: rgba(255, 255, 255, 0.05);
-}
-.hang-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Panoramica verso il basso della foto (object-position alto = mostra la parte
-     bassa dello scatto): più busto, meno aria morta sopra la testa, così il volto
-     sale nella composizione (più alto, meglio inquadrato) invece di restare
-     centrale/basso. */
-  object-position: center 100%;
-  transform: scale(1.18);
-  transform-origin: center 24%;
-}
-/* Ritratto di Julian: primo piano già stretto (non un mezzobusto seduto come
-   Alice), quindi niente pan verso il basso — altrimenti la testa si taglia. */
-.hang-card.grad-2 .hang-photo img {
-  object-position: center 58%;
-  transform: scale(1.04);
-  transform-origin: center 58%;
-}
-.hang-initial {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(72px, 11vw, 120px);
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.92);
-}
-.hang-id {
-  position: relative;
-  z-index: 1; /* sopra lo scrim di .hang-card::after */
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding-top: 16px;
-}
-.hang-id-name {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(20px, 1.6vw, 24px);
-  color: #fff;
-}
-.hang-id-role {
-  font-family: var(--font-body);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.86);
-}
-.hang-id-brand {
-  margin-top: 8px;
-  font-family: var(--font-body);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  /* Periwinkle schiarito e senza alpha: a 9px con 0.3em di spaziatura l'accent
-     soft su fondo caldo stava a 2.8:1 e la firma spariva del tutto. */
-  color: #B4C0D8;
-}
-@media (max-width: 900px) {
-  .hang {
-    --cord-len: clamp(96px, 14vh, 170px);
-  }
-  .hang-swing {
-    width: min(82vw, 340px);
-  }
-}
-/* Reduced motion: corda e badge già nello stato finale (main.ts non anima). */
-@media (prefers-reduced-motion: reduce) {
-  .hang-cord {
-    transform: scaleY(1) !important;
-  }
-  .hang-badge {
-    opacity: 1 !important;
-  }
-  .hang-swing {
-    transform: none !important;
-  }
-}
-
 /* COME LAVORIAMO — layout a due colonne: copy a sinistra, stage CardSwap a
    destra. Lo stage è il contesto posizionato in cui le card si impilano. */
 .ap-flow-inner--swap {
@@ -5361,12 +4562,9 @@ nav:has(#burger-menu.is-open) .pill {
 /* Titoli e display: spezzano le parole troppo lunghe invece di sfondare. */
 .works-title,
 .slide-title,
-.ap-hero-title,
-.ap-bio-name,
 .about-cta-title,
 .cta-title,
 .duo-names,
-.ap-statement,
 .point-pain,
 .point-turn {
   overflow-wrap: break-word;
@@ -5974,5 +5172,662 @@ html.apd-skip-loader #apd-loader {
   .faq-cta-btn,
   .faq-cta-btn:hover {
     transform: none;
+  }
+}
+
+/* ======================================================================
+   CHI SIAMO — HERO PIXEL, MANIFESTO, DUO
+   Il filo della pagina è il titolo: "le persone dietro i pixel". In hero i
+   ritratti sono griglie di tessere nei colori del brand (brace per Julian,
+   ombra per Alice) che la lente rimette a fuoco (scripts/pixelPortrait.ts);
+   nelle card la stessa foto entra pixelata e si risolve. Il punto finale di
+   titolo e nomi è un pixel quadrato.
+   ====================================================================== */
+.ap-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding-block: clamp(108px, 14vh, 150px) clamp(64px, 9vh, 104px);
+  overflow: clip;
+}
+.ap-hero > .ap-hero-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.ap-hero-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 110rem;
+  margin: 0 auto;
+  padding-inline: clamp(24px, 4vw, 64px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  gap: clamp(32px, 4vw, 80px);
+  align-items: center;
+}
+.ap-hero-copy {
+  position: relative;
+}
+/* Velo carta sotto la colonna di testo: l'aurora resta viva intorno ma non
+   morde le righe lunghe del titolo (stessa tecnica della versione prima). */
+.ap-hero-copy::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: calc(-1 * clamp(90px, 13vh, 160px)) calc(-1 * clamp(48px, 6vw, 110px));
+  background: radial-gradient(
+    ellipse farthest-side at 45% 50%,
+    rgba(254, 253, 236, 0.78) 0%,
+    rgba(254, 253, 236, 0.7) 62%,
+    rgba(254, 253, 236, 0.32) 88%,
+    rgba(254, 253, 236, 0) 100%
+  );
+  pointer-events: none;
+}
+.ap-hero-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 22px;
+  margin-bottom: clamp(20px, 3.4vh, 36px);
+}
+.ap-hero-kicker {
+  margin: 0;
+  align-self: center;
+}
+.ap-hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 14px 7px 11px;
+  border-radius: 999px;
+  background: rgba(254, 253, 236, 0.72);
+  border: 1px solid var(--color-border);
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+.ap-hero-status-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2f9e5b;
+}
+.ap-hero-status-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #2f9e5b;
+  animation: ap-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes ap-ping {
+  0% { transform: scale(1); opacity: 0.55; }
+  80%, 100% { transform: scale(3.2); opacity: 0; }
+}
+.ap-hero-title {
+  margin: 0;
+  font-weight: 500;
+  font-size: clamp(46px, 6.5vw, 112px);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  color: var(--color-ink);
+  hyphens: manual;
+}
+.ap-hero-line {
+  display: block;
+}
+.ap-hero-accent {
+  font-style: italic;
+  color: var(--color-orange);
+  /* il corsivo sporge a destra: un filo d'aria prima del pixel */
+  padding-right: 0.02em;
+}
+/* Il punto è un pixel: quadrato, colore del testo che chiude. */
+.ap-px-dot {
+  display: inline-block;
+  width: 0.15em;
+  height: 0.15em;
+  margin-left: 0.05em;
+  background: currentColor;
+  vertical-align: baseline;
+}
+.ap-hero-sub {
+  margin: clamp(22px, 3.4vh, 34px) 0 0;
+  max-width: 40ch;
+  font-size: clamp(15px, 1.2vw, 19px);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  text-wrap: balance;
+}
+.ap-hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 28px;
+  margin-top: clamp(28px, 4.6vh, 46px);
+}
+.ap-hero-btn {
+  padding: 15px 30px;
+}
+.ap-hero-meet {
+  position: relative;
+  display: inline-flex;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  text-decoration: none;
+  padding-block: 4px;
+}
+.ap-hero-meet::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: currentColor;
+  transform-origin: right;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ap-hero-meet:hover::after {
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.ap-hero-meet > span {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ap-hero-meet:hover > span {
+  transform: translateY(3px);
+}
+
+/* Palco dei ritratti: due cornici sfalsate + qualche pixel "sfuggito" che
+   segue il cursore in parallasse (--mx/--my da main.ts, -1..1). */
+.ap-stage {
+  position: relative;
+  height: min(74svh, 660px);
+  min-height: 460px;
+  --mx: 0;
+  --my: 0;
+}
+.ap-portrait {
+  position: absolute;
+  margin: 0;
+  width: clamp(200px, 17.5vw, 300px);
+}
+.ap-portrait--1 {
+  left: 4%;
+  top: 2%;
+}
+.ap-portrait--2 {
+  right: 2%;
+  bottom: 4%;
+}
+.ap-portrait-frame {
+  position: relative;
+  aspect-ratio: 3 / 4;
+}
+/* Mirino: quattro angoli a squadra attorno al ritratto. */
+.ap-portrait-frame::before,
+.ap-portrait-frame::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  pointer-events: none;
+  --c: rgba(23, 19, 16, 0.42);
+  background:
+    linear-gradient(var(--c), var(--c)) top left / 18px 1.5px,
+    linear-gradient(var(--c), var(--c)) top left / 1.5px 18px,
+    linear-gradient(var(--c), var(--c)) top right / 18px 1.5px,
+    linear-gradient(var(--c), var(--c)) top right / 1.5px 18px;
+  background-repeat: no-repeat;
+}
+.ap-portrait-frame::after {
+  background:
+    linear-gradient(var(--c), var(--c)) bottom left / 18px 1.5px,
+    linear-gradient(var(--c), var(--c)) bottom left / 1.5px 18px,
+    linear-gradient(var(--c), var(--c)) bottom right / 18px 1.5px,
+    linear-gradient(var(--c), var(--c)) bottom right / 1.5px 18px;
+  background-repeat: no-repeat;
+}
+.ap-portrait-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+.ap-portrait-cap {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 22px;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ap-portrait-n {
+  color: var(--color-orange-deep);
+  font-weight: 600;
+}
+.ap-portrait--2 .ap-portrait-n {
+  color: var(--color-accent);
+}
+.ap-portrait-area {
+  flex-basis: 100%;
+}
+.ap-portrait-name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+.ap-bit {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  translate: calc(var(--mx) * var(--d) * 26px) calc(var(--my) * var(--d) * 26px);
+  transition: translate 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ap-bit--1 { left: 47%; top: 8%; background: var(--color-orange); }
+.ap-bit--2 { left: 41%; top: 13%; width: 8px; height: 8px; background: var(--color-amber); }
+.ap-bit--3 { right: 6%; top: 18%; width: 20px; height: 20px; background: var(--color-accent-soft); }
+.ap-bit--4 { left: 10%; bottom: 14%; width: 10px; height: 10px; background: var(--color-accent); }
+.ap-bit--5 { left: 49%; bottom: 30%; width: 12px; height: 12px; background: #cedaf3; }
+.ap-stage-hint {
+  position: absolute;
+  left: 4%;
+  bottom: 2%;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 34%;
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+.ap-stage-hint-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-ink);
+  animation: ap-nudge 2.6s ease-in-out infinite;
+}
+.ap-stage-hint-icon svg {
+  width: 14px;
+  height: 14px;
+}
+@keyframes ap-nudge {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(3px, -3px); }
+}
+.ap-hint-touch { display: none; }
+@media (hover: none) {
+  .ap-hint-desk { display: none; }
+  .ap-hint-touch { display: inline; }
+}
+
+@media (max-width: 960px) {
+  .ap-hero {
+    align-items: flex-start;
+    padding-block: clamp(104px, 14svh, 132px) 56px;
+  }
+  .ap-hero-inner {
+    grid-template-columns: 1fr;
+    gap: 44px;
+  }
+  .ap-hero-title {
+    font-size: clamp(44px, 12.4vw, 84px);
+  }
+  .ap-stage {
+    height: auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 clamp(18px, 5vw, 40px);
+    padding: 12px 12px 0;
+  }
+  .ap-portrait {
+    position: relative;
+    inset: auto;
+    width: auto;
+  }
+  .ap-portrait--2 {
+    margin-top: clamp(48px, 14vw, 96px);
+  }
+  .ap-portrait-cap {
+    margin-top: 18px;
+  }
+  .ap-stage-hint {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    grid-column: 1 / -1;
+    max-width: none;
+    margin-top: 26px;
+  }
+  .ap-bit--3,
+  .ap-bit--4 {
+    display: none;
+  }
+}
+
+/* Stato iniziale delle entrate (solo con animazioni: lo rivela main.ts). */
+@media (prefers-reduced-motion: no-preference) {
+  .ap-hero [data-ap-hero-fade],
+  .ap-hero-title,
+  .ap-portrait-cap,
+  .ap-stage-hint,
+  .ap-bit {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap-hero-status-dot::after,
+  .ap-stage-hint-icon {
+    animation: none;
+  }
+}
+
+/* MANIFESTO */
+.ap-manifesto {
+  position: relative;
+  padding-block: clamp(96px, 15vh, 180px) clamp(80px, 12vh, 150px);
+}
+.ap-statement {
+  margin: 0;
+  max-width: 17ch;
+  font-weight: 500;
+  font-size: clamp(36px, 5.6vw, 96px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  hyphens: manual;
+  text-wrap: balance;
+}
+.ap-statement em {
+  font-style: italic;
+  color: var(--color-accent);
+  padding-inline: 0.06em;
+  margin-inline: -0.06em;
+  background: linear-gradient(rgba(132, 162, 245, 0.32), rgba(132, 162, 245, 0.32))
+    no-repeat 0 88% / calc(var(--hl, 1) * 100%) 0.34em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.ap-facts {
+  list-style: none;
+  margin: clamp(56px, 10vh, 120px) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(28px, 3.4vw, 64px);
+}
+.ap-fact {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: end;
+  column-gap: 16px;
+  padding-top: clamp(22px, 3vh, 32px);
+}
+.ap-fact-rule {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--color-border-strong);
+  transform-origin: left;
+  transform: scaleX(var(--rule, 1));
+}
+.ap-fact-n {
+  display: block;
+  height: 1em;
+  overflow: hidden;
+  font-size: clamp(84px, 9vw, 156px);
+  line-height: 1;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: -0.04em;
+  color: var(--color-orange);
+  /* il corsivo sporge: aria a destra perché la maschera non lo tagli */
+  padding-right: 0.08em;
+}
+.ap-fact-reel {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(-90%);
+}
+.ap-fact-reel > span {
+  display: block;
+  height: 1em;
+}
+.ap-fact-label {
+  padding-bottom: 0.55em;
+  font-size: clamp(20px, 1.7vw, 28px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.ap-fact-text {
+  grid-column: 1 / -1;
+  margin-top: 14px;
+  max-width: 32ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+@media (max-width: 860px) {
+  .ap-manifesto {
+    padding-block: 72px 64px;
+  }
+  .ap-facts {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+}
+
+/* IL DUO */
+.ap-duo {
+  position: relative;
+  padding-block: clamp(70px, 11vh, 130px) clamp(110px, 17vh, 200px);
+  /* sfuma verso la sabbia del Percorso: nessuna riga fra le due sezioni */
+  background: linear-gradient(to bottom, var(--color-bg) 0%, var(--color-bg) 50%, var(--color-warm-deeper) 100%);
+  overflow: clip;
+}
+/* Eco dell'aurora dietro le card: due aloni morbidi, brace e ombra. */
+.ap-duo-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 34% at 22% 52%, rgba(242, 145, 63, 0.16), transparent 70%),
+    radial-gradient(40% 36% at 80% 64%, rgba(132, 162, 245, 0.22), transparent 70%);
+}
+.ap-duo-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: 24px clamp(32px, 5vw, 96px);
+  align-items: end;
+}
+.ap-duo-title {
+  margin: 0;
+  font-size: clamp(40px, 5.4vw, 88px);
+  letter-spacing: -0.03em;
+}
+.ap-duo-lead {
+  margin: 0;
+  max-width: 44ch;
+  font-size: clamp(15px, 1.15vw, 18px);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+.ap-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(24px, 4vw, 80px);
+  align-items: start;
+  margin-top: clamp(40px, 7vh, 90px);
+}
+.ap-card {
+  --tone: var(--color-orange);
+  --tone-text: var(--color-orange-deep);
+  --tone-hl: rgba(242, 145, 63, 0.36);
+  --tone-bg: #f6d3a6;
+  position: relative;
+  padding: 12px;
+  border-radius: 30px;
+  background: rgba(247, 245, 225, 0.78);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 40px 90px -50px rgba(23, 19, 16, 0.32);
+  transform-style: preserve-3d;
+  transition: box-shadow 0.6s ease;
+}
+.ap-card--shadow {
+  --tone: var(--color-accent);
+  --tone-text: var(--color-accent);
+  --tone-hl: rgba(132, 162, 245, 0.34);
+  --tone-bg: #cedaf3;
+  margin-top: clamp(60px, 15vh, 190px);
+}
+.ap-card:hover {
+  box-shadow: 0 50px 110px -50px rgba(23, 19, 16, 0.42);
+}
+.ap-card-media {
+  position: relative;
+  aspect-ratio: 4 / 4.3;
+  border-radius: 21px;
+  overflow: hidden;
+  background: var(--tone-bg);
+}
+.ap-card-media picture,
+.ap-card-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ap-card-img {
+  object-fit: cover;
+  object-position: 50% 30%;
+  transition: transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ap-card:hover .ap-card-img {
+  transform: scale(1.035);
+}
+.ap-card-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.ap-card-chip {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: rgba(254, 253, 236, 0.92);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+.ap-card-body {
+  padding: clamp(24px, 3vh, 34px) clamp(14px, 1.8vw, 26px) clamp(16px, 2vh, 24px);
+}
+.ap-card-namerow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 18px;
+}
+.ap-card-name {
+  margin: 0;
+  font-weight: 500;
+  font-size: clamp(54px, 6vw, 104px);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--color-ink);
+}
+.ap-card-name .ap-px-dot {
+  color: var(--tone);
+}
+.ap-card-area {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--tone-text);
+}
+.ap-card-bio {
+  margin: 20px 0 0;
+  max-width: 48ch;
+  font-size: clamp(15px, 1.1vw, 17px);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+.ap-card-quote {
+  margin: 26px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-border);
+  font-size: clamp(22px, 2vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.ap-card-quote em {
+  font-style: italic;
+  color: var(--tone-text);
+  padding-inline: 0.06em;
+  margin-inline: -0.06em;
+  background: linear-gradient(var(--tone-hl), var(--tone-hl)) no-repeat 0 88% /
+    calc(var(--hl, 1) * 100%) 0.36em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.ap-card-tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0 0;
+  padding: 0;
+}
+.ap-card-tags li {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-strong);
+  font-size: 0.8125rem;
+  color: var(--color-ink);
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+.ap-card-tags li:hover {
+  background: var(--tone);
+  border-color: var(--tone);
+  color: var(--color-bg);
+}
+@media (max-width: 860px) {
+  .ap-duo-head,
+  .ap-cards {
+    grid-template-columns: 1fr;
+  }
+  .ap-card--shadow {
+    margin-top: 0;
+  }
+  .ap-card {
+    border-radius: 26px;
   }
 }

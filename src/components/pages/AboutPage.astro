@@ -8,11 +8,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import Navbar from "../Navbar.astro";
 import Footer from "../Footer.astro";
 import Rich from "../Rich.astro";
-import BlurText from "../reactbits/BlurText.jsx";
-import HangBadge from "../HangBadge.astro";
-import FlowCardSwap from "../reactbits/FlowCardSwap.jsx";
 import JourneyPath from "../reactbits/JourneyPath.jsx";
-import HeroProximityTitle from "../reactbits/HeroProximityTitle.jsx";
+import FlowCardSwap from "../reactbits/FlowCardSwap.jsx";
+import { Picture, getImage } from "astro:assets";
+import julianPhoto from "../../assets/team/julian.png";
+import alicePhoto from "../../assets/team/alice.png";
 import "../../styles/global.css";
 
 interface Props {
@@ -22,28 +22,37 @@ const { lang = defaultLang } = Astro.props;
 const t = getDict(lang);
 const ta = t.about;
 
-// Hero — il titolo usa la sintassi "Normale *accento*" con "\n" come a-capo
-// ESPLICITO: ogni riga del dizionario è una riga tipografica (nowrap, mai
-// spezzata dal wrapping — "dietro i pixel" resta sempre unito). Dentro ogni
-// riga, i segmenti pari/dispari sono normale/accento per VariableProximity,
-// che li renderizza in un'unica isola (containerRef condiviso).
-const heroTitleParts = ta.hero.title.split("\n").flatMap((lineText, line) =>
-  lineText
+// HERO — titolo "Normale *accento*" con "\n" come a-capo esplicito. Il punto
+// finale dell'accento diventa un pixel quadrato (stesso segno delle card).
+const heroLines = ta.hero.title.split("\n").map((line) =>
+  line
     .split("*")
-    .map((text, i) => ({ text, accent: i % 2 === 1, line }))
+    .map((text, i) => ({ text, accent: i % 2 === 1 }))
     .filter((p) => p.text.length > 0)
 );
 
-// IL DUO — dati strutturali fusi con bio/ruoli/focus tradotti.
+// IL DUO — foto (placeholder fino allo shooting: basta sostituire i file in
+// src/assets/team), tono di colore e testi tradotti fusi per indice. La
+// sorgente del canvas a pixel è una webp leggera generata a build time.
 const peopleMeta = [
-  { initial: "J", name: "Julian", grad: "grad-2", photo: "/team/julian.png" },
-  { initial: "A", name: "Alice", grad: "grad-4", photo: "/team/alice.png" },
-];
-const people = peopleMeta.map((m, i) => ({
-  ...m,
-  role: ta.people[i].role,
-  bio: ta.people[i].bio,
-  focus: ta.people[i].focus,
+  // zoom: quanto stringere sul volto nel ritratto a pixel della hero.
+  { name: "Julian", photo: julianPhoto, tone: "ember", zoom: 1 },
+  { name: "Alice", photo: alicePhoto, tone: "shadow", zoom: 1.3 },
+] as const;
+const people = await Promise.all(
+  peopleMeta.map(async (m, i) => ({
+    ...m,
+    ...ta.people[i],
+    pixelSrc: (await getImage({ src: m.photo, width: 640, format: "webp", quality: 82 })).src,
+  }))
+);
+
+// Il manifesto: le parole dello statement si accendono una a una con lo
+// scroll; le cifre dei fatti girano come un contachilometri. La striscia di
+// ogni cifra finisce sul valore vero (10 cifre, l'ultima è quella giusta).
+const facts = ta.manifesto.facts.map((f) => ({
+  ...f,
+  reel: Array.from({ length: 10 }, (_, k) => (f.n + 1 + k) % 10),
 }));
 
 // IL PERCORSO — le 4 tappe tradotte (gli asset 3D li sceglie JourneyPath).
@@ -68,111 +77,155 @@ const workflow = ta.flow.items.map((it, i) => ({
   <Navbar lang={lang} route="/chi-siamo" />
 
   <main class="aboutpage">
-    <!-- HERO — colonna editoriale "one-shot": titolo, sub e CTA dentro
-         esattamente un viewport (100svh, overflow clip). Lo spazio negativo
-         lo tiene l'aurora di fondo, nessun asset 3D. -->
-    <section class="ap-hero ap-hero--split">
+    <!-- HERO — "Le persone dietro i pixel", alla lettera: i due ritratti sono
+         griglie di tessere nei colori del brand e la lente (il cursore, o un
+         percorso automatico) li rimette a fuoco. Fondo: l'aurora. -->
+    <section class="ap-hero" data-ap-hero>
       <div class="ap-hero-aurora" aria-hidden="true"></div>
 
       <div class="ap-hero-inner">
-        <div class="ap-hero-copy">
-          <!-- opacity:0 inline = anti-flash (stesso pattern di badge/sub):
-               la riespone l'island HeroProximityTitle quando parte la
-               cascata split-text delle lettere (o subito, con
-               reduced-motion). -->
-          <h1 class="ap-hero-title font-display" style="opacity: 0;">
-            <HeroProximityTitle client:load parts={heroTitleParts} radius={140} />
+        <div class="ap-hero-copy" data-ap-hero-copy>
+          <div class="ap-hero-top" data-ap-hero-fade>
+            <span class="works-kicker ap-hero-kicker">{ta.hero.badge}</span>
+            <span class="ap-hero-status"><span class="ap-hero-status-dot" aria-hidden="true"></span>{ta.hero.status}</span>
+          </div>
+
+          <h1 class="ap-hero-title font-display" data-ap-hero-title>
+            {heroLines.map((line) => (
+              <span class="ap-hero-line">
+                {line.map((p) =>
+                  p.accent ? (
+                    <em class="ap-hero-accent" data-ap-hero-accent>{p.text.replace(/\.$/, "")}{p.text.endsWith(".") && <span class="ap-px-dot" data-ap-px-dot aria-hidden="true"></span>}</em>
+                  ) : (
+                    <span>{p.text}</span>
+                  )
+                )}
+              </span>
+            ))}
           </h1>
 
-          <p class="ap-hero-sub" style="opacity: 0;">
-            {ta.hero.sub}
-          </p>
+          <p class="ap-hero-sub" data-ap-hero-fade>{ta.hero.sub}</p>
 
-          <div class="ap-hero-cta" style="opacity: 0;">
+          <div class="ap-hero-cta" data-ap-hero-fade>
             <a href="#contatti" class="about-cta-btn ap-hero-btn magnetic">
               {ta.hero.cta} <span aria-hidden="true">↗</span>
             </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MANIFESTO -->
-    <section class="ap-section ap-manifesto">
-      <div class="works-screen">
-        <div class="ap-manifesto-grid">
-          <div class="ap-manifesto-lead">
-            <span class="ap-manifesto-mark" aria-hidden="true">✦</span>
-          </div>
-
-          <BlurText
-            client:load
-            text={ta.manifesto.statement}
-            animateBy="words"
-            direction="top"
-            delay={120}
-            stepDuration={0.4}
-            className="ap-statement font-display ap-statement--blur"
-          />
-
-          <div class="ap-manifesto-aside" data-ap-reveal>
-            {ta.manifesto.notes.map((note) => (
-              <p class="ap-manifesto-note"><Rich text={note} /></p>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- IL DUO — la sezione vive in un "campo" tecnico ultra-minimale:
-         gridlines semi-trasparenti che si accendono attorno al cursore
-         (mask-image su var --gx/--gy aggiornate da main.ts, solo pointer
-         fine) e micro-coordinate editoriali agli angoli. Tutto aria-hidden,
-         solo background/mask → nessun costo di layout. -->
-    <section class="ap-section ap-section--deeper ap-duo-env">
-      <div class="ap-duo-field" aria-hidden="true"></div>
-      <span class="ap-duo-coord ap-duo-coord--br" aria-hidden="true">46.49° N · 11.35° E</span>
-      <div class="works-screen">
-        <div class="works-head">
-          <div class="works-head-left">
-            <h2 class="works-title"><Rich text={ta.duo.title} /></h2>
+            <a href="#il-duo" class="ap-hero-meet">
+              {ta.hero.meet} <span aria-hidden="true">↓</span>
+            </a>
           </div>
         </div>
 
-        <!-- Split-stage 50/50: ogni metà è il "palco" di una persona — indice
-             e ruolo in testa, la card fotografica appesa al centro, il nome
-             gigante sotto. Al passaggio del mouse la metà si accende (glow +
-             iniziale watermark), l'altra si spegne, e bio + aree focus
-             affiorano. Solo opacity/transform/filter: la geometria del
-             documento NON cambia mai (gli ScrollTrigger a valle — il pin del
-             Percorso — restano validi). Su touch tutto è visibile. -->
-        <div class="ap-duo">
-          {people.map((person, i) => (
-            <div class={`ap-person${i % 2 === 1 ? " ap-person--flip" : ""}`}>
-              <span class="ap-duo-mark font-display" aria-hidden="true">{person.initial}</span>
-              <div class="ap-duo-head">
-                <span class="ap-duo-index">0{i + 1}</span>
-                <span class="ap-bio-role">{person.role}</span>
+        <div class="ap-stage" data-ap-stage>
+          <span class="ap-bit ap-bit--1" data-ap-bit style="--d: 0.6" aria-hidden="true"></span>
+          <span class="ap-bit ap-bit--2" data-ap-bit style="--d: -0.9" aria-hidden="true"></span>
+          <span class="ap-bit ap-bit--3" data-ap-bit style="--d: 1.2" aria-hidden="true"></span>
+          <span class="ap-bit ap-bit--4" data-ap-bit style="--d: -0.5" aria-hidden="true"></span>
+          <span class="ap-bit ap-bit--5" data-ap-bit style="--d: 0.8" aria-hidden="true"></span>
+
+          {people.map((p, i) => (
+            <figure class={`ap-portrait ap-portrait--${i + 1}`} data-ap-portrait>
+              <div class="ap-portrait-frame">
+                <canvas
+                  class="ap-portrait-canvas"
+                  data-px-lens
+                  data-src={p.pixelSrc}
+                  data-tone={p.tone}
+                  data-zoom={p.zoom}
+                  role="img"
+                  aria-label={`${p.name} — ${p.area}`}
+                ></canvas>
               </div>
-              <HangBadge
-                initial={person.initial}
-                name={person.name}
-                role={person.role}
-                grad={person.grad}
-                photo={person.photo || undefined}
-              />
-              <div class="ap-bio">
-                <h3 class="ap-bio-name font-display">{person.name}<em>.</em></h3>
-                <div class="ap-duo-more">
-                  <div class="ap-duo-more-in">
-                    <p class="ap-bio-text">{person.bio}</p>
-                    <ul class="ap-focus">
-                      {person.focus.map((f) => <li>{f}</li>)}
-                    </ul>
-                  </div>
+              <figcaption class="ap-portrait-cap">
+                <span class="ap-portrait-n">0{i + 1}</span>
+                <span class="ap-portrait-name">{p.name}</span>
+                <span class="ap-portrait-area">{p.area}</span>
+              </figcaption>
+            </figure>
+          ))}
+
+          <p class="ap-stage-hint" data-ap-hint>
+            <span class="ap-stage-hint-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 7-6 2-2 6z"/></svg>
+            </span>
+            <span class="ap-hint-desk">{ta.hero.hint}</span>
+            <span class="ap-hint-touch">{ta.hero.hintTouch}</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MANIFESTO — lo statement si accende parola per parola con lo scroll,
+         poi i tre numeri che lo dimostrano. -->
+    <section class="ap-manifesto" data-ap-manifesto>
+      <div class="works-screen">
+        <span class="works-kicker" data-ap-rise>{ta.manifesto.kicker}</span>
+        <p class="ap-statement font-display" data-ap-statement>
+          <Rich text={ta.manifesto.statement} />
+        </p>
+
+        <ol class="ap-facts">
+          {facts.map((f) => (
+            <li class="ap-fact" data-ap-fact>
+              <span class="ap-fact-rule" aria-hidden="true"></span>
+              <span class="ap-fact-n font-display" aria-label={String(f.n)}>
+                <span class="ap-fact-reel" data-ap-reel aria-hidden="true">
+                  {f.reel.map((d) => <span>{d}</span>)}
+                </span>
+              </span>
+              <span class="ap-fact-label font-display">{f.label}</span>
+              <span class="ap-fact-text">{f.text}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <!-- IL DUO — due card editoriali sfalsate: la foto entra pixelata e si
+         mette a fuoco (lo stesso gesto della hero), poi nome, ruolo, bio,
+         una frase in prima persona e le aree di lavoro. -->
+    <section id="il-duo" class="ap-duo" data-ap-duo>
+      <div class="ap-duo-glow" aria-hidden="true"></div>
+      <div class="works-screen">
+        <div class="ap-duo-head">
+          <div>
+            <span class="works-kicker" data-ap-rise>{ta.duo.kicker}</span>
+            <h2 class="works-title ap-duo-title" data-ap-rise><Rich text={ta.duo.title} /></h2>
+          </div>
+          <p class="ap-duo-lead" data-ap-rise>{ta.duo.lead}</p>
+        </div>
+
+        <div class="ap-cards">
+          {people.map((p, i) => (
+            <article class={`ap-card ap-card--${p.tone}`} data-ap-card>
+              <div class="ap-card-media" data-ap-card-media>
+                <Picture
+                  src={p.photo}
+                  formats={["avif", "webp"]}
+                  widths={[480, 720, 960]}
+                  sizes="(max-width: 860px) 92vw, 44vw"
+                  alt={`${p.name} — ${p.title}, ${p.area}`}
+                  class="ap-card-img"
+                  loading="lazy"
+                />
+                <canvas class="ap-card-canvas" data-px-reveal data-src={p.pixelSrc} data-tone={p.tone} aria-hidden="true"></canvas>
+                <span class="ap-card-chip">0{i + 1} · {p.title}</span>
+              </div>
+
+              <div class="ap-card-body">
+                <div class="ap-card-namerow">
+                  <h3 class="ap-card-name font-display" data-ap-card-name>{p.name}<span class="ap-px-dot" aria-hidden="true"></span></h3>
+                  <span class="ap-card-area">{p.area}</span>
                 </div>
+                <p class="ap-card-bio" data-ap-card-in>{p.bio}</p>
+                <blockquote class="ap-card-quote font-display" data-ap-card-in>
+                  <span aria-hidden="true">«</span><Rich text={p.quote} /><span aria-hidden="true">»</span>
+                </blockquote>
+                <ul class="ap-card-tags" data-ap-card-in>
+                  {p.focus.map((f) => <li>{f}</li>)}
+                </ul>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </div>

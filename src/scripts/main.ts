@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Draggable } from "gsap/Draggable";
 import { SplitText } from "gsap/SplitText";
 import { initContactFlow } from "./contactFlow";
+import { PixelPortrait, RAMPS } from "./pixelPortrait";
 
 gsap.registerPlugin(ScrollTrigger, Draggable, SplitText);
 
@@ -1609,216 +1610,225 @@ if (
 }
 
 // ---------- Pagina /chi-siamo ----------
-// Le coreografie condivise (glow, capitoli, tilt founder, outro, CTA,
-// footer) si agganciano da sole alle stesse classi; qui vive solo ciò che
-// è esclusivo della pagina: l'entrata della hero, i ritratti del duo e la
-// timeline del percorso.
+// Hero "dietro i pixel" (ritratti a tessere + lente), manifesto che si
+// accende con lo scroll, card del duo che si mettono a fuoco. Le coreografie
+// condivise (CTA, footer, Percorso, Come lavoriamo) restano più sotto.
 const aboutPage = document.querySelector<HTMLElement>(".aboutpage");
 if (aboutPage) {
-  // Hero — il titolo ora usa l'isola VariableProximity (React Bits): le lettere
-  // reagiscono al cursore variando il peso del font, quindi niente split/mask GSAP
-  // qui. Sottotitolo e CTA mantengono l'entrata in dissolvenza.
-  const apHeroBits: { sel: string; delay: number }[] = [
-    { sel: ".ap-hero-sub", delay: 0.75 },
-    { sel: ".ap-hero-cta", delay: 0.92 },
-  ];
-  apHeroBits.forEach(({ sel, delay }) => {
-    if (!aboutPage.querySelector(sel)) return;
-    gsap.fromTo(
-      sel,
-      { opacity: 0, y: 14 },
-      { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", delay }
-    );
-  });
-
-  // Hero — parallax editoriale in scrub: uscendo dalla hero il blocco
-  // tipografico sale un filo più veloce della pagina → profondità rispetto
-  // all'aurora di fondo. Solo transform, costo nullo.
-  if (!reduceMotion && aboutPage.querySelector(".ap-hero")) {
-    gsap.to(".ap-hero-inner", {
-      yPercent: -9,
-      ease: "none",
-      scrollTrigger: {
-        trigger: ".ap-hero",
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-      },
+  // Le entrate della hero partono quando il loader se n'è andato (o subito,
+  // se in questa sessione è già stato visto).
+  const afterLoader = (cb: () => void) => {
+    const root = document.documentElement;
+    if (!root.classList.contains("apd-loading")) return cb();
+    const mo = new MutationObserver(() => {
+      if (root.classList.contains("apd-loading")) return;
+      mo.disconnect();
+      cb();
     });
-  }
+    mo.observe(root, { attributes: true, attributeFilter: ["class"] });
+  };
+  const rampOf = (el: HTMLElement) =>
+    RAMPS[(el.dataset.tone as keyof typeof RAMPS) || "shadow"] ?? RAMPS.shadow;
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
-  // Duo — ogni riga è una scena indipendente: il badge cala dall'alto come da
-  // un filo (corda che cresce + badge che scende, assestamento a pendolo),
-  // mentre la bio sale a pezzi. L'animazione parte solo quando IL blocco di
-  // QUELLA persona entra in viewport (trigger per riga), una volta sola, e il
-  // badge resta poi fisso. Solo transform/opacity. Reduced-motion → stato
-  // finale immediato (lo stato iniziale nascosto è inline nel componente).
-  aboutPage.querySelectorAll<HTMLElement>(".ap-person").forEach((row, idx) => {
-    revealRise(row.querySelectorAll(":scope > .ap-duo-head, .ap-bio > *"), {
-      trigger: row,
-      start: "top 78%",
-      stagger: 0.1,
-      y: 44,
-      duration: 0.9,
+  // --- HERO ---
+  const apHero = aboutPage.querySelector<HTMLElement>("[data-ap-hero]");
+  const stage = aboutPage.querySelector<HTMLElement>("[data-ap-stage]");
+  const lensCanvases = Array.from(
+    aboutPage.querySelectorAll<HTMLCanvasElement>("[data-px-lens]")
+  );
+  const lenses = lensCanvases.map(
+    (c) =>
+      new PixelPortrait(c, {
+        src: c.dataset.src!,
+        ramp: rampOf(c),
+        block: c.getBoundingClientRect().width < 220 ? 10 : 14,
+        zoom: Number(c.dataset.zoom) || 1,
+      })
+  );
+
+  if (reduceMotion) {
+    lenses.forEach((p) => p.sharp());
+  } else if (apHero && stage) {
+    // Lente: col mouse segue il cursore sul ritratto sotto di lui (l'altro si
+    // spegne tutto pixel); fuori dal palco torna il percorso automatico. Su
+    // touch un tocco mette a fuoco il punto per qualche secondo.
+    const localOf = (c: HTMLCanvasElement, e: PointerEvent) => {
+      const r = c.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top, r };
+    };
+    stage.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse") return;
+      lensCanvases.forEach((c, i) => {
+        const { x, y, r } = localOf(c, e);
+        const pad = r.width * 0.25;
+        const near = x > -pad && y > -pad && x < r.width + pad && y < r.height + pad;
+        near ? lenses[i].point(x, y) : lenses[i].dim();
+      });
+    });
+    stage.addEventListener("pointerleave", () => lenses.forEach((p) => p.point(null)));
+    lensCanvases.forEach((c, i) => {
+      let release = 0;
+      c.addEventListener("pointerdown", (e) => {
+        if (e.pointerType === "mouse") return;
+        const { x, y } = localOf(c, e);
+        lenses[i].point(x, y);
+        window.clearTimeout(release);
+        release = window.setTimeout(() => lenses[i].point(null), 2600);
+      });
     });
 
-    const swing = row.querySelector<HTMLElement>("[data-hang-swing]");
-    const badge = row.querySelector<HTMLElement>("[data-hang-badge]");
-    const cord = row.querySelector<HTMLElement>("[data-hang-cord]");
-    if (!swing || !badge || !cord) return;
-
-    if (reduceMotion) {
-      gsap.set(cord, { scaleY: 1 });
-      gsap.set(badge, { opacity: 1, y: 0 });
-      gsap.set(swing, { rotation: 0 });
-      return;
+    // Pixel sfuggiti: parallasse col cursore su tutta la hero.
+    if (finePointer) {
+      apHero.addEventListener("pointermove", (e) => {
+        const r = apHero.getBoundingClientRect();
+        stage.style.setProperty("--mx", (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3));
+        stage.style.setProperty("--my", (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3));
+      });
     }
 
-    // Distanza di caduta = lunghezza della corda: badge e corda restano
-    // agganciati per tutta la discesa (stesso ease, stessa durata). Il pendolo
-    // di assestamento ruota il WRAPPER (.hang-swing) attorno all'aggancio in
-    // cima, così corda e badge oscillano insieme — pendolo fisicamente corretto.
-    const drop = cord.offsetHeight || 180;
+    const title = apHero.querySelector<HTMLElement>("[data-ap-hero-title]");
+    const plain = title
+      ? SplitText.create(title.querySelectorAll(".ap-hero-line > span"), {
+          type: "words",
+          mask: "words",
+        })
+      : null;
+    const accent = apHero.querySelectorAll<HTMLElement>("[data-ap-hero-accent]");
+    const dots = apHero.querySelectorAll<HTMLElement>("[data-ap-px-dot]");
+    const fades = apHero.querySelectorAll<HTMLElement>("[data-ap-hero-fade]");
+    const caps = apHero.querySelectorAll<HTMLElement>(".ap-portrait-cap");
+    const bits = apHero.querySelectorAll<HTMLElement>("[data-ap-bit]");
+    const hint = apHero.querySelector<HTMLElement>("[data-ap-hint]");
+    gsap.set(accent, { clipPath: "inset(-12% 100% -28% -6%)" });
+    gsap.set(dots, { scale: 0 });
 
-    // --- Pendolo interattivo: peso a riposo (sway) + trascinamento ---
-    // Creato dopo la caduta. Lo sway dà "vita/peso" senza costare nulla (un
-    // solo transform su layer GPU) e va in pausa fuori viewport. Su desktop
-    // (pointer fine) il badge si trascina e torna alla verticale con un
-    // rimbalzo elastico; su touch resta non-draggable per non rubare lo scroll.
-    let idle: gsap.core.Tween | null = null;
-    let dragging = false;
-    const canDrag = window.matchMedia(
-      "(hover: hover) and (pointer: fine)"
-    ).matches;
-
-    const makeIdle = () =>
-      gsap.fromTo(
-        swing,
-        { rotation: 0 },
-        {
-          rotation: 1.6,
-          duration: 3.2,
-          ease: "sine.inOut",
-          yoyo: true,
-          repeat: -1,
-          paused: true,
-        }
-      );
-
-    const enablePendulum = () => {
-      gsap.set([swing, badge], { willChange: "auto" });
-      idle = makeIdle();
-      idle.play();
-
-      // Pausa lo sway quando il badge esce dallo schermo (niente loop sprecati).
-      ScrollTrigger.create({
-        trigger: row,
-        start: "top bottom",
-        end: "bottom top",
-        onToggle: (self) => {
-          if (dragging) return;
-          self.isActive ? idle?.play() : idle?.pause();
-        },
-      });
-
-      if (!canDrag) return;
-      swing.classList.add("is-draggable");
-
-      Draggable.create(swing, {
-        type: "rotation",
-        // Limiti: oscilla come un pendolo, non gira a vuoto.
-        bounds: { minRotation: -34, maxRotation: 34 },
-        dragResistance: 0.32, // "peso": il badge non schizza dietro al cursore
-        onPress() {
-          dragging = true;
-          idle?.pause();
-          gsap.killTweensOf(swing); // ferma un eventuale ritorno elastico
-          gsap.set(swing, { willChange: "transform" });
-        },
-        onDragStart() {
-          swing.classList.add("is-dragging");
-        },
-        onRelease() {
-          dragging = false;
-          swing.classList.remove("is-dragging");
-          // Ricade alla verticale e oscilla: molla smorzata (effetto gravità).
-          gsap.to(swing, {
-            rotation: 0,
-            duration: 1.3,
-            ease: "elastic.out(1, 0.4)",
-            onComplete: () => {
-              gsap.set(swing, { willChange: "auto" });
-              idle = makeIdle();
-              idle.play();
-            },
-          });
-        },
-      });
-    };
-
-    const tl = gsap.timeline({
-      scrollTrigger: { trigger: row, start: "top 68%", once: true },
-      defaults: { force3D: true },
-      // Nel layout split le due metà entrano in vista insieme: la seconda
-      // card cala con un piccolo scarto — caduta "a canone", non a blocco.
-      delay: idx * 0.22,
-      onComplete: enablePendulum,
+    afterLoader(() => {
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.set(title, { opacity: 1 })
+        .fromTo(fades[0], { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.8 }, 0)
+        .fromTo(
+          plain?.words ?? [],
+          { yPercent: 115 },
+          { yPercent: 0, duration: 1.1, ease: "power4.out", stagger: 0.08 },
+          0.1
+        )
+        // "i pixel." si scrive a scatti, come un display che si accende.
+        .to(accent, { clipPath: "inset(-12% -10% -28% -6%)", duration: 0.75, ease: "steps(9)" }, 0.55)
+        .to(dots, { scale: 1, duration: 0.5, ease: "back.out(3)" }, 1.25)
+        .to(dots, { opacity: 0, duration: 0.14, ease: "steps(1)", repeat: 3, yoyo: true }, 1.5)
+        .fromTo(
+          Array.from(fades).slice(1),
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.9, stagger: 0.12 },
+          0.8
+        )
+        .call(() => lenses.forEach((p) => p.start()), [], 0.35)
+        .fromTo(
+          bits,
+          { opacity: 0, scale: 0 },
+          { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(2.4)", stagger: 0.09 },
+          1.1
+        )
+        .fromTo(caps, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.15 }, 1.35)
+        .fromTo(hint, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.8 }, 2);
     });
-    tl.set([swing, badge], { willChange: "transform, opacity" })
-      .fromTo(
-        cord,
-        { scaleY: 0 },
-        { scaleY: 1, duration: 0.9, ease: "power3.out" },
-        0,
-      )
-      .fromTo(
-        badge,
-        { opacity: 0, y: -drop },
-        { opacity: 1, y: 0, duration: 0.9, ease: "power3.out" },
-        0,
-      )
-      // Pendolo di assestamento attorno all'aggancio (transform-origin: top).
-      .fromTo(
-        swing,
-        { rotation: 0 },
-        { rotation: 3, duration: 0.5, ease: "sine.inOut" },
-        0.6,
-      )
-      .to(swing, { rotation: -2, duration: 0.55, ease: "sine.inOut" })
-      .to(swing, { rotation: 1, duration: 0.5, ease: "sine.inOut" })
-      .to(swing, { rotation: 0, duration: 0.6, ease: "sine.out" });
-  });
 
-  // Duo — le gridlines del "campo" seguono il cursore: pointermove aggiorna
-  // due var CSS (--gx/--gy) e la mask radiale la disegna la GPU. Solo con
-  // pointer fine; su touch il campo resta statico e tenue.
-  const duoEnv = aboutPage.querySelector<HTMLElement>(".ap-duo-env");
-  const duoField = duoEnv?.querySelector<HTMLElement>(".ap-duo-field");
-  if (
-    duoEnv &&
-    duoField &&
-    window.matchMedia("(hover: hover) and (pointer: fine)").matches
-  ) {
-    duoEnv.addEventListener(
-      "pointermove",
-      (e) => {
-        const r = duoEnv.getBoundingClientRect();
-        duoField.style.setProperty("--gx", `${((e.clientX - r.left) / r.width) * 100}%`);
-        duoField.style.setProperty("--gy", `${((e.clientY - r.top) / r.height) * 100}%`);
-      },
-      { passive: true }
-    );
+    // Uscita: il testo sale un filo più veloce della pagina, i due ritratti a
+    // velocità diverse → profondità sull'aurora.
+    const scrubOut = { trigger: apHero, start: "top top", end: "bottom top", scrub: SCRUB };
+    gsap.to("[data-ap-hero-copy]", { yPercent: -10, ease: "none", scrollTrigger: scrubOut });
+    // Su mobile i ritratti stanno in colonna sotto il testo: niente scarto.
+    if (window.matchMedia("(min-width: 961px)").matches) {
+      aboutPage.querySelectorAll<HTMLElement>("[data-ap-portrait]").forEach((el, i) => {
+        gsap.to(el, { y: i ? -150 : -70, ease: "none", scrollTrigger: { ...scrubOut } });
+      });
+    }
   }
 
-  // Manifesto — la nota di rinforzo entra riga per riga nello spazio negativo.
-  aboutPage.querySelectorAll<HTMLElement>("[data-ap-reveal]").forEach((el) => {
-    revealRise(el.querySelectorAll(":scope > *"), {
-      trigger: el,
-      start: "top 86%",
-      stagger: 0.12,
-      y: 22,
-      duration: 0.9,
-    });
+  // --- MANIFESTO ---
+  aboutPage.querySelectorAll<HTMLElement>("[data-ap-manifesto] [data-ap-rise]").forEach((el) =>
+    revealRise(el, { trigger: el, start: "top 86%", y: 24, duration: 0.9 })
+  );
+  const statement = aboutPage.querySelector<HTMLElement>("[data-ap-statement]");
+  if (statement && !reduceMotion) {
+    // Le parole si accendono una a una mentre la frase attraversa lo schermo;
+    // per ultimo l'evidenziatore sotto "un'agenzia intera".
+    const words = SplitText.create(statement, { type: "words" }).words;
+    const em = statement.querySelectorAll("em");
+    gsap.set(em, { "--hl": 0 });
+    gsap
+      .timeline({
+        scrollTrigger: { trigger: statement, start: "top 82%", end: "bottom 42%", scrub: SCRUB },
+      })
+      .fromTo(words, { opacity: 0.13 }, { opacity: 1, duration: 0.3, stagger: 0.12, ease: "none" })
+      .to(em, { "--hl": 1, duration: 0.6, ease: "power2.out" });
+  }
+  aboutPage.querySelectorAll<HTMLElement>("[data-ap-fact]").forEach((fact, i) => {
+    if (reduceMotion) return;
+    const reel = fact.querySelector<HTMLElement>("[data-ap-reel]");
+    const rest = fact.querySelectorAll<HTMLElement>(".ap-fact-label, .ap-fact-text");
+    gsap
+      .timeline({
+        scrollTrigger: { trigger: fact, start: "top 88%", once: true },
+        delay: i * 0.14,
+      })
+      .fromTo(fact, { "--rule": 0 }, { "--rule": 1, duration: 1.1, ease: "power3.inOut" }, 0)
+      // Contachilometri: la striscia gira e si ferma sulla cifra vera.
+      .fromTo(reel, { y: 0, yPercent: 0 }, { y: 0, yPercent: -90, duration: 1.7, ease: "power4.out" }, 0.1)
+      .fromTo(rest, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: "power3.out" }, 0.45);
+  });
+
+  // --- IL DUO ---
+  revealRise(aboutPage.querySelectorAll("[data-ap-duo] .ap-duo-head [data-ap-rise]"), {
+    trigger: "[data-ap-duo]",
+    start: "top 78%",
+    stagger: 0.12,
+    y: 36,
+  });
+  aboutPage.querySelectorAll<HTMLElement>("[data-ap-card]").forEach((card) => {
+    const canvas = card.querySelector<HTMLCanvasElement>("[data-px-reveal]");
+    if (reduceMotion) {
+      if (canvas) canvas.hidden = true;
+      return;
+    }
+    const name = card.querySelector<HTMLElement>("[data-ap-card-name]");
+    const dot = name?.querySelector<HTMLElement>(".ap-px-dot");
+    const ins = card.querySelectorAll<HTMLElement>("[data-ap-card-in]");
+    const quoteEm = card.querySelectorAll<HTMLElement>(".ap-card-quote em");
+    const chars = name ? SplitText.create(name, { type: "chars", mask: "chars" }).chars : [];
+    const px = canvas
+      ? new PixelPortrait(canvas, { src: canvas.dataset.src!, ramp: rampOf(canvas), block: 22, mode: "reveal" })
+      : null;
+    const wave = { v: 0 };
+    gsap.set(quoteEm, { "--hl": 0 });
+    gsap.set(dot, { scale: 0 });
+
+    const tl = gsap.timeline({ scrollTrigger: { trigger: card, start: "top 80%", once: true } });
+    tl.fromTo(card, { opacity: 0, y: 90 }, { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }, 0)
+      // La foto si mette a fuoco a ondata dall'alto, poi resta la <img> vera.
+      .to(wave, { v: 1.1, duration: 1.7, ease: "power1.inOut", onUpdate: () => px?.setWave(wave.v) }, 0.35)
+      .to(canvas, { autoAlpha: 0, duration: 0.35, onComplete: () => px?.destroy() }, ">-0.1")
+      .fromTo(chars, { yPercent: 108 }, { yPercent: 0, duration: 0.9, ease: "power4.out", stagger: 0.05 }, 0.5)
+      .to(dot, { scale: 1, duration: 0.5, ease: "back.out(3)" }, 0.95)
+      .fromTo(ins, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.12, ease: "power3.out" }, 0.75)
+      .to(quoteEm, { "--hl": 1, duration: 0.8, ease: "power2.inOut" }, 1.45);
+
+    // Inclinazione leggera verso il cursore (solo mouse).
+    if (finePointer) {
+      gsap.set(card, { transformPerspective: 1400 });
+      const rx = gsap.quickTo(card, "rotationX", { duration: 0.8, ease: "power3.out" });
+      const ry = gsap.quickTo(card, "rotationY", { duration: 0.8, ease: "power3.out" });
+      card.addEventListener("pointermove", (e) => {
+        const r = card.getBoundingClientRect();
+        rx(((e.clientY - r.top) / r.height - 0.5) * -4);
+        ry(((e.clientX - r.left) / r.width - 0.5) * 5);
+      });
+      card.addEventListener("pointerleave", () => {
+        rx(0);
+        ry(0);
+      });
+    }
   });
 
   // Come lavoriamo — la copy (kicker/titolo/lead) sale in cascata quando la
