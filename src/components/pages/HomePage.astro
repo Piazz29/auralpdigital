@@ -113,23 +113,26 @@ const t = getDict(lang);
   <!-- CONTENUTO — flusso normale -->
   <div class="post-reveal relative z-10" data-home>
 
-  <!-- SECTION — IL PUNTO: problema → svolta, subito dopo la hero.
-       Fondale e testo centrato scorrono insieme con la pagina: scorrendo
-       dalla hero il fondale compare in dissolvenza, il testo compare e si
-       accende mentre scorre (prima il problema, poi la svolta), poi la scena
-       svanisce mentre arrivano i Servizi. Regia in main.ts. -->
-  <section id="il-punto" class="point-scene" data-point-scene>
+  <!-- SECTION — IL PUNTO: racconto in tre tempi subito dopo la hero.
+       Con la regia attiva (main.ts aggiunge .is-live) la schermata si ferma
+       (pin) e lo scroll fa avanzare la storia:
+         1. il LAVORO — "Fai un lavoro eccellente." da solo, grande;
+         2. il CAOS — sale in testata e sotto arrivano le tre righe del
+            problema, ognuna con la sua notifica che si accumula ai lati;
+         3. la SVOLTA — il caos si ritira, le notifiche vengono risucchiate
+            al centro e resta la promessa, chiusa da una notifica "ok".
+       Il fondale Sciliar resta, ma velato nella carta: è un'atmosfera, non
+       un'immagine da leggere. Senza JS / reduced motion: tutto in colonna. -->
+  <section id="il-punto" class="point" data-point>
     <div class="point-stage" data-point-stage>
-      <!-- Fondale: foto statica dello Sciliar in B/N (fotogramma 2560×1440
-           dall'originale, src/assets/point). Astro genera AVIF/WebP a più
-           larghezze; `sizes` è la larghezza reale a schermo: il blocco è alto
-           160vh, quindi una foto 16:9 in cover è larga max(100vw, 160vh × 16/9). -->
-      <div class="point-bg" aria-hidden="true">
+      <!-- Fondale: foto statica dello Sciliar in B/N (src/assets/point),
+           AVIF/WebP a più larghezze. Il palco è alto una schermata. -->
+      <div class="point-bg" aria-hidden="true" data-point-bg>
         <Picture
           src={sciliarBw}
           formats={["avif", "webp"]}
           widths={[1280, 1920, 2560]}
-          sizes="max(100vw, 285vh)"
+          sizes="max(100vw, 178vh)"
           quality={82}
           fallbackFormat="jpg"
           alt=""
@@ -137,14 +140,67 @@ const t = getDict(lang);
           decoding="async"
         />
       </div>
+      <div class="point-veil" aria-hidden="true"></div>
 
-      <div class="point-copy" data-point-copy>
-        <p class="point-pain font-display" data-point-pain>
-          <Rich text={t.home.point.pain} />
-        </p>
-        <p class="point-turn font-display" data-point-turn>
-          <Rich text={t.home.point.turn} />
-        </p>
+      <!-- Notifiche: decorazione del caos (una per riga del problema) e la
+           notifica della svolta. Il galleggiare è CSS sull'interno, la regia
+           GSAP sul contenitore: i due transform non si pestano. -->
+      <div class="point-pings" aria-hidden="true">
+        {t.home.point.pings.map((ping, i) => (
+          <div class={`point-ping point-ping--${i + 1}`} data-point-ping>
+            <div class="point-ping-in">
+              <span class={`point-ping-icon point-ping-icon--${i + 1}`}>
+                {i === 0 && (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg>
+                )}
+                {i === 1 && (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" /><path d="m16 3 5 5M21 3l-5 5" /></svg>
+                )}
+                {i === 2 && (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                )}
+              </span>
+              <span class="point-ping-text">
+                <span class="point-ping-title">{ping.title}</span>
+                <span class="point-ping-body">{ping.body}</span>
+              </span>
+              <span class="point-ping-dot"></span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="point-copy">
+        <!-- Atto 1 + 2: lead (poi testata) e problema -->
+        <div class="point-pain" data-point-pain>
+          <h2 class="point-lead" data-point-lead>{t.home.point.lead}</h2>
+          <p class="point-but" data-point-but>{t.home.point.but}</p>
+          <ol class="point-list">
+            {t.home.point.pains.map((line, i) => (
+              <li class="point-item" data-point-item>
+                <span class="point-num">0{i + 1}</span>
+                <span class="point-item-text"><Rich text={line} /></span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <!-- Atto 3: la svolta -->
+        <div class="point-turn" data-point-turn>
+          <p class="point-turn-title" data-point-turn-title>
+            <Rich text={t.home.point.turn} />
+          </p>
+          <p class="point-turn-sub" data-point-turn-sub><em>{t.home.point.turnSub}</em></p>
+          <div class="point-ok" data-point-ok aria-hidden="true">
+            <span class="point-ok-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+            </span>
+            <span class="point-ping-text">
+              <span class="point-ping-title">{t.home.point.ok.title}</span>
+              <span class="point-ping-body">{t.home.point.ok.body}</span>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </section>

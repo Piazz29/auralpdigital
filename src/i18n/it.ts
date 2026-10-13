@@ -174,22 +174,34 @@ const it = {
       // punto" (Google → siti, DM → social, a qualsiasi ora → gestionali).
       // Descrizioni di lunghezza simile: il palco non cambia altezza tra una
       // scena e l'altra. `name` tondo + `nameEm` corsivo blu.
+      // `short` = etichetta nella barra di navigazione; `tags` = tre
+      // etichette sotto la descrizione; `fix` = la notifica di "Il punto"
+      // RISOLTA, che compare sull'angolo della card (decorativa).
       link: "Parliamone",
       items: [
         {
           name: "Siti web",
           nameEm: "che convertono.",
           desc: "Ti trovano su Google e nelle ricerche AI, si aprono in un attimo e accompagnano chi arriva fino alla prenotazione. Il tuo miglior venditore, aperto 24 ore su 24.",
+          short: "Siti web",
+          tags: ["SEO e ricerca AI", "Prenotazioni online", "Veloci su mobile"],
+          fix: { title: "Google", body: "Il primo risultato sei tu" },
         },
         {
           name: "Social & Ads",
           nameEm: "che vendono.",
           desc: "Contenuti che fermano lo scroll e campagne mirate su chi è pronto a comprare. L'attenzione diventa prenotazioni, non messaggi da rincorrere uno per uno.",
+          short: "Social & Ads",
+          tags: ["Contenuti", "Campagne Ads", "Clienti pronti a comprare"],
+          fix: { title: "Messaggio diretto", body: "Prenotato, senza rincorrere" },
         },
         {
           name: "Gestionali",
           nameEm: "su misura.",
           desc: "Prenotazioni, contatti e clienti in un unico posto, con automazioni che rispondono anche quando tu non puoi. Nessuna richiesta persa, ore restituite ogni settimana.",
+          short: "Gestionali",
+          tags: ["Agenda e clienti", "Risposte automatiche", "Tutto in un posto"],
+          fix: { title: "Chiamata delle 22:47", body: "Risposta automatica inviata" },
         },
       ],
     },
@@ -202,13 +214,28 @@ const it = {
       visit: "Apri il sito",
     },
     point: {
-      // IL PUNTO — subito dopo la hero: prima il RICONOSCIMENTO (la giornata
-      // del cliente, in scuro), poi la SVOLTA (la promessa; *corsivo* = blu).
-      // **Parole chiave**: arancio nel problema, blu nella svolta.
-      // Mentre la svolta si accende il problema si spegne (regia in main.ts).
-      // \n solo tra una frase e l'altra; il resto lo impagina text-wrap: balance.
-      pain: "Fai un lavoro eccellente.\nMa i clienti ti scrivono **in DM**, ti chiamano **a qualsiasi ora** e alla fine prenotano da chi trovano **prima su Google**.",
-      turn: "Costruiamo **il sistema** che li porta da te.\n*E lavora mentre tu lavori.*",
+      // IL PUNTO — subito dopo la hero, racconto in tre tempi dentro un pin
+      // (regia in main.ts): il LAVORO (lead), il CAOS (but + pains, con le
+      // notifiche che si accumulano ai lati), la SVOLTA (turn + turnSub, con
+      // la notifica "ok" che chiude il caos).
+      // **Parole chiave**: evidenziatore nel problema, blu nella svolta.
+      lead: "Fai un lavoro eccellente.",
+      but: "Ma i clienti",
+      pains: [
+        "ti scrivono **in DM**,",
+        "ti chiamano **a qualsiasi ora**",
+        "e alla fine prenotano da chi trovano **prima su Google**.",
+      ],
+      turn: "Costruiamo **il sistema** che li porta da te.",
+      turnSub: "E lavora mentre tu lavori.",
+      // Notifiche decorative (aria-hidden): una per ogni riga del problema,
+      // più quella della svolta.
+      pings: [
+        { title: "Messaggio diretto", body: "Ciao! Avete posto sabato?" },
+        { title: "Chiamata persa", body: "Oggi, 22:47" },
+        { title: "Google", body: "Il primo risultato non sei tu" },
+      ],
+      ok: { title: "Nuova prenotazione", body: "Confermata in automatico" },
     },
     contact: {
       kicker: "Iniziamo",

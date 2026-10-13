@@ -613,6 +613,8 @@ const svcShots = gsap.utils.toArray<HTMLElement>("[data-svc-shot]");
 const svcCopyWrap = document.querySelector<HTMLElement>("[data-svc-copies]");
 const svcCopies = gsap.utils.toArray<HTMLElement>("[data-svc-copy]");
 const svcFills = gsap.utils.toArray<HTMLElement>("[data-svc-fill]");
+const svcSteps = gsap.utils.toArray<HTMLButtonElement>("[data-svc-step]");
+const svcFixes = gsap.utils.toArray<HTMLElement>("[data-svc-fix]");
 const servicesSection = document.querySelector<HTMLElement>("#cosa-facciamo");
 
 if (
@@ -664,6 +666,66 @@ if (
     });
     // L'asse inattivo resta a zero (il movimento avviene su uno solo).
     gsap.set([svcFrame, svcTrack], vertical ? { x: 0 } : { y: 0 });
+    // Notifiche risolte: ognuna nel posto della card della SUA scena (con
+    // `translate`, separato dal transform dell'entrata). Nel modo reel
+    // stanno tutte in alto al centro (CSS).
+    svcFixes.forEach((el, k) => {
+      el.style.translate = reel ? "" : `${frameAt(k)}px 0`;
+    });
+  };
+
+  // ---- Entrata a tempo del testo di scena ----
+  // Le descrizioni si danno il cambio in dissolvenza seguendo `p` (apply);
+  // il CONTENUTO della scena invece entra a tempo, quando la card si è
+  // posata: numero, titolo parola per parola (maschera), evidenziatore sul
+  // corsivo, descrizione, etichette in cascata, link. Insieme, la notifica
+  // risolta arriva sul bordo della card (storta, si posa dritta: force3D off
+  // e niente scala, così a riposo resta nitida). Le timeline tornano a zero
+  // quando la loro scena è del tutto spenta, pronte per il prossimo giro.
+  const copyTls = svcCopies.map((el, k) => {
+    const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+    const num = el.querySelector("[data-svc-num]");
+    const title = el.querySelector<HTMLElement>("[data-svc-title]");
+    const desc = el.querySelector("[data-svc-desc]");
+    const tags = el.querySelectorAll("[data-svc-tag]");
+    const link = el.querySelector("[data-svc-link]");
+    if (num) tl.fromTo(num, { autoAlpha: 0, x: -14 }, { autoAlpha: 1, x: 0, duration: 0.5 }, 0);
+    if (title) {
+      const words = SplitText.create(title, { type: "words", mask: "words" }).words;
+      tl.fromTo(words, { yPercent: 112 }, { yPercent: 0, duration: 0.75, stagger: 0.06 }, 0.05);
+      const em = title.querySelector("em");
+      if (em) tl.fromTo(em, { "--hl": 0 }, { "--hl": 1, duration: 0.55, ease: "power2.inOut" }, 0.5);
+    }
+    if (desc) tl.fromTo(desc, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.6 }, 0.3);
+    if (tags.length) {
+      tl.fromTo(
+        tags,
+        { autoAlpha: 0, y: 12 },
+        { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.07, ease: "back.out(1.6)" },
+        0.45
+      );
+    }
+    if (link) tl.fromTo(link, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.45 }, 0.62);
+    const fix = svcFixes[k];
+    if (fix) {
+      tl.fromTo(
+        fix,
+        { autoAlpha: 0, y: 30, rotation: k % 2 ? 6 : -6 },
+        { autoAlpha: 1, y: 0, rotation: 0, duration: 0.7, ease: "back.out(1.5)", force3D: false },
+        0.35
+      );
+    }
+    return tl;
+  });
+  // La notifica esce in fretta appena la sua card riparte (prima che la
+  // cornice la porti via).
+  const fixLeaving = new Set<number>();
+  const fixOut = (k: number) => {
+    const fix = svcFixes[k];
+    if (!fix || fixLeaving.has(k)) return;
+    fixLeaving.add(k);
+    copyTls[k].pause();
+    gsap.to(fix, { autoAlpha: 0, y: 14, duration: 0.22, ease: "power2.in", overwrite: true });
   };
 
   const setFrame = (v: number) =>
@@ -675,6 +737,8 @@ if (
   // scrub, tutto il resto è calcolato da qui (idempotente, quindi corretto
   // anche scrollando all'indietro).
   const state = { p: 0 };
+  // Il pin (creato più sotto): serve già ad apply per sapere se è attivo.
+  let st: ScrollTrigger | null = null;
 
   const apply = () => {
     const p = state.p;
@@ -719,9 +783,27 @@ if (
       el.inert = off;
     });
 
-    // Puntini: quello della scena a fuoco si riempie mentre la corsa avanza.
+    // Barre: quella della scena a fuoco si riempie mentre la corsa avanza.
     svcFills.forEach((el, k) => {
-      el.style.transform = `scale(${gsap.utils.clamp(0, 1, p - k + 1).toFixed(3)})`;
+      el.style.transform = `scaleX(${gsap.utils.clamp(0, 1, p - k + 1).toFixed(3)})`;
+    });
+    const near = Math.round(p);
+    svcSteps.forEach((el, k) => {
+      el.classList.toggle("is-on", k === near);
+      if (k === near) el.setAttribute("aria-current", "step");
+      else el.removeAttribute("aria-current");
+    });
+
+    // Entrata a tempo: parte quando la card è posata (solo a sezione in
+    // pin, non al caricamento); torna a zero a scena spenta.
+    const live = !!st?.isActive;
+    copyTls.forEach((tl, k) => {
+      const d = Math.abs(p - k);
+      if (live && d < 0.004 && tl.progress() === 0 && !tl.isActive()) {
+        fixLeaving.delete(k);
+        tl.play(0);
+      } else if (d > 0.02 && tl.progress() > 0) fixOut(k);
+      if (d >= 0.3 && tl.progress() > 0) tl.pause(0);
     });
 
     syncSvcVideos();
@@ -817,7 +899,6 @@ if (
   const svcPinDistance = () =>
     Math.round(window.innerHeight * STEP_VH) * (N - 1) + EDGE_PAD * 2;
 
-  let st: ScrollTrigger | null = null;
   let index = 0; // scena a fuoco
   // "Cambio in corso" è una SCADENZA, non un interruttore: si spegne da sé al
   // passare del tempo. Un flag booleano dipenderebbe da una callback per
@@ -921,6 +1002,8 @@ if (
       measure();
       apply();
     },
+    // Entrando nel pin la scena a fuoco fa la sua entrata (vedi apply).
+    onToggle: () => apply(),
     onUpdate: (self) => {
       if (isBusy() || isTravelling()) return;
       const delta = self.scroll() - anchorOf(index);
@@ -958,6 +1041,24 @@ if (
     },
   });
 
+  // Navigazione: un clic porta alla scena (anche saltandone una). Il
+  // viaggio dichiara di essere tale, così l'atterraggio d'ingresso non lo
+  // intercetta se si clicca a sezione non ancora in pin.
+  svcSteps.forEach((el, k) =>
+    el.addEventListener("click", () => {
+      if (!st) return;
+      if (!st.isActive) {
+        travelFor(STEP_TIME);
+        index = k;
+        state.p = k;
+        apply();
+        lockedScrollTo(anchorOf(k), STEP_TIME);
+        return;
+      }
+      goTo(k);
+    })
+  );
+
   // ARRIVO del palco: compare (con un filo di salita) mentre la scena del
   // Punto svanisce, nella stessa finestra di scroll e con la stessa curva
   // (vedi l'uscita nel blocco del Punto): un passaggio di mano senza vuoti.
@@ -978,198 +1079,248 @@ if (
   );
 }
 
-// ---------- Glow text — illuminazione lettera per lettera in scrub ----------
-// Ogni elemento [data-glow] viene spezzato in lettere: le parole diventano
-// span inline-block (così non si spezzano a metà riga), ogni carattere uno
-// span che passa da quasi spento a pieno mentre l'elemento attraversa il
-// viewport. Gli <em> conservano corsivo + colore accent via .gw-em; gli
-// <strong> diventano parole chiave (.gw-key), colorate da chi le accende.
-// Con reduced motion il testo resta pieno (niente split, niente tween).
-const splitGlowChars = (el: HTMLElement): HTMLElement[] => {
-  const chars: HTMLElement[] = [];
-  const frag = document.createDocumentFragment();
+// ---------- Il punto — racconto in tre tempi dentro un pin ----------------
+// Il palco (una schermata) si ferma e lo scroll, in scrub, fa avanzare la
+// storia (markup e tempi in HomePage.astro, impaginazione in global.css):
+//   0. ARRIVO — mentre il palco sale dalla hero il fondale compare e
+//      "Fai un lavoro eccellente." si alza parola per parola, GRANDE e al
+//      centro della schermata (il lead parte trasformato verso il centro).
+//   1. LAVORO → CAOS — il lead si rimpicciolisce al suo posto di testata e
+//      sotto la frase si completa riga per riga: hairline che si disegna,
+//      riga che sale, evidenziatore sulla parola chiave e, insieme, la
+//      notifica di quella riga che "arriva" ai margini.
+//   2. SVOLTA — il problema si ritira verso l'alto, le notifiche vengono
+//      risucchiate al centro e lì sale la promessa: parole che emergono,
+//      evidenziatore blu su "il sistema", poi il corsivo e la notifica "ok".
+//   3. USCITA — a pin finito la svolta sale e si spegne mentre arrivano i
+//      Servizi; i bordi del fondale sono già sciolti nella carta.
+// Solo transform, opacità e due variabili CSS (tratti): niente layout per
+// frame. Le misure (centro del lead, rotte delle notifiche) si rileggono a
+// ogni refresh. Con reduced motion non parte nulla: colonna statica.
+const point = document.querySelector<HTMLElement>("[data-point]");
+const pointStage = point?.querySelector<HTMLElement>("[data-point-stage]");
+const pointBg = point?.querySelector<HTMLElement>("[data-point-bg]");
+const pointLead = point?.querySelector<HTMLElement>("[data-point-lead]");
+const pointPain = point?.querySelector<HTMLElement>("[data-point-pain]");
+const pointTurn = point?.querySelector<HTMLElement>("[data-point-turn]");
+const pointTurnTitle = point?.querySelector<HTMLElement>("[data-point-turn-title]");
+const pointTurnSub = point?.querySelector<HTMLElement>("[data-point-turn-sub]");
+if (
+  point &&
+  pointStage &&
+  pointBg &&
+  pointLead &&
+  pointPain &&
+  pointTurn &&
+  pointTurnTitle &&
+  pointTurnSub &&
+  !reduceMotion
+) {
+  point.classList.add("is-live");
 
-  const pushText = (text: string, kind: "" | "em" | "key") => {
-    text.split(/(\s+)/).forEach((tok) => {
-      if (!tok) return;
-      if (/^\s+$/.test(tok)) {
-        frag.appendChild(document.createTextNode(" "));
-        return;
-      }
-      const word = document.createElement("span");
-      word.className = kind ? `gw gw-${kind}` : "gw";
-      for (const ch of tok) {
-        const c = document.createElement("span");
-        c.className = "gc";
-        c.textContent = ch;
-        word.appendChild(c);
-        chars.push(c);
-      }
-      frag.appendChild(word);
-    });
+  const but = point.querySelector<HTMLElement>("[data-point-but]");
+  const items = gsap.utils.toArray<HTMLElement>("[data-point-item]", point);
+  const pings = gsap.utils.toArray<HTMLElement>("[data-point-ping]", point);
+  const ok = point.querySelector<HTMLElement>("[data-point-ok]");
+  const bgImg = pointBg.querySelector<HTMLElement>("img");
+  const turnKey = pointTurnTitle.querySelector<HTMLElement>("strong");
+
+  // Posizione di un elemento nel palco dal layout (offset* ignora i
+  // transform): corretta anche a scena già mossa.
+  const offsetIn = (el: HTMLElement) => {
+    let x = 0;
+    let y = 0;
+    let n: HTMLElement | null = el;
+    while (n && n !== pointStage) {
+      x += n.offsetLeft;
+      y += n.offsetTop;
+      n = n.offsetParent as HTMLElement | null;
+    }
+    return { x, y };
+  };
+  // Il lead parte al centro della schermata, ingrandito fin dove ci sta.
+  const leadScale = () =>
+    Math.min(1.9, (pointStage.clientWidth * 0.88) / pointLead.offsetWidth);
+  const leadShift = (axis: "x" | "y") => {
+    const o = offsetIn(pointLead);
+    return axis === "x"
+      ? pointStage.clientWidth / 2 - (o.x + pointLead.offsetWidth / 2)
+      : pointStage.clientHeight / 2 - (o.y + pointLead.offsetHeight / 2);
+  };
+  // Rotta di una notifica verso il centro del palco (il risucchio).
+  const toCenter = (el: HTMLElement, axis: "x" | "y") => {
+    const o = offsetIn(el);
+    return axis === "x"
+      ? pointStage.clientWidth / 2 - (o.x + el.offsetWidth / 2)
+      : pointStage.clientHeight / 2 - (o.y + el.offsetHeight / 2);
   };
 
-  el.childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      pushText(node.textContent ?? "", "");
-    } else if (node instanceof HTMLElement) {
-      if (node.tagName === "BR") {
-        frag.appendChild(document.createElement("br"));
-        return;
-      }
-      pushText(
-        node.textContent ?? "",
-        node.tagName === "EM" ? "em" : node.tagName === "STRONG" ? "key" : ""
+  // Parole con maschera: salgono dal basso come da una fessura.
+  const leadWords = SplitText.create(pointLead, { type: "words", mask: "words" }).words;
+  const turnWords = SplitText.create(pointTurnTitle, { type: "words", mask: "words" }).words;
+  const subWords = SplitText.create(pointTurnSub, { type: "words", mask: "words" }).words;
+  const marks = items.map((el) => el.querySelector<HTMLElement>("strong"));
+
+  // ---- 0. Arrivo dalla hero (prima del pin) ----
+  gsap.set(pointLead, {
+    x: () => leadShift("x"),
+    y: () => leadShift("y"),
+    scale: leadScale,
+  });
+  gsap.fromTo(
+    pointBg,
+    { autoAlpha: 0 },
+    {
+      autoAlpha: 1,
+      ease: "sine.inOut",
+      scrollTrigger: { trigger: point, start: "top 95%", end: "top 15%", scrub: SCRUB },
+    }
+  );
+  gsap.fromTo(
+    leadWords,
+    { yPercent: 110 },
+    {
+      yPercent: 0,
+      ease: "power3.out",
+      stagger: 0.12,
+      scrollTrigger: { trigger: point, start: "top 70%", end: "top 12%", scrub: SCRUB },
+    }
+  );
+
+  // ---- 1-2. Il racconto, dentro al pin ----
+  const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+  // Respiro: il lead resta solo per un attimo.
+  tl.to({}, { duration: 0.5 });
+  // Il lead va al suo posto di testata.
+  tl.fromTo(
+    pointLead,
+    { x: () => leadShift("x"), y: () => leadShift("y"), scale: leadScale },
+    { x: 0, y: 0, scale: 1, duration: 1.1, ease: "power3.inOut" },
+    0.5
+  );
+  if (but) tl.fromTo(but, { autoAlpha: 0, x: -16 }, { autoAlpha: 1, x: 0, duration: 0.6 }, 1.25);
+
+  items.forEach((item, i) => {
+    const at = 1.55 + i * 1.05;
+    tl.fromTo(item, { "--rule": 0 }, { "--rule": 1, duration: 0.6, ease: "power2.inOut" }, at);
+    tl.fromTo(item, { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duration: 0.7 }, at + 0.1);
+    const mark = marks[i];
+    if (mark) tl.fromTo(mark, { "--mark": 0 }, { "--mark": 1, duration: 0.55, ease: "power2.inOut" }, at + 0.45);
+    // La notifica arriva storta e si posa dritta. Niente scala in entrata e
+    // force3D off: Chrome rasterizzerebbe la scheda alla taglia piccola
+    // d'inizio e la terrebbe sgranata; così a riposo è un 2D pulito.
+    const ping = pings[i];
+    if (ping) {
+      tl.fromTo(
+        ping,
+        { autoAlpha: 0, y: 46, rotation: i % 2 ? 7 : -7 },
+        { autoAlpha: 1, y: 0, rotation: 0, duration: 0.7, ease: "back.out(1.5)", force3D: false },
+        at + 0.3
       );
     }
   });
 
-  el.textContent = "";
-  el.appendChild(frag);
-  return chars;
-};
-
-if (!reduceMotion) {
-  document.querySelectorAll<HTMLElement>("[data-glow]").forEach((el) => {
-    const chars = splitGlowChars(el);
-    if (!chars.length) return;
-    gsap.fromTo(
-      chars,
-      { opacity: 0.12 },
+  // SVOLTA — il caos si ritira e viene risucchiato al centro.
+  const turnAt = 1.55 + items.length * 1.05 + 0.6;
+  tl.to(
+    pointPain,
+    { autoAlpha: 0, y: -70, scale: 0.97, duration: 0.9, ease: "power2.in" },
+    turnAt
+  );
+  pings.forEach((ping, i) => {
+    tl.to(
+      ping,
       {
-        opacity: 1,
-        duration: 1,
+        x: () => toCenter(ping, "x"),
+        y: () => toCenter(ping, "y"),
+        scale: 0.25,
+        autoAlpha: 0,
+        duration: 0.85,
+        ease: "power2.in",
+        force3D: false,
+      },
+      turnAt + 0.05 + i * 0.08
+    );
+  });
+  // Il fondale si schiarisce di un filo: dopo il caos, aria.
+  if (bgImg) tl.to(bgImg, { opacity: 0.36, duration: 1.4, ease: "sine.inOut" }, turnAt);
+
+  const riseAt = turnAt + 0.85;
+  tl.set(pointTurn, { autoAlpha: 1 }, riseAt - 0.01);
+  tl.fromTo(turnWords, { yPercent: 110 }, { yPercent: 0, duration: 0.8, stagger: 0.07 }, riseAt);
+  if (turnKey) {
+    tl.fromTo(
+      turnKey,
+      { "--line": 0 },
+      { "--line": 1, duration: 0.6, ease: "power2.inOut" },
+      riseAt + 0.75
+    );
+  }
+  tl.fromTo(subWords, { yPercent: 110 }, { yPercent: 0, duration: 0.7, stagger: 0.05 }, riseAt + 0.95);
+  if (ok) {
+    tl.fromTo(
+      ok,
+      { autoAlpha: 0, scale: 0.85, y: 24 },
+      { autoAlpha: 1, scale: 1, y: 0, duration: 0.7, ease: "back.out(1.6)" },
+      riseAt + 1.45
+    );
+  }
+  // Coda: la promessa resta in scena da sola prima di lasciare il pin.
+  tl.to({}, { duration: 0.8 });
+
+  gsap.set(pointTurn, { autoAlpha: 0 });
+
+  // Il fondale si distende lungo tutto il racconto (da 1.1 a 1).
+  if (bgImg) {
+    gsap.fromTo(
+      bgImg,
+      { scale: 1.1 },
+      {
+        scale: 1,
         ease: "none",
-        stagger: 0.05,
         scrollTrigger: {
-          trigger: el,
-          start: "top 80%",
-          end: "bottom 45%",
-          scrub: 0.6,
+          trigger: point,
+          start: "top bottom",
+          end: () => "+=" + (window.innerHeight * 3.6),
+          scrub: SCRUB,
+          invalidateOnRefresh: true,
         },
       }
     );
-  });
-}
+  }
 
-// ---------- Il punto — fondale e testo che scorrono insieme ----------------
-// Un unico blocco (160vh, vedi .point-scene.is-scene) con fondale Sciliar e
-// testo centrato: scorre con la pagina alla stessa velocità, niente
-// parallasse. Tutto in scrub, con la stessa inerzia del resto della pagina:
-//   1. dalla hero si scrolla → il fondale compare in dissolvenza (e la foto
-//      si distende da 1.08 a 1)
-//   2. il testo compare con un filo di salita
-//   3. mentre scorre si accende lettera per lettera: prima il PROBLEMA
-//      (inchiostro, parole chiave in arancio), poi la SVOLTA (inchiostro,
-//      corsivo e chiavi in blu). Il problema resta acceso: si legge tutto.
-//   4. in uscita la montagna si scioglie nella carta con la stessa sfumatura
-//      della hero, mentre il palco dei Servizi compare sotto.
-// Solo opacità, colore e una scala leggera: niente layout per frame.
-// Con reduced motion non parte nulla: schermata statica con testo pieno.
-const pointScene = document.querySelector<HTMLElement>("[data-point-scene]");
-const pointCopy = pointScene?.querySelector<HTMLElement>("[data-point-copy]");
-const pointBg = pointScene?.querySelector<HTMLElement>(".point-bg");
-const pointPain = pointScene?.querySelector<HTMLElement>("[data-point-pain]");
-const pointTurn = pointScene?.querySelector<HTMLElement>("[data-point-turn]");
-if (pointScene && pointCopy && pointBg && pointPain && pointTurn && !reduceMotion) {
-  pointScene.classList.add("is-scene");
-
-  const scrubbed = (trigger: Element, start: string, end: string) => ({
-    trigger,
-    start,
-    end,
+  const pointPin = ScrollTrigger.create({
+    trigger: point,
+    start: "top top",
+    // ~0.34 schermate per unità di timeline: ogni riga del problema vale
+    // poco più di un terzo di schermata di scroll.
+    end: () => "+=" + Math.round(window.innerHeight * 0.34 * tl.duration()),
+    pin: pointStage,
+    animation: tl,
     scrub: SCRUB,
     invalidateOnRefresh: true,
+    // Primo pin della pagina, prima dei Servizi (3): ogni spacer a valle
+    // legge posizioni già spostate.
+    refreshPriority: 4,
   });
 
-  // 1 — ENTRATA: il fondale compare mentre la hero se ne va — dal primo
-  // pixel di scroll a hero uscita per il 60%. Agganciato alla hero, non al
-  // blocco: il blocco parte già sovrapposto alla sua sfumatura (vedi
-  // --point-overlap), quindi a pagina ferma è già in parte sullo schermo.
-  const heroEl = document.querySelector(".hero-section") ?? pointScene;
+  // ---- 3. Uscita, a pin finito ----
   gsap.fromTo(
-    pointBg,
-    { autoAlpha: 0 },
-    { autoAlpha: 1, ease: "sine.inOut", scrollTrigger: scrubbed(heroEl, "top top", "60% top") }
-  );
-  const pointImg = pointBg.querySelector<HTMLElement>("img");
-  if (pointImg) {
-    gsap.fromTo(
-      pointImg,
-      { scale: 1.08 },
-      { scale: 1, ease: "sine.out", scrollTrigger: scrubbed(heroEl, "top top", "60% top") }
-    );
-  }
-
-  // 2 — il testo compare a fondale ormai pieno.
-  gsap.fromTo(
-    pointCopy,
-    { autoAlpha: 0, y: 28 },
-    { autoAlpha: 1, y: 0, ease: "sine.out", scrollTrigger: scrubbed(pointCopy, "top 95%", "top 62%") }
-  );
-
-  // 3 — RIEMPIMENTO lettera per lettera mentre il testo sale verso il centro:
-  // finisce quando il blocco è a metà schermo. Un tween per lettera in
-  // sequenza (1 unità di timeline = 1 lettera): ogni lettera "scatta" piena
-  // prima che parta la successiva, dal grigio al suo colore.
-  const painChars = splitGlowChars(pointPain);
-  const turnChars = splitGlowChars(pointTurn);
-  const chars = [...painChars, ...turnChars];
-  if (chars.length) {
-    const GRAY = "rgba(23, 19, 16, 0.22)";
-    const INK = "#171310";
-    const ACCENT = "#2748A5";
-    const EMBER = "#D84002";
-    const painSet = new Set(painChars);
-    gsap.set(chars, { color: GRAY });
-
-    const fillTl = gsap.timeline({ defaults: { ease: "none" } });
-    chars.forEach((c, i) => {
-      const cls = c.parentElement?.classList;
-      const color = cls?.contains("gw-em")
-        ? ACCENT
-        : cls?.contains("gw-key")
-          ? painSet.has(c) ? EMBER : ACCENT
-          : INK;
-      fillTl.to(c, { color, duration: 0.6 }, i);
-    });
-
-    ScrollTrigger.create({
-      animation: fillTl,
-      ...scrubbed(pointCopy, "top 72%", "top 18%"),
-    });
-  }
-
-  // 4 — USCITA: il fondale non svanisce in opacità ma si scioglie nella carta
-  // scorrendo, con la sua sfumatura bassa (identica a quella della hero, vedi
-  // .point-bg in global.css), mentre il palco dei Servizi sale dentro di lei.
-  // Il testo si spegne mentre esce dall'alto, legato alla sua posizione: si
-  // legge tutto prima che se ne vada.
-  gsap.fromTo(
-    pointCopy,
-    { autoAlpha: 1 },
+    pointTurn,
+    { y: 0 },
     {
-      autoAlpha: 0,
-      ease: "sine.in",
+      y: () => -window.innerHeight * 0.12,
+      ease: "none",
       immediateRender: false,
-      scrollTrigger: scrubbed(pointCopy, "top 2%", "top -38%"),
+      scrollTrigger: {
+        start: () => pointPin.end,
+        end: () => pointPin.end + window.innerHeight * 0.7,
+        scrub: SCRUB,
+        invalidateOnRefresh: true,
+        refreshPriority: 4,
+      },
     }
   );
-  // Coda: quando il palco dei Servizi è quasi arrivato, quel che resta della
-  // sfumatura svanisce, così la sezione si blocca su carta pulita (senza,
-  // la coda della montagna restava dietro la parte alta dei Servizi fermi).
-  if (svcScene) {
-    gsap.fromTo(
-      pointBg,
-      { autoAlpha: 1 },
-      {
-        autoAlpha: 0,
-        ease: "sine.in",
-        immediateRender: false,
-        scrollTrigger: scrubbed(svcScene, "top 70%", "top 22%"),
-      }
-    );
-  }
 }
 
 // ---------- Chi Siamo — capitoli del metodo ----------
