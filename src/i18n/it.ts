@@ -222,7 +222,7 @@ const it = {
     // profilo → canale (call con calendario, oppure WhatsApp/email).
     // `value` resta fisso in tutte le lingue: è ciò che arriva nel messaggio.
     steps: {
-      service: { title: "Di cosa hai bisogno?", hint: "Anche più di una risposta" },
+      service: { title: "Cosa vuoi creare?", hint: "Anche più di una risposta" },
       profile: { title: "Per chi è il progetto?", hint: "Così prepariamo la proposta giusta" },
       channel: { title: "Come preferisci sentirci?", hint: "Scegli tu, rispondiamo sempre noi due" },
     },

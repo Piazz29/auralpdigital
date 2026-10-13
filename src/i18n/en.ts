@@ -211,7 +211,7 @@ const en = {
 
   contactForm: {
     steps: {
-      service: { title: "What do you need?", hint: "Pick as many as you like" },
+      service: { title: "What do you want to create?", hint: "Pick as many as you like" },
       profile: { title: "Who is the project for?", hint: "So we can prepare the right proposal" },
       channel: { title: "How would you like to talk?", hint: "Your call — it's always the two of us replying" },
     },

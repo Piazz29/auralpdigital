@@ -45,7 +45,12 @@ const media: { video?: string; poster?: string; src?: string; tint: string }[] =
     poster: "/videos/services/social-poster.jpg",
     tint: "216, 64, 2",
   },
-  { tint: "28, 43, 95" },
+  {
+    // Stessa lavorazione delle altre due (originale in .video-originals/).
+    video: "/videos/services/gestionali.mp4",
+    poster: "/videos/services/gestionali-poster.jpg",
+    tint: "28, 43, 95",
+  },
 ];
 
 const services = t.items.map((item, i) => ({ ...item, ...media[i] }));
