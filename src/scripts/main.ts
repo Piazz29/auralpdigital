@@ -32,6 +32,15 @@ const SCRUB_LERP = 1 - Math.exp(-1 / (60 * (SCRUB / 2)));
 
 // ---------- Lenis smooth scroll ----------
 const lenis = new Lenis({
+  // Checkpoint di scroll: vicino a un [data-scroll-detent] la rotella fa
+  // resistenza (vedi "Checkpoint di scroll" sotto). Solo per l'input utente,
+  // mai durante uno scroll programmato.
+  virtualScroll: (data) => {
+    if (!lenis || lenis.isLocked || isTravelling()) return true;
+    const f = detentFactor(lenis.targetScroll);
+    data.deltaY *= f;
+    return true;
+  },
   // Modalità LERP (smorzamento esponenziale), NON `duration` fissa: con una
   // durata fissa un colpo di rotella veloce copre molta strada nello stesso
   // tempo → velocità alta, sembra non ammortizzato; lo scroll lento invece sì.
@@ -121,6 +130,68 @@ document.addEventListener("click", (e) => {
     travelFor(1.5);
     lenis.scrollTo(target, { duration: 1.5 });
   }
+});
+
+// ---------- Checkpoint di scroll ("fermi") ----------
+// Ogni elemento [data-scroll-detent] è un checkpoint: la posizione di scroll
+// che lo porta in cima al viewport. Vicino a un checkpoint la rotella fa
+// RESISTENZA (il delta viene smorzato, al massimo proprio sul punto) e quando
+// lo scroll si ferma lì vicino la pagina si POSA da sola sul punto esatto —
+// così non serve dosare lo scroll al pixel per arrivare a una tappa.
+// Le posizioni si rileggono a ogni refresh di ScrollTrigger e quando un'isola
+// le ri-misura (evento "apd:detents").
+let detentYs: number[] = [];
+const readDetents = () => {
+  detentYs = Array.from(document.querySelectorAll<HTMLElement>("[data-scroll-detent]"))
+    .map((el) => Math.round(el.getBoundingClientRect().top + lenis.scroll))
+    .sort((a, b) => a - b);
+};
+const nearestDetent = (y: number) => {
+  let best = NaN;
+  for (const d of detentYs) if (isNaN(best) || Math.abs(d - y) < Math.abs(best - y)) best = d;
+  return best;
+};
+ScrollTrigger.addEventListener("refresh", readDetents);
+window.addEventListener("apd:detents", readDetents);
+readDetents();
+
+const DETENT_ZONE = 0.16; // ±viewport in cui la rotella fa resistenza
+const DETENT_SNAP = 0.3; // ±viewport entro cui, da fermi, ci si posa
+const DETENT_GRIP = 0.25; // fattore minimo sul delta (sul punto esatto)
+const detentFactor = (y: number) => {
+  if (!detentYs.length) return 1;
+  const zone = window.innerHeight * DETENT_ZONE;
+  const dist = Math.abs(y - nearestDetent(y));
+  if (dist >= zone) return 1;
+  return DETENT_GRIP + (1 - DETENT_GRIP) * Math.pow(dist / zone, 1.6);
+};
+
+let touching = false;
+window.addEventListener("touchstart", () => (touching = true), { passive: true });
+window.addEventListener("touchend", () => (touching = false), { passive: true });
+let detentTimer = 0;
+const settleOnDetent = () => {
+  window.clearTimeout(detentTimer);
+  detentTimer = window.setTimeout(() => {
+    if (touching || lenis.isLocked || isTravelling() || Math.abs(lenis.velocity) > 0.4) return;
+    const y = lenis.scroll;
+    const d = nearestDetent(y);
+    const dist = Math.abs(d - y);
+    // In avanti (nel verso dello scroll) ci si posa da più lontano; un
+    // checkpoint appena superato richiama indietro solo se è vicinissimo.
+    const ahead = Math.sign(d - y) === lastDir;
+    const reach = window.innerHeight * (ahead ? DETENT_SNAP : DETENT_SNAP * 0.4);
+    if (isNaN(d) || dist < 2 || dist > reach) return;
+    lenis.scrollTo(d, {
+      duration: gsap.utils.clamp(0.5, 1, (dist / window.innerHeight) * 2.6),
+      easing: (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+    });
+  }, 170);
+};
+let lastDir = 1;
+lenis.on("scroll", () => {
+  if (lenis.direction) lastDir = lenis.direction;
+  settleOnDetent();
 });
 
 // ---------- Scroll progress bar ----------
@@ -1564,6 +1635,13 @@ revealRise(".cta-panel", {
       start: "top 80%",
       stagger: 0.09,
       y: 24,
+    });
+    // la sottolineatura a mano si disegna quando il titolo è in vista
+    ScrollTrigger.create({
+      trigger: aboutCta.querySelector(".about-cta-title"),
+      start: "top 72%",
+      once: true,
+      onEnter: () => aboutCta.classList.add("is-drawn"),
     });
   }
 }

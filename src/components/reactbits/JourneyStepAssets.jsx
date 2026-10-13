@@ -70,6 +70,17 @@ const ASSETS = [
   },
 ];
 
+// Geometria condivisa con JourneyPath: il cursore deve sapere DOVE sta ogni
+// asset (lato, grandezza, X responsiva) per andarci sopra e "cliccarlo".
+export const ASSET_LAYOUT = ASSETS.map((a) => ({ side: a.side, size: a.size }));
+export const assetY = (anchorY, mobile) => anchorY + (mobile ? MOBILE_Y_LIFT : 0);
+export const assetScale = (mobile) => (mobile ? MOBILE_SCALE : 1);
+export function assetX(side, halfW, mobile, size = 0) {
+  // Su mobile l'oggetto non deve uscire dal bordo (il logo è largo).
+  if (mobile) return side * Math.max(0, Math.min(MOBILE_X, halfW - (size * MOBILE_SCALE) / 2 - 0.06));
+  return side * THREE.MathUtils.clamp(halfW * 0.52, 1.35, 2.3);
+}
+
 // --- Tuning interazione ----------------------------------------------------
 const TILT_X = 0.1;   // rad: beccheggio dal mouse Y (~6°)
 const TILT_Y = 0.16;  // rad: imbardata dal mouse X (~9°)
@@ -104,10 +115,11 @@ const SPRING_ZETA = 0.72;
 const EXIT_OMEGA = 12;
 const EXIT_ZETA = 1;
 const ENTRANCE_RISE = 0.24; // l'asset "sale" di tanto durante l'entrata
+const ENTRANCE_TWIST = 0.9; // rad: l'asset nasce ruotato e si raddrizza
 
 // Fattori mobile: più piccoli, sopra il testo (che è centrato full-width).
 const MOBILE_SCALE = 0.62;
-const MOBILE_X = 0.5;
+const MOBILE_X = 0; // mobile: oggetto centrato sopra il testo
 const MOBILE_Y_LIFT = 0.95;
 
 // Stesso look del cursore (JourneyPath.makeGlossyMaterial), ma col colore
@@ -210,7 +222,7 @@ export function prewarm(gl, object, camera, scene) {
   object.visible = wasVisible;
 }
 
-function StepAsset({ cfg, index, params, progressRef, anchorsRef, mouseRef, mobile }) {
+function StepAsset({ cfg, index, params, progressRef, anchorsRef, tipsRef, clickRef, pressDelay = 0, mouseRef, masksRef, mobile }) {
   const group = useRef();
   const hover = useRef(0); // 0..1, smorzato
   const hovering = useRef(false);
@@ -304,13 +316,21 @@ function StepAsset({ cfg, index, params, progressRef, anchorsRef, mouseRef, mobi
     const worldH =
       2 * camera.position.z * Math.tan((camera.fov * Math.PI) / 360);
     const halfW = (worldH * state.size.width) / state.size.height / 2;
-    if (mobile) return cfg.side * MOBILE_X;
-    return cfg.side * THREE.MathUtils.clamp(halfW * 0.52, 1.35, 2.3);
+    return assetX(cfg.side, halfW, mobile, cfg.size);
   });
   const baseScale = mobile ? MOBILE_SCALE : 1;
   const hoverScale = useRef(baseScale);
 
-  useFrame((_, delta) => {
+  // La rotta tratteggiata si spegne attorno alla sagoma di questo oggetto.
+  useEffect(() => {
+    if (!masksRef) return;
+    masksRef.current[index] = { group: group.current, size: cfg.size };
+    return () => {
+      masksRef.current[index] = null;
+    };
+  }, [masksRef, index, cfg.size]);
+
+  useFrame((state, delta) => {
     const g = group.current;
     if (!g) return;
     const p = THREE.MathUtils.clamp(progressRef.current ?? 0, 0, 1);
@@ -331,15 +351,25 @@ function StepAsset({ cfg, index, params, progressRef, anchorsRef, mouseRef, mobi
       index < params.length - 1
         ? (anchors?.[index + 1]?.p ?? params[index + 1])
         : null;
-    let enterAt = Math.max(par - ENTER_SPAN, START_MIN);
-    if (pPrev != null) enterAt = Math.max(enterAt, (pPrev + par) / 2 + HANDOFF_GAP);
-    let exitAt = par + EXIT_SPAN;
-    if (pNext != null) exitAt = Math.min(exitAt, (par + pNext) / 2 - HANDOFF_GAP);
+    // Se JourneyStage ha già calcolato le finestre (allineate al CLICK del
+    // cursore), comandano quelle; altrimenti la logica storica a punti medi.
+    let enterAt = anchors?.[index]?.enterAt;
+    let exitAt = anchors?.[index]?.exitAt;
+    if (enterAt == null || exitAt == null) {
+      enterAt = Math.max(par - ENTER_SPAN, START_MIN);
+      if (pPrev != null) enterAt = Math.max(enterAt, (pPrev + par) / 2 + HANDOFF_GAP);
+      exitAt = par + EXIT_SPAN;
+      if (pNext != null) exitAt = Math.min(exitAt, (par + pNext) / 2 - HANDOFF_GAP);
+    }
 
     // Entrata a molla: target 1 quando lo step è nella finestra attiva, 0
     // fuori → l'uscita è la stessa animazione al contrario, scroll-reversibile
     // ma con parametri più rapidi e senza overshoot (handoff pulito).
-    const active = p > enterAt && p < exitAt;
+    // Se il cursore ha appena cliccato QUESTA tappa, l'oggetto aspetta la
+    // pressione del click per nascere (prima si vede il cursore premere).
+    const click = clickRef?.current;
+    const waiting = click && click.index === index && state.clock.elapsedTime - click.time < pressDelay + 0.04;
+    const active = p > enterAt && p < exitAt && !waiting;
     const target = active ? 1 : 0;
     const w = target ? SPRING_OMEGA : EXIT_OMEGA;
     const z = target ? SPRING_ZETA : EXIT_ZETA;
@@ -370,9 +400,16 @@ function StepAsset({ cfg, index, params, progressRef, anchorsRef, mouseRef, mobi
 
     // Target di posa: tilt dal mouse + drift di rotazione legato allo scroll.
     const tRotX = m.y * TILT_X * boost;
-    const tRotY = m.x * TILT_Y * boost + (p - par) * DRIFT_GAIN;
-    const tX = baseX + m.x * PARALLAX * boost;
-    const tY = baseY + m.y * PARALLAX * 0.6 - (1 - eC) * ENTRANCE_RISE;
+    const tRotY =
+      m.x * TILT_Y * boost + (p - par) * DRIFT_GAIN - (1 - eC) * ENTRANCE_TWIST * cfg.side;
+    // NASCITA DAL CLICK: a molla scarica l'asset sta sulla punta del cursore
+    // (tipsRef, dove avviene il click) e si espande fino al suo posto.
+    const tip = tipsRef?.current?.[index];
+    const grow = eC * eC * (3 - 2 * eC);
+    const fromX = tip ? tip.x : baseX;
+    const fromY = tip ? tip.y : baseY - ENTRANCE_RISE;
+    const tX = fromX + (baseX - fromX) * grow + m.x * PARALLAX * boost;
+    const tY = fromY + (baseY - fromY) * grow + m.y * PARALLAX * 0.6;
 
     const k = 1 - Math.pow(0.005, delta); // damping morbido comune
     g.rotation.x += (tRotX - g.rotation.x) * k;
@@ -413,7 +450,7 @@ function StepAsset({ cfg, index, params, progressRef, anchorsRef, mouseRef, mobi
 // asset; ogni asset è isolato da Suspense + boundary (un GLB rotto non
 // compromette gli altri né il cursore).
 // ---------------------------------------------------------------------------
-export default function StepAssets({ progressRef, stepParams, anchorsRef, mobile }) {
+export default function StepAssets({ progressRef, stepParams, anchorsRef, tipsRef, clickRef, pressDelay, masksRef, mobile }) {
   const mouseRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -437,6 +474,10 @@ export default function StepAssets({ progressRef, stepParams, anchorsRef, mobile
               params={stepParams}
               progressRef={progressRef}
               anchorsRef={anchorsRef}
+              tipsRef={tipsRef}
+              clickRef={clickRef}
+              pressDelay={pressDelay}
+              masksRef={masksRef}
               mouseRef={mouseRef}
               mobile={mobile}
             />

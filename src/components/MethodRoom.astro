@@ -1,0 +1,268 @@
+---
+// COME LAVORIAMO — "Umani al timone, AI in sala macchine", alla lettera.
+// Una scena pinnata (sticky) attraversa le 4 fasi del metodo; ogni fase è un
+// checkpoint di scroll ([data-scroll-detent], vedi main.ts). A sinistra la fase
+// (numero, titolo a parole mascherate, testo), a destra la "sala macchine":
+// l'AI lavora (log che si scrivono, contatore), passa la palla e gli umani
+// decidono (decisione + timbro firmato). Lo stato attivo lo decide lo script
+// in fondo dalla posizione di scroll; tutte le animazioni sono CSS, riavviate
+// a ogni cambio di fase. Senza JS resta visibile la fase 1.
+import { getImage } from "astro:assets";
+import Rich from "./Rich.astro";
+import julianPhoto from "../assets/team/julian.png";
+import alicePhoto from "../assets/team/alice.png";
+
+interface Item {
+  title: string;
+  titleEm: string;
+  text: string;
+  tag: string;
+  ai: string[];
+  metric: { value: number; label: string };
+  decision: string;
+}
+interface Props {
+  lang: string;
+  flow: {
+    kicker: string;
+    title: string;
+    lead: string;
+    console: Record<"title" | "live" | "ai" | "human" | "handoff" | "approved" | "signed" | "phase", string>;
+    items: Item[];
+  };
+}
+
+const { lang, flow } = Astro.props;
+const c = flow.console;
+const n = flow.items.length;
+const avatars = await Promise.all(
+  [
+    { name: "Alice", src: alicePhoto },
+    { name: "Julian", src: julianPhoto },
+  ].map(async (a) => ({ name: a.name, img: await getImage({ src: a.src, width: 96, format: "webp" }) }))
+);
+const words = (s: string) => s.split(/\s+/).filter(Boolean);
+const pad = (i: number) => String(i + 1).padStart(2, "0");
+---
+
+<section class="apm" data-apm data-lang={lang} style={`--n:${n}`}>
+  <header class="apm-head works-screen">
+    <span class="works-kicker apm-kicker">{flow.kicker}</span>
+    <h2 class="apm-title"><Rich text={flow.title} /></h2>
+    <p class="apm-lead">{flow.lead}</p>
+  </header>
+
+  <div class="apm-track">
+    {flow.items.map((_, i) => (
+      <span class="apm-anchor" id={`metodo-${i + 1}`} data-scroll-detent style={`--i:${i}`} aria-hidden="true" />
+    ))}
+
+    <div class="apm-stage" data-phase="0">
+      <span class="apm-aura" aria-hidden="true"></span>
+      <div class="apm-inner works-screen">
+        <div class="apm-left">
+          <ol class="apm-rail">
+            {flow.items.map((it, i) => (
+              <li class:list={["apm-rail-item", { "is-active": i === 0 }]} data-i={i}>
+                <a href={`#metodo-${i + 1}`}>
+                  <span class="apm-rail-n">{pad(i)}</span>
+                  <span class="apm-rail-name">{it.title}</span>
+                  <span class="apm-rail-bar" aria-hidden="true"><span></span></span>
+                </a>
+              </li>
+            ))}
+          </ol>
+
+          <div class="apm-phases">
+            {flow.items.map((it, i) => (
+              <article class:list={["apm-phase", { "is-active": i === 0 }]} data-i={i}>
+                <span class="apm-bignum" aria-hidden="true">{pad(i)}</span>
+                <span class="apm-phase-meta">
+                  {c.phase} {pad(i)} <span aria-hidden="true">—</span> {it.tag}
+                </span>
+                <h3 class="apm-phase-title">
+                  {words(it.title).map((w, wi) => (
+                    <span class="apm-w" style={`--wi:${wi}`}><span>{w}</span></span>
+                  ))}
+                  <em>
+                    {words(it.titleEm).map((w, wi) => (
+                      <span class="apm-w" style={`--wi:${wi + words(it.title).length}`}><span>{w}</span></span>
+                    ))}
+                  </em>
+                </h3>
+                <p class="apm-phase-text">{it.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div class="apm-console-wrap">
+          <div class="apm-console">
+            <div class="apm-bar">
+              <span class="apm-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="apm-bar-title">apd://{c.title}</span>
+              <span class="apm-live"><i aria-hidden="true"></i>{c.live}</span>
+            </div>
+
+            <div class="apm-screens">
+              {flow.items.map((it, i) => (
+                <div class:list={["apm-screen", { "is-active": i === 0 }]} data-i={i}>
+                  <div class="apm-block apm-block--ai">
+                    <span class="apm-label">
+                      <span class="apm-chip apm-chip--ai" aria-hidden="true">AI</span>
+                      {c.ai}
+                    </span>
+                    <ul class="apm-log">
+                      {it.ai.map((line, li) => (
+                        <li style={`--li:${li}`}>
+                          <span class="apm-log-state" aria-hidden="true"></span>
+                          <span class="apm-log-txt">{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div class="apm-metric">
+                      <span class="apm-metric-n" data-count={it.metric.value}>{new Intl.NumberFormat(lang, { useGrouping: "always" } as Intl.NumberFormatOptions).format(it.metric.value)}</span>
+                      <span class="apm-metric-label">{it.metric.label}</span>
+                      <span class="apm-metric-bar" aria-hidden="true"><span></span></span>
+                    </div>
+                  </div>
+
+                  <div class="apm-handoff" aria-hidden="true">
+                    <span class="apm-handoff-line"><i></i></span>
+                    <span class="apm-handoff-label">{c.handoff}</span>
+                  </div>
+
+                  <div class="apm-block apm-block--human">
+                    <span class="apm-label">
+                      <span class="apm-faces" aria-hidden="true">
+                        {avatars.map((a) => (
+                          <img src={a.img.src} alt="" width="48" height="48" loading="lazy" decoding="async" />
+                        ))}
+                      </span>
+                      {c.human}
+                    </span>
+                    <p class="apm-decision">«{it.decision}»</p>
+                    <div class="apm-sign">
+                      <span class="apm-signed">{c.signed}</span>
+                      <span class="apm-stamp"><span>{c.approved}</span></span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Fase attiva = posizione dentro la traccia pinnata. A ogni cambio di fase
+  // si riavviano le animazioni CSS (classe tolta e rimessa al frame dopo) e
+  // il contatore. La barra della fase in corso si riempie con lo scroll.
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function setup(root: HTMLElement) {
+    const track = root.querySelector<HTMLElement>(".apm-track")!;
+    const stage = root.querySelector<HTMLElement>(".apm-stage")!;
+    const rail = Array.from(root.querySelectorAll<HTMLElement>(".apm-rail-item"));
+    const phases = Array.from(root.querySelectorAll<HTMLElement>(".apm-phase"));
+    const screens = Array.from(root.querySelectorAll<HTMLElement>(".apm-screen"));
+    const n = phases.length;
+    const fmt = new Intl.NumberFormat(root.dataset.lang || "it", { useGrouping: "always" } as Intl.NumberFormatOptions);
+    let current = -1;
+    let countRaf = 0;
+    let visible = false;
+    let raf = 0;
+
+    const count = (el: HTMLElement | null) => {
+      cancelAnimationFrame(countRaf);
+      if (!el) return;
+      const to = Number(el.dataset.count) || 0;
+      if (reduced) {
+        el.textContent = fmt.format(to);
+        return;
+      }
+      const t0 = performance.now() + 350;
+      const dur = 1500;
+      const tick = (t: number) => {
+        const k = Math.min(Math.max((t - t0) / dur, 0), 1);
+        const e = 1 - Math.pow(1 - k, 4);
+        el.textContent = fmt.format(Math.round(to * e));
+        if (k < 1) countRaf = requestAnimationFrame(tick);
+      };
+      el.textContent = fmt.format(0);
+      countRaf = requestAnimationFrame(tick);
+    };
+
+    const activate = (i: number) => {
+      if (i === current) return;
+      const dir = i > current ? 1 : -1;
+      current = i;
+      stage.dataset.phase = String(i);
+      stage.dataset.dir = String(dir);
+      [phases, screens].forEach((list) =>
+        list.forEach((el, k) => {
+          el.classList.toggle("is-past", k < i);
+          if (k !== i) el.classList.remove("is-active");
+        })
+      );
+      // riavvio delle animazioni della fase entrante
+      const enter = [phases[i], screens[i]];
+      enter.forEach((el) => el.classList.remove("is-active"));
+      requestAnimationFrame(() => {
+        enter.forEach((el) => el.classList.add("is-active"));
+        count(screens[i].querySelector<HTMLElement>("[data-count]"));
+      });
+      rail.forEach((el, k) => {
+        el.classList.toggle("is-active", k === i);
+        el.classList.toggle("is-past", k < i);
+      });
+    };
+
+    const update = () => {
+      raf = 0;
+      const r = track.getBoundingClientRect();
+      const range = Math.max(r.height - window.innerHeight, 1);
+      const p = Math.min(Math.max(-r.top / range, 0), 1);
+      const f = p * n;
+      const i = Math.min(n - 1, Math.floor(f));
+      rail.forEach((el, k) => el.style.setProperty("--lp", String(Math.min(Math.max(f - k, 0), 1))));
+      activate(i);
+    };
+    const queue = () => {
+      if (visible && !raf) raf = requestAnimationFrame(update);
+    };
+
+    new IntersectionObserver(
+      ([e]) => {
+        visible = e.isIntersecting;
+        root.classList.toggle("is-in", visible);
+        queue();
+      },
+      { rootMargin: "10% 0px" }
+    ).observe(root);
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+
+    // Console in leggera prospettiva, segue il puntatore (solo mouse).
+    if (!reduced && window.matchMedia("(pointer: fine)").matches) {
+      const wrap = root.querySelector<HTMLElement>(".apm-console-wrap")!;
+      stage.addEventListener("pointermove", (e) => {
+        const b = stage.getBoundingClientRect();
+        const x = (e.clientX - b.left) / b.width - 0.5;
+        const y = (e.clientY - b.top) / b.height - 0.5;
+        wrap.style.setProperty("--rx", `${(-y * 5).toFixed(2)}deg`);
+        wrap.style.setProperty("--ry", `${(x * 7).toFixed(2)}deg`);
+      });
+      stage.addEventListener("pointerleave", () => {
+        wrap.style.setProperty("--rx", "0deg");
+        wrap.style.setProperty("--ry", "0deg");
+      });
+    }
+    update();
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-apm]").forEach(setup);
+</script>

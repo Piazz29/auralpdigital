@@ -9,7 +9,7 @@ import Navbar from "../Navbar.astro";
 import Footer from "../Footer.astro";
 import Rich from "../Rich.astro";
 import JourneyPath from "../reactbits/JourneyPath.jsx";
-import FlowCardSwap from "../reactbits/FlowCardSwap.jsx";
+import MethodRoom from "../MethodRoom.astro";
 import { Picture, getImage } from "astro:assets";
 import julianPhoto from "../../assets/team/julian.png";
 import alicePhoto from "../../assets/team/alice.png";
@@ -39,6 +39,10 @@ const peopleMeta = [
   { name: "Julian", photo: julianPhoto, tone: "ember", zoom: 1 },
   { name: "Alice", photo: alicePhoto, tone: "shadow", zoom: 1.3 },
 ] as const;
+// CTA — i due volti dentro al bottone: risponde chi hai appena conosciuto.
+const ctaFaces = await Promise.all(
+  [alicePhoto, julianPhoto].map((src) => getImage({ src, width: 72, format: "webp" }))
+);
 const people = await Promise.all(
   peopleMeta.map(async (m, i) => ({
     ...m,
@@ -63,14 +67,6 @@ const steps = ta.journey.steps.map((s) => ({
   text: s.text,
 }));
 
-// COME LAVORIAMO — numero strutturale + testi tradotti.
-const workflow = ta.flow.items.map((it, i) => ({
-  n: `0${i + 1}`,
-  title: it.title,
-  titleEm: it.titleEm,
-  text: it.text,
-  tag: it.tag,
-}));
 ---
 
 <BaseLayout lang={lang} title={t.meta.about.title} description={t.meta.about.description}>
@@ -231,40 +227,30 @@ const workflow = ta.flow.items.map((it, i) => ({
       </div>
     </section>
 
-    <!-- IL PERCORSO — viaggio immersivo 3D scroll-driven: un cursore 3D vola
-         tra le 4 tappe mentre la pagina scorre (JourneyPath). -->
-    <section class="ap-section ap-journey">
+    <!-- IL PERCORSO — viaggio 3D scroll-driven in tre atti (JourneyPath):
+         apertura col pulsante di partenza, 4 tappe che il cursore "clicca",
+         finale fermo che se ne va con la pagina. Ogni sosta è un checkpoint
+         di scroll (data-scroll-detent, main.ts). -->
+    <section class="ap-journey">
       <div class="works-screen">
-        <div class="works-head">
-          <div class="works-head-left">
-            <h2 class="works-title"><Rich text={ta.journey.title} /></h2>
-          </div>
-        </div>
-
-        <JourneyPath client:idle steps={steps} />
+        <JourneyPath
+          client:idle
+          steps={steps}
+          copy={{
+            kicker: ta.journey.kicker,
+            title: ta.journey.title,
+            lead: ta.journey.lead,
+            start: ta.journey.start,
+            stops: ta.journey.stops,
+            outro: ta.journey.outro,
+            ctaHref: "#contatti",
+          }}
+        />
       </div>
     </section>
 
-    <!-- COME LAVORIAMO -->
-    <section class="ap-section ap-flow ap-flow--plain">
-      <div class="works-screen">
-        <div class="ap-flow-inner ap-flow-inner--swap">
-          <div class="ap-flow-copy">
-            <span class="works-kicker ap-flow-kicker">{ta.flow.kicker}</span>
-            <h2 class="works-title ap-flow-title">
-              <Rich text={ta.flow.title} />
-            </h2>
-            <p class="ap-flow-lead">
-              {ta.flow.lead}
-            </p>
-          </div>
-
-          <div class="ap-flow-stage">
-            <FlowCardSwap client:visible items={workflow} hint={ta.flow.hint} width={517} height={397} />
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- COME LAVORIAMO — la "sala macchine" -->
+    <MethodRoom lang={lang} flow={ta.flow} />
 
     <!-- SEPARATORE — linea sottile che introduce la CTA/form, con respiro
          extra perché lo stack di card di "Come lavoriamo" deborda verso il basso. -->
@@ -280,6 +266,10 @@ const workflow = ta.flow.items.map((it, i) => ({
 
       <h2 class="about-cta-title font-display">
         <Rich text={ta.cta.title} />
+        <svg class="about-cta-scribble" viewBox="0 0 320 24" preserveAspectRatio="none" aria-hidden="true">
+          <path pathLength="1" d="M6 16C62 7 128 5 196 8c44 2 82 5 118 9" />
+          <path pathLength="1" d="M70 21c52-6 120-8 190-4" />
+        </svg>
       </h2>
 
       <p class="about-cta-sub">
@@ -288,6 +278,9 @@ const workflow = ta.flow.items.map((it, i) => ({
 
       <div class="about-cta-actions">
         <a href={`${localePath(lang, "/")}#contatti`} class="about-cta-btn magnetic">
+          <span class="about-cta-faces" aria-hidden="true">
+            {ctaFaces.map((f) => <img src={f.src} alt="" width="30" height="30" loading="lazy" decoding="async" />)}
+          </span>
           {ta.cta.btn} <span aria-hidden="true">↗</span>
         </a>
         <a href="mailto:hello@auralpdigital.com" class="about-cta-mail">
