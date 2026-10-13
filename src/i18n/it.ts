@@ -4,14 +4,14 @@
 const it = {
   meta: {
     home: {
-      title: "AuralpDigital — Sistemi digitali che generano clienti",
+      title: "AuralpDigital | Siti web, social e gestionali in Alto Adige",
       description:
-        "Studio di crescita digitale in Alto Adige. Siti web premium, lead generation, campagne ads, brand & social, automazioni, AI integration.",
+        "Studio digitale in Alto Adige. Siti web, social e campagne ads, gestionali su misura e automazioni per professionisti e aziende che vogliono più clienti.",
     },
     about: {
-      title: "Chi siamo — AuralpDigital",
+      title: "Chi siamo | AuralpDigital",
       description:
-        "Le persone dietro AuralpDigital: un team indipendente in Alto Adige con formazione universitaria, strumenti di nuova generazione e un workflow potenziato dall'AI.",
+        "I fondatori di AuralpDigital, studio digitale indipendente in Alto Adige. Strategia, design e sviluppo seguiti dalle stesse persone, dalla prima call al lancio.",
     },
   },
 
@@ -52,7 +52,7 @@ const it = {
         items: [
           {
             q: "Che tipo di siti realizzate?",
-            a: "Siti vetrina, landing page, e-commerce leggeri e piattaforme su misura. Ogni progetto nasce su codice pulito e veloce, pensato per convertire — non su template generici.",
+            a: "Siti vetrina, landing page, e-commerce leggeri e piattaforme su misura. Ogni progetto nasce su codice pulito e veloce, pensato per convertire, senza template generici.",
           },
           {
             q: "Lavorate solo con aziende o anche con professionisti?",
@@ -85,7 +85,7 @@ const it = {
           },
           {
             q: "Offrite supporto dopo la pubblicazione?",
-            a: "Sì. Dopo il lancio restiamo a disposizione per aggiornamenti, modifiche ed evoluzioni. Non spariamo alla consegna.",
+            a: "Sì. Dopo il lancio restiamo a disposizione per aggiornamenti, modifiche ed evoluzioni del sito.",
           },
         ],
       },
@@ -163,10 +163,10 @@ const it = {
     hero: {
       badge: "Digital Growth Studio · Alto Adige",
       l1: "Sistemi digitali",
-      l2: "di *prossima*",
-      l3: "generazione.",
-      sub: "Siti web, gestionali e social che trasformano visitatori in clienti.",
-      cta: "Esplora il nostro lavoro",
+      l2: "che *portano*",
+      l3: "clienti.",
+      sub: "Siti web, social e gestionali pensati per trasformare le visite in clienti.",
+      cta: "Guarda i nostri progetti",
       scroll: "Scorri",
     },
     services: {
@@ -182,7 +182,7 @@ const it = {
         {
           name: "Siti web",
           nameEm: "che convertono.",
-          desc: "Ti trovano su Google e nelle ricerche AI, si aprono in un attimo e accompagnano chi arriva fino alla prenotazione. Il tuo miglior venditore, aperto 24 ore su 24.",
+          desc: "Siti veloci e ben posizionati su Google e nelle ricerche AI, costruiti per accompagnare chi arriva fino alla richiesta di contatto o alla prenotazione.",
           short: "Siti web",
           tags: ["SEO e ricerca AI", "Prenotazioni online", "Veloci su mobile"],
           fix: { title: "Google", body: "Il primo risultato sei tu" },
@@ -190,15 +190,15 @@ const it = {
         {
           name: "Social & Ads",
           nameEm: "che vendono.",
-          desc: "Contenuti che fermano lo scroll e campagne mirate su chi è pronto a comprare. L'attenzione diventa prenotazioni, non messaggi da rincorrere uno per uno.",
+          desc: "Contenuti coerenti con il tuo brand e campagne rivolte alle persone giuste, con risultati misurati ogni mese. Le richieste arrivano già in ordine.",
           short: "Social & Ads",
           tags: ["Contenuti", "Campagne Ads", "Clienti pronti a comprare"],
-          fix: { title: "Messaggio diretto", body: "Prenotato, senza rincorrere" },
+          fix: { title: "Messaggio diretto", body: "Prenotazione confermata" },
         },
         {
           name: "Gestionali",
           nameEm: "su misura.",
-          desc: "Prenotazioni, contatti e clienti in un unico posto, con automazioni che rispondono anche quando tu non puoi. Nessuna richiesta persa, ore restituite ogni settimana.",
+          desc: "Prenotazioni, contatti e clienti in un unico strumento, con risposte automatiche quando non puoi rispondere tu. Meno lavoro manuale e nessuna richiesta persa.",
           short: "Gestionali",
           tags: ["Agenda e clienti", "Risposte automatiche", "Tutto in un posto"],
           fix: { title: "Chiamata delle 22:47", body: "Risposta automatica inviata" },
@@ -206,11 +206,11 @@ const it = {
       ],
     },
     projects: {
-      title: "Progetti Online",
-      sub: "Esplora i nostri lavori",
-      soon: "Coming soon",
+      title: "Progetti online",
+      sub: "Alcuni dei nostri lavori",
+      soon: "In arrivo",
       soonSub: "Il prossimo è in cantiere",
-      create: "Crea il tuo progetto",
+      create: "Parliamo del tuo progetto",
       visit: "Apri il sito",
     },
     point: {
@@ -227,7 +227,7 @@ const it = {
         "e alla fine prenotano da chi trovano **prima su Google**.",
       ],
       turn: "Costruiamo **il sistema** che li porta da te.",
-      turnSub: "E lavora mentre tu lavori.",
+      turnSub: "Anche quando sei impegnato con il tuo lavoro.",
       // Notifiche decorative (aria-hidden): una per ogni riga del problema,
       // più quella della svolta.
       pings: [
@@ -239,8 +239,8 @@ const it = {
     },
     contact: {
       kicker: "Iniziamo",
-      headline: "Costruiamo il tuo *sistema di crescita.*",
-      sub: "Tre domande veloci e sappiamo già come aiutarti. Poi scegli tu: una call gratuita di 30 minuti o un messaggio diretto.",
+      headline: "Raccontaci *il tuo progetto.*",
+      sub: "Tre domande veloci per capire di cosa hai bisogno. Poi scegli tu se prenotare una call gratuita di 30 minuti o scriverci direttamente.",
     },
   },
 
@@ -252,13 +252,13 @@ const it = {
       title: "Brief di progetto",
       meta: "3 domande · 1 minuto",
       steps: ["Servizio", "Profilo", "Contatto"],
-      reply: "Ti rispondiamo noi due, entro 24 ore",
+      reply: "Ti rispondiamo personalmente entro 24 ore",
       perks: ["Gratis", "Senza impegno"],
     },
     steps: {
       service: { title: "Cosa vuoi creare?", hint: "Anche più di una risposta" },
       profile: { title: "Per chi è il progetto?", hint: "Così prepariamo la proposta giusta" },
-      channel: { title: "Come preferisci sentirci?", hint: "Scegli tu, rispondiamo sempre noi due" },
+      channel: { title: "Come preferisci sentirci?", hint: "In entrambi i casi ti rispondiamo personalmente" },
     },
     services: [
       { value: "web", label: "Sito web", desc: "Vetrina, prenotazioni, e-commerce" },
@@ -274,7 +274,7 @@ const it = {
     ],
     channels: {
       call: { label: "Prenota una call", desc: "30 minuti gratuiti, scegli giorno e ora" },
-      write: { label: "Scrivici subito", desc: "WhatsApp o email, in un tap" },
+      write: { label: "Scrivici subito", desc: "Su WhatsApp o via email" },
     },
     calendar: {
       prev: "Mese precedente",
@@ -324,7 +324,7 @@ const it = {
   },
 
   footer: {
-    tagline: "Sistemi digitali di prossima generazione,\nprogettati in Alto Adige.",
+    tagline: "Siti web, social e gestionali\nprogettati in Alto Adige.",
     menuLabel: "Menu",
     links: {
       projects: "Progetti",
@@ -345,81 +345,81 @@ const it = {
     hero: {
       badge: "Chi siamo",
       status: "Disponibili per nuovi progetti",
-      title: "Le persone\ndietro *i pixel.*",
-      sub: "Uno studio indipendente di due persone, dall'Alto Adige. Strategia, design e codice sotto lo stesso tetto.",
-      cta: "Parla con noi",
+      title: "Le persone\ndietro *lo studio.*",
+      sub: "Uno studio digitale indipendente in Alto Adige, fondato da due persone. Strategia, design e sviluppo li seguiamo direttamente noi.",
+      cta: "Contattaci",
       meet: "Conoscici",
-      hint: "Passa il cursore e guarda dietro i pixel",
-      hintTouch: "Tocca e guarda dietro i pixel",
+      hint: "Passa il cursore sulle foto",
+      hintTouch: "Tocca le foto",
     },
     manifesto: {
       kicker: "Il manifesto",
-      statement: "Un piccolo team con gli strumenti giusti batte *un'agenzia intera.*",
+      statement: "Pochi progetti alla volta, *seguiti per intero.*",
       facts: [
-        { n: 0, label: "intermediari", text: "Chi ti risponde è chi progetta e costruisce. Niente telefono senza fili." },
-        { n: 1, label: "sola voce", text: "Dallo sketch al lancio parli sempre con le stesse due persone." },
-        { n: 2, label: "paia d'occhi", text: "Ogni dettaglio passa da entrambi prima di andare online." },
+        { n: 0, label: "intermediari", text: "Parli direttamente con chi progetta e sviluppa. Le decisioni sono rapide e niente va perso." },
+        { n: 1, label: "squadra", text: "Lo stesso team segue il progetto dall'analisi al lancio, e anche dopo." },
+        { n: 2, label: "fondatori", text: "Lavoriamo entrambi su ogni progetto e lo controlliamo prima che vada online." },
       ],
     },
     duo: {
-      kicker: "Il duo",
-      title: "Piacere, *siamo noi.*",
-      lead: "Due competenze che si incastrano: uno costruisce i sistemi, l'altra dà loro una forma. Insieme copriamo tutto il progetto, senza passaggi di mano.",
+      kicker: "I fondatori",
+      title: "Chi segue *il tuo progetto.*",
+      lead: "Siamo due co-founder con competenze complementari: strategia e sviluppo da una parte, design e contenuti dall'altra. Seguiamo ogni progetto insieme, senza affidarlo ad altri.",
     },
     people: [
       {
-        title: "Founder",
+        title: "Co-founder",
         area: "Strategia & Sviluppo",
-        bio: "Strategia, codice e sistemi. Julian progetta l'architettura di ogni progetto, dal posizionamento al deploy, e costruisce siti e gestionali con uno stack moderno e un workflow potenziato dall'AI.",
-        quote: "Se una cosa si può misurare, *la misuro.*",
+        bio: "Julian si occupa di strategia e sviluppo. Definisce la struttura di ogni progetto, dal posizionamento al lancio, e realizza siti e gestionali con tecnologie moderne e strumenti di AI.",
+        quote: "Un sito vale quanto i clienti *che ti porta.*",
         focus: ["Strategia digitale", "Sviluppo web", "SEO + GEO", "AI & automazioni"],
       },
       {
         title: "Co-founder",
         area: "Design & Contenuti",
-        bio: "Design, contenuti e direzione visiva. Alice dà forma all'identità dei brand: interfacce pulite, fotografia curata e contenuti che parlano alle persone giuste, con il tono giusto.",
-        quote: "Se un dettaglio stona, *lo vedo.*",
+        bio: "Alice si occupa di design e contenuti. Cura identità visiva, interfacce, fotografia e testi, perché ogni progetto parli in modo chiaro al pubblico giusto.",
+        quote: "L'immagine di un brand *nasce dai dettagli.*",
         focus: ["Art direction", "UI & visual design", "Contenuti & social", "Fotografia"],
       },
     ],
     journey: {
       kicker: "Il percorso",
-      lead: "Quattro tappe, un solo cursore. Scorri: è lui a raccontarti come siamo arrivati fin qui.",
-      start: "Scorri per partire",
+      lead: "Quattro tappe che raccontano come siamo arrivati fin qui.",
+      start: "Scorri per iniziare",
       stops: "Le tappe",
-      outro: { kicker: "Il prossimo capitolo", title: "Lo scriviamo *insieme.*", cta: "Iniziamo un progetto" },
-      title: "Da studenti *a studio.*",
+      outro: { kicker: "Il prossimo passo", title: "Costruiamolo *insieme.*", cta: "Inizia un progetto" },
+      title: "Come è nato *lo studio.*",
       steps: [
         {
           year: "Le basi",
           kicker: "La formazione",
           title: "Università.",
-          text: "Il metodo nasce qui: analisi, ricerca e pensiero critico. Il percorso universitario ci ha dato il rigore che oggi applichiamo a ogni progetto — e non abbiamo mai smesso di studiare.",
+          text: "Il nostro metodo nasce dagli studi universitari: analisi, ricerca e spirito critico. Lo applichiamo a ogni progetto e continuiamo ad aggiornarci.",
         },
         {
-          year: "La scintilla",
+          year: "L'inizio",
           kicker: "I primi progetti",
-          title: "La prima riga di codice.",
-          text: "I primi siti per attività locali dell'Alto Adige. È lì che capiamo una cosa semplice: ai professionisti non serve una vetrina, serve un sistema che porti clienti.",
+          title: "I primi clienti.",
+          text: "I primi siti per attività locali in Alto Adige ci hanno mostrato cosa serve davvero a un professionista: un sito che porti richieste concrete e clienti nuovi.",
         },
         {
           year: "Oggi",
           kicker: "Lo studio",
           title: "AuralpDigital.",
-          text: "Uno studio digitale indipendente: strategia, design e tecnologia sotto lo stesso tetto, un workflow AI-augmented e un unico standard — fatto bene o rifatto.",
+          text: "Oggi AuralpDigital è uno studio indipendente che unisce strategia, design e sviluppo. Usiamo l'intelligenza artificiale per lavorare più velocemente, senza abbassare la qualità.",
         },
         {
           year: "Domani",
           kicker: "La direzione",
-          title: "Sempre un passo avanti.",
-          text: "Ogni nuova ondata tecnologica viene studiata, testata e — solo se funziona — portata nei progetti dei nostri clienti. Prima degli altri, mai a scapito della qualità.",
+          title: "Sempre aggiornati.",
+          text: "Studiamo e testiamo le nuove tecnologie prima di proporle. Nei progetti dei clienti entra solo ciò che ha dimostrato di funzionare.",
         },
       ],
     },
     flow: {
       kicker: "Come lavoriamo",
-      title: "Quattro passi, *zero sorprese.*",
-      lead: "Dalla prima chiacchierata al sito online: sai sempre a che punto siamo, cosa stiamo facendo e cosa ti consegniamo.",
+      title: "Un metodo *in quattro fasi.*",
+      lead: "Dalla prima call alla messa online sai sempre a che punto siamo, su cosa stiamo lavorando e cosa riceverai.",
       card: { phase: "Fase", get: "Cosa ricevi" },
       // Sito di esempio che si costruisce fase per fase (MethodRoom).
       demo: {
@@ -448,44 +448,44 @@ const it = {
         {
           title: "Ascolto",
           titleEm: "e analisi.",
-          text: "Prima di disegnare qualsiasi cosa ti ascoltiamo: chi sono i tuoi clienti, cosa cercano, come lavori oggi. Poi guardiamo cosa fanno i concorrenti in zona.",
-          tag: "Si parte da te",
+          text: "Prima di progettare ti ascoltiamo: chi sono i tuoi clienti, cosa cercano, come lavori oggi. Poi analizziamo i concorrenti nella tua zona.",
+          tag: "Punto di partenza",
           deliverable: "Un piano su misura, con tempi e costi chiari",
         },
         {
           title: "Design",
           titleEm: "su misura.",
-          text: "Ti mostriamo come sarà il sito prima di costruirlo: pagine, testi e grafica. Lo sistemiamo insieme finché non ti convince al cento per cento.",
-          tag: "Lo vedi prima",
+          text: "Ti mostriamo come sarà il sito prima di costruirlo: pagine, testi e grafica. Lo perfezioniamo insieme finché non ti convince del tutto.",
+          tag: "Anteprima completa",
           deliverable: "L'anteprima completa del sito",
         },
         {
           title: "Sviluppo",
           titleEm: "e test.",
-          text: "Costruiamo il sito veloce, sicuro e facile da usare. Prima di andare online lo proviamo su telefoni e computer veri, pagina per pagina.",
-          tag: "Fatto bene",
+          text: "Sviluppiamo un sito veloce, sicuro e facile da usare. Prima della pubblicazione lo testiamo pagina per pagina su telefoni e computer reali.",
+          tag: "Controllo qualità",
           deliverable: "Il sito pronto, controllato in ogni dettaglio",
         },
         {
           title: "Lancio",
           titleEm: "e crescita.",
-          text: "Mettiamo online il sito e restiamo al tuo fianco: ogni mese guardiamo visite e contatti e miglioriamo quello che porta più clienti.",
-          tag: "Non finisce qui",
-          deliverable: "Un resoconto ogni mese, in parole semplici",
+          text: "Pubblichiamo il sito e continuiamo a seguirlo: ogni mese analizziamo visite e contatti e miglioriamo ciò che porta più clienti.",
+          tag: "Supporto continuo",
+          deliverable: "Un report mensile chiaro e leggibile",
         },
       ],
     },
     outro: {
-      names: "Persone, *non* agenzie.",
-      cta: "Le stesse mani, dallo sketch al lancio",
+      names: "Un unico team, *dall'inizio alla fine.*",
+      cta: "Parliamo del tuo progetto",
     },
     cta: {
       kicker: "Iniziamo",
-      title: "Ora che ci conosci, *parliamo di te.*",
-      sub: "Una consulenza gratuita di 30 minuti: nessun impegno, solo idee chiare per far crescere la tua attività.",
+      title: "Ora che ci conosci, *parliamo del tuo progetto.*",
+      sub: "Una consulenza gratuita di 30 minuti, senza impegno, per capire insieme obiettivi, tempi e budget.",
       btn: "Compila il form",
       mail: "oppure scrivici a hello@auralpdigital.com",
-      foot: ["Risposta entro 24 ore", "Nessun impegno", "Budget chiari da subito"],
+      foot: ["Risposta entro 24 ore", "Senza impegno", "Budget chiaro fin da subito"],
     },
   },
 };

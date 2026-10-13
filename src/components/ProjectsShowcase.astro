@@ -93,7 +93,7 @@ const cards = [
         const Tag = content.kind === "soon" ? "article" : "a";
         const link =
           content.kind === "site"
-            ? { href: content.url, target: "_blank", rel: "noopener", "aria-label": `${content.name} — ${copy.visit}` }
+            ? { href: content.url, target: "_blank", rel: "noopener", "aria-label": `${content.name}: ${copy.visit}` }
             : content.kind === "create"
               ? { href: "#contatti" }
               : {};

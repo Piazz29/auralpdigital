@@ -123,7 +123,7 @@ const MOUNTAINS = `
                 <article class:list={["apm-phase", { "is-active": i === 0 }]} data-i={i}>
                   <span class="apm-bignum" aria-hidden="true">{pad(i)}</span>
                   <span class="apm-phase-meta">
-                    {c.phase} {pad(i)} <span aria-hidden="true">—</span> {it.tag}
+                    {c.phase} {pad(i)} <span aria-hidden="true">·</span> {it.tag}
                   </span>
                   <h3 class="apm-phase-title">
                     {words(it.title).map((w, wi) => (
