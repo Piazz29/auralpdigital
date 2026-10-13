@@ -10,7 +10,6 @@ import Footer from "../Footer.astro";
 import Rich from "../Rich.astro";
 import JourneyPath from "../reactbits/JourneyPath.jsx";
 import MethodRoom from "../MethodRoom.astro";
-import ManifestoWire from "../ManifestoWire.astro";
 import { Picture, getImage } from "astro:assets";
 import julianPhoto from "../../assets/team/julian.png";
 import alicePhoto from "../../assets/team/alice.png";
@@ -153,29 +152,25 @@ const steps = ta.journey.steps.map((s) => ({
     </section>
 
     <!-- MANIFESTO — lo statement si accende parola per parola con lo scroll,
-         accanto la prova (il "telefono senza fili", ManifestoWire), sotto i
-         tre numeri. Su desktop sta in una schermata: checkpoint + breve
+         sotto i tre numeri che lo dimostrano (al passaggio del mouse la
+         cifra rigira). Su desktop sta in una schermata: checkpoint + breve
          sosta (data-ap-hold, main.ts). -->
     <section class="ap-manifesto" data-ap-manifesto data-ap-hold>
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
       <div class="ap-manifesto-grid" aria-hidden="true"></div>
       <div class="works-screen ap-screen">
-        <div class="ap-manifesto-main">
-          <div class="ap-manifesto-copy">
-            <span class="works-kicker" data-ap-rise>{ta.manifesto.kicker}</span>
-            <p class="ap-statement font-display" data-ap-statement>
-              <Rich text={ta.manifesto.statement} />
-            </p>
-          </div>
-          <div class="ap-manifesto-demo" data-ap-rise>
-            <ManifestoWire lang={lang} />
-          </div>
+        <div class="ap-manifesto-copy">
+          <span class="works-kicker" data-ap-rise>{ta.manifesto.kicker}</span>
+          <p class="ap-statement font-display" data-ap-statement>
+            <Rich text={ta.manifesto.statement} />
+          </p>
         </div>
 
         <ol class="ap-facts">
           {facts.map((f) => (
             <li class="ap-fact" data-ap-fact>
               <span class="ap-fact-rule" aria-hidden="true"></span>
+              <span class="ap-fact-idx" aria-hidden="true">0{facts.indexOf(f) + 1}</span>
               <span class="ap-fact-n font-display" aria-label={String(f.n)}>
                 <span class="ap-fact-reel" data-ap-reel aria-hidden="true">
                   {f.reel.map((d) => <span>{d}</span>)}

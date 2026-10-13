@@ -39,6 +39,7 @@ const lenis = new Lenis({
     if (!lenis || lenis.isLocked || isTravelling()) return true;
     const f = detentFactor(lenis.targetScroll);
     data.deltaY *= f;
+    if (data.event.type === "wheel") hardGate(data);
     return true;
   },
   // Modalità LERP (smorzamento esponenziale), NON `duration` fissa: con una
@@ -141,10 +142,48 @@ document.addEventListener("click", (e) => {
 // Le posizioni si rileggono a ogni refresh di ScrollTrigger e quando un'isola
 // le ri-misura (evento "apd:detents").
 let detentYs: number[] = [];
+let hardYs: number[] = [];
 const readDetents = () => {
-  detentYs = Array.from(document.querySelectorAll<HTMLElement>("[data-scroll-detent]"))
-    .map((el) => Math.round(el.getBoundingClientRect().top + lenis.scroll))
-    .sort((a, b) => a - b);
+  const ys = (sel: string) =>
+    Array.from(document.querySelectorAll<HTMLElement>(sel))
+      .map((el) => Math.round(el.getBoundingClientRect().top + lenis.scroll))
+      .sort((a, b) => a - b);
+  detentYs = ys("[data-scroll-detent]");
+  hardYs = ys('[data-scroll-detent="hard"]');
+};
+
+// Checkpoint "duri" (data-scroll-detent="hard", le fasi di Come lavoriamo):
+// uno scroll profondo NON li scavalca. Il colpo di rotella che li
+// attraverserebbe si ferma esattamente sul punto; per proseguire serve un
+// nuovo gesto (una pausa nella rotella) o tenere la rotella ancora un po'.
+// Così ogni tappa si vede anche con un'unica, lunga spinta del trackpad.
+const HARD_QUIET_MS = 200; // pausa che conta come "nuovo gesto"
+const HARD_HOLD_MS = 1800; // rotella sempre in moto: valvola, si riparte dopo
+let gateY = NaN;
+let gateSince = 0;
+let lastWheelAt = 0;
+const hardGate = (data: { deltaY: number }) => {
+  const now = performance.now();
+  const quiet = now - lastWheelAt > HARD_QUIET_MS;
+  lastWheelAt = now;
+  const t = lenis.targetScroll;
+  if (!isNaN(gateY)) {
+    if (Math.abs(t - gateY) < 2 && !quiet && now - gateSince < HARD_HOLD_MS) {
+      data.deltaY = 0;
+      return;
+    }
+    gateY = NaN;
+  }
+  const next = t + data.deltaY;
+  for (const d of data.deltaY > 0 ? hardYs : [...hardYs].reverse()) {
+    const crosses = data.deltaY > 0 ? t < d - 1 && next > d : t > d + 1 && next < d;
+    if (crosses) {
+      data.deltaY = d - t;
+      gateY = d;
+      gateSince = now;
+      return;
+    }
+  }
 };
 const nearestDetent = (y: number) => {
   let best = NaN;
@@ -1892,6 +1931,11 @@ if (aboutPage) {
       // Contachilometri: la striscia gira e si ferma sulla cifra vera.
       .fromTo(reel, { y: 0, yPercent: 0 }, { y: 0, yPercent: -90, duration: 1.7, ease: "power4.out" }, 0.1)
       .fromTo(rest, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: "power3.out" }, 0.45);
+    // Al passaggio del mouse la cifra rigira e si riferma sul valore vero.
+    fact.addEventListener("mouseenter", () => {
+      if (!reel || gsap.isTweening(reel)) return;
+      gsap.fromTo(reel, { yPercent: 0 }, { yPercent: -90, duration: 1.1, ease: "power4.out" });
+    });
   });
 
   // --- IL DUO ---
