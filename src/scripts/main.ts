@@ -157,8 +157,8 @@ const readDetents = () => {
 // attraverserebbe si ferma esattamente sul punto; per proseguire serve un
 // nuovo gesto (una pausa nella rotella) o tenere la rotella ancora un po'.
 // Così ogni tappa si vede anche con un'unica, lunga spinta del trackpad.
-const HARD_QUIET_MS = 200; // pausa che conta come "nuovo gesto"
-const HARD_HOLD_MS = 1800; // rotella sempre in moto: valvola, si riparte dopo
+const HARD_QUIET_MS = 140; // pausa che conta come "nuovo gesto"
+const HARD_HOLD_MS = 1000; // rotella sempre in moto: valvola, si riparte dopo
 let gateY = NaN;
 let gateSince = 0;
 let lastWheelAt = 0;
