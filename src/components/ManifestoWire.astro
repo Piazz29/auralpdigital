@@ -1,0 +1,208 @@
+---
+// Il manifesto, dimostrato: "il telefono senza fili". Lo stesso messaggio
+// del cliente fa due strade. Nell'agenzia classica passa di mano in mano e a
+// ogni passaggio si deforma; con noi arriva dritto a chi lo realizza, intatto.
+// Parte da solo quando entra in vista (prima l'agenzia, poi noi), dopo si
+// può rigiocare con l'interruttore.
+import type { Lang } from "../i18n";
+import { defaultLang, getDict } from "../i18n";
+import { getImage } from "astro:assets";
+import julianPhoto from "../assets/team/julian.png";
+import alicePhoto from "../assets/team/alice.png";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const d = getDict(lang).about.manifesto.demo;
+const faces = await Promise.all(
+  [julianPhoto, alicePhoto].map((src) => getImage({ src, width: 96, format: "webp" }))
+);
+const initials = (s: string) =>
+  s
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+const data = JSON.stringify({ message: d.message, chain: d.chain });
+---
+
+<div class="amx" data-amx data-mode="agency" data-msgs={data}>
+  <div class="amx-top">
+    <div class="amx-heading">
+      <span class="amx-tag">{d.tag}</span>
+      <span class="amx-title font-display">{d.title}</span>
+    </div>
+    <div class="amx-switch" role="tablist" aria-label={d.title}>
+      <span class="amx-switch-thumb" aria-hidden="true"></span>
+      <button type="button" role="tab" aria-selected="true" data-amx-mode="agency">{d.agency}</button>
+      <button type="button" role="tab" aria-selected="false" data-amx-mode="us">{d.us}</button>
+    </div>
+  </div>
+
+  <div class="amx-stage" data-amx-stage>
+    <div class="amx-bubble" data-amx-bubble aria-live="polite">
+      <span class="amx-bubble-text" data-amx-text>{d.message}</span>
+    </div>
+    <span class="amx-line" aria-hidden="true"><span class="amx-line-fill"></span></span>
+    <ol class="amx-chain">
+      <li class="amx-node is-you" data-amx-node="you">
+        <span class="amx-av">{initials(d.you)}</span>
+        <span class="amx-label">{d.you}</span>
+      </li>
+      {d.roles.map((r) => (
+        <li class="amx-node is-mid" data-amx-node="mid">
+          <span class="amx-av">{initials(r)}</span>
+          <span class="amx-label">{r}</span>
+        </li>
+      ))}
+      <li class="amx-node is-team" data-amx-node="team">
+        <span class="amx-av amx-av--faces">
+          {faces.map((f) => <img src={f.src} alt="" width="48" height="48" loading="lazy" decoding="async" />)}
+        </span>
+        <span class="amx-label">{d.team}</span>
+      </li>
+    </ol>
+  </div>
+
+  <dl class="amx-readout">
+    <div>
+      <dt>{d.hops}</dt>
+      <dd data-amx-hops>0</dd>
+    </div>
+    <div>
+      <dt>{d.people}</dt>
+      <dd data-amx-people>1</dd>
+    </div>
+    <div class="amx-meter">
+      <dt>{d.fidelity}</dt>
+      <dd><span class="amx-meter-bar"><i data-amx-meter></i></span><b data-amx-fid>100%</b></dd>
+    </div>
+  </dl>
+
+  <p class="amx-arrives">
+    <span class="amx-arrives-k">{d.arrives}</span>
+    <span class="amx-arrives-v" data-amx-final>—</span>
+  </p>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-amx]");
+  if (root) {
+    const { message, chain } = JSON.parse(root.dataset.msgs!) as { message: string; chain: string[] };
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const stage = root.querySelector<HTMLElement>("[data-amx-stage]")!;
+    const bubble = root.querySelector<HTMLElement>("[data-amx-bubble]")!;
+    const text = root.querySelector<HTMLElement>("[data-amx-text]")!;
+    const hopsEl = root.querySelector<HTMLElement>("[data-amx-hops]")!;
+    const peopleEl = root.querySelector<HTMLElement>("[data-amx-people]")!;
+    const meter = root.querySelector<HTMLElement>("[data-amx-meter]")!;
+    const fidEl = root.querySelector<HTMLElement>("[data-amx-fid]")!;
+    const finalEl = root.querySelector<HTMLElement>("[data-amx-final]")!;
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-amx-mode]"));
+    const nodes = Array.from(root.querySelectorAll<HTMLElement>("[data-amx-node]"));
+    const you = nodes.find((n) => n.dataset.amxNode === "you")!;
+    const mids = nodes.filter((n) => n.dataset.amxNode === "mid");
+    const team = nodes.find((n) => n.dataset.amxNode === "team")!;
+
+    type Mode = "agency" | "us";
+    // Percorso, testo in mano a ogni nodo e quanto del messaggio sopravvive.
+    const ROUTES: Record<Mode, { path: HTMLElement[]; msgs: string[]; fid: number[] }> = {
+      agency: { path: [you, ...mids], msgs: [message, ...chain], fid: [100, 78, 55, 32, 12] },
+      us: { path: [you, team], msgs: [message, message], fid: [100, 100] },
+    };
+    const HOP_MS = 1150;
+    let mode: Mode = "agency";
+    let timers: number[] = [];
+    let auto = true;
+    let current = 0;
+
+    const later = (fn: () => void, ms: number) => timers.push(window.setTimeout(fn, ms));
+    const clear = () => {
+      timers.forEach(clearTimeout);
+      timers = [];
+    };
+
+    // La bolla si centra sopra il nodo che "tiene" il messaggio; la linea si
+    // riempie fino a lì.
+    const place = (node: HTMLElement) => {
+      const s = stage.getBoundingClientRect();
+      const av = node.querySelector<HTMLElement>(".amx-av")!.getBoundingClientRect();
+      const cx = av.left + av.width / 2 - s.left;
+      const half = bubble.offsetWidth / 2;
+      root.style.setProperty("--bx", `${Math.max(half, Math.min(s.width - half, cx))}px`);
+      root.style.setProperty("--tail", `${cx - Math.max(half, Math.min(s.width - half, cx))}px`);
+      root.style.setProperty("--prog", String(Math.max(0, Math.min(1, cx / s.width))));
+    };
+
+    const show = (i: number, instant = false) => {
+      const r = ROUTES[mode];
+      current = i;
+      r.path.forEach((n, k) => n.classList.toggle("is-lit", k <= i));
+      r.path.forEach((n, k) => n.classList.toggle("is-holding", k === i));
+      const setText = () => {
+        text.textContent = r.msgs[i];
+        place(r.path[i]);
+      };
+      if (instant || reduce) setText();
+      else {
+        bubble.classList.add("is-swap");
+        later(() => {
+          setText();
+          bubble.classList.remove("is-swap");
+        }, 180);
+      }
+      hopsEl.textContent = String(i);
+      peopleEl.textContent = String(i + 1);
+      const f = r.fid[i];
+      fidEl.textContent = `${f}%`;
+      meter.style.setProperty("--f", String(f / 100));
+      root.style.setProperty("--warp", String((100 - f) / 100));
+      const done = i === r.path.length - 1;
+      root.classList.toggle("is-done", done);
+      finalEl.textContent = done ? r.msgs[i] : "…";
+    };
+
+    const play = () => {
+      clear();
+      const r = ROUTES[mode];
+      if (reduce) return show(r.path.length - 1, true);
+      show(0, true);
+      for (let i = 1; i < r.path.length; i++) later(() => show(i), 520 + (i - 1) * HOP_MS);
+      // Prima volta: finita l'agenzia, si passa da soli alla strada diretta.
+      if (auto && mode === "agency")
+        later(() => setMode("us", false), 520 + (r.path.length - 1) * HOP_MS + 1900);
+    };
+
+    const setMode = (m: Mode, byUser: boolean) => {
+      if (byUser) auto = false;
+      clear();
+      mode = m;
+      root.dataset.mode = m;
+      tabs.forEach((t) => t.setAttribute("aria-selected", String(t.dataset.amxMode === m)));
+      nodes.forEach((n) => n.classList.remove("is-lit", "is-holding"));
+      // Aspetta che la catena si ricomponga (i nodi di mezzo si chiudono).
+      if (reduce) play();
+      else {
+        show(0, true);
+        later(play, 560);
+      }
+    };
+
+    tabs.forEach((t) => t.addEventListener("click", () => setMode(t.dataset.amxMode as Mode, true)));
+
+    show(0, true);
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          play();
+        }
+      },
+      { threshold: 0.55 }
+    );
+    io.observe(root);
+    new ResizeObserver(() => place(ROUTES[mode].path[current])).observe(stage);
+  }
+</script>

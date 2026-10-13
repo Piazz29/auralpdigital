@@ -1,12 +1,13 @@
 // FORM A PASSI della sezione finale (markup in components/ContactForm.astro).
 //
-//   01 servizio  → alla prima scelta si apre il 02
-//   02 profilo   → scelto, si apre il 03
+//   01 servizio  → "Avanti" (scelta multipla)
+//   02 profilo   → scelto, si passa da soli al 03
 //   03 canale    → "call": calendario + orari + recapiti → richiesta
 //                  "scrivici": WhatsApp / email con il messaggio già composto
 //
-// Le aperture sono CSS (grid-template-rows 0fr → 1fr su .cflow-collapse): qui
-// si cambiano solo classi e `inert`. Il sito è statico: la richiesta di call
+// Ogni passo è un pannello (.cflow-pane) impilato nella stessa cella: si
+// mostra uno alla volta e scorre di lato (CSS); qui si cambiano solo classi
+// e `inert`. L'altezza della card non cambia mai. Il sito è statico: la richiesta di call
 // parte come email precompilata, oppure in POST se BOOKING_ENDPOINT è
 // valorizzato in config/contact.ts.
 import { BOOKING_ENDPOINT, mailHref, whatsappHref } from "../config/contact";
@@ -31,11 +32,17 @@ type Strings = {
 };
 
 type Opts = {
-  // Porta in vista un passo appena aperto (scroll morbido di Lenis).
+  // Porta in vista la card se il passo nuovo è fuori schermo (mobile, dove
+  // i pannelli non hanno altezza fissa).
   reveal?: (el: HTMLElement) => void;
   // L'altezza della pagina è cambiata (per riallineare i trigger sotto).
   onResize?: () => void;
 };
+
+// Ordine dei pannelli: serve a decidere da che lato entra quello nuovo.
+const ORDER: Record<string, number> = { service: 0, profile: 1, channel: 2, call: 3, write: 3 };
+const SEG_PANE = ["service", "profile", "channel"];
+const ADVANCE_MS = 420;
 
 // Giorni prenotabili: da domani, lun–ven, per i prossimi 60 giorni.
 const DAYS_AHEAD = 60;
@@ -50,23 +57,112 @@ export function initContactFlow(opts: Opts = {}) {
   if (!form) return;
   const S: Strings = JSON.parse(form.dataset.i18n || "{}");
   const $ = <T extends Element = HTMLElement>(sel: string) => form.querySelector<T>(sel)!;
-  const collapse = (name: string) => $(`[data-collapse="${name}"]`);
+  const panes = [...form.querySelectorAll<HTMLElement>(".cflow-pane")];
+  const narrow = window.matchMedia("(max-width: 960px)");
 
-  // ---------- Aperture ----------
-  const setOpen = (name: string, open: boolean, reveal = false) => {
-    const el = collapse(name);
-    if (el.classList.contains("is-open") === open) return;
-    el.classList.toggle("is-open", open);
-    el.toggleAttribute("inert", !open);
-    if (open && reveal) opts.reveal?.(el);
+  // ---------- Pannelli ----------
+  // Quelli "prima" del corrente escono a sinistra, quelli dopo aspettano a
+  // destra: andando avanti il nuovo entra da destra, tornando da sinistra.
+  let pane = "service";
+  let reached = 0;
+  let advanceTimer = 0;
+  const go = (name: string) => {
+    window.clearTimeout(advanceTimer);
+    if (!name || name === pane) return;
+    pane = name;
+    form.classList.add("was-moved");
+    reached = Math.max(reached, Math.min(ORDER[name], 2));
+    form.dataset.pane = name;
+    panes.forEach((el) => {
+      const k = el.dataset.pane!;
+      const cur = k === name;
+      el.classList.toggle("is-current", cur);
+      el.classList.toggle("is-before", !cur && ORDER[k] < ORDER[name]);
+      el.toggleAttribute("inert", !cur);
+    });
+    segs.forEach((el, i) => {
+      el.disabled = i > reached || segTarget(i) === name;
+      el.classList.toggle("is-here", i === Math.min(ORDER[name], 2));
+    });
+    if (narrow.matches) {
+      opts.onResize?.();
+      opts.reveal?.(form);
+    }
   };
-  // A transizione finita la pagina ha la nuova altezza.
-  form.addEventListener("transitionend", (e) => {
-    if ((e.target as HTMLElement).classList?.contains("cflow-collapse")) opts.onResize?.();
-  });
+  const advance = (name: string) => {
+    window.clearTimeout(advanceTimer);
+    advanceTimer = window.setTimeout(() => go(name), ADVANCE_MS);
+  };
+  const paneNext = (from: string) => $<HTMLButtonElement>(`[data-pane="${from}"] [data-next]`);
+  form.querySelectorAll<HTMLButtonElement>("[data-next]").forEach((b) =>
+    b.addEventListener("click", () => go(b.dataset.next!))
+  );
+  form.querySelectorAll<HTMLButtonElement>("[data-back]").forEach((b) =>
+    b.addEventListener("click", () => go(b.dataset.back!))
+  );
 
-  const markDone = (step: string, done: boolean) =>
+  // ---------- Avanzamento (testata della card) ----------
+  // 3 segmenti: servizio, profilo, contatto. Il terzo è a metà con il canale
+  // scelto e pieno a richiesta partita (call inviata o link diretto aperto).
+  const segs = [...form.querySelectorAll<HTMLButtonElement>("[data-seg]")];
+  // Il terzo segmento porta al canale scelto (call o scrivici), se c'è.
+  const segTarget = (i: number) =>
+    i < 2 ? SEG_PANE[i] : form.querySelector<HTMLInputElement>('input[name="channel"]:checked')?.value || "channel";
+  segs.forEach((el, i) => el.addEventListener("click", () => go(segTarget(i))));
+  const progN = form.querySelector<HTMLElement>("[data-prog-n]");
+  let sent = false;
+  let shown = 0;
+  let progRaf = 0;
+  const progress = () => {
+    const isDone = (s: string) => $(`[data-step="${s}"]`).classList.contains("is-done");
+    const f = [isDone("service") ? 1 : 0, isDone("profile") ? 1 : 0, sent ? 1 : isDone("channel") ? 0.5 : 0];
+    segs.forEach((el, i) => {
+      el.style.setProperty("--f", String(f[i]));
+      el.classList.toggle("is-on", f[i] > 0);
+    });
+    const to = Math.round(((f[0] + f[1] + f[2]) / 3) * 100);
+    form.dataset.prog = String(to);
+    if (!progN) return;
+    cancelAnimationFrame(progRaf);
+    const from = shown;
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const k = Math.min((t - t0) / 700, 1);
+      shown = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+      progN.textContent = String(shown);
+      if (k < 1) progRaf = requestAnimationFrame(tick);
+    };
+    progRaf = requestAnimationFrame(tick);
+  };
+  const markSent = () => {
+    sent = true;
+    progress();
+  };
+
+  const markDone = (step: string, done: boolean) => {
     $(`[data-step="${step}"]`).classList.toggle("is-done", done);
+    progress();
+  };
+
+  // Luce che segue il puntatore sulla card (solo mouse).
+  if (window.matchMedia("(pointer: fine)").matches) {
+    form.addEventListener("pointermove", (e) => {
+      const b = form.getBoundingClientRect();
+      form.style.setProperty("--mx", `${e.clientX - b.left}px`);
+      form.style.setProperty("--my", `${e.clientY - b.top}px`);
+    });
+  }
+  // Entrata: la card si "accende" la prima volta che entra in vista
+  // (is-armed nasconde le opzioni solo se questo script gira).
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) form.classList.add("is-armed");
+  new IntersectionObserver(
+    ([e], io) => {
+      if (!e.isIntersecting) return;
+      form.classList.add("is-in");
+      io.disconnect();
+    },
+    { threshold: 0.25 }
+  ).observe(form);
 
   // ---------- Riepilogo scelte → messaggio precompilato ----------
   const checkedLabels = (name: string) =>
@@ -104,7 +200,7 @@ export function initContactFlow(opts: Opts = {}) {
       }
       const any = checkedLabels("service").length > 0;
       markDone("service", any);
-      if (any) setOpen("profile", true, true);
+      paneNext("service").disabled = !any;
       refreshDirectLinks();
     });
   });
@@ -113,8 +209,9 @@ export function initContactFlow(opts: Opts = {}) {
   form.querySelectorAll<HTMLInputElement>('input[name="profile"]').forEach((input) => {
     input.addEventListener("change", () => {
       markDone("profile", true);
-      setOpen("channel", true, true);
+      paneNext("profile").disabled = false;
       refreshDirectLinks();
+      advance("channel");
     });
   });
 
@@ -122,9 +219,10 @@ export function initContactFlow(opts: Opts = {}) {
   form.querySelectorAll<HTMLInputElement>('input[name="channel"]').forEach((input) => {
     input.addEventListener("change", () => {
       markDone("channel", true);
-      const isCall = input.value === "call";
-      setOpen("call", isCall, true);
-      setOpen("write", !isCall, true);
+      const nb = paneNext("channel");
+      nb.dataset.next = input.value;
+      nb.disabled = false;
+      advance(input.value);
     });
   });
 
@@ -216,15 +314,6 @@ export function initContactFlow(opts: Opts = {}) {
   };
   slotsGrid.addEventListener("change", updateSubmit);
 
-  // ---------- Messaggio facoltativo ----------
-  const addMsg = $<HTMLButtonElement>("[data-addmsg]");
-  addMsg.addEventListener("click", () => {
-    const open = addMsg.getAttribute("aria-expanded") !== "true";
-    addMsg.setAttribute("aria-expanded", String(open));
-    setOpen("message", open);
-    if (open) setTimeout(() => $<HTMLTextAreaElement>('textarea[name="message"]').focus(), 300);
-  });
-
   // ---------- Invio della richiesta di call ----------
   const errorEl = $("[data-error]");
   const nameInput = $<HTMLInputElement>('input[name="name"]');
@@ -272,7 +361,7 @@ export function initContactFlow(opts: Opts = {}) {
     if (!name) return fail(S.errors.name, nameInput);
     if (!email || !emailInput.checkValidity()) return fail(S.errors.email, emailInput);
 
-    const message = $<HTMLTextAreaElement>('textarea[name="message"]').value.trim();
+    const message = $<HTMLInputElement>('input[name="message"]').value.trim();
     const when = `${fmtDayLong.format(selected)}, ${t}`;
     const { lines, services } = summary();
     const body = [
@@ -313,6 +402,7 @@ export function initContactFlow(opts: Opts = {}) {
     $("[data-done-when]").textContent = when;
     callForm.hidden = true;
     done.hidden = false;
+    markSent();
     opts.onResize?.();
   });
 
@@ -321,6 +411,8 @@ export function initContactFlow(opts: Opts = {}) {
     callForm.hidden = false;
     opts.onResize?.();
   });
+
+  form.querySelectorAll("[data-wa], [data-mail]").forEach((a) => a.addEventListener("click", markSent));
 
   refreshDirectLinks();
 }

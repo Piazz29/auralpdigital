@@ -1544,6 +1544,43 @@ if (deck) {
   }
 }
 
+// ---------- Progetti — sosta a mazzo aperto ----------
+// Come le sezioni prima: arrivati col mazzo aperto la scena si FERMA un
+// attimo (pin di mezza schermata) invece di scivolare via subito. L'arrivo
+// lo ammortizza il checkpoint [data-scroll-detent] messo appena prima della
+// sezione (stessa Y dell'inizio del pin).
+if (!reduceMotion && isHome && document.querySelector("#projects")) {
+  ScrollTrigger.create({
+    trigger: "#projects",
+    start: "top top",
+    end: () => "+=" + Math.round(window.innerHeight * 0.55),
+    pin: true,
+    invalidateOnRefresh: true,
+    // Dopo Servizi (3), prima di chi-siamo (1): lo spacer a valle legge
+    // posizioni già spostate.
+    refreshPriority: 2,
+  });
+}
+
+// ---------- Contatti — sosta sul form ----------
+// Come per i Progetti: arrivati allo schermo dei contatti (titolo + card, alto
+// 100svh) la pagina si FERMA un attimo prima di lasciar salire il footer.
+// Solo desktop: su mobile lo schermo è più alto del viewport e va scorso.
+if (!reduceMotion && isHome && window.matchMedia("(min-width: 961px)").matches) {
+  const screen = document.querySelector<HTMLElement>(".finale-screen");
+  if (screen) {
+    ScrollTrigger.create({
+      trigger: screen,
+      start: "top top",
+      end: () => "+=" + Math.round(window.innerHeight * 0.6),
+      pin: true,
+      invalidateOnRefresh: true,
+      // dopo tutti i pin più in alto (Progetti = 2)
+      refreshPriority: 0,
+    });
+  }
+}
+
 // ---------- Chi Siamo — i nomi del duo ----------
 // I nomi entrano dalla maschera parola per parola — stesso linguaggio dei
 // titoli di sezione, ma in scala monumentale — poi la riga CTA segue.
@@ -1837,7 +1874,7 @@ if (aboutPage) {
     gsap.set(em, { "--hl": 0 });
     gsap
       .timeline({
-        scrollTrigger: { trigger: statement, start: "top 82%", end: "bottom 42%", scrub: SCRUB },
+        scrollTrigger: { trigger: statement, start: "top 85%", end: "bottom 58%", scrub: SCRUB },
       })
       .fromTo(words, { opacity: 0.13 }, { opacity: 1, duration: 0.3, stagger: 0.12, ease: "none" })
       .to(em, { "--hl": 1, duration: 0.6, ease: "power2.out" });
@@ -1908,6 +1945,25 @@ if (aboutPage) {
       });
     }
   });
+
+  // Sezioni da una schermata (manifesto, duo, CTA): oltre al checkpoint
+  // [data-scroll-detent] in cima, una breve sosta pinnata come il form in
+  // home: arrivi, la sezione si ferma un attimo, poi si riparte. Solo su
+  // desktop e solo se la sezione ci sta davvero in altezza.
+  if (!reduceMotion && window.matchMedia("(min-width: 961px)").matches) {
+    aboutPage.querySelectorAll<HTMLElement>("[data-ap-hold]").forEach((sec, i, all) => {
+      if (sec.offsetHeight > window.innerHeight + 4) return;
+      ScrollTrigger.create({
+        trigger: sec,
+        start: "top top",
+        end: () => "+=" + Math.round(window.innerHeight * 0.5),
+        pin: true,
+        invalidateOnRefresh: true,
+        // dall'alto in basso: i pin più in alto si misurano per primi
+        refreshPriority: all.length - i,
+      });
+    });
+  }
 
   // Come lavoriamo — la copy (kicker/titolo/lead) sale in cascata quando la
   // sezione entra: aggancia visivamente il Percorso al blocco finale.
@@ -2025,11 +2081,13 @@ document.querySelector("[data-back-to-top]")?.addEventListener("click", () => {
 // la pagina: si ricalcola solo il trigger del wordmark (l'unico più in basso),
 // senza un refresh globale che rilancerebbe le coreografie sopra.
 initContactFlow({
+  // Mobile: cambiando passo la card cambia altezza; se la sua testata è
+  // finita sopra lo schermo la si riporta in vista.
   reveal: (el) => {
     setTimeout(() => {
       const top = el.getBoundingClientRect().top;
-      if (top > window.innerHeight * 0.62) {
-        lenis.scrollTo(el, { offset: -window.innerHeight * 0.3, duration: 1.2 });
+      if (top < 0 || top > window.innerHeight * 0.62) {
+        lenis.scrollTo(el, { offset: -90, duration: 0.9 });
       }
     }, 60);
   },
