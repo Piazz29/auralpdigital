@@ -369,6 +369,11 @@ const en = {
     },
   },
 
+  // First-load loader: "Building" + rotating words.
+  loader: {
+    lead: "Building",
+    words: ["websites", "social", "software", "systems"],
+  },
   footer: {
     tagline: "Websites, social media and software,\ndesigned in South Tyrol.",
     menuLabel: "Menu",

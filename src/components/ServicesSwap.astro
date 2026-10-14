@@ -37,23 +37,24 @@ const t = getDict(lang).home.services;
 // solo a distinguere i segnaposto durante lo scambio.
 const media: { video?: string; poster?: string; src?: string; tint: string }[] = [
   {
-    // Clip originale (720×1280, con audio) in .video-originals/: qui lo
-    // stesso video senza traccia audio (copiato, nessuna ricompressione) +
-    // faststart. È 9:16: la cornice 4:5 la ritaglia in alto e in basso.
-    video: "/videos/services/siti.mp4?v=2",
-    poster: "/videos/services/siti-poster.jpg?v=2",
+    // Clip originale (720×1280, con audio) in .video-originals/: qui senza
+    // audio, ricodificata H.264 CRF 24 (veryslow, faststart): −60% di peso a
+    // qualità indistinguibile (SSIM 0.99). È 9:16: la cornice 4:5 la ritaglia
+    // in alto e in basso. Poster in webp.
+    video: "/videos/services/siti.mp4?v=3",
+    poster: "/videos/services/siti-poster.webp",
     tint: "39, 72, 165",
   },
   {
     // Stessa lavorazione della clip dei siti (originale in .video-originals/).
-    video: "/videos/services/social.mp4",
-    poster: "/videos/services/social-poster.jpg",
+    video: "/videos/services/social.mp4?v=2",
+    poster: "/videos/services/social-poster.webp",
     tint: "216, 64, 2",
   },
   {
     // Stessa lavorazione delle altre due (originale in .video-originals/).
-    video: "/videos/services/gestionali.mp4",
-    poster: "/videos/services/gestionali-poster.jpg",
+    video: "/videos/services/gestionali.mp4?v=2",
+    poster: "/videos/services/gestionali-poster.webp",
     tint: "28, 43, 95",
   },
 ];
@@ -81,7 +82,7 @@ const fixIcons = [
               <video
                 data-svc-video
                 src={s.video}
-                poster={s.poster}
+                data-poster={s.poster}
                 muted
                 loop
                 playsinline

@@ -1396,6 +1396,32 @@ if (shortViewport && !reduceMotion && "IntersectionObserver" in window) {
   document.querySelectorAll<HTMLVideoElement>("[data-svc-video]").forEach((v) => io.observe(v));
 }
 
+// Poster delle clip: in `data-poster`, assegnati solo quando la clip si
+// avvicina allo schermo. Un `poster` nell'HTML si scarica subito, con
+// priorità alta (Chrome alza le prime immagini grandi): tre jpg sotto la
+// piega rubavano banda al CSS bloccante e ritardavano il primo paint.
+{
+  const lazyPosters = document.querySelectorAll<HTMLVideoElement>("video[data-poster]");
+  const setPoster = (v: HTMLVideoElement) => {
+    if (v.dataset.poster && !v.poster) v.poster = v.dataset.poster;
+  };
+  // Si osserva la SEZIONE, non la clip: nei Servizi le card fuori scena
+  // stanno traslate di lato e per l'observer non si avvicinerebbero mai.
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach(({ target, isIntersecting }) => {
+          if (!isIntersecting) return;
+          target.querySelectorAll<HTMLVideoElement>("video[data-poster]").forEach(setPoster);
+          if (target instanceof HTMLVideoElement) setPoster(target);
+          io.unobserve(target);
+        }),
+      { rootMargin: "150% 0px 150% 0px" }
+    );
+    new Set([...lazyPosters].map((v) => v.closest("section") ?? v)).forEach((el) => io.observe(el));
+  } else lazyPosters.forEach(setPoster);
+}
+
 // ---------- Il punto — racconto in tre tempi dentro un pin ----------------
 // Il palco (una schermata) si ferma e lo scroll, in scrub, fa avanzare la
 // storia (markup e tempi in HomePage.astro, impaginazione in global.css):

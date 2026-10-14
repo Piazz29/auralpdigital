@@ -21,20 +21,29 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <link rel="preconnect" href="https://api.fontshare.com" />
-    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
-    <!-- La wordmark è la maschera del loader: preload così è disponibile dal
-         primo frame (niente logo vuoto all'avvio). -->
-    <link rel="preload" as="image" href="/logo/wordmark.svg" type="image/svg+xml" />
-    <!-- Sistema tipografico: Satoshi (Fontshare) su tutto il sito — display e
-         body sulla stessa famiglia. display=swap evita il FOIT.
-         `satoshi@1,2` chiede le due varianti VARIABILI (tondo + corsivo, asse
-         wght 300..900) invece dei pesi statici: due soli woff2 in tutto.
-         Il corsivo è vero, non simulato: i titoli lo usano come accento. -->
-    <link
-      rel="stylesheet"
-      href="https://api.fontshare.com/v2/css?f%5B%5D=satoshi@1,2&display=swap"
-    />
+    <!-- Sistema tipografico: Satoshi (Fontshare, licenza ITF FFL) su tutto il
+         sito — display e body sulla stessa famiglia. Le due varianti
+         VARIABILI (tondo + corsivo, asse wght 300..900) sono ospitate qui in
+         /fonts: niente CSS esterno bloccante né connessioni a due domini
+         Fontshare prima del primo testo. Il corsivo è vero, non simulato.
+         Niente preload: misurato su rete lenta, i due woff2 rubavano banda
+         al CSS bloccante e il primo paint arrivava ~400ms più tardi. -->
+    <style is:inline>
+      @font-face {
+        font-family: "Satoshi";
+        src: url("/fonts/satoshi-variable.woff2") format("woff2");
+        font-weight: 300 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Satoshi";
+        src: url("/fonts/satoshi-variable-italic.woff2") format("woff2");
+        font-weight: 300 900;
+        font-style: italic;
+        font-display: swap;
+      }
+    </style>
     <title>{title}</title>
 
     <!-- Loader: decisione SINCRONA prima del render per evitare flash. Se la
@@ -50,6 +59,16 @@ const {
           }
         } catch (e) {
           document.documentElement.classList.add("apd-loading");
+        }
+        // Scene in regia (stessa condizione di `staticScenes` in main.ts):
+        // decisa qui, prima del primo render, così il layout delle sezioni
+        // pinnate (es. .point, che sale di 30vh sulla hero) è già quello
+        // finale e non salta quando parte il modulo (era CLS visibile).
+        if (
+          !matchMedia("(prefers-reduced-motion: reduce)").matches &&
+          !matchMedia("(max-height: 500px) and (orientation: landscape) and (hover: none)").matches
+        ) {
+          document.documentElement.classList.add("apd-scenes");
         }
       })();
     </script>
@@ -156,38 +175,18 @@ const {
     </script>
   </head>
   <body class="bg-[#FEFDEC] text-[#171310] overflow-x-clip">
-    <!-- First-load loader: wordmark del brand (colori identici al logo SVG) e,
-         sotto, un loader 3D a cuboide. Primo figlio del body così copre tutto
-         fin da subito; rimosso dallo script dopo un minimo di 3s. -->
+    <!-- First-load loader: su notte navy, "Costruiamo" fisso e accanto le
+         parole del lavoro che scorrono dal basso (testi dal dizionario,
+         la prima ripetuta in coda per chiudere il giro senza salto). Primo
+         figlio del body così copre tutto fin da subito; rimosso dallo script
+         dopo un minimo di 3s (scripts/loader.ts). -->
     <div id="apd-loader" class="apd-loader" role="presentation" aria-hidden="true">
-      <div class="apd-loader-inner">
-        <img
-          class="apd-mark-img"
-          src="/logo/wordmark.svg"
-          alt="AuralpDigital"
-          width="556"
-          height="119"
-        />
-        <div class="apd-cuboid" aria-hidden="true">
-          <div class="scene">
-            <div class="shadow"></div>
-            <div class="jumper">
-              <div class="spinner">
-                <div class="scaler">
-                  <div class="loader">
-                    <div class="cuboid">
-                      <div class="cuboid__side"></div>
-                      <div class="cuboid__side"></div>
-                      <div class="cuboid__side"></div>
-                      <div class="cuboid__side"></div>
-                      <div class="cuboid__side"></div>
-                      <div class="cuboid__side"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div class="apd-words-loader">
+        <p>{getDict(lang).loader.lead}</p>
+        <div class="apd-words">
+          {[...getDict(lang).loader.words, getDict(lang).loader.words[0]].map((w) => (
+            <span class="apd-word">{w}</span>
+          ))}
         </div>
       </div>
     </div>

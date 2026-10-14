@@ -2359,22 +2359,25 @@ button {
    trasparenti): senza, tra scrivania e montagna resterebbe una fascia di
    carta vuota. Spostamento solo visivo (top relativo: un margine negativo
    trascinerebbe su anche il fondo pieno di .post-reveal, tagliando la hero);
-   il margine in fondo restituisce lo spazio. */
-.point.is-live {
+   il margine in fondo restituisce lo spazio.
+   `.apd-scenes .point` (classe messa dallo script inline in <head>) applica
+   lo stesso layout già al primo render: aspettando `.is-live` dal modulo la
+   sezione saliva di 30vh sotto gli occhi (layout shift). */
+:is(.point.is-live, .apd-scenes .point) {
   top: -30vh;
   margin-bottom: -30vh;
 }
-.point.is-live .point-stage {
+:is(.point.is-live, .apd-scenes .point) .point-stage {
   height: 100vh;
   height: 100svh;
   min-height: 0;
 }
-.point.is-live .point-copy {
+:is(.point.is-live, .apd-scenes .point) .point-copy {
   height: 100%;
   align-items: center;
 }
-.point.is-live .point-pain,
-.point.is-live .point-turn {
+:is(.point.is-live, .apd-scenes .point) .point-pain,
+:is(.point.is-live, .apd-scenes .point) .point-turn {
   grid-area: 1 / 1;
 }
 
@@ -4565,7 +4568,9 @@ nav:has(#burger-menu.is-open) .pill {
   translate: -50% -50%;
   opacity: 0;
   scale: 0.7;
-  filter: blur(40px);
+  /* Niente filter: blur — il radial-gradient arriva già a 0 al 72–76% del
+     raggio, il bordo è morbido da sé. Il blur di 40px su un disco da ~1000px
+     costava una rasterizzazione offscreen a ogni frame dello scale. */
   transition:
     opacity 1.1s ease,
     scale 1.6s cubic-bezier(0.22, 1, 0.36, 1);
@@ -5444,8 +5449,8 @@ nav:has(#burger-menu.is-open) .pill {
 
 /* =========================================================================
    FIRST-LOAD LOADER — schermata di caricamento solo alla prima entrata della
-   sessione. Wordmark del brand (colori IDENTICI al logo SVG) e, ben separato
-   sotto, un loader 3D a cuboide. Resta visibile per un minimo di 3s. Lo script
+   sessione. Notte navy, "Costruiamo" fisso e le parole del lavoro che
+   scorrono in ambra. Resta visibile per un minimo di 3s. Lo script
    scripts/loader.ts gestisce l'uscita e imposta sessionStorage['apd:loaded'];
    lo script inline in <head> decide skip vs loading prima del render.
    ========================================================================= */
@@ -5548,237 +5553,70 @@ html.apd-skip-loader #apd-loader {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FEFDEC;
+  padding: 0 24px;
+  background:
+    radial-gradient(60% 50% at 50% 50%, rgba(39, 72, 165, 0.32), transparent 70%),
+    var(--color-navy-deep);
   /* L'animazione di uscita usa autoAlpha + y; evita ripaint pesanti. */
   will-change: opacity, transform;
 }
 
-.apd-loader-inner {
+/* "Costruiamo" fisso + parola che sale: carta smorzata e ambra (l'accento
+   caldo sullo scuro), corsivo vero come gli accenti dei titoli. */
+.apd-words-loader {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* gap ampio: il cuboide (che salta) non deve mai toccare la wordmark. */
-  gap: clamp(48px, 9vh, 96px);
-  width: min(86vw, 520px);
-  padding: 0 24px;
+  box-sizing: content-box;
+  height: 1.6em;
+  padding: 10px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(24px, 3.2vw, 40px);
+  letter-spacing: -0.02em;
+  color: rgba(254, 253, 236, 0.62);
+  animation: apd-loader-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-
-/* Wordmark = logo SVG reale → colori identici a quelli del marchio. */
-.apd-mark-img {
+.apd-words-loader p {
+  margin: 0;
+  line-height: 1.6em;
+}
+/* Sfumatura alto/basso come MASCHERA, non come velo colorato sopra: sul
+   bagliore radiale del fondo un velo pieno si vedeva come un riquadro. */
+.apd-words {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(transparent 4%, #000 24%, #000 80%, transparent 98%);
+  mask-image: linear-gradient(transparent 4%, #000 24%, #000 80%, transparent 98%);
+}
+.apd-word {
   display: block;
-  width: clamp(200px, 56vw, 420px);
-  height: auto;
-  user-select: none;
-  -webkit-user-drag: none;
-  animation: apd-mark-in 0.6s ease both;
-}
-@keyframes apd-mark-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ---- Loader 3D a cuboide (adattato al brand: navy / blu / periwinkle) -------
-   La scala globale del demo (applicata al body) qui vive sul wrapper .apd-cuboid;
-   preserve-3d è scopato SOLO ai discendenti del loader per non toccare il sito. */
-.apd-cuboid {
-  --size: 54;
-  --coefficient: 1px;
-  --timeline: 2.6s;
-  --delay: 0.4s;
-  --rotation-y: -24;
-  --rotation-x: 28;
-  /* Le tre facce portano le tre famiglie: navy, blu brand, arancio. */
-  --color-one: #1C2B5F;
-  --color-two: #2748A5;
-  --color-three: #D84002;
-  display: grid;
-  place-items: center;
-  width: 180px;
-  height: 168px;
-  transform-origin: 50% 50%;
-  animation: apd-cube-scale var(--timeline) var(--delay) infinite linear;
-}
-.apd-cuboid *,
-.apd-cuboid *::before,
-.apd-cuboid *::after {
-  box-sizing: border-box;
-  transform-style: preserve-3d;
-}
-
-.apd-cuboid .scene {
-  position: relative;
-  transform: translate3d(0, 0, 100vmin)
-    rotateX(calc(var(--rotation-y, 0) * 1deg))
-    rotateY(calc(var(--rotation-x, 0) * 1deg)) rotateX(0deg);
-}
-
-@keyframes apd-cube-scale {
-  0%,
-  10% {
-    transform: scaleX(1) scaleY(1);
-  }
-  35%,
-  100% {
-    transform: scaleX(0.5) scaleY(0.5);
-  }
-}
-
-.apd-cuboid .shadow {
-  width: calc(var(--size) * var(--coefficient));
-  position: absolute;
-  bottom: 0;
-  aspect-ratio: 1;
-  transform-origin: 50% 50%;
-  transform: rotateX(90deg)
-    translate3d(0, 0, calc((var(--size) * (var(--coefficient) * -0.5)) - 1px))
-    scale(0.96);
-  background: rgba(23, 19, 16, 0.55);
-  animation: apd-cube-squish var(--timeline) var(--delay) infinite,
-    apd-cube-fade var(--timeline) var(--delay) infinite;
-}
-
-.apd-cuboid .loader {
-  --depth: var(--size);
-  --color: var(--color-one);
-  width: calc(var(--depth) * var(--coefficient));
-  aspect-ratio: 1;
-  transform-origin: 50% 50%;
-  animation: apd-cube-squish var(--timeline) var(--delay) infinite;
-}
-.apd-cuboid .spinner {
-  animation: apd-cube-spin var(--timeline) var(--delay) infinite;
-}
-.apd-cuboid .jumper {
-  animation: apd-cube-jump var(--timeline) var(--delay) infinite;
-}
-
-@keyframes apd-cube-squish {
-  0%,
-  50%,
-  60% {
-    scale: 1 1 1;
-  }
-  10%,
-  35% {
-    scale: 1.2 0.8 1.2;
-  }
-  25% {
-    scale: 0.8 1.2 0.8;
-  }
-  70% {
-    scale: 1 1 2;
-  }
-  80% {
-    scale: 2 1 2;
-  }
-  90%,
-  100% {
-    scale: 2 2 2;
-  }
-}
-@keyframes apd-cube-fade {
-  0%,
-  10%,
-  40%,
-  50%,
-  60%,
-  100% {
-    opacity: 1;
-  }
-  25% {
-    opacity: 0.5;
-  }
-}
-@keyframes apd-cube-spin {
-  0%,
-  10% {
-    rotate: 0deg;
-  }
-  30%,
-  100% {
-    rotate: -360deg;
-  }
-}
-@keyframes apd-cube-jump {
-  0%,
-  10%,
-  35%,
-  50% {
-    translate: 0 0;
-  }
-  25% {
-    translate: 0 -150%;
-  }
-}
-
-/* Cuboid boilerplate (facce del cubo) */
-.apd-cuboid .cuboid {
-  width: 100%;
   height: 100%;
-  position: relative;
+  padding-left: 0.28em;
+  line-height: 1.6em;
+  font-style: italic;
+  white-space: nowrap;
+  color: var(--color-amber);
+  animation: apd-word-spin 4s infinite;
 }
-.apd-cuboid .cuboid__side {
-  background: var(--color);
-  position: absolute;
+@keyframes apd-loader-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
-.apd-cuboid .cuboid__side:nth-of-type(1) {
-  height: calc(var(--depth, 20) * var(--coefficient));
-  width: 100%;
-  top: 0;
-  transform: translate(0, -50%) rotateX(90deg);
-}
-.apd-cuboid .cuboid__side:nth-of-type(2) {
-  --color: var(--color-three);
-  height: 100%;
-  width: calc(var(--depth, 20) * var(--coefficient));
-  top: 50%;
-  right: 0;
-  transform: translate(50%, -50%) rotateY(90deg);
-}
-.apd-cuboid .cuboid__side:nth-of-type(3) {
-  width: 100%;
-  height: calc(var(--depth, 20) * var(--coefficient));
-  bottom: 0;
-  transform: translate(0%, 50%) rotateX(90deg);
-}
-.apd-cuboid .cuboid__side:nth-of-type(4) {
-  --color: var(--color-three);
-  height: 100%;
-  width: calc(var(--depth, 20) * var(--coefficient));
-  left: 0;
-  top: 50%;
-  transform: translate(-50%, -50%) rotateY(90deg);
-}
-.apd-cuboid .cuboid__side:nth-of-type(5) {
-  --color: var(--color-two);
-  height: 100%;
-  width: 100%;
-  transform: translate3d(0, 0, calc(var(--depth, 20) * (var(--coefficient) * 0.5)));
-  top: 0;
-  left: 0;
-}
-.apd-cuboid .cuboid__side:nth-of-type(6) {
-  height: 100%;
-  width: 100%;
-  transform: translate3d(0, 0, calc(var(--depth, 20) * (var(--coefficient) * -0.5)))
-    rotateY(180deg);
-  top: 0;
-  left: 0;
+/* Ogni scatto supera di un filo (-102%) e si riassesta (-100%). */
+@keyframes apd-word-spin {
+  10% { transform: translateY(-102%); }
+  25% { transform: translateY(-100%); }
+  35% { transform: translateY(-202%); }
+  50% { transform: translateY(-200%); }
+  60% { transform: translateY(-302%); }
+  75% { transform: translateY(-300%); }
+  85% { transform: translateY(-402%); }
+  100% { transform: translateY(-400%); }
 }
 
-/* Reduced-motion: niente cubo che salta/scala — resta la sola wordmark. */
+/* Reduced-motion: niente scorrimento, resta la prima parola. */
 @media (prefers-reduced-motion: reduce) {
-  .apd-mark-img {
+  .apd-words-loader,
+  .apd-word {
     animation: none;
-  }
-  .apd-cuboid {
-    display: none;
   }
 }
 
@@ -7295,7 +7133,7 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   aspect-ratio: 1;
   border-radius: 50%;
   translate: -50% -50%;
-  filter: blur(40px);
+  /* Niente blur: il gradiente sfuma già a 0 prima del bordo (vedi .ajx-aura). */
   pointer-events: none;
   background: radial-gradient(closest-side, rgba(242, 145, 63, 0.28), rgba(81, 117, 219, 0.1) 55%, rgba(81, 117, 219, 0) 74%);
   transition: background 1.2s ease;

@@ -385,6 +385,11 @@ const it = {
     },
   },
 
+  // Loader della prima entrata: "Costruiamo" + parole che scorrono.
+  loader: {
+    lead: "Costruiamo",
+    words: ["siti web", "social", "gestionali", "sistemi"],
+  },
   footer: {
     tagline: "Siti web, social e gestionali\nprogettati in Alto Adige.",
     menuLabel: "Menu",
