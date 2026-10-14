@@ -124,6 +124,7 @@ const fixIcons = [
       {services.map((s, i) => (
         <article class="svc-copy" data-svc-copy data-i={i}>
           <span class="svc-num" data-svc-num>
+            <span class="works-kicker svc-kicker">{t.kicker}</span>
             <span class="svc-num-i">{String(i + 1).padStart(2, "0")}</span>
             <span class="svc-num-of">/ {total}</span>
           </span>

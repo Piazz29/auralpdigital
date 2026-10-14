@@ -385,6 +385,44 @@ html.lenis body {
   pointer-events: none;
 }
 
+/* Torna su flottante — un cerchio piccolo e velato, quasi trasparente
+   finché non lo si cerca. Leggibile sia sulla carta sia sulle sezioni navy. */
+.to-top {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9000;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(23, 19, 16, 0.12);
+  background: rgba(254, 253, 236, 0.72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #171310;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.35s ease, transform 0.35s ease, visibility 0s linear 0.35s, background-color 0.2s ease;
+}
+.to-top.is-on {
+  opacity: 0.7;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.35s ease, transform 0.35s ease, visibility 0s, background-color 0.2s ease;
+}
+.to-top.is-on:hover,
+.to-top:focus-visible {
+  opacity: 1;
+  background: rgba(254, 253, 236, 0.95);
+}
+@media (max-width: 767px) {
+  .to-top { right: 14px; bottom: 14px; width: 34px; height: 34px; }
+}
+
 #scroll-fill {
   width: 100%;
   height: 100%;
@@ -1598,6 +1636,11 @@ button {
 .svc-num-i {
   color: var(--color-accent);
 }
+/* L'etichetta di sezione, come nelle altre: apre la riga del contatore. */
+.svc-kicker {
+  margin: 0 6px 0 0;
+  align-self: center;
+}
 .svc-num::after {
   content: "";
   width: 36px;
@@ -2172,6 +2215,25 @@ button {
 }
 .point-turn-sub em {
   font-style: italic;
+}
+/* Le maschere delle parole (SplitText) sono alte e larghe quanto la parola:
+   tagliavano i discendenti (g, p, y) e il corsivo che sporge a destra (la t
+   di "that"). La maschera si allunga sopra e sotto (line-height più ampio,
+   ereditato anche dalla parola → lo yPercent nascosto resta fuori) e di lato;
+   i margini negativi la riportano all'ingombro originale: stessa interlinea,
+   stessa spaziatura, glifi interi. */
+:is(.point-lead, .point-turn-title, .svc-title) div[style*="overflow"] {
+  line-height: 1.44;
+  margin-block: -0.2em;
+}
+:is(.point-lead, .point-turn-title, .svc-title, .ap-hero-title) div[style*="overflow"] {
+  padding-inline: 0.12em;
+  margin-inline: -0.12em;
+}
+/* hero di Chi siamo: interlinea 0.95, il margine compensa di più */
+.ap-hero-title div[style*="overflow"] {
+  line-height: 1.44;
+  margin-block: -0.245em;
 }
 
 /* NOTIFICHE — schede di carta: tre per il caos (ai margini, arrivano un
@@ -2937,6 +2999,11 @@ button {
   color: var(--fin-ink);
   overflow-wrap: break-word;
   hyphens: auto;
+}
+/* DE — la sillabazione automatica spezzava "dei-nem" su telefono: parole
+   tedesche corte che stanno comunque nella riga, vanno a capo intere. */
+html[lang="de"] .finale-title {
+  hyphens: manual;
 }
 /* Sul buio il corsivo caldo è AMBRA (l'arancio pieno vibrerebbe). */
 .finale-title em {
@@ -4732,12 +4799,12 @@ nav:has(#burger-menu.is-open) .pill {
   display: inline-block;
   overflow: hidden;
   vertical-align: top;
-  padding-bottom: 0.12em;
-  margin-bottom: -0.12em;
+  padding: 0 0.12em 0.24em;
+  margin: 0 -0.12em -0.24em;
 }
 .ajx-intro .ajx-word > span {
   display: inline-block;
-  transform: translateY(110%);
+  transform: translateY(135%);
   transition: transform 1.05s cubic-bezier(0.22, 1, 0.36, 1);
   transition-delay: calc(0.05s + var(--wi, 0) * 0.08s);
 }
@@ -4935,12 +5002,12 @@ nav:has(#burger-menu.is-open) .pill {
   display: inline-block;
   overflow: hidden;
   vertical-align: top;
-  padding-bottom: 0.12em;
-  margin-bottom: -0.12em;
+  padding: 0 0.12em 0.24em;
+  margin: 0 -0.12em -0.24em;
 }
 .ajx-outro .ajx-word > span {
   display: inline-block;
-  transform: translateY(110%);
+  transform: translateY(135%);
   transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
   transition-delay: calc(0.1s + var(--wi, 0) * 0.08s);
 }
@@ -5064,12 +5131,12 @@ nav:has(#burger-menu.is-open) .pill {
   overflow: hidden;
   vertical-align: top;
   /* evita che la maschera tagli ascendenti/discendenti (es. "à"). */
-  padding-bottom: 0.14em;
-  margin-bottom: -0.14em;
+  padding: 0 0.12em 0.24em;
+  margin: 0 -0.12em -0.24em;
 }
 .ajx-step-title .ajx-word > span {
   display: inline-block;
-  transform: translateY(115%);
+  transform: translateY(135%);
   transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
   transition-delay: calc(0.1s + var(--wi, 0) * 0.06s);
 }
@@ -6161,6 +6228,13 @@ html.apd-skip-loader #apd-loader {
   color: var(--color-orange);
   /* il corsivo sporge a destra: un filo d'aria prima del pixel */
   padding-right: 0.02em;
+}
+/* EN/DE — "the studio." / "dem Studio." sono più lunghi di "lo studio." e
+   l'accento si spezzava su due righe: il clip-path della rivelazione
+   (riferito al box dell'em spezzato) lasciava invisibile "Studio." e il
+   pixel finale. Intero, va a capo come un blocco solo. */
+html:is([lang="en"], [lang="de"]) .ap-hero-accent {
+  white-space: nowrap;
 }
 /* Il punto è un pixel: quadrato, colore del testo che chiude. */
 .ap-px-dot {
@@ -7371,15 +7445,16 @@ html.apd-skip-loader #apd-loader {
 .apm-phase-title em { font-style: italic; color: var(--color-accent); }
 .apm-w {
   display: inline-block;
-  margin-right: 0.24em;
   overflow: hidden;
   vertical-align: top;
-  padding-bottom: 0.12em;
-  margin-bottom: -0.12em;
+  /* aria sotto e di lato per discendenti e corsivo ("and"), compensata dai
+     margini negativi: ingombro invariato */
+  padding: 0 0.12em 0.24em;
+  margin: 0 0.12em -0.24em -0.12em;
 }
 .apm-w > span {
   display: inline-block;
-  transform: translateY(110%);
+  transform: translateY(135%);
   transition: transform 0.35s ease-in;
 }
 .apm-phase-text {

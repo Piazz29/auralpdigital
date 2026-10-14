@@ -1,6 +1,6 @@
 ---
 import type { Lang } from "../i18n";
-import { defaultLang } from "../i18n";
+import { defaultLang, getDict } from "../i18n";
 
 interface Props {
   lang?: Lang;
@@ -205,6 +205,14 @@ const {
     <div id="scroll-track">
       <div id="scroll-fill"></div>
     </div>
+
+    <!-- Torna su — compare dalla seconda sezione, sparisce sul footer
+         (che ha già il suo). Comportamento in main.ts. -->
+    <button type="button" class="to-top" data-to-top aria-label={getDict(lang).footer.backToTop} title={getDict(lang).footer.backToTop}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 19V5" /><path d="M18 11l-6-6-6 6" />
+      </svg>
+    </button>
 
     <slot />
 

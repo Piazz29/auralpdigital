@@ -179,6 +179,7 @@ const it = {
       // `short` = etichetta nella barra di navigazione; `tags` = tre
       // etichette sotto la descrizione; `fix` = la notifica di "Il punto"
       // RISOLTA, che compare sull'angolo della card (decorativa).
+      kicker: "Servizi",
       link: "Parliamone",
       items: [
         {

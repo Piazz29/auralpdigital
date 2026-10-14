@@ -52,8 +52,11 @@ const lenis = new Lenis({
   // prossima fermata (vedi "Fermate di scroll" sotto). Solo per l'input
   // utente, mai durante uno scroll programmato.
   virtualScroll: (data) => {
-    if (!lenis || lenis.isLocked || isTravelling()) return true;
     const type = data.event.type;
+    // Contato anche a input bloccato: serve a riconoscere la coda d'inerzia
+    // di un gesto che arriva dopo un cambio scena dei Servizi.
+    if (type === "wheel") trackWheelGesture(data.deltaY);
+    if (!lenis || lenis.isLocked || isTravelling()) return true;
     // Un evento "trattenuto" (pagina ferma su una fermata) va anche tolto al
     // browser: con delta 0 Lenis lo ignorerebbe senza preventDefault e lo
     // scroll nativo lo eseguirebbe lo stesso.
@@ -62,6 +65,7 @@ const lenis = new Lenis({
       return false;
     };
     if (type === "wheel") {
+      if (svcSwallow()) return swallow();
       const raw = data.deltaY;
       data.deltaY *= detentFactor(lenis.targetScroll);
       if (stopGate(data, raw)) return swallow();
@@ -228,6 +232,30 @@ const STOP_QUIET_MS = 140; // pausa della rotella che conta come "nuovo gesto"
 // (prima una valvola a tempo si apriva durante l'inerzia e la fermata
 // veniva superata lo stesso). STOP_HOLD_MS resta solo come sicurezza.
 const STOP_HOLD_MS = 2200;
+// Gesti della rotella: un numero che cresce a ogni NUOVO gesto (dopo una
+// pausa, o con delta che risalgono invece di spegnersi). Una scrollata
+// veloce sul trackpad è un gesto solo, inerzia compresa.
+let wheelGesture = 0;
+let gestureAt = 0;
+let gestureRaw = 0;
+let gestureSince = 0;
+const trackWheelGesture = (raw: number) => {
+  const now = performance.now();
+  const fresh =
+    now - gestureAt > STOP_QUIET_MS ||
+    (Math.abs(raw) > Math.abs(gestureRaw) * 1.3 + 2 && now - gestureSince > 200) ||
+    now - gestureSince > 3000; // sicurezza: le code d'inerzia durano meno
+  if (fresh) {
+    wheelGesture++;
+    gestureSince = now;
+  }
+  gestureAt = now;
+  gestureRaw = raw;
+};
+// I Servizi lo impostano: true = la rotella va ignorata (il gesto che ha
+// già cambiato scena non ne cambia un'altra).
+let svcSwallow: () => boolean = () => false;
+
 let gateY = NaN;
 let gateSince = 0;
 let lastWheelAt = 0;
@@ -1168,6 +1196,13 @@ if (
   // sezione resterebbe sorda a ogni scroll.
   let busyUntil = 0;
   const isBusy = () => performance.now() < busyUntil;
+  // Un gesto di rotella = al massimo un cambio scena. Scrollando veloce la
+  // coda d'inerzia del trackpad continuava dopo il cambio e faceva scattare
+  // il successivo: con uno scroll solo si scorrevano tutti e tre i servizi
+  // senza vederli. Ora serve un gesto nuovo (una pausa, o una spinta nuova).
+  let spentGesture = -1;
+  const spendGesture = () => (spentGesture = wheelGesture);
+  svcSwallow = () => !!st?.isActive && wheelGesture === spentGesture;
 
   const anchorOf = (i: number) => {
     if (!st) return 0;
@@ -1184,6 +1219,7 @@ if (
     const next = gsap.utils.clamp(0, N - 1, target);
     if (next === index || isBusy()) return;
     index = next;
+    spendGesture();
     holdFor(STEP_TIME);
     gsap.to(state, {
       p: next,
@@ -1205,6 +1241,7 @@ if (
     index = i;
     state.p = i;
     apply();
+    spendGesture();
     holdFor(0.3);
     lockedScrollTo(anchorOf(i), 0.3);
   };
@@ -1235,6 +1272,7 @@ if (
     const v = Math.max(Math.abs(lenis.velocity) * 60, 1); // px/s
     const duration = gsap.utils.clamp(0.55, 1.15, (3 * dist) / v);
     glideUntil = performance.now() + duration * 1000 + 150;
+    spendGesture();
     index = i;
     state.p = i;
     apply();
@@ -2293,6 +2331,29 @@ document.querySelector("[data-back-to-top]")?.addEventListener("click", () => {
   travelFor(2);
   lenis.scrollTo(0, { duration: 2 });
 });
+
+// ---------- Torna su flottante ----------
+// Piccolo e discreto in basso a destra: compare passata la prima schermata,
+// sparisce quando il footer (che ha il suo "torna su") è in vista.
+const toTop = document.querySelector<HTMLElement>("[data-to-top]");
+if (toTop) {
+  let footerIn = false;
+  const sync = () =>
+    toTop.classList.toggle("is-on", lenis.scroll > window.innerHeight * 0.8 && !footerIn);
+  const footer = document.querySelector("footer");
+  if (footer) {
+    new IntersectionObserver(([e]) => {
+      footerIn = e.isIntersecting;
+      sync();
+    }).observe(footer);
+  }
+  lenis.on("scroll", sync);
+  sync();
+  toTop.addEventListener("click", () => {
+    travelFor(2);
+    lenis.scrollTo(0, { duration: 2 });
+  });
+}
 
 // ---------- Form a passi della sezione finale ----------
 // Quando un passo si apre sotto il bordo dello schermo lo si porta in vista

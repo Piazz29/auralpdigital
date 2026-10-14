@@ -172,6 +172,7 @@ const en = {
     },
     services: {
       // Three services (vedi it.ts).
+      kicker: "Services",
       link: "Let's talk",
       items: [
         {

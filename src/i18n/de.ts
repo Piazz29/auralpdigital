@@ -172,6 +172,7 @@ const de = {
     },
     services: {
       // Drei Leistungen (vedi it.ts).
+      kicker: "Leistungen",
       link: "Sprechen wir darüber",
       items: [
         {
@@ -276,12 +277,15 @@ const de = {
         "rufen **zu jeder Uhrzeit** an",
         "und buchen am Ende bei dem, den sie **zuerst auf Google** finden.",
       ],
-      turn: "Wir bauen **das System**, das sie zu dir bringt.",
+      // Virgola dentro il grassetto: fuori, SplitText ne fa una parola a sé
+      // che può andare a capo da sola (", das sie…").
+      turn: "Wir bauen **das System,** das sie zu dir bringt.",
       turnSub: "Auch dann, wenn du mit deiner Arbeit beschäftigt bist.",
+      // Corti: su telefono la riga sotto il titolo è a una riga sola (ellissi).
       pings: [
-        { title: "Direktnachricht", body: "Hallo! Habt ihr Samstag frei?" },
+        { title: "Direktnachricht", body: "Hallo! Samstag noch frei?" },
         { title: "Verpasster Anruf", body: "Heute, 22:47" },
-        { title: "Google", body: "Das erste Ergebnis bist nicht du" },
+        { title: "Google", body: "Erstes Ergebnis: nicht du" },
       ],
       ok: { title: "Neue Buchung", body: "Automatisch bestätigt" },
     },
