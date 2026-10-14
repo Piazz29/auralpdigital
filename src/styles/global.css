@@ -5449,8 +5449,8 @@ nav:has(#burger-menu.is-open) .pill {
 
 /* =========================================================================
    FIRST-LOAD LOADER — schermata di caricamento solo alla prima entrata della
-   sessione. Su carta: quattro cubi isometrici blu che si scambiano di posto
-   e sotto la wordmark. Resta visibile per un minimo di 3s. Lo script
+   sessione. Wordmark del brand (colori IDENTICI al logo SVG) e, ben separato
+   sotto, un loader 3D a cuboide. Resta visibile per un minimo di 3s. Lo script
    scripts/loader.ts gestisce l'uscita e imposta sessionStorage['apd:loaded'];
    lo script inline in <head> decide skip vs loading prima del render.
    ========================================================================= */
@@ -5553,115 +5553,239 @@ html.apd-skip-loader #apd-loader {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 24px;
   background: var(--color-bg);
   /* L'animazione di uscita usa autoAlpha + y; evita ripaint pesanti. */
   will-change: opacity, transform;
 }
+
 .apd-loader-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(36px, 6vh, 56px);
-  animation: apd-loader-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* gap ampio: il cuboide (che salta) non deve mai toccare la wordmark. */
+  gap: clamp(56px, 10vh, 108px);
+  width: min(86vw, 520px);
+  padding: 0 24px;
 }
+
+/* Wordmark = logo SVG reale → colori identici a quelli del marchio. */
 .apd-mark-img {
   display: block;
-  width: clamp(190px, 46vw, 320px);
+  width: clamp(200px, 56vw, 420px);
   height: auto;
   user-select: none;
   -webkit-user-drag: none;
+  animation: apd-mark-in 0.6s ease both;
 }
-@keyframes apd-loader-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
+@keyframes apd-mark-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* ---- Quattro cubi isometrici che si scambiano di posto ------------------
-   Facce nella famiglia SHADOW: cima chiara, fianco navy, fronte blu pieno;
-   la quarta faccia, spinta in basso, è l'ombra a terra (crema profonda).
-   preserve-3d resta confinato qui dentro. */
-.apd-boxes {
-  --size: clamp(36px, 4vw, 44px);
-  --duration: 800ms;
-  position: relative;
-  width: calc(var(--size) * 3);
-  height: calc(var(--size) * 2);
-  /* L'ombra a terra (4ª faccia, a -3×size) proietta ~2.5×size sotto i
-     cubi fuori dal box: il margine le fa posto prima della wordmark. */
-  margin-bottom: calc(var(--size) * 2.4);
-  transform-style: preserve-3d;
+/* ---- Loader 3D a cuboide (adattato al brand: navy / blu / periwinkle) -------
+   La scala globale del demo (applicata al body) qui vive sul wrapper .apd-cuboid;
+   preserve-3d è scopato SOLO ai discendenti del loader per non toccare il sito. */
+.apd-cuboid {
+  --size: 66;
+  --coefficient: 1px;
+  --timeline: 2.6s;
+  --delay: 0.4s;
+  --rotation-y: -24;
+  --rotation-x: 28;
+  /* Le tre facce portano le famiglie della palette (token di @theme):
+     navy sopra/sotto, blu SHADOW davanti, EMBER sui fianchi. */
+  --color-one: var(--color-navy);
+  --color-two: #2748A5;
+  --color-three: var(--color-orange);
+  display: grid;
+  place-items: center;
+  width: 220px;
+  height: 206px;
   transform-origin: 50% 50%;
-  transform: rotateX(60deg) rotateZ(45deg) rotateY(0deg) translateZ(0px);
+  animation: apd-cube-scale var(--timeline) var(--delay) infinite linear;
 }
-.apd-box {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: var(--size);
-  height: var(--size);
+.apd-cuboid *,
+.apd-cuboid *::before,
+.apd-cuboid *::after {
+  box-sizing: border-box;
   transform-style: preserve-3d;
 }
-.apd-box:nth-child(1) { transform: translate(100%, 0); animation: apd-box1 var(--duration) linear infinite; }
-.apd-box:nth-child(2) { transform: translate(0, 100%); animation: apd-box2 var(--duration) linear infinite; }
-.apd-box:nth-child(3) { transform: translate(100%, 100%); animation: apd-box3 var(--duration) linear infinite; }
-.apd-box:nth-child(4) { transform: translate(200%, 0); animation: apd-box4 var(--duration) linear infinite; }
-.apd-box > div {
-  --background: #5175DB;
-  --top: auto;
-  --right: auto;
-  --bottom: auto;
-  --left: auto;
-  --translateZ: calc(var(--size) / 2);
-  --rotateY: 0deg;
-  --rotateX: 0deg;
+
+.apd-cuboid .scene {
+  position: relative;
+  transform: translate3d(0, 0, 100vmin)
+    rotateX(calc(var(--rotation-y, 0) * 1deg))
+    rotateY(calc(var(--rotation-x, 0) * 1deg)) rotateX(0deg);
+}
+
+@keyframes apd-cube-scale {
+  0%,
+  10% {
+    transform: scaleX(1) scaleY(1);
+  }
+  35%,
+  100% {
+    transform: scaleX(0.5) scaleY(0.5);
+  }
+}
+
+.apd-cuboid .shadow {
+  width: calc(var(--size) * var(--coefficient));
   position: absolute;
+  bottom: 0;
+  aspect-ratio: 1;
+  transform-origin: 50% 50%;
+  transform: rotateX(90deg)
+    translate3d(0, 0, calc((var(--size) * (var(--coefficient) * -0.5)) - 1px))
+    scale(0.96);
+  /* Ombra tinta navy, non inchiostro: sulla carta resta morbida. */
+  background: rgba(28, 43, 95, 0.28);
+  animation: apd-cube-squish var(--timeline) var(--delay) infinite,
+    apd-cube-fade var(--timeline) var(--delay) infinite;
+}
+
+.apd-cuboid .loader {
+  --depth: var(--size);
+  --color: var(--color-one);
+  width: calc(var(--depth) * var(--coefficient));
+  aspect-ratio: 1;
+  transform-origin: 50% 50%;
+  animation: apd-cube-squish var(--timeline) var(--delay) infinite;
+}
+.apd-cuboid .spinner {
+  animation: apd-cube-spin var(--timeline) var(--delay) infinite;
+}
+.apd-cuboid .jumper {
+  animation: apd-cube-jump var(--timeline) var(--delay) infinite;
+}
+
+@keyframes apd-cube-squish {
+  0%,
+  50%,
+  60% {
+    scale: 1 1 1;
+  }
+  10%,
+  35% {
+    scale: 1.2 0.8 1.2;
+  }
+  25% {
+    scale: 0.8 1.2 0.8;
+  }
+  70% {
+    scale: 1 1 2;
+  }
+  80% {
+    scale: 2 1 2;
+  }
+  90%,
+  100% {
+    scale: 2 2 2;
+  }
+}
+@keyframes apd-cube-fade {
+  0%,
+  10%,
+  40%,
+  50%,
+  60%,
+  100% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.5;
+  }
+}
+@keyframes apd-cube-spin {
+  0%,
+  10% {
+    rotate: 0deg;
+  }
+  30%,
+  100% {
+    rotate: -360deg;
+  }
+}
+@keyframes apd-cube-jump {
+  0%,
+  10%,
+  35%,
+  50% {
+    translate: 0 0;
+  }
+  25% {
+    translate: 0 -150%;
+  }
+}
+
+/* Cuboid boilerplate (facce del cubo) */
+.apd-cuboid .cuboid {
   width: 100%;
   height: 100%;
-  top: var(--top);
-  right: var(--right);
-  bottom: var(--bottom);
-  left: var(--left);
-  background: var(--background);
-  transform: rotateY(var(--rotateY)) rotateX(var(--rotateX)) translateZ(var(--translateZ));
+  position: relative;
 }
-.apd-box > div:nth-child(1) { --top: 0; --left: 0; }
-.apd-box > div:nth-child(2) { --background: var(--color-navy); --right: 0; --rotateY: 90deg; }
-.apd-box > div:nth-child(3) { --background: #2748A5; --rotateX: -90deg; }
-.apd-box > div:nth-child(4) {
-  --background: #ECE9D2;
-  --top: 0;
-  --left: 0;
-  --translateZ: calc(var(--size) * 3 * -1);
+.apd-cuboid .cuboid__side {
+  background: var(--color);
+  position: absolute;
 }
-/* Un cubo EMBER fra i blu: la brace, l'accento caldo del brand. */
-.apd-box:nth-child(4) > div:nth-child(1) { --background: #F2913F; }
-.apd-box:nth-child(4) > div:nth-child(2) { --background: #A83202; }
-.apd-box:nth-child(4) > div:nth-child(3) { --background: #D84002; }
-@keyframes apd-box1 {
-  0%, 50% { transform: translate(100%, 0); }
-  100% { transform: translate(200%, 0); }
+.apd-cuboid .cuboid__side:nth-of-type(1) {
+  height: calc(var(--depth, 20) * var(--coefficient));
+  width: 100%;
+  top: 0;
+  transform: translate(0, -50%) rotateX(90deg);
 }
-@keyframes apd-box2 {
-  0% { transform: translate(0, 100%); }
-  50% { transform: translate(0, 0); }
-  100% { transform: translate(100%, 0); }
+.apd-cuboid .cuboid__side:nth-of-type(2) {
+  --color: var(--color-three);
+  height: 100%;
+  width: calc(var(--depth, 20) * var(--coefficient));
+  top: 50%;
+  right: 0;
+  transform: translate(50%, -50%) rotateY(90deg);
 }
-@keyframes apd-box3 {
-  0%, 50% { transform: translate(100%, 100%); }
-  100% { transform: translate(0, 100%); }
+.apd-cuboid .cuboid__side:nth-of-type(3) {
+  width: 100%;
+  height: calc(var(--depth, 20) * var(--coefficient));
+  bottom: 0;
+  transform: translate(0%, 50%) rotateX(90deg);
 }
-@keyframes apd-box4 {
-  0% { transform: translate(200%, 0); }
-  50% { transform: translate(200%, 100%); }
-  100% { transform: translate(100%, 100%); }
+.apd-cuboid .cuboid__side:nth-of-type(4) {
+  --color: var(--color-three);
+  height: 100%;
+  width: calc(var(--depth, 20) * var(--coefficient));
+  left: 0;
+  top: 50%;
+  transform: translate(-50%, -50%) rotateY(90deg);
+}
+.apd-cuboid .cuboid__side:nth-of-type(5) {
+  --color: var(--color-two);
+  height: 100%;
+  width: 100%;
+  transform: translate3d(0, 0, calc(var(--depth, 20) * (var(--coefficient) * 0.5)));
+  top: 0;
+  left: 0;
+}
+.apd-cuboid .cuboid__side:nth-of-type(6) {
+  height: 100%;
+  width: 100%;
+  transform: translate3d(0, 0, calc(var(--depth, 20) * (var(--coefficient) * -0.5)))
+    rotateY(180deg);
+  top: 0;
+  left: 0;
 }
 
-/* Reduced-motion: cubi fermi, resta la composizione. */
+/* Reduced-motion: niente cubo che salta/scala — resta la sola wordmark. */
 @media (prefers-reduced-motion: reduce) {
-  .apd-loader-inner,
-  .apd-box {
+  .apd-mark-img {
     animation: none;
+  }
+  .apd-cuboid {
+    display: none;
   }
 }
 

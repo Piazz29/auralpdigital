@@ -4,8 +4,8 @@
 // inline in <head> (BaseLayout) decide skip/loading prima del render; qui
 // gestiamo l'uscita: il loader resta visibile per un MINIMO di 3s (così
 // l'animazione si vede sempre) e comunque non oltre un tetto di sicurezza,
-// anche se un asset fallisce. Visivamente il "loading" sono i cubi che
-// si scambiano di posto (solo CSS); non c'è una barra di progresso.
+// anche se un asset fallisce. Visivamente il "loading" è il cuboide 3D + la
+// wordmark; non c'è una barra di progresso da pilotare.
 import { gsap } from "gsap";
 
 const root = document.documentElement;
