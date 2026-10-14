@@ -210,15 +210,15 @@ const i18n = {
         <div class="cflow-fields">
           <label class="cflow-field">
             <span class="cflow-label">{cf.fields.name}</span>
-            <input class="cflow-input" type="text" name="name" autocomplete="name" placeholder={cf.fields.namePh} />
+            <input class="cflow-input" type="text" name="name" autocomplete="name" maxlength="100" placeholder={cf.fields.namePh} />
           </label>
           <label class="cflow-field">
             <span class="cflow-label">{cf.fields.email}</span>
-            <input class="cflow-input" type="email" name="email" autocomplete="email" placeholder={cf.fields.emailPh} />
+            <input class="cflow-input" type="email" name="email" autocomplete="email" maxlength="254" placeholder={cf.fields.emailPh} />
           </label>
           <label class="cflow-field">
             <span class="cflow-label">{cf.fields.addMessage}</span>
-            <input class="cflow-input" type="text" name="message" placeholder={cf.fields.messagePh} />
+            <input class="cflow-input" type="text" name="message" maxlength="600" placeholder={cf.fields.messagePh} />
           </label>
         </div>
 
