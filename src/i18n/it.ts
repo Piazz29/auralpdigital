@@ -4,14 +4,19 @@
 const it = {
   meta: {
     home: {
-      title: "AuralpDigital | Siti web, social e gestionali in Alto Adige",
+      title: "Web agency a Bolzano · Siti web e gestionali | AuralpDigital",
       description:
-        "Studio digitale in Alto Adige. Siti web, social e campagne ads, gestionali su misura e automazioni per professionisti e aziende che vogliono più clienti.",
+        "Studio digitale a Bolzano, Alto Adige: siti web, social e ads, gestionali su misura e automazioni per professionisti e aziende. In italiano, tedesco e inglese.",
     },
     about: {
-      title: "Chi siamo | AuralpDigital",
+      title: "Chi siamo | AuralpDigital, web agency a Bolzano",
       description:
-        "I fondatori di AuralpDigital, studio digitale indipendente in Alto Adige. Strategia, design e sviluppo seguiti dalle stesse persone, dalla prima call al lancio.",
+        "I fondatori di AuralpDigital, studio digitale indipendente a Bolzano, Alto Adige. Strategia, design e sviluppo seguiti dalle stesse persone, dalla prima call al lancio.",
+    },
+    faq: {
+      title: "Domande frequenti: prezzi, tempi e servizi | AuralpDigital",
+      description:
+        "Quanto costa un sito, quanto tempo serve, dove lavoriamo: le risposte di AuralpDigital, web agency a Bolzano. Progetti da 1.500 €, call iniziale gratuita.",
     },
   },
 
@@ -32,7 +37,7 @@ const it = {
     },
     socialsLabel: "Social",
     write: "Scrivici",
-    place: "Alto Adige\nItalia, 39100",
+    place: "Bolzano, Alto Adige\nItalia, 39100",
     toggleOpen: "Menu",
     toggleClose: "Chiudi",
     openMenu: "Apri il menu",
@@ -45,7 +50,7 @@ const it = {
   },
 
   faq: {
-    title: "Frequently Asked Questions",
+    title: "Domande frequenti",
     subtitle:
       "Tutto quello che ti serve sapere prima di iniziare un progetto digitale con AuralpDigital.",
     categories: [
@@ -117,7 +122,7 @@ const it = {
         items: [
           {
             q: "Quanto costa un sito?",
-            a: "Una landing page parte da poche centinaia di euro, un sito completo cresce in base a pagine e funzionalità. Dopo la prima call ricevi un preventivo preciso, senza costi nascosti.",
+            a: "I nostri progetti partono da 1.500 €. Il prezzo finale dipende da pagine, contenuti e funzionalità: dopo la prima call, che è gratuita, ricevi un preventivo preciso, senza costi nascosti.",
           },
           {
             q: "Perché non avete un prezzo fisso uguale per tutti?",
@@ -137,8 +142,8 @@ const it = {
         name: "Collaborazione",
         items: [
           {
-            q: "Lavorate anche da remoto?",
-            a: "Sì, lavoriamo da remoto con clienti in tutta Italia. Per chi è in Alto Adige possiamo anche incontrarci di persona quando serve.",
+            q: "Lavorate solo in Alto Adige?",
+            a: "No. Siamo a Bolzano e seguiamo clienti in tutto l'Alto Adige, da Merano a Bressanone, da Brunico alla Val Gardena, ma anche in Trentino, Veneto, Lombardia e nel resto d'Italia. Parliamo italiano, tedesco e inglese, quindi lavoriamo anche con clienti in Austria, Germania e Svizzera. Da remoto, oppure di persona quando serve.",
           },
           {
             q: "Come vengono gestite revisioni e feedback?",
@@ -396,8 +401,8 @@ const it = {
       contact: "Contatti",
     },
     contactLabel: "Contatti",
-    muted: "Alto Adige, Italia · 39100",
-    location: "Alto Adige, Italia",
+    muted: "39100 Bolzano · Alto Adige, Italia",
+    location: "Bolzano, Alto Adige",
     madeWith: "Fatto con cura",
     whatsapp: "WhatsApp",
     email: "Email",

@@ -4,6 +4,7 @@
 // vengono dal dizionario e si fondono per indice.
 import type { Lang } from "../../i18n";
 import { defaultLang, getDict, localePath } from "../../i18n";
+import { EMAIL } from "../../config/contact";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Navbar from "../Navbar.astro";
 import Footer from "../Footer.astro";
@@ -91,8 +92,8 @@ const steps = ta.journey.steps.map((s) => ({
           </div>
 
           <h1 class="ap-hero-title font-display" data-ap-hero-title>
-            {heroLines.map((line) => (
-              <span class="ap-hero-line">
+            {heroLines.map((line, li) => (
+              <>{li > 0 && " "}<span class="ap-hero-line">
                 {line.map((p) =>
                   p.accent ? (
                     <em class="ap-hero-accent" data-ap-hero-accent>{p.text.replace(/\.$/, "")}{p.text.endsWith(".") && <span class="ap-px-dot" data-ap-px-dot aria-hidden="true"></span>}</em>
@@ -100,7 +101,7 @@ const steps = ta.journey.steps.map((s) => ({
                     <span>{p.text}</span>
                   )
                 )}
-              </span>
+              </span></>
             ))}
           </h1>
 
@@ -326,7 +327,7 @@ const steps = ta.journey.steps.map((s) => ({
           </span>
           {ta.cta.btn} <span aria-hidden="true">↗</span>
         </a>
-        <a href="mailto:hello@auralpdigital.com" class="about-cta-mail">
+        <a href={`mailto:${EMAIL}`} class="about-cta-mail">
           {ta.cta.mail}
         </a>
       </div>

@@ -3,14 +3,19 @@
 const en = {
   meta: {
     home: {
-      title: "AuralpDigital | Websites, social media and software in South Tyrol",
+      title: "Web agency in Bolzano, South Tyrol | AuralpDigital",
       description:
-        "Digital studio in South Tyrol. Websites, social media and ad campaigns, custom software and automation for professionals and businesses that want more clients.",
+        "Digital studio in Bolzano, South Tyrol: websites, social media and ads, custom software and automation for professionals and businesses. In English, Italian and German.",
     },
     about: {
-      title: "About us | AuralpDigital",
+      title: "About us | AuralpDigital, web agency in Bolzano",
       description:
-        "The founders of AuralpDigital, an independent digital studio in South Tyrol. Strategy, design and development handled by the same people, from the first call to launch.",
+        "The founders of AuralpDigital, an independent digital studio in Bolzano, South Tyrol. Strategy, design and development handled by the same people, from the first call to launch.",
+    },
+    faq: {
+      title: "FAQ: pricing, timelines and services | AuralpDigital",
+      description:
+        "What a website costs, how long it takes, where we work: answers from AuralpDigital, a web agency in Bolzano. Projects from €1,500, free first call.",
     },
   },
 
@@ -31,7 +36,7 @@ const en = {
     },
     socialsLabel: "Social",
     write: "Write to us",
-    place: "South Tyrol\nItaly, 39100",
+    place: "Bolzano, South Tyrol\nItaly, 39100",
     toggleOpen: "Menu",
     toggleClose: "Close",
     openMenu: "Open menu",
@@ -116,7 +121,7 @@ const en = {
         items: [
           {
             q: "How much does a website cost?",
-            a: "A landing page starts from a few hundred euros, a full website grows with pages and features. After the first call you get a precise quote, with no hidden costs.",
+            a: "Our projects start from €1,500. The final price depends on pages, content and features: after the first call, which is free, you get a precise quote, with no hidden costs.",
           },
           {
             q: "Why don't you have one fixed price for everyone?",
@@ -136,8 +141,8 @@ const en = {
         name: "Collaboration",
         items: [
           {
-            q: "Do you also work remotely?",
-            a: "Yes, we work remotely with clients across Italy. For those in South Tyrol we can also meet in person when it helps.",
+            q: "Do you only work in South Tyrol?",
+            a: "No. We are based in Bolzano and work with clients across South Tyrol, from Merano to Bressanone, from Brunico to Val Gardena, as well as in Trentino, Veneto, Lombardy and the rest of Italy. We speak English, Italian and German, so we also work with clients in Austria, Germany and Switzerland. Remotely, or in person when it helps.",
           },
           {
             q: "How are revisions and feedback handled?",
@@ -380,8 +385,8 @@ const en = {
       contact: "Contact",
     },
     contactLabel: "Contact",
-    muted: "South Tyrol, Italy · 39100",
-    location: "South Tyrol, Italy",
+    muted: "39100 Bolzano · South Tyrol, Italy",
+    location: "Bolzano, South Tyrol",
     madeWith: "Made with care",
     whatsapp: "WhatsApp",
     email: "Email",

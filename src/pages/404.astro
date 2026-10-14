@@ -1,0 +1,112 @@
+---
+// 404 — Vercel la serve per ogni URL inesistente (dist/404.html). Non si sa
+// la lingua di chi arriva: messaggio in italiano, con le strade in tutte e
+// tre le lingue. Niente loader (si arriva da un link rotto) e noindex.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import { localePath } from "../i18n";
+import "../styles/global.css";
+
+const ways = [
+  { lang: "it", home: "Torna alla home", faq: "Domande frequenti" },
+  { lang: "de", home: "Zur Startseite", faq: "Häufige Fragen" },
+  { lang: "en", home: "Back to home", faq: "FAQ" },
+] as const;
+---
+
+<BaseLayout
+  lang="it"
+  title="Pagina non trovata | AuralpDigital"
+  description="Questa pagina non esiste o è stata spostata."
+  noindex
+  loader={false}
+>
+  <Navbar lang="it" route="/" />
+
+  <main class="nf">
+    <p class="nf-code" aria-hidden="true">404</p>
+    <h1 class="nf-title font-display">Questa pagina <em>non c'è.</em></h1>
+    <p class="nf-lead">Il link potrebbe essere sbagliato, oppure la pagina è stata spostata.</p>
+
+    <ul class="nf-ways">
+      {ways.map((w) => (
+        <li lang={w.lang}>
+          <a class="nf-link nf-link--main" href={localePath(w.lang, "/")}>{w.home} <span aria-hidden="true">→</span></a>
+          <a class="nf-link" href={localePath(w.lang, "/faq")}>{w.faq}</a>
+        </li>
+      ))}
+    </ul>
+  </main>
+
+  <Footer lang="it" />
+</BaseLayout>
+
+<style>
+  .nf {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(120px, 18vh, 200px) clamp(20px, 6vw, 96px) clamp(72px, 12vh, 140px);
+    color: var(--color-navy);
+  }
+  .nf-code {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(15px, 1.2vw, 17px);
+    letter-spacing: 0.16em;
+    color: var(--color-orange);
+    margin-bottom: 18px;
+  }
+  .nf-title {
+    font-size: clamp(44px, 8vw, 112px);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    font-weight: 700;
+    max-width: 12ch;
+  }
+  .nf-title em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--color-orange);
+  }
+  .nf-lead {
+    margin-top: 24px;
+    max-width: 46ch;
+    font-size: clamp(17px, 1.4vw, 20px);
+    line-height: 1.5;
+    color: var(--color-text-secondary, #544c40);
+  }
+  .nf-ways {
+    list-style: none;
+    margin: clamp(36px, 6vh, 56px) 0 0;
+    padding: 0;
+    display: grid;
+    gap: 14px;
+  }
+  .nf-ways li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 22px;
+  }
+  .nf-link {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--color-text-secondary, #544c40);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
+    text-underline-offset: 4px;
+    transition: color 0.2s ease;
+  }
+  .nf-link--main {
+    font-weight: 600;
+    color: var(--color-navy);
+    text-decoration: none;
+  }
+  .nf-link:hover,
+  .nf-link:focus-visible {
+    color: var(--color-orange);
+  }
+</style>

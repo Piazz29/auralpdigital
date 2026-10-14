@@ -3,14 +3,19 @@
 const de = {
   meta: {
     home: {
-      title: "AuralpDigital | Websites, Social Media und Software in Südtirol",
+      title: "Webagentur in Bozen · Websites & Software | AuralpDigital",
       description:
-        "Digitalstudio in Südtirol. Websites, Social Media und Werbekampagnen, Software nach Maß und Automatisierungen für Selbstständige und Unternehmen, die mehr Kunden gewinnen wollen.",
+        "Digitalstudio in Bozen, Südtirol: Websites, Social Media und Ads, Software nach Maß und Automatisierung für Selbstständige und Firmen. Auf Deutsch, Italienisch, Englisch.",
     },
     about: {
-      title: "Über uns | AuralpDigital",
+      title: "Über uns | AuralpDigital, Webagentur in Bozen",
       description:
-        "Die Gründer von AuralpDigital, einem unabhängigen Digitalstudio in Südtirol. Strategie, Design und Entwicklung aus einer Hand, vom ersten Gespräch bis zum Launch.",
+        "Die Gründer von AuralpDigital, einem unabhängigen Digitalstudio in Bozen, Südtirol. Strategie, Design und Entwicklung aus einer Hand, vom ersten Gespräch bis zum Launch.",
+    },
+    faq: {
+      title: "Häufige Fragen: Preise, Dauer und Leistungen | AuralpDigital",
+      description:
+        "Was kostet eine Website, wie lange dauert sie, wo arbeiten wir: die Antworten von AuralpDigital, Webagentur in Bozen. Projekte ab 1.500 €, erster Call kostenlos.",
     },
   },
 
@@ -31,7 +36,7 @@ const de = {
     },
     socialsLabel: "Social",
     write: "Schreib uns",
-    place: "Südtirol\nItalien, 39100",
+    place: "Bozen, Südtirol\nItalien, 39100",
     toggleOpen: "Menü",
     toggleClose: "Schließen",
     openMenu: "Menü öffnen",
@@ -44,7 +49,7 @@ const de = {
   },
 
   faq: {
-    title: "Frequently Asked Questions",
+    title: "Häufige Fragen",
     subtitle:
       "Alles, was du wissen musst, bevor du ein digitales Projekt mit AuralpDigital startest.",
     categories: [
@@ -116,7 +121,7 @@ const de = {
         items: [
           {
             q: "Was kostet eine Website?",
-            a: "Eine Landing Page beginnt bei einigen hundert Euro, eine komplette Website wächst mit Seiten und Funktionen. Nach dem ersten Call erhältst du ein genaues Angebot, ohne versteckte Kosten.",
+            a: "Unsere Projekte beginnen bei 1.500 €. Der Endpreis hängt von Seiten, Inhalten und Funktionen ab: Nach dem ersten, kostenlosen Call erhältst du ein genaues Angebot, ohne versteckte Kosten.",
           },
           {
             q: "Warum habt ihr keinen Fixpreis für alle?",
@@ -136,8 +141,8 @@ const de = {
         name: "Zusammenarbeit",
         items: [
           {
-            q: "Arbeitet ihr auch remote?",
-            a: "Ja, wir arbeiten remote mit Kunden in ganz Italien. Wer in Südtirol ist, kann uns bei Bedarf auch persönlich treffen.",
+            q: "Arbeitet ihr nur in Südtirol?",
+            a: "Nein. Wir sitzen in Bozen und betreuen Kunden in ganz Südtirol, von Meran bis Brixen, von Bruneck bis Gröden, aber auch im Trentino, in Venetien, in der Lombardei und im Rest Italiens. Wir sprechen Deutsch, Italienisch und Englisch und arbeiten daher auch mit Kunden in Österreich, Deutschland und der Schweiz. Remote oder, wenn nötig, persönlich.",
           },
           {
             q: "Wie werden Revisionen und Feedback gehandhabt?",
@@ -383,8 +388,8 @@ const de = {
       contact: "Kontakt",
     },
     contactLabel: "Kontakt",
-    muted: "Südtirol, Italien · 39100",
-    location: "Südtirol, Italien",
+    muted: "39100 Bozen · Südtirol, Italien",
+    location: "Bozen, Südtirol",
     madeWith: "Mit Sorgfalt gemacht",
     whatsapp: "WhatsApp",
     email: "E-Mail",

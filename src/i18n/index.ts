@@ -43,8 +43,9 @@ export function getLangFromUrl(url: URL): Lang {
 export function localePath(lang: Lang, path: string): string {
   if (lang === defaultLang) return path;
   const prefix = `/${lang}`;
-  if (path === "/") return `${prefix}/`;
-  if (path.startsWith("/#")) return `${prefix}/${path.slice(1)}`; // /#x → /de/#x
+  // Niente slash finale (vercel.json → trailingSlash: false): /de, /de#x.
+  if (path === "/") return prefix;
+  if (path.startsWith("/#")) return `${prefix}${path.slice(1)}`; // /#x → /de#x
   return `${prefix}${path}`;
 }
 

@@ -1,5 +1,6 @@
 import StaggeredMenu from './StaggeredMenu.jsx';
 import { getDict, localePath, languages, langLabels, langNames, defaultLang } from '../../i18n';
+import { EMAIL, INSTAGRAM_URL } from '../../config/contact';
 
 /**
  * Menu del sito basato su StaggeredMenu (React Bits), adattato al brand e ora
@@ -36,7 +37,7 @@ export default function SiteMenu({ home = false, lang = defaultLang, route = '/'
   const socialItems = [
     {
       label: 'Instagram',
-      link: '#',
+      link: INSTAGRAM_URL,
       icon: (
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.6" />
@@ -68,7 +69,7 @@ export default function SiteMenu({ home = false, lang = defaultLang, route = '/'
   const extraPanelContent = (
     <>
       <span className="sm-panel-extra-label">{t.nav.write}</span>
-      <a href="mailto:hello@auralpdigital.com">hello@auralpdigital.com</a>
+      <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
       <span className="sm-panel-place">
         {place1}
         <br />

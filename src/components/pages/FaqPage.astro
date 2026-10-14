@@ -19,10 +19,10 @@ const { lang = defaultLang } = Astro.props;
 const t = getDict(lang);
 const f = t.faq;
 
-const metaTitle = `${f.title} | AuralpDigital`;
+const metaTitle = t.meta.faq.title;
 ---
 
-<BaseLayout lang={lang} title={metaTitle} description={f.subtitle}>
+<BaseLayout lang={lang} title={metaTitle} description={t.meta.faq.description}>
   <Navbar lang={lang} route="/faq" />
 
   <main class="faqpage">
@@ -41,6 +41,24 @@ const metaTitle = `${f.title} | AuralpDigital`;
         subtitle={f.subtitle}
         cta={{ text: f.cta.text, button: f.cta.button, href: localePath(lang, "/#contatti") }}
       />
+      <!-- Tutte le domande in HTML statico. L'esploratore sopra mostra una
+           categoria e una risposta alla volta (le altre arrivano solo al
+           click): così il testo completo resta nella pagina per Google e per
+           i motori AI, che spesso non eseguono JavaScript. È lo schema dei
+           pannelli a schede: contenuto nascosto finché non serve. -->
+      <div class="faq-all" hidden>
+        {f.categories.map((c) => (
+          <section>
+            <h2>{c.name}</h2>
+            {c.items.map((it) => (
+              <div>
+                <h3>{it.q}</h3>
+                <p>{it.a}</p>
+              </div>
+            ))}
+          </section>
+        ))}
+      </div>
     </section>
   </main>
 

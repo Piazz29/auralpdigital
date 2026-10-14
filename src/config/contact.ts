@@ -1,10 +1,15 @@
 // CONTATTI — unica fonte di verità per email e WhatsApp dello studio.
 // Li usano la navbar (PillNav), il form a passi della home e il footer.
 
-export const EMAIL = "hello@auralpdigital.com";
+export const EMAIL = "auralpdigital@outlook.com";
 
-// TODO: numero WhatsApp reale (formato internazionale, solo cifre).
-export const WHATSAPP_NUMBER = "390000000000";
+// Telefono in formato internazionale (E.164): lo usano i dati strutturati.
+export const PHONE = "+393483165843";
+
+// Numero WhatsApp (formato internazionale, solo cifre): lo stesso di PHONE.
+export const WHATSAPP_NUMBER = PHONE.replace(/\D/g, "");
+
+export const INSTAGRAM_URL = "https://www.instagram.com/auralpdigital/";
 
 // Endpoint per le prenotazioni della call (es. Formspree, Cal.com, una
 // funzione serverless). Vuoto = il sito è statico e la richiesta parte come
