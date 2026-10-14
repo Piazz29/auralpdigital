@@ -9,7 +9,7 @@
 // le stringhe localizzate da data-i18n.
 import type { Lang } from "../i18n";
 import { defaultLang, getDict } from "../i18n";
-import { EMAIL } from "../config/contact";
+import { EMAIL, whatsappHref } from "../config/contact";
 
 interface Props {
   lang?: Lang;
@@ -257,7 +257,7 @@ const i18n = {
         <span class="cflow-step-hint">{cf.direct.note}</span>
       </div>
       <div class="cflow-direct">
-        <a class="cflow-direct-btn cflow-direct-btn--wa" data-wa href="#" target="_blank" rel="noopener" style="--k:0">
+        <a class="cflow-direct-btn cflow-direct-btn--wa" data-wa href={whatsappHref()} target="_blank" rel="noopener" style="--k:0">
           <span class="cflow-direct-icon" set:html={svg("whatsapp", 28)} />
           <span class="cflow-direct-text">
             <span class="cflow-direct-label">{cf.direct.whatsapp}</span>

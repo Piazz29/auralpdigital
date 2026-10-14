@@ -4268,6 +4268,7 @@ nav:has(#burger-menu.is-open) .pill {
 }
 .footer-social-link--wa:hover { background: #25D366; border-color: #25D366; }
 .footer-social-link--mail:hover { background: #EA4335; border-color: #EA4335; }
+.footer-social-link--ig:hover { background: #D62976; border-color: #D62976; }
 .footer-social-link:focus-visible,
 .footer-top-link:focus-visible {
   outline: 2px solid var(--color-accent-soft);

@@ -1,18 +1,33 @@
 ---
 import type { Lang } from "../i18n";
-import { defaultLang, getDict } from "../i18n";
+import { defaultLang, getDict, languages } from "../i18n";
+import { baseRoute, jsonLd, localeUrl, ogLocale, siteOrigin } from "../lib/seo";
 
 interface Props {
   lang?: Lang;
   title?: string;
   description?: string;
+  /** Pagine da non indicizzare (404): niente canonical, hreflang né schema. */
+  noindex?: boolean;
+  /** false = niente loader iniziale (es. 404: si arriva da un link rotto). */
+  loader?: boolean;
 }
 
 const {
   lang = defaultLang,
   title = "AuralpDigital — Sistemi digitali che generano clienti",
   description = "Studio di crescita digitale in Alto Adige. Siti web premium, lead generation, campagne ads, brand & social, automazioni, AI integration.",
+  noindex = false,
+  loader = true,
 } = Astro.props;
+
+// SEO: URL canonico, alternative di lingua (hreflang), Open Graph, JSON-LD.
+const origin = siteOrigin(Astro.site);
+const route = baseRoute(Astro.url.pathname);
+const canonical = localeUrl(origin, lang, route);
+const ogImage = `${origin}/og/og-${lang}.png`;
+// `<` escapato: il JSON non può mai chiudere il tag <script> per errore.
+const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, title, description })).replace(/</g, "\\u003c");
 ---
 
 <!doctype html>
@@ -21,6 +36,43 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    {noindex ? (
+      <meta name="robots" content="noindex, follow" />
+    ) : (
+      <>
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+        <link rel="canonical" href={canonical} />
+        {languages.map((l) => <link rel="alternate" hreflang={l} href={localeUrl(origin, l, route)} />)}
+        <link rel="alternate" hreflang="x-default" href={localeUrl(origin, defaultLang, route)} />
+      </>
+    )}
+    <meta name="author" content="AuralpDigital" />
+    <meta name="theme-color" content="#FEFDEC" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <!-- Open Graph / anteprime social (WhatsApp, LinkedIn, Facebook, X). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AuralpDigital" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={ogLocale[lang]} />
+    {languages.filter((l) => l !== lang).map((l) => <meta property="og:locale:alternate" content={ogLocale[l]} />)}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="geo.region" content="IT-BZ" />
+    <meta name="geo.placename" content="Bolzano" />
+    <meta name="geo.position" content="46.4983;11.3548" />
+    <meta name="ICBM" content="46.4983, 11.3548" />
+    {schema && <script type="application/ld+json" set:html={schema} />}
     <!-- La wordmark è nel loader: preload così è lì dal primo frame. -->
     <link rel="preload" as="image" href="/logo/wordmark.svg" type="image/svg+xml" />
     <!-- Sistema tipografico: Satoshi (Fontshare, licenza ITF FFL) su tutto il
@@ -180,6 +232,7 @@ const {
     <!-- First-load loader: wordmark del brand (colori identici al logo SVG) e,
          sotto, un loader 3D a cuboide. Primo figlio del body così copre tutto
          fin da subito; rimosso dallo script dopo un minimo di 3s. -->
+{loader && (
     <div id="apd-loader" class="apd-loader" role="presentation" aria-hidden="true">
       <div class="apd-loader-inner">
         <img
@@ -212,6 +265,7 @@ const {
         </div>
       </div>
     </div>
+    )}
 
 
     <!-- Transizione tra pagine: le due fasce blu del vecchio menu. Restano

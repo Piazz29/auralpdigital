@@ -5,7 +5,7 @@
 // in home vive DENTRO .finale, sotto il form, e ne eredita il fondo.
 import type { Lang } from "../i18n";
 import { defaultLang, getDict, localePath } from "../i18n";
-import { EMAIL, mailHref, whatsappHref } from "../config/contact";
+import { EMAIL, INSTAGRAM_URL, mailHref, whatsappHref } from "../config/contact";
 import Rich from "./Rich.astro";
 
 interface Props {
@@ -56,6 +56,13 @@ const year = new Date().getFullYear();
               <path d="M5 20h3v-16h-3a1 1 0 0 0 -1 1v14a1 1 0 0 0 1 1" />
               <path d="M16 4l-4 4l-4 -4" />
               <path d="M4 6.5l8 7.5l8 -7.5" />
+            </svg>
+          </a>
+          <a href={INSTAGRAM_URL} class="footer-social-link footer-social-link--ig" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="4" width="16" height="16" rx="4.5" />
+              <circle cx="12" cy="12" r="3.6" />
+              <path d="M16.6 7.4v.01" />
             </svg>
           </a>
         </div>

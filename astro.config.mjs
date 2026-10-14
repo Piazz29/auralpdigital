@@ -4,6 +4,12 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 
 export default defineConfig({
+  // Origine canonica: la usano canonical, hreflang, Open Graph, JSON-LD,
+  // sitemap, robots e llms.txt (src/lib/seo.ts). Quando si collega il dominio
+  // definitivo basta cambiare QUESTA riga (e il valore di
+  // Access-Control-Allow-Origin in vercel.json).
+  site: 'https://auralpdigital.vercel.app',
+
   // i18n: l'italiano è la lingua base e resta alla root (nessun prefisso /it).
   // Tedesco e inglese vivono sotto /de e /en. prefixDefaultLocale=false mantiene
   // gli URL italiani invariati (/ e /chi-siamo).
