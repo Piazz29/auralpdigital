@@ -5449,8 +5449,8 @@ nav:has(#burger-menu.is-open) .pill {
 
 /* =========================================================================
    FIRST-LOAD LOADER — schermata di caricamento solo alla prima entrata della
-   sessione. Notte navy, "Costruiamo" fisso e le parole del lavoro che
-   scorrono in ambra. Resta visibile per un minimo di 3s. Lo script
+   sessione. Su carta: quattro cubi isometrici blu che si scambiano di posto
+   e sotto la wordmark. Resta visibile per un minimo di 3s. Lo script
    scripts/loader.ts gestisce l'uscita e imposta sessionStorage['apd:loaded'];
    lo script inline in <head> decide skip vs loading prima del render.
    ========================================================================= */
@@ -5554,68 +5554,113 @@ html.apd-skip-loader #apd-loader {
   align-items: center;
   justify-content: center;
   padding: 0 24px;
-  background:
-    radial-gradient(60% 50% at 50% 50%, rgba(39, 72, 165, 0.32), transparent 70%),
-    var(--color-navy-deep);
+  background: var(--color-bg);
   /* L'animazione di uscita usa autoAlpha + y; evita ripaint pesanti. */
   will-change: opacity, transform;
 }
-
-/* "Costruiamo" fisso + parola che sale: carta smorzata e ambra (l'accento
-   caldo sullo scuro), corsivo vero come gli accenti dei titoli. */
-.apd-words-loader {
+.apd-loader-inner {
   display: flex;
-  box-sizing: content-box;
-  height: 1.6em;
-  padding: 10px;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(24px, 3.2vw, 40px);
-  letter-spacing: -0.02em;
-  color: rgba(254, 253, 236, 0.62);
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(36px, 6vh, 56px);
   animation: apd-loader-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.apd-words-loader p {
-  margin: 0;
-  line-height: 1.6em;
-}
-/* Sfumatura alto/basso come MASCHERA, non come velo colorato sopra: sul
-   bagliore radiale del fondo un velo pieno si vedeva come un riquadro. */
-.apd-words {
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(transparent 4%, #000 24%, #000 80%, transparent 98%);
-  mask-image: linear-gradient(transparent 4%, #000 24%, #000 80%, transparent 98%);
-}
-.apd-word {
+.apd-mark-img {
   display: block;
-  height: 100%;
-  padding-left: 0.28em;
-  line-height: 1.6em;
-  font-style: italic;
-  white-space: nowrap;
-  color: var(--color-amber);
-  animation: apd-word-spin 4s infinite;
+  width: clamp(190px, 46vw, 320px);
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 @keyframes apd-loader-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
-/* Ogni scatto supera di un filo (-102%) e si riassesta (-100%). */
-@keyframes apd-word-spin {
-  10% { transform: translateY(-102%); }
-  25% { transform: translateY(-100%); }
-  35% { transform: translateY(-202%); }
-  50% { transform: translateY(-200%); }
-  60% { transform: translateY(-302%); }
-  75% { transform: translateY(-300%); }
-  85% { transform: translateY(-402%); }
-  100% { transform: translateY(-400%); }
+
+/* ---- Quattro cubi isometrici che si scambiano di posto ------------------
+   Facce nella famiglia SHADOW: cima chiara, fianco navy, fronte blu pieno;
+   la quarta faccia, spinta in basso, è l'ombra a terra (crema profonda).
+   preserve-3d resta confinato qui dentro. */
+.apd-boxes {
+  --size: clamp(36px, 4vw, 44px);
+  --duration: 800ms;
+  position: relative;
+  width: calc(var(--size) * 3);
+  height: calc(var(--size) * 2);
+  /* L'ombra a terra (4ª faccia, a -3×size) proietta ~2.5×size sotto i
+     cubi fuori dal box: il margine le fa posto prima della wordmark. */
+  margin-bottom: calc(var(--size) * 2.4);
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  transform: rotateX(60deg) rotateZ(45deg) rotateY(0deg) translateZ(0px);
+}
+.apd-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--size);
+  height: var(--size);
+  transform-style: preserve-3d;
+}
+.apd-box:nth-child(1) { transform: translate(100%, 0); animation: apd-box1 var(--duration) linear infinite; }
+.apd-box:nth-child(2) { transform: translate(0, 100%); animation: apd-box2 var(--duration) linear infinite; }
+.apd-box:nth-child(3) { transform: translate(100%, 100%); animation: apd-box3 var(--duration) linear infinite; }
+.apd-box:nth-child(4) { transform: translate(200%, 0); animation: apd-box4 var(--duration) linear infinite; }
+.apd-box > div {
+  --background: #5175DB;
+  --top: auto;
+  --right: auto;
+  --bottom: auto;
+  --left: auto;
+  --translateZ: calc(var(--size) / 2);
+  --rotateY: 0deg;
+  --rotateX: 0deg;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: var(--top);
+  right: var(--right);
+  bottom: var(--bottom);
+  left: var(--left);
+  background: var(--background);
+  transform: rotateY(var(--rotateY)) rotateX(var(--rotateX)) translateZ(var(--translateZ));
+}
+.apd-box > div:nth-child(1) { --top: 0; --left: 0; }
+.apd-box > div:nth-child(2) { --background: var(--color-navy); --right: 0; --rotateY: 90deg; }
+.apd-box > div:nth-child(3) { --background: #2748A5; --rotateX: -90deg; }
+.apd-box > div:nth-child(4) {
+  --background: #ECE9D2;
+  --top: 0;
+  --left: 0;
+  --translateZ: calc(var(--size) * 3 * -1);
+}
+/* Un cubo EMBER fra i blu: la brace, l'accento caldo del brand. */
+.apd-box:nth-child(4) > div:nth-child(1) { --background: #F2913F; }
+.apd-box:nth-child(4) > div:nth-child(2) { --background: #A83202; }
+.apd-box:nth-child(4) > div:nth-child(3) { --background: #D84002; }
+@keyframes apd-box1 {
+  0%, 50% { transform: translate(100%, 0); }
+  100% { transform: translate(200%, 0); }
+}
+@keyframes apd-box2 {
+  0% { transform: translate(0, 100%); }
+  50% { transform: translate(0, 0); }
+  100% { transform: translate(100%, 0); }
+}
+@keyframes apd-box3 {
+  0%, 50% { transform: translate(100%, 100%); }
+  100% { transform: translate(0, 100%); }
+}
+@keyframes apd-box4 {
+  0% { transform: translate(200%, 0); }
+  50% { transform: translate(200%, 100%); }
+  100% { transform: translate(100%, 100%); }
 }
 
-/* Reduced-motion: niente scorrimento, resta la prima parola. */
+/* Reduced-motion: cubi fermi, resta la composizione. */
 @media (prefers-reduced-motion: reduce) {
-  .apd-words-loader,
-  .apd-word {
+  .apd-loader-inner,
+  .apd-box {
     animation: none;
   }
 }

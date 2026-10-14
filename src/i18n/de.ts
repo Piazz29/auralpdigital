@@ -372,11 +372,6 @@ const de = {
     },
   },
 
-  // Loader beim ersten Aufruf: "Wir bauen" + rotierende Wörter.
-  loader: {
-    lead: "Wir bauen",
-    words: ["Websites", "Social Media", "Software", "Systeme"],
-  },
   footer: {
     tagline: "Websites, Social Media und Software,\nentwickelt in Südtirol.",
     menuLabel: "Menü",
