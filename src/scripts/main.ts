@@ -2096,12 +2096,16 @@ if (aboutPage) {
     // per ultimo l'evidenziatore sotto "un'agenzia intera".
     const words = SplitText.create(statement, { type: "words" }).words;
     const em = statement.querySelectorAll("em");
+    // Stato spento impostato una volta sola e tween in `to`: con un fromTo,
+    // ai refresh di ScrollTrigger le parole non ancora raggiunte tornavano
+    // piene, e arrivandoci si spegnevano e riaccendevano (sembrava un lag).
     gsap.set(em, { "--hl": 0 });
+    gsap.set(words, { opacity: 0.13 });
     gsap
       .timeline({
         scrollTrigger: { trigger: statement, start: "top 85%", end: "bottom 58%", scrub: SCRUB },
       })
-      .fromTo(words, { opacity: 0.13 }, { opacity: 1, duration: 0.3, stagger: 0.12, ease: "none" })
+      .to(words, { opacity: 1, duration: 0.3, stagger: 0.12, ease: "none" })
       .to(em, { "--hl": 1, duration: 0.6, ease: "power2.out" });
   }
   aboutPage.querySelectorAll<HTMLElement>("[data-ap-fact]").forEach((fact, i) => {
