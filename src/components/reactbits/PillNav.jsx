@@ -60,8 +60,7 @@ export default function PillNav({ home = false, lang = defaultLang, route = '/' 
   const sections = [
     { key: 'projects', label: t.nav.items.projects, aria: t.nav.aria.projects, href: anchor('projects') },
     { key: 'services', label: t.nav.items.services, aria: t.nav.aria.services, href: anchor('cosa-facciamo') },
-    // Il metodo vive in /chi-siamo: da lì è un'ancora, altrove porta alla pagina.
-    { key: 'method', label: t.nav.items.method, aria: t.nav.aria.method, href: route === '/chi-siamo' ? '#come-lavoriamo' : `${localePath(lang, '/chi-siamo')}#come-lavoriamo` },
+    { key: 'method', label: t.nav.items.method, aria: t.nav.aria.method, href: anchor('come-lavoriamo') },
     { key: 'about', label: t.nav.items.about, aria: t.nav.aria.about, href: localePath(lang, '/chi-siamo') }
   ];
   const bigItems = [

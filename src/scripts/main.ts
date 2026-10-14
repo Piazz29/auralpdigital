@@ -47,14 +47,31 @@ const SCRUB_LERP = 1 - Math.exp(-1 / (60 * (SCRUB / 2)));
 
 // ---------- Lenis smooth scroll ----------
 const lenis = new Lenis({
-  // Checkpoint di scroll: vicino a un [data-scroll-detent] la rotella fa
-  // resistenza (vedi "Checkpoint di scroll" sotto). Solo per l'input utente,
-  // mai durante uno scroll programmato.
+  // Fermate di scroll: vicino a una fermata la rotella fa resistenza e una
+  // scrollata non la scavalca; su touch lo swipe lanciato si posa sulla
+  // prossima fermata (vedi "Fermate di scroll" sotto). Solo per l'input
+  // utente, mai durante uno scroll programmato.
   virtualScroll: (data) => {
     if (!lenis || lenis.isLocked || isTravelling()) return true;
-    const f = detentFactor(lenis.targetScroll);
-    data.deltaY *= f;
-    if (data.event.type === "wheel") hardGate(data);
+    const type = data.event.type;
+    // Un evento "trattenuto" (pagina ferma su una fermata) va anche tolto al
+    // browser: con delta 0 Lenis lo ignorerebbe senza preventDefault e lo
+    // scroll nativo lo eseguirebbe lo stesso.
+    const swallow = () => {
+      if (data.event.cancelable) data.event.preventDefault();
+      return false;
+    };
+    if (type === "wheel") {
+      const raw = data.deltaY;
+      data.deltaY *= detentFactor(lenis.targetScroll);
+      if (stopGate(data, raw)) return swallow();
+    } else if (type === "touchmove") {
+      if (touchGate(data)) return swallow();
+    } else if (type === "touchend") {
+      return touchLanding(data.deltaY);
+    } else if (type === "touchstart") {
+      touchHeld = NaN;
+    }
     return true;
   },
   // Modalità LERP (smorzamento esponenziale), NON `duration` fissa: con una
@@ -67,6 +84,13 @@ const lenis = new Lenis({
   // `duration` esplicita a scrollTo e restano a tempo.)
   lerp: 0.075,
   smoothWheel: true,
+  // Anche il touch passa da Lenis: con lo scroll nativo lo slancio di uno
+  // swipe non si può fermare e le fermate su telefono venivano scavalcate
+  // (le tappe del Percorso passavano prima che l'animazione partisse). Il
+  // dito resta 1:1 (lerp 1 durante il trascinamento), lo slancio decelera
+  // con lo stesso smorzamento della rotella.
+  syncTouch: true,
+  syncTouchLerp: 0.075,
 });
 
 lenis.on("scroll", ScrollTrigger.update);
@@ -148,61 +172,129 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// ---------- Checkpoint di scroll ("fermi") ----------
-// Ogni elemento [data-scroll-detent] è un checkpoint: la posizione di scroll
-// che lo porta in cima al viewport. Vicino a un checkpoint la rotella fa
-// RESISTENZA (il delta viene smorzato, al massimo proprio sul punto) e quando
-// lo scroll si ferma lì vicino la pagina si POSA da sola sul punto esatto —
-// così non serve dosare lo scroll al pixel per arrivare a una tappa.
-// Le posizioni si rileggono a ogni refresh di ScrollTrigger e quando un'isola
-// le ri-misura (evento "apd:detents").
+// ---------- Fermate di scroll ----------
+// UNA regola per tutto il sito: ogni sezione e ogni passo di una sezione
+// (le righe del Punto, le tappe del Percorso, le fasi di Come lavoriamo, le
+// card del duo su telefono…) è una FERMATA, e tutte si comportano allo stesso
+// modo:
+//   - rotella/trackpad: vicino alla fermata lo scroll fa resistenza e un
+//     colpo che la attraverserebbe si ferma esattamente lì; per proseguire
+//     serve un nuovo gesto (una pausa nella rotella) o tenerla ancora un po';
+//   - touch: lo swipe lanciato si posa sulla prossima fermata invece di
+//     scavalcarla; il trascinamento col dito resta libero;
+//   - da fermi, vicino a una fermata, la pagina ci si posa da sola.
+// Così nessun passo si perde, a qualunque velocità si scorra.
+// Le fermate sono gli elementi [data-scroll-detent] (la posizione di scroll
+// che li porta in cima al viewport) più le posizioni calcolate in
+// `extraDetents` (passi dentro un pin). Si rileggono a ogni refresh di
+// ScrollTrigger e quando un'isola le ri-misura (evento "apd:detents").
+// I Servizi hanno la loro regia a scatti (una scrollata = una scena), che è
+// la stessa regola applicata dentro al pin.
 let detentYs: number[] = [];
-let hardYs: number[] = [];
-const readDetents = () => {
-  const ys = (sel: string) =>
-    Array.from(document.querySelectorAll<HTMLElement>(sel))
-      .map((el) => Math.round(el.getBoundingClientRect().top + lenis.scroll))
-      .sort((a, b) => a - b);
-  detentYs = [...ys("[data-scroll-detent]"), ...extraDetents.map((f) => Math.round(f()))].sort((a, b) => a - b);
-  hardYs = ys('[data-scroll-detent="hard"]');
-};
-// Checkpoint che non corrispondono alla cima di un elemento (es. l'inizio
-// di un pin che inquadra una card): funzioni che restituiscono la posizione.
 const extraDetents: (() => number)[] = [];
+// Posizione dal LAYOUT (catena di offsetTop), non da getBoundingClientRect:
+// alcune fermate stanno dentro elementi animati in transform (il foglio dei
+// contatti che sale) e misurate a metà animazione finivano spostate.
+const layoutTop = (el: HTMLElement) => {
+  let y = 0;
+  for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null) y += n.offsetTop;
+  return y;
+};
+const readDetents = () => {
+  const ys = Array.from(document.querySelectorAll<HTMLElement>("[data-scroll-detent]")).map((el) =>
+    Math.round(layoutTop(el))
+  );
+  detentYs = [...ys, ...extraDetents.map((f) => Math.round(f()))].sort((a, b) => a - b);
+};
 
-// Checkpoint "duri" (data-scroll-detent="hard", le fasi di Come lavoriamo):
-// uno scroll profondo NON li scavalca. Il colpo di rotella che li
-// attraverserebbe si ferma esattamente sul punto; per proseguire serve un
-// nuovo gesto (una pausa nella rotella) o tenere la rotella ancora un po'.
-// Così ogni tappa si vede anche con un'unica, lunga spinta del trackpad.
-const HARD_QUIET_MS = 140; // pausa che conta come "nuovo gesto"
-const HARD_HOLD_MS = 1000; // rotella sempre in moto: valvola, si riparte dopo
+// Prima fermata attraversata andando da `from` a `to` (NaN se nessuna). La
+// fermata su cui si è già posati non conta: da lì si riparte.
+const crossedStop = (from: number, to: number) => {
+  if (to > from) {
+    for (const d of detentYs) if (from < d - 1 && to > d) return d;
+  } else {
+    for (let i = detentYs.length - 1; i >= 0; i--) {
+      const d = detentYs[i];
+      if (from > d + 1 && to < d) return d;
+    }
+  }
+  return NaN;
+};
+
+const STOP_QUIET_MS = 140; // pausa della rotella che conta come "nuovo gesto"
+// Un nuovo gesto si riconosce anche senza pausa: la coda d'inerzia del
+// trackpad ha delta che si spengono e basta, una spinta nuova li fa
+// RISALIRE. Finché i delta calano la pagina resta ferma sulla fermata
+// (prima una valvola a tempo si apriva durante l'inerzia e la fermata
+// veniva superata lo stesso). STOP_HOLD_MS resta solo come sicurezza.
+const STOP_HOLD_MS = 2200;
 let gateY = NaN;
 let gateSince = 0;
 let lastWheelAt = 0;
-const hardGate = (data: { deltaY: number }) => {
+let lastRaw = 0;
+const stopGate = (data: { deltaY: number }, raw: number): boolean => {
   const now = performance.now();
-  const quiet = now - lastWheelAt > HARD_QUIET_MS;
+  const quiet = now - lastWheelAt > STOP_QUIET_MS;
+  const rising = Math.abs(raw) > Math.abs(lastRaw) * 1.3 + 2 && now - gateSince > 200;
   lastWheelAt = now;
+  lastRaw = raw;
   const t = lenis.targetScroll;
   if (!isNaN(gateY)) {
-    if (Math.abs(t - gateY) < 2 && !quiet && now - gateSince < HARD_HOLD_MS) {
-      data.deltaY = 0;
-      return;
-    }
+    const fresh = quiet || rising || now - gateSince > STOP_HOLD_MS;
+    if (Math.abs(t - gateY) < 2 && !fresh) return true;
     gateY = NaN;
   }
-  const next = t + data.deltaY;
-  for (const d of data.deltaY > 0 ? hardYs : [...hardYs].reverse()) {
-    const crosses = data.deltaY > 0 ? t < d - 1 && next > d : t > d + 1 && next < d;
-    if (crosses) {
-      data.deltaY = d - t;
-      gateY = d;
-      gateSince = now;
-      return;
-    }
+  const d = crossedStop(t, t + data.deltaY);
+  if (!isNaN(d)) {
+    data.deltaY = d - t;
+    gateY = d;
+    gateSince = now;
   }
+  return Math.abs(data.deltaY) < 0.5;
 };
+
+// Touch, stessa regola: un gesto supera al massimo una fermata. Se il dito
+// la attraversa trascinando, la pagina si ferma lì finché il dito non si
+// alza (o dopo TOUCH_HOLD_MS di trascinamento continuo).
+const TOUCH_HOLD_MS = 1000;
+let touchHeld = NaN;
+let touchHeldSince = 0;
+const touchGate = (data: { deltaY: number }): boolean => {
+  const now = performance.now();
+  const t = lenis.targetScroll;
+  if (!isNaN(touchHeld)) {
+    if (now - touchHeldSince < TOUCH_HOLD_MS) return true;
+    touchHeld = NaN;
+    return false;
+  }
+  const d = crossedStop(t, t + data.deltaY);
+  if (!isNaN(d)) {
+    data.deltaY = d - t;
+    touchHeld = d;
+    touchHeldSince = now;
+  }
+  return Math.abs(data.deltaY) < 0.5;
+};
+
+// Swipe lanciato: Lenis calcola lo slancio dalla velocità (|v|^1.7, vedi
+// touchInertiaExponent). Se la corsa scavalcherebbe una fermata, la corsa
+// finisce lì, con la stessa decelerazione. Se il gesto si è già fermato su
+// una fermata, niente slancio: si riparte col gesto dopo.
+const touchLanding = (dir: number) => {
+  if (!isNaN(touchHeld)) {
+    touchHeld = NaN;
+    return false;
+  }
+  const v = lenis.velocity;
+  if (Math.abs(v) < 0.5) return true;
+  const sign = Math.sign(dir || v);
+  const t = lenis.targetScroll;
+  const d = crossedStop(t, t + sign * Math.abs(v) ** 1.7);
+  if (isNaN(d)) return true;
+  lenis.scrollTo(d, { programmatic: false, lerp: 0.075 });
+  return false;
+};
+
 const nearestDetent = (y: number) => {
   let best = NaN;
   for (const d of detentYs) if (isNaN(best) || Math.abs(d - y) < Math.abs(best - y)) best = d;
@@ -234,8 +326,8 @@ const settleOnDetent = () => {
     const y = lenis.scroll;
     const d = nearestDetent(y);
     const dist = Math.abs(d - y);
-    // In avanti (nel verso dello scroll) ci si posa da più lontano; un
-    // checkpoint appena superato richiama indietro solo se è vicinissimo.
+    // In avanti (nel verso dello scroll) ci si posa da più lontano; una
+    // fermata appena superata richiama indietro solo se è vicinissima.
     const ahead = Math.sign(d - y) === lastDir;
     const reach = window.innerHeight * (ahead ? DETENT_SNAP : DETENT_SNAP * 0.4);
     if (isNaN(d) || dist < 2 || dist > reach) return;
@@ -1491,6 +1583,19 @@ if (
     refreshPriority: 4,
   });
 
+  // Fermate dentro al pin (vedi "Fermate di scroll"): il lead al centro,
+  // ogni riga del problema completa (riga, evidenziatore e notifica), la
+  // svolta chiusa dalla notifica "ok".
+  const pointStops = [
+    0,
+    ...items.map((_, i) => 1.55 + i * 1.05 + 1),
+    riseAt + (ok ? 2.15 : 1.65),
+  ];
+  pointStops.forEach((t) =>
+    extraDetents.push(() => pointPin.start + (pointPin.end - pointPin.start) * (t / tl.duration()))
+  );
+  readDetents();
+
   // ---- 3. Uscita, a pin finito ----
   gsap.fromTo(
     pointTurn,
@@ -1659,42 +1764,9 @@ if (deck) {
   }
 }
 
-// ---------- Progetti — sosta a mazzo aperto ----------
-// Come le sezioni prima: arrivati col mazzo aperto la scena si FERMA un
-// attimo (pin di mezza schermata) invece di scivolare via subito. L'arrivo
-// lo ammortizza il checkpoint [data-scroll-detent] messo appena prima della
-// sezione (stessa Y dell'inizio del pin).
-if (!staticScenes && isHome && document.querySelector("#projects")) {
-  ScrollTrigger.create({
-    trigger: "#projects",
-    start: "top top",
-    end: () => "+=" + Math.round(window.innerHeight * 0.55),
-    pin: true,
-    invalidateOnRefresh: true,
-    // Dopo Servizi (3), prima di chi-siamo (1): lo spacer a valle legge
-    // posizioni già spostate.
-    refreshPriority: 2,
-  });
-}
-
-// ---------- Contatti — sosta sul form ----------
-// Come per i Progetti: arrivati allo schermo dei contatti (titolo + card, alto
-// 100svh) la pagina si FERMA un attimo prima di lasciar salire il footer.
-// Solo desktop: su mobile lo schermo è più alto del viewport e va scorso.
-if (!reduceMotion && isHome && window.matchMedia("(min-width: 961px)").matches) {
-  const screen = document.querySelector<HTMLElement>(".finale-screen");
-  if (screen) {
-    ScrollTrigger.create({
-      trigger: screen,
-      start: "top top",
-      end: () => "+=" + Math.round(window.innerHeight * 0.6),
-      pin: true,
-      invalidateOnRefresh: true,
-      // dopo tutti i pin più in alto (Progetti = 2)
-      refreshPriority: 0,
-    });
-  }
-}
+// (Progetti e Contatti non hanno più un pin di "sosta": la fermata in cima
+// alla sezione — [data-scroll-detent] in HomePage.astro — li ferma come ogni
+// altra sezione, senza scroll a vuoto dopo.)
 
 // ---------- Chi Siamo — i nomi del duo ----------
 // I nomi entrano dalla maschera parola per parola — stesso linguaggio dei
@@ -1842,7 +1914,7 @@ if (
 // ---------- Pagina /chi-siamo ----------
 // Hero "dietro i pixel" (ritratti a tessere + lente), manifesto che si
 // accende con lo scroll, card del duo che si mettono a fuoco. Le coreografie
-// condivise (CTA, footer, Percorso, Come lavoriamo) restano più sotto.
+// condivise (CTA, footer, Percorso) restano più sotto.
 const aboutPage = document.querySelector<HTMLElement>(".aboutpage");
 if (aboutPage) {
   // Le entrate della hero partono quando il loader se n'è andato (o subito,
@@ -2124,79 +2196,27 @@ if (aboutPage) {
     }
   });
 
-  // Sezioni da una schermata (manifesto, duo, CTA): oltre al checkpoint
-  // [data-scroll-detent] in cima, una breve sosta pinnata come il form in
-  // home: arrivi, la sezione si ferma un attimo, poi si riparte. Solo su
-  // desktop e solo se la sezione ci sta davvero in altezza.
-  if (!reduceMotion && window.matchMedia("(min-width: 961px)").matches) {
-    aboutPage.querySelectorAll<HTMLElement>("[data-ap-hold]").forEach((sec, i, all) => {
-      if (sec.offsetHeight > window.innerHeight + 4) return;
-      ScrollTrigger.create({
-        trigger: sec,
-        start: "top top",
-        end: () => "+=" + Math.round(window.innerHeight * 0.5),
-        pin: true,
-        invalidateOnRefresh: true,
-        // dall'alto in basso: i pin più in alto si misurano per primi
-        refreshPriority: all.length - i,
-      });
-    });
-  }
-
-  // Il duo su telefono: ogni card è alta una schermata. Arrivati sulla card
-  // la pagina si posa da sola (checkpoint) e la card resta ferma un attimo
-  // (pin breve), così la si legge intera prima di passare all'altra.
+  // Il duo su telefono: ogni card è alta una schermata e ognuna è una
+  // fermata, posata al centro del viewport: la si legge intera prima di
+  // passare all'altra. Finché la card occupa la scena la pillola resta
+  // ritirata (copriva il chip in cima alla card).
   if (!staticScenes && window.matchMedia("(max-width: 559px)").matches) {
     aboutPage.querySelectorAll<HTMLElement>("[data-ap-card-slot]").forEach((slot) => {
-      // Si ferma il contenitore, non la card: la card ha già il suo y
-      // d'entrata e i due transform si pesterebbero i piedi.
-      const st = ScrollTrigger.create({
+      extraDetents.push(
+        () =>
+          slot.getBoundingClientRect().top +
+          lenis.scroll -
+          Math.max(0, Math.round((window.innerHeight - slot.offsetHeight) / 2))
+      );
+      ScrollTrigger.create({
         trigger: slot,
-        start: () => `top ${Math.max(0, Math.round((window.innerHeight - slot.offsetHeight) / 2))}`,
-        end: () => "+=" + Math.round(window.innerHeight * 0.32),
-        pin: true,
-        invalidateOnRefresh: true,
+        start: "top 40%",
+        end: "bottom 60%",
         onToggle: (self) =>
           window.dispatchEvent(new CustomEvent("pillnav:hush", { detail: { on: self.isActive } })),
       });
-      extraDetents.push(() => st.start);
     });
     readDetents();
-  }
-
-  // Come lavoriamo — la copy (kicker/titolo/lead) sale in cascata quando la
-  // sezione entra: aggancia visivamente il Percorso al blocco finale.
-  revealRise(aboutPage.querySelectorAll(".ap-flow-copy > *"), {
-    trigger: ".ap-flow",
-    start: "top 76%",
-    stagger: 0.12,
-    y: 34,
-    duration: 0.9,
-  });
-
-  // Come lavoriamo — le card bento salgono in cascata; lo spotlight segue il
-  // cursore aggiornando due var CSS (il gradient lo disegna la GPU).
-  const flowCards = aboutPage.querySelectorAll<HTMLElement>("[data-flow-card]");
-  if (flowCards.length) {
-    revealRise(flowCards, {
-      trigger: ".ap-flow-grid",
-      start: "top 82%",
-      stagger: 0.12,
-      y: 56,
-      duration: 1,
-    });
-
-    if (!reduceMotion && window.matchMedia("(min-width: 769px)").matches) {
-      flowCards.forEach((card) => {
-        const spot = card.querySelector<HTMLElement>(".flow-card-spot");
-        if (!spot) return;
-        card.addEventListener("mousemove", (e) => {
-          const r = card.getBoundingClientRect();
-          spot.style.setProperty("--mx", `${e.clientX - r.left}px`);
-          spot.style.setProperty("--my", `${e.clientY - r.top}px`);
-        });
-      });
-    }
   }
 }
 
@@ -2294,7 +2314,7 @@ initContactFlow({
 });
 
 // ---------- Ancora all'arrivo da un'altra pagina ----------
-// Un link tipo /chi-siamo#come-lavoriamo: il browser salta all'ancora prima
+// Un link tipo /#come-lavoriamo: il browser salta all'ancora prima
 // che i pin aggiungano i loro spacer, quindi atterra nel punto sbagliato. Si
 // riparte da capo e, a layout completo (font, immagini, refresh dei trigger),
 // si va all'ancora di colpo.

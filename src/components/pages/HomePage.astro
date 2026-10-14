@@ -14,6 +14,7 @@ import ContactReply from "../ContactReply.astro";
 import Rich from "../Rich.astro";
 import ServicesSwap from "../ServicesSwap.astro";
 import ProjectsShowcase from "../ProjectsShowcase.astro";
+import MethodRoom from "../MethodRoom.astro";
 import { Picture } from "astro:assets";
 import sciliarBw from "../../assets/point/sciliar-bw.png";
 import "../../styles/global.css";
@@ -222,19 +223,25 @@ const t = getDict(lang);
        Mazzo di 4 carte impilate al centro che si sparpagliano sullo schermo
        scoprendo il titolo: due siti online, un "coming soon" e lo slot
        "+ crea il tuo progetto". -->
-  <!-- Checkpoint (main.ts): la rotella frena e la pagina si posa qui, col
-       mazzo appena aperto; poi la sezione resta ferma un attimo (pin). -->
+  <!-- Fermata di scroll (main.ts): la pagina si ferma qui, col mazzo appena
+       aperto. -->
   <span class="projects-detent" data-scroll-detent aria-hidden="true"></span>
   <section id="projects" class="projects-section">
     <ProjectsShowcase copy={t.home.projects} />
   </section>
+
+  <!-- SECTION — COME LAVORIAMO
+       Il metodo in 4 fasi raccontato costruendo un sito di esempio: dopo i
+       progetti risponde a "e adesso cosa succede?" prima del form. Ogni fase
+       è una fermata di scroll (MethodRoom.astro). -->
+  <MethodRoom lang={lang} flow={t.home.flow} />
 
   <!-- FINALE — contatti e footer sono un blocco solo: un foglio navy che
        sale sulla carta. In alto l'invito + il form a passi, sotto il footer
        e, a chiudere la pagina, il wordmark gigante che emerge dal fondo. -->
   <div class="finale">
     <section id="contatti" class="finale-contact" data-anim="contact">
-      <!-- Checkpoint: la pagina si posa con lo schermo dei contatti intero. -->
+      <!-- Fermata: la pagina si ferma con lo schermo dei contatti intero. -->
       <span class="finale-detent" data-scroll-detent aria-hidden="true"></span>
       <div class="finale-screen">
         <header class="finale-head">

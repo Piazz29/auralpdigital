@@ -21,7 +21,7 @@
                           progetti, form). Blu deciso e saturo: fa da
                           contrappeso freddo alla brace, non da grigio.
      3. EMBER           → calore e azione: corsivi dei titoli nelle sezioni
-                          "calde", numerali, hairline dei kicker, hover dei
+                          "calde", numerali, cima dei kicker, hover dei
                           bottoni. Vive su superfici piccole (< 5% dell'area)
                           e sempre a piena intensità, mai slavato.
 
@@ -106,7 +106,7 @@
 
    TESTI (ovunque):   titolo = ink caldo · corpo = secondary · meta = muted.
                       Il CORSIVO dei titoli prende il dominante della sezione.
-   SEGNI RICORRENTI:  hairline dei kicker e numerali = sempre EMBER.
+   SEGNI RICORRENTI:  cima dei kicker e numerali = sempre EMBER.
                       Bottoni primari: fondo ink, hover EMBER.
                       Focus, bordi attivi dei campi, link = sempre SHADOW.
 
@@ -116,6 +116,7 @@
      Cosa facciamo ..... SHADOW   (corsivi, torre isometrica) + numerali EMBER
      Progetti .......... EMBER    (parola-fondale, aloni, didascalie, puntini)
                                    su card navy/blu → contrasto complementare
+     Come lavoriamo .... EMBER    (fasi, cantiere del sito, palette provabile)
      Chi siamo ......... SHADOW   su carta base + video B/N (nessuna banda:
                                    il fondo non cambia mai tono in home)
      Contatti .......... AMBRA    su pannello scuro (aside blu, submit arancio)
@@ -126,7 +127,6 @@
      Manifesto ......... EMBER
      Il duo ............ SHADOW   (badge alternati caldo/freddo)
      Percorso .......... SHADOW→EMBER (la linea si scalda scendendo), anni arancio
-     Come lavoriamo .... AMBRA su pannello scuro
    /faq ................ SHADOW (interazione) + kicker e dots EMBER
    ====================================================================== */
 
@@ -546,21 +546,15 @@ button {
   );
 }
 
-/* Hero label — kicker essenziale: small caps tra due hairline accent,
-   niente pill. La leggibilità sul video la dà un alone warm leggero. */
+/* Hero label — kicker essenziale: small caps con la cima dei kicker davanti
+   (vedi .works-kicker), niente pill. La leggibilità sul video la dà un alone
+   warm leggero. */
 .hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   color: var(--color-ink);
   text-shadow: 0 1px 8px rgba(254, 253, 236, 0.9);
-}
-.hero-badge::before,
-.hero-badge::after {
-  content: "";
-  width: 28px;
-  height: 1px;
-  background: var(--color-orange);
 }
 
 /* Hero — link secondario accanto al pill: hairline essenziale, stesso
@@ -636,14 +630,16 @@ button {
   flex-direction: column;
   gap: 12px;
 }
-/* Kicker — etichetta editoriale: hairline accent d'accompagnamento + small
-   caps spaziato, niente numero progressivo (look sartoriale, non da template).
-   Il colore resta theme-aware (chiaro sulle sezioni scure via override). */
+/* Kicker — etichetta editoriale: small caps spaziato, preceduto da una
+   piccola CIMA (due vette, il segno di Auralp) al posto del classico
+   trattino. Disegnata con una maschera SVG: il colore è il `background`,
+   quindi le varianti per sezione cambiano solo quello. Il colore del testo
+   resta theme-aware (chiaro sulle sezioni scure via override). */
 .works-kicker {
   display: inline-flex;
   align-items: center;
   align-self: flex-start;
-  gap: 14px;
+  gap: 10px;
   margin-bottom: 1rem;
   font-family: var(--font-body);
   font-size: 0.75rem;
@@ -652,17 +648,25 @@ button {
   text-transform: uppercase;
   color: var(--color-text-secondary);
 }
-/* La hairline del kicker è SEMPRE arancio: è il segno caldo ricorrente che
+/* La cima del kicker è SEMPRE arancio: è il segno caldo ricorrente che
    attraversa tutta la pagina, qualunque sia il colore dominante della sezione. */
-.works-kicker::before {
+.works-kicker::before,
+.hero-badge::before {
   content: "";
-  width: 28px;
-  height: 1px;
+  flex: none;
+  width: 15px;
+  height: 9px;
+  /* un filo sotto il centro: la base della vetta si allinea al piede del
+     maiuscoletto, come un segno di punteggiatura */
+  margin-top: -1px;
   background: var(--color-orange);
-  opacity: 0.9;
+  -webkit-mask: var(--kicker-peak) center / contain no-repeat;
+  mask: var(--kicker-peak) center / contain no-repeat;
 }
-/* Kicker senza il trattino accent davanti (Iniziamo, flow, CTA Chi Siamo). */
-.ap-flow-kicker::before,
+:root {
+  --kicker-peak: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 9'%3E%3Cpath d='M0 9 5.2 1.6a.6.6 0 0 1 1 0L8.6 5l1.5-2a.6.6 0 0 1 1 0L15 9Z'/%3E%3C/svg%3E");
+}
+/* Kicker senza il segno davanti (CTA Chi Siamo). */
 .about-cta-kicker::before {
   display: none;
 }
@@ -2060,32 +2064,31 @@ button {
   color: var(--color-ink);
   transform-origin: 50% 50%;
 }
+/* "Ma i clienti" — l'attacco della frase che le tre righe completano. Non
+   un'etichetta: un mezzo verso in corsivo, nel calore del problema, allineato
+   alla colonna del testo delle righe così si legge di seguito
+   ("Ma i clienti / ti scrivono in DM, / ti chiamano…"). */
 .point-but {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: clamp(26px, 5vh, 52px) 0 clamp(6px, 1.2vh, 12px);
-  font-size: 13px;
+  margin: clamp(26px, 5vh, 52px) 0 clamp(4px, 1vh, 10px);
+  padding-left: var(--point-num-col);
+  font-family: var(--font-display);
+  font-style: italic;
   font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-.point-but::before {
-  content: "";
-  width: 28px;
-  height: 1px;
-  background: var(--color-orange);
+  font-size: clamp(20px, 1.9vw, 30px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--color-orange-deep);
 }
 .point-list {
   margin: 0;
   padding: 0;
   list-style: none;
 }
+.point-pain { --point-num-col: clamp(34px, 4.4vw, 64px); }
 .point-item {
   position: relative;
   display: grid;
-  grid-template-columns: clamp(34px, 4.4vw, 64px) 1fr;
+  grid-template-columns: var(--point-num-col) 1fr;
   align-items: baseline;
   padding-block: clamp(12px, 2.2vh, 22px);
 }
@@ -2333,7 +2336,8 @@ button {
   .point-ping--1 { left: 4%; top: 11%; }
   .point-ping--2 { right: 3%; top: 17.5%; }
   .point-ping--3 { right: 6%; bottom: 6%; }
-  .point-item { grid-template-columns: 30px 1fr; }
+  .point-pain { --point-num-col: 30px; }
+  .point-but { font-size: clamp(18px, 5vw, 22px); }
   .point-item-text { font-size: clamp(22px, 6.4vw, 30px); }
   .point-turn { font-size: clamp(36px, 10.6vw, 56px); }
 }
@@ -2624,29 +2628,6 @@ button {
 }
 @media (max-width: 560px) {
   .founder-card { grid-column: span 12; }
-}
-
-/* ----------------------------------------------------------------------
-   SEPARATORE DI SEZIONE — hairline minimale al posto del vecchio marquee:
-   accenna soltanto la divisione tra le sezioni senza pesare. Resta l'hook
-   `.section-rule` letto da main.ts per il morph colore del canvas (homepage).
--------------------------------------------------------------------------- */
-.section-rule {
-  width: min(100%, 110rem);
-  height: 0;
-  margin: 4rem auto;
-  border: 0;
-  border-top: 1px solid var(--color-border);
-}
-/* Variante "ariosa": separatore corto e centrato che introduce la sezione
-   successiva con più respiro verticale. Usata in fondo a "Chi siamo" dopo lo
-   stack di card di "Come lavoriamo", che deborda/anima verso il basso: il
-   margine ampio garantisce che nessuna card in movimento copra la CTA. */
-.section-rule--airy {
-  width: min(72%, 40rem);
-  margin-top: clamp(5rem, 12vh, 9rem);
-  margin-bottom: clamp(4rem, 9vh, 7rem);
-  border-top-color: color-mix(in srgb, var(--color-border) 70%, transparent);
 }
 
 /* ----------------------------------------------------------------------
@@ -3879,6 +3860,9 @@ button {
   align-items: center;
   text-align: center;
   padding: clamp(80px, 14vh, 180px) clamp(20px, 6vw, 60px) clamp(90px, 16vh, 200px);
+  /* La sabbia del Percorso si scioglie nella carta: nessuno stacco netto
+     tra il viaggio e l'invito finale. */
+  background: linear-gradient(180deg, var(--color-warm-deeper), var(--color-bg) clamp(240px, 36vh, 480px));
 }
 .about-cta-glow {
   position: absolute;
@@ -5154,7 +5138,10 @@ nav:has(#burger-menu.is-open) .pill {
     margin: 0 auto;
     min-height: 76vh;
     justify-content: flex-end;
-    padding: 0 0 14vh;
+    /* Oggetto + testo della tappa formano un blocco unico centrato tra la
+       navbar e la timeline (l'oggetto scende di pari passo: vedi
+       MOBILE_Y_LIFT in JourneyStepAssets.jsx). */
+    padding: 0 0 7vh;
     align-items: center;
     text-align: center;
   }
@@ -5170,6 +5157,14 @@ nav:has(#burger-menu.is-open) .pill {
   .ajx-hud-label { display: none; }
   .ajx-hud-nodes { gap: 8px; }
   .ajx-hud-node { padding: 6px 9px; }
+}
+/* Telefoni: il tabellone delle tappe non entra nella schermata d'apertura e
+   spingeva il pulsante di partenza sotto il bordo. Il cursore partiva così
+   da SOTTO la tappa 1, saliva e poi riscendeva: la scia si attorcigliava.
+   Sui telefoni l'elenco delle tappe lo fa già la timeline in basso. */
+@media (max-width: 768px) and (max-height: 960px) {
+  .ajx-board { display: none; }
+  .ajx-intro { justify-content: center; }
 }
 /* Telefoni bassi (SE): la tappa si allunga verso il basso, così il testo
    scende fin sopra la HUD e lascia spazio all'oggetto 3D sopra il titolo
@@ -5204,173 +5199,6 @@ nav:has(#burger-menu.is-open) .pill {
   .ajx-bignum,
   .ajx-aura,
   .ajx-hud-node span { transition: none; animation: none; }
-}
-
-/* ----------------------------------------------------------------------
-   COME LAVORIAMO — pannello dark immersivo (aurora come la CTA), bento
-   asimmetrico di card interattive. Spotlight al cursore (var --mx/--my via
-   JS), bordo che si accende, numero-fantasma in filigrana. Sostituisce il
-   vecchio blocco statico di capitoli.
--------------------------------------------------------------------------- */
-.ap-flow {
-  padding: clamp(20px, 5vh, 60px) clamp(14px, 3vw, 40px) clamp(70px, 12vh, 150px);
-}
-.ap-flow-panel {
-  position: relative;
-  max-width: 110rem;
-  margin: 0 auto;
-  border-radius: clamp(24px, 3vw, 40px);
-  overflow: hidden;
-  padding: clamp(56px, 8vw, 120px) clamp(24px, 5vw, 96px) clamp(60px, 9vw, 120px);
-  border: 1px solid rgba(254, 253, 236, 0.08);
-  box-shadow:
-    0 2px 4px rgba(23, 19, 16, 0.08),
-    0 40px 100px rgba(23, 19, 16, 0.28);
-  background-color: var(--color-cta-bg);
-  background-image:
-    radial-gradient(60% 52% at 14% 18%, rgba(39, 72, 165, 0.38), transparent 70%),
-    radial-gradient(56% 48% at 88% 8%, rgba(28, 43, 95, 0.85), transparent 70%),
-    radial-gradient(64% 56% at 82% 92%, rgba(242, 145, 63, 0.22), transparent 70%),
-    radial-gradient(46% 40% at 52% 50%, rgba(28, 43, 95, 0.45), transparent 70%);
-  background-repeat: no-repeat;
-  background-size: 165% 165%, 150% 150%, 172% 172%, 140% 140%;
-  animation: menu-aurora 30s ease-in-out infinite alternate;
-}
-@media (prefers-reduced-motion: reduce) {
-  .ap-flow-panel { animation: none; }
-}
-/* Grana sottile in alto, stesso linguaggio della CTA. */
-.ap-flow-aurora {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(254, 253, 236, 0.05), transparent 30%);
-}
-.ap-flow-inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(40px, 6vh, 72px);
-}
-.ap-flow-kicker { color: rgba(254, 253, 236, 0.6); }
-.ap-flow-kicker::before { background: var(--color-amber); }
-.ap-flow-title {
-  color: var(--color-cta-text);
-  max-width: 18ch;
-}
-.ap-flow-title em { color: var(--color-amber); }
-
-/* Bento asimmetrico: card larga / stretta alternate (7+5, 5+7). */
-.ap-flow-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: clamp(16px, 1.6vw, 24px);
-}
-.flow-card {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  padding: clamp(28px, 3vw, 48px);
-  border-radius: clamp(18px, 2vw, 26px);
-  border: 1px solid rgba(254, 253, 236, 0.1);
-  background: rgba(254, 253, 236, 0.035);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
-  transition:
-    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.4s ease,
-    background-color 0.4s ease;
-}
-.flow-card--0 { grid-column: span 7; }
-.flow-card--1 { grid-column: span 5; }
-.flow-card--2 { grid-column: span 5; }
-.flow-card--3 { grid-column: span 7; }
-.flow-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(132, 162, 245, 0.45);
-  background: rgba(254, 253, 236, 0.06);
-}
-/* Spotlight che segue il cursore (var --mx/--my via JS). */
-.flow-card-spot {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0;
-  background: radial-gradient(
-    260px circle at var(--mx, 50%) var(--my, 0%),
-    rgba(132, 162, 245, 0.18),
-    transparent 60%
-  );
-  transition: opacity 0.4s ease;
-}
-.flow-card:hover .flow-card-spot { opacity: 1; }
-/* Numero-fantasma in filigrana, dietro al contenuto. */
-.flow-card-ghost {
-  position: absolute;
-  top: clamp(-14px, -1vw, -8px);
-  right: clamp(12px, 2vw, 28px);
-  z-index: 0;
-  font-weight: 700;
-  font-size: clamp(90px, 11vw, 170px);
-  line-height: 1;
-  color: rgba(254, 253, 236, 0.04);
-  pointer-events: none;
-  user-select: none;
-}
-.flow-card > *:not(.flow-card-spot):not(.flow-card-ghost) {
-  position: relative;
-  z-index: 1;
-}
-.flow-card-top {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.flow-card-n {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  color: var(--color-amber);
-}
-.flow-card-tag {
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(254, 253, 236, 0.55);
-  padding: 5px 12px;
-  border: 1px solid rgba(254, 253, 236, 0.14);
-  border-radius: 9999px;
-}
-.flow-card-title {
-  font-weight: 500;
-  font-size: clamp(26px, 2.8vw, 42px);
-  line-height: 1.04;
-  letter-spacing: -0.015em;
-  color: var(--color-cta-text);
-}
-.flow-card-title em {
-  font-style: italic;
-  color: var(--color-amber);
-}
-.flow-card-text {
-  font-family: var(--font-body);
-  font-size: clamp(14px, 1.05vw, 16px);
-  line-height: 1.65;
-  color: rgba(254, 253, 236, 0.62);
-  max-width: 52ch;
-}
-@media (max-width: 900px) {
-  .flow-card--0, .flow-card--1, .flow-card--2, .flow-card--3 {
-    grid-column: 1 / -1;
-  }
 }
 
 /* ----------------------------------------------------------------------
@@ -5470,7 +5298,6 @@ nav:has(#burger-menu.is-open) .pill {
   }
 }
 
-
 /* ---- Retino CTA — griglia di punti periwinkle con bordi sfumati ---- */
 .cta-dots {
   position: absolute;
@@ -5487,109 +5314,6 @@ nav:has(#burger-menu.is-open) .pill {
   mask-image: radial-gradient(closest-side, #000, transparent);
 }
 
-
-/* COME LAVORIAMO — layout a due colonne: copy a sinistra, stage CardSwap a
-   destra. Lo stage è il contesto posizionato in cui le card si impilano. */
-.ap-flow-inner--swap {
-  display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  gap: clamp(36px, 5vw, 88px);
-  align-items: center;
-}
-.ap-flow-copy {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(18px, 2.6vh, 30px);
-}
-.ap-flow-lead {
-  font-family: var(--font-body);
-  font-size: clamp(15px, 1.2vw, 18px);
-  line-height: 1.7;
-  color: rgba(254, 253, 236, 0.66);
-  max-width: 44ch;
-  margin: 0;
-}
-.ap-flow-stage {
-  position: relative;
-  min-height: 510px;
-}
-/* Desktop ampio (≥1025px): card un filo più grandi (vedi width/height passati a
-   FlowCardSwap) e l'intero blocco spostato leggermente verso sinistra (~1,6 cm).
-   Sotto i 1025px le due colonne diventano troppo strette per una card da 517px:
-   anziché lasciarla sbordare sul testo, si passa allo stack singolo CENTRATO già
-   dal tablet in giù. */
-@media (min-width: 1025px) {
-  .ap-flow-stage {
-    transform: translateX(-60px);
-  }
-}
-@media (max-width: 1024px) {
-  .ap-flow-inner--swap {
-    grid-template-columns: 1fr;
-    gap: clamp(48px, 8vh, 96px);
-  }
-  .ap-flow-stage {
-    min-height: 560px;
-    transform: none;
-  }
-  /* Impilato: la pila va CENTRATA (non più ancorata in basso a destra, dove su
-     schermo stretto resterebbe tagliata) e rimpicciolita per stare nel viewport.
-     `.ap-flow-stage .card-swap-container` (0,2,0) batte le regole generiche di
-     CardSwap.css (0,1,0) a prescindere dall'ordine d'import. */
-  .ap-flow-stage .card-swap-container {
-    left: 50%;
-    right: auto;
-    transform-origin: bottom center;
-    transform: translate(-50%, 6%) scale(0.84);
-  }
-}
-@media (max-width: 768px) {
-  .ap-flow-stage {
-    min-height: 520px;
-  }
-  .ap-flow-stage .card-swap-container {
-    transform: translate(-50%, 4%) scale(0.64);
-  }
-}
-@media (max-width: 480px) {
-  .ap-flow-stage {
-    min-height: 440px;
-  }
-  .ap-flow-stage .card-swap-container {
-    transform: translate(-50%, 2%) scale(0.48);
-  }
-}
-
-/* COME LAVORIAMO senza contenitore: vive sul plain background, quindi i testi
-   tornano scuri (ink/secondary) invece dei chiari pensati per il pannello. */
-.ap-flow--plain {
-  /* Più aria sotto: lo stack CardSwap deborda (translate 20%) e in swap una
-     card scende ~500px; questo padding evita che invada il separatore/CTA. */
-  padding-block: clamp(40px, 9vh, 110px) clamp(90px, 16vh, 180px);
-  /* Ancora visiva: il warm-deeper del Percorso si scioglie nel plain bg lungo
-     la parte alta della sezione → nessuno stacco netto tra le due scene, e la
-     pagina degrada dolcemente verso separatore/CTA/footer. */
-  background: linear-gradient(
-    180deg,
-    var(--color-warm-deeper),
-    var(--color-bg) clamp(240px, 34vh, 460px)
-  );
-}
-.ap-flow--plain .ap-flow-kicker {
-  color: var(--color-muted);
-}
-.ap-flow--plain .ap-flow-kicker::before {
-  background: var(--color-orange);
-}
-.ap-flow--plain .ap-flow-title {
-  color: var(--color-ink);
-}
-.ap-flow--plain .ap-flow-title em {
-  color: var(--color-orange);
-}
-.ap-flow--plain .ap-flow-lead {
-  color: var(--color-secondary);
-}
 
 /* ============================================================
    i18n — guardie per testi più lunghi (es. tedesco)
@@ -7008,8 +6732,7 @@ html.apd-skip-loader #apd-loader {
 /* ============================================================
    CHI SIAMO — sezioni "da una schermata" (manifesto, duo, CTA)
    Su desktop ognuna sta esattamente in 100svh, con aria in alto per la
-   navbar: in cima c'è un checkpoint di scroll e main.ts aggiunge una breve
-   sosta pinnata ([data-ap-hold]).
+   navbar: in cima c'è una fermata di scroll (vedi main.ts).
    ============================================================ */
 .ap-hold-detent,
 .about-cta > .ap-hold-detent {
@@ -7462,12 +7185,12 @@ html.apd-skip-loader #apd-loader {
    Traccia alta (1 schermo + 85vh per fase) con UNA scena sticky di 100svh
    che contiene tutto: titolo in alto, sotto la fase a sinistra e a destra
    il "cantiere" (un sito di esempio che si costruisce). Ogni fase è un
-   checkpoint di scroll.
+   checkpoint di scroll. Vive in home: niente fondo proprio, resta sulla
+   carta come il resto della pagina.
    ============================================================ */
 .apm {
   --apm-ease: cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
-  background: linear-gradient(180deg, var(--color-warm-deeper), var(--color-bg) clamp(260px, 40vh, 520px));
 }
 
 .apm-track {
@@ -8492,7 +8215,7 @@ html.apd-skip-loader #apd-loader {
   .point-lead { font-size: clamp(38px, 5.4vw, 54px); }
   .point-pain { width: min(660px, 100%); }
   .point-item-text { font-size: clamp(28px, 3.9vw, 38px); }
-  .point-but { font-size: 14px; }
+  .point-but { font-size: clamp(22px, 2.8vw, 27px); }
   .point-ping { width: 260px; }
   .svc-title { font-size: clamp(44px, 6vw, 60px); }
   .svc-desc { font-size: 17px; max-width: 44ch; }

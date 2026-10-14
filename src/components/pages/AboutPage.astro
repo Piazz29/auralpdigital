@@ -9,7 +9,6 @@ import Navbar from "../Navbar.astro";
 import Footer from "../Footer.astro";
 import Rich from "../Rich.astro";
 import JourneyPath from "../reactbits/JourneyPath.jsx";
-import MethodRoom from "../MethodRoom.astro";
 import { Picture, getImage } from "astro:assets";
 import julianPhoto from "../../assets/team/julian.png";
 import alicePhoto from "../../assets/team/alice.png";
@@ -158,9 +157,9 @@ const steps = ta.journey.steps.map((s) => ({
 
     <!-- MANIFESTO — lo statement si accende parola per parola con lo scroll,
          sotto i tre numeri che lo dimostrano (al passaggio del mouse la
-         cifra rigira). Su desktop sta in una schermata: checkpoint + breve
-         sosta (data-ap-hold, main.ts). -->
-    <section class="ap-manifesto" data-ap-manifesto data-ap-hold>
+         cifra rigira). Su desktop sta in una schermata; in cima una fermata
+         di scroll (main.ts). -->
+    <section class="ap-manifesto" data-ap-manifesto>
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
       <div class="ap-manifesto-grid" aria-hidden="true"></div>
       <div class="works-screen ap-screen">
@@ -227,7 +226,7 @@ const steps = ta.journey.steps.map((s) => ({
     <!-- IL DUO — due card editoriali sfalsate: la foto entra pixelata e si
          mette a fuoco (lo stesso gesto della hero), poi nome, ruolo, bio,
          una frase in prima persona e le aree di lavoro. -->
-    <section id="il-duo" class="ap-duo" data-ap-duo data-ap-hold>
+    <section id="il-duo" class="ap-duo" data-ap-duo>
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
       <div class="ap-duo-glow" aria-hidden="true"></div>
       <div class="works-screen ap-screen">
@@ -279,7 +278,7 @@ const steps = ta.journey.steps.map((s) => ({
 
     <!-- IL PERCORSO — viaggio 3D scroll-driven in tre atti (JourneyPath):
          apertura col pulsante di partenza, 4 tappe che il cursore "clicca",
-         finale fermo che se ne va con la pagina. Ogni sosta è un checkpoint
+         finale fermo che se ne va con la pagina. Ogni sosta è una fermata
          di scroll (data-scroll-detent, main.ts). -->
     <section class="ap-journey">
       <div class="works-screen">
@@ -299,15 +298,8 @@ const steps = ta.journey.steps.map((s) => ({
       </div>
     </section>
 
-    <!-- COME LAVORIAMO — la "sala macchine" -->
-    <MethodRoom lang={lang} flow={ta.flow} />
-
-    <!-- SEPARATORE — linea sottile che introduce la CTA/form, con respiro
-         extra perché lo stack di card di "Come lavoriamo" deborda verso il basso. -->
-    <hr class="section-rule section-rule--airy" aria-hidden="true" />
-
     <!-- CTA FINALE -->
-    <section id="contatti" class="about-cta" data-anim="contact" data-ap-hold>
+    <section id="contatti" class="about-cta" data-anim="contact">
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
       <span class="about-cta-glow" aria-hidden="true"></span>
       <span class="deco deco--star deco-accent deco-float-2" style="left: 12%; top: 22%;" aria-hidden="true">✦</span>

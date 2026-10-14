@@ -123,7 +123,7 @@ const ENTRANCE_TWIST = 0.9; // rad: l'asset nasce ruotato e si raddrizza
 // Fattori mobile: più piccoli, sopra il testo (che è centrato full-width).
 const MOBILE_SCALE = 0.56;
 const MOBILE_X = 0; // mobile: oggetto centrato sopra il testo
-const MOBILE_Y_LIFT = 1.3; // alzata a 390×664 (iPhone con barre di Safari)
+const MOBILE_Y_LIFT = 1.0; // alzata a 390×664 (iPhone con barre di Safari)
 // In unità di scena l'alzata vale più o meno pixel a seconda dell'altezza del
 // viewport (la camera inquadra sempre la stessa altezza di mondo), mentre il
 // testo della tappa è in px: su un telefono basso l'oggetto ricadeva sul
