@@ -1230,7 +1230,11 @@ export default function JourneyPath({ steps = [], copy }) {
 
   useEffect(() => {
     // Con reduced-motion niente viaggio 3D: restano tappe, aura e timeline.
-    setWebgl(hasWebGL() && !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    // Idem col telefono in orizzontale (~390px d'altezza): oggetto, cursore e
+    // testo della tappa non stanno insieme in una schermata così bassa (vedi
+    // `shortViewport` in main.ts, stessa media query).
+    const short = window.matchMedia('(max-height: 500px) and (orientation: landscape) and (hover: none)').matches;
+    setWebgl(hasWebGL() && !short && !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     // `mobile` reattivo: curva e scala del cursore dipendono dal breakpoint.
     const mq = window.matchMedia('(max-width: 768px)');
     const sync = () => setMobile(mq.matches);

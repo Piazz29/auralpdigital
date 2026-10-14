@@ -17,6 +17,21 @@ const reduceMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 ).matches;
 
+// Telefono in orizzontale: ~390px di altezza non bastano alle scene pinnate
+// (Il punto, Servizi, sosta dei Progetti), che si tagliavano o si
+// sovrapponevano. Lì le sezioni restano nella loro versione impilata — la
+// stessa di reduced-motion — e si scorrono normalmente; i reveal restano.
+// Solo touch (hover: none): una finestra desktop bassa non cambia modo.
+// Ruotando il telefono il modo cambia: si ricarica la pagina, perché pin e
+// misure delle scene sono costruiti una volta sola al caricamento.
+const shortViewportMq = window.matchMedia(
+  "(max-height: 500px) and (orientation: landscape) and (hover: none)"
+);
+const shortViewport = shortViewportMq.matches;
+shortViewportMq.addEventListener("change", () => location.reload());
+document.documentElement.classList.toggle("is-short-vp", shortViewport);
+const staticScenes = reduceMotion || shortViewport;
+
 // ---------- Ritardo unico dello scroll ----------
 // Ogni animazione agganciata allo scroll (uscita della hero, zoom del suo
 // video, passaggio di Chi Siamo, virata di colore del canvas) insegue lo
@@ -148,9 +163,12 @@ const readDetents = () => {
     Array.from(document.querySelectorAll<HTMLElement>(sel))
       .map((el) => Math.round(el.getBoundingClientRect().top + lenis.scroll))
       .sort((a, b) => a - b);
-  detentYs = ys("[data-scroll-detent]");
+  detentYs = [...ys("[data-scroll-detent]"), ...extraDetents.map((f) => Math.round(f()))].sort((a, b) => a - b);
   hardYs = ys('[data-scroll-detent="hard"]');
 };
+// Checkpoint che non corrispondono alla cima di un elemento (es. l'inizio
+// di un pin che inquadra una card): funzioni che restituiscono la posizione.
+const extraDetents: (() => number)[] = [];
 
 // Checkpoint "duri" (data-scroll-detent="hard", le fasi di Come lavoriamo):
 // uno scroll profondo NON li scavalca. Il colpo di rotella che li
@@ -251,6 +269,47 @@ if (scrollFill) {
 window.addEventListener("pillnav:toggle", (e) => {
   (e as CustomEvent<{ open: boolean }>).detail.open ? lenis.stop() : lenis.start();
 });
+
+// ---------- Navbar a scomparsa (schermi stretti) ----------
+// Su telefono e tablet la pillola copre titoli e form mentre si legge: si
+// ritira scorrendo verso il basso e torna appena si risale (o vicino al
+// top). Solo una classe sul dock (transform in PillNav.css); mai a menu
+// aperto né con il focus da tastiera dentro la navbar.
+{
+  const narrow = window.matchMedia("(max-width: 960px)");
+  let dock: HTMLElement | null = null;
+  let menuOpen = false;
+  let lastY = 0;
+  let run = 0; // strada fatta nella direzione corrente
+  const setTucked = (on: boolean) => {
+    dock ??= document.querySelector<HTMLElement>(".pnav-dock");
+    dock?.classList.toggle("is-tucked", on);
+  };
+  window.addEventListener("pillnav:toggle", (e) => {
+    menuOpen = (e as CustomEvent<{ open: boolean }>).detail.open;
+    if (menuOpen) setTucked(false);
+  });
+  // Una scena a schermo pieno (le card del duo) chiede la scena libera: la
+  // pillola resta ritirata finché la sosta dura.
+  let hushed = false;
+  window.addEventListener("pillnav:hush", (e) => {
+    hushed = (e as CustomEvent<{ on: boolean }>).detail.on;
+    if (hushed && !menuOpen) setTucked(true);
+  });
+  document.addEventListener("focusin", (e) => {
+    if ((e.target as Element | null)?.closest?.(".pnav-dock")) setTucked(false);
+  });
+  lenis.on("scroll", ({ scroll }: { scroll: number }) => {
+    const dy = scroll - lastY;
+    lastY = scroll;
+    if (!narrow.matches || menuOpen) return setTucked(false);
+    if (scroll < 120) return setTucked(false);
+    if (hushed) return setTucked(true);
+    run = Math.sign(dy) === Math.sign(run) ? run + dy : dy;
+    if (run > 36) setTucked(true);
+    else if (run < -16) setTucked(false);
+  });
+}
 
 // ---------- Mobile menu ----------
 // Apertura: il pannello si rivela con il mask radiale dal punto del burger,
@@ -735,7 +794,7 @@ if (
   svcTrack &&
   svcCopyWrap &&
   svcShots.length &&
-  !reduceMotion
+  !staticScenes
 ) {
   const N = svcShots.length;
   svcRoot.classList.add("is-live");
@@ -1190,6 +1249,23 @@ if (
   );
 }
 
+// Servizi impilati per schermo basso (non per reduced motion): le clip
+// suonano quando sono in vista, come nella versione animata.
+if (shortViewport && !reduceMotion && "IntersectionObserver" in window) {
+  const io = new IntersectionObserver(
+    (entries) =>
+      entries.forEach(({ target, isIntersecting }) => {
+        const v = target as HTMLVideoElement;
+        if (isIntersecting) {
+          v.preload = "auto";
+          void v.play().catch(() => {});
+        } else if (!v.paused) v.pause();
+      }),
+    { threshold: 0.4 }
+  );
+  document.querySelectorAll<HTMLVideoElement>("[data-svc-video]").forEach((v) => io.observe(v));
+}
+
 // ---------- Il punto — racconto in tre tempi dentro un pin ----------------
 // Il palco (una schermata) si ferma e lo scroll, in scrub, fa avanzare la
 // storia (markup e tempi in HomePage.astro, impaginazione in global.css):
@@ -1225,7 +1301,7 @@ if (
   pointTurn &&
   pointTurnTitle &&
   pointTurnSub &&
-  !reduceMotion
+  !staticScenes
 ) {
   point.classList.add("is-live");
 
@@ -1588,7 +1664,7 @@ if (deck) {
 // attimo (pin di mezza schermata) invece di scivolare via subito. L'arrivo
 // lo ammortizza il checkpoint [data-scroll-detent] messo appena prima della
 // sezione (stessa Y dell'inizio del pin).
-if (!reduceMotion && isHome && document.querySelector("#projects")) {
+if (!staticScenes && isHome && document.querySelector("#projects")) {
   ScrollTrigger.create({
     trigger: "#projects",
     start: "top top",
@@ -1938,6 +2014,64 @@ if (aboutPage) {
     });
   });
 
+  // La catena: con lo scroll i passaggi in mezzo vengono barrati e cadono,
+  // "tu" e "noi" si vengono incontro, il filo tratteggiato diventa pieno e
+  // l'etichetta passa da "Di solito" a "Con noi". Scrub: si riavvolge
+  // tornando su. Con reduced motion resta lo stato finale.
+  const chain = aboutPage.querySelector<HTMLElement>("[data-ap-chain]");
+  if (chain) {
+    const track = chain.querySelector<HTMLElement>(".ap-chain-track")!;
+    const you = chain.querySelector<HTMLElement>("[data-ap-chain-you]")!;
+    const us = chain.querySelector<HTMLElement>("[data-ap-chain-us]")!;
+    const wire = chain.querySelector<HTMLElement>("[data-ap-chain-wire]")!;
+    const on = chain.querySelector<HTMLElement>("[data-ap-chain-on]");
+    const hops = chain.querySelectorAll<HTMLElement>("[data-ap-chain-hop]");
+    const before = chain.querySelectorAll<HTMLElement>("[data-ap-chain-before]");
+    const after = chain.querySelectorAll<HTMLElement>("[data-ap-chain-after]");
+    // Misure senza transform: posizioni di layout dentro la traccia.
+    const GAP = 44; // filo che resta fra i due capi, a catena chiusa
+    const wireL = () => you.offsetLeft + you.offsetWidth / 2;
+    const wireR = () => track.clientWidth - (us.offsetLeft + us.offsetWidth / 2);
+    const dx = () => Math.max(0, (us.offsetLeft - (you.offsetLeft + you.offsetWidth) - GAP) / 2);
+    gsap.set(wire, { left: wireL, right: wireR });
+
+    const tl = gsap
+      .timeline({ defaults: { ease: "power2.inOut" }, paused: true })
+      .to(hops, { "--strike": 1, duration: 0.35, stagger: 0.12, ease: "power2.out" }, 0)
+      .to(hops, {
+        y: 34,
+        rotation: (i: number) => (i % 2 ? 9 : -7),
+        opacity: 0,
+        duration: 0.45,
+        stagger: 0.1,
+        ease: "power2.in",
+      }, 0.4)
+      .to(you, { x: dx, duration: 0.6 }, 0.85)
+      .to(us, { x: () => -dx(), duration: 0.6 }, 0.85)
+      .to(wire, { left: () => wireL() + dx(), right: () => wireR() + dx(), duration: 0.6 }, 0.85)
+      .to(on, { opacity: 1, duration: 0.4 }, 1.05)
+      .to(before, { yPercent: -60, opacity: 0, duration: 0.3 }, 1.05)
+      .fromTo(after, { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.3 }, 1.15)
+      .set({}, {}, 1.5);
+    // l'inchiostro sui due capi arriva solo a catena chiusa
+    tl.eventCallback("onUpdate", () => chain.classList.toggle("is-linked", tl.progress() > 0.9));
+
+    if (reduceMotion) {
+      tl.progress(1);
+    } else {
+      ScrollTrigger.create({
+        trigger: chain,
+        // si legge prima "Di solito" (catena intera), poi la si vede chiudersi
+        // mentre sale verso la parte alta dello schermo
+        start: "top 62%",
+        end: "top 18%",
+        scrub: SCRUB,
+        animation: tl,
+        invalidateOnRefresh: true,
+      });
+    }
+  }
+
   // --- IL DUO ---
   revealRise(aboutPage.querySelectorAll("[data-ap-duo] .ap-duo-head [data-ap-rise]"), {
     trigger: "[data-ap-duo]",
@@ -2007,6 +2141,27 @@ if (aboutPage) {
         refreshPriority: all.length - i,
       });
     });
+  }
+
+  // Il duo su telefono: ogni card è alta una schermata. Arrivati sulla card
+  // la pagina si posa da sola (checkpoint) e la card resta ferma un attimo
+  // (pin breve), così la si legge intera prima di passare all'altra.
+  if (!staticScenes && window.matchMedia("(max-width: 559px)").matches) {
+    aboutPage.querySelectorAll<HTMLElement>("[data-ap-card-slot]").forEach((slot) => {
+      // Si ferma il contenitore, non la card: la card ha già il suo y
+      // d'entrata e i due transform si pesterebbero i piedi.
+      const st = ScrollTrigger.create({
+        trigger: slot,
+        start: () => `top ${Math.max(0, Math.round((window.innerHeight - slot.offsetHeight) / 2))}`,
+        end: () => "+=" + Math.round(window.innerHeight * 0.32),
+        pin: true,
+        invalidateOnRefresh: true,
+        onToggle: (self) =>
+          window.dispatchEvent(new CustomEvent("pillnav:hush", { detail: { on: self.isActive } })),
+      });
+      extraDetents.push(() => st.start);
+    });
+    readDetents();
   }
 
   // Come lavoriamo — la copy (kicker/titolo/lead) sale in cascata quando la
@@ -2137,3 +2292,22 @@ initContactFlow({
   },
   onResize: () => ghostTrigger?.refresh(),
 });
+
+// ---------- Ancora all'arrivo da un'altra pagina ----------
+// Un link tipo /chi-siamo#come-lavoriamo: il browser salta all'ancora prima
+// che i pin aggiungano i loro spacer, quindi atterra nel punto sbagliato. Si
+// riparte da capo e, a layout completo (font, immagini, refresh dei trigger),
+// si va all'ancora di colpo.
+if (location.hash.length > 1) {
+  const id = decodeURIComponent(location.hash.slice(1));
+  if (document.getElementById(id)) {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    const goToHash = () => {
+      ScrollTrigger.refresh();
+      const el = document.getElementById(id);
+      if (el) lenis.scrollTo(el, { immediate: true, force: true });
+    };
+    if (document.readyState === "complete") requestAnimationFrame(goToHash);
+    else window.addEventListener("load", () => requestAnimationFrame(goToHash), { once: true });
+  }
+}

@@ -51,6 +51,11 @@ const people = await Promise.all(
   }))
 );
 
+// Le card dei fondatori: prima Alice, poi Julian (la hero resta com'è).
+const cardPeople = [people[1], people[0]];
+
+const chain = ta.manifesto.chain;
+
 // Il manifesto: le parole dello statement si accendono una a una con lo
 // scroll; le cifre dei fatti girano come un contachilometri. La striscia di
 // ogni cifra finisce sul valore vero (10 cifre, l'ultima è quella giusta).
@@ -159,11 +164,46 @@ const steps = ta.journey.steps.map((s) => ({
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
       <div class="ap-manifesto-grid" aria-hidden="true"></div>
       <div class="works-screen ap-screen">
-        <div class="ap-manifesto-copy">
-          <span class="works-kicker" data-ap-rise>{ta.manifesto.kicker}</span>
-          <p class="ap-statement font-display" data-ap-statement>
-            <Rich text={ta.manifesto.statement} />
-          </p>
+        <div class="ap-manifesto-top">
+          <div class="ap-manifesto-copy">
+            <span class="works-kicker" data-ap-rise>{ta.manifesto.kicker}</span>
+            <p class="ap-statement font-display" data-ap-statement>
+              <Rich text={ta.manifesto.statement} />
+            </p>
+          </div>
+
+          <!-- La catena: tu da una parte, noi dall'altra, in mezzo i soliti
+               passaggi. Con lo scroll i passaggi vengono barrati e cadono, i
+               due capi si avvicinano e il filo diventa pieno (main.ts). -->
+          <div class="ap-chain" data-ap-chain>
+            <div class="ap-chain-head">
+              <span class="ap-chain-tag" aria-hidden="true">
+                <span data-ap-chain-before>{chain.before}</span>
+                <span data-ap-chain-after>{chain.after}</span>
+              </span>
+              <span class="ap-chain-note">
+                <span data-ap-chain-before>{chain.beforeNote}</span>
+                <span data-ap-chain-after>{chain.afterNote}</span>
+              </span>
+            </div>
+            <div class="ap-chain-track" aria-hidden="true">
+              <span class="ap-chain-wire" data-ap-chain-wire>
+                <span class="ap-chain-wire-on" data-ap-chain-on></span>
+                <span class="ap-chain-pulse"></span>
+              </span>
+              <span class="ap-chain-end ap-chain-end--you" data-ap-chain-you>{chain.you}</span>
+              <span class="ap-chain-hops">
+                {chain.hops.map((h) => <span class="ap-chain-hop" data-ap-chain-hop>{h}</span>)}
+              </span>
+              <span class="ap-chain-end ap-chain-end--us" data-ap-chain-us>
+                <span class="ap-chain-faces">
+                  {ctaFaces.map((f) => <img src={f.src} alt="" width="26" height="26" loading="lazy" decoding="async" />)}
+                </span>
+                <span class="ap-chain-us-long">{chain.us}</span>
+                <span class="ap-chain-us-short">{chain.usShort}</span>
+              </span>
+            </div>
+          </div>
         </div>
 
         <ol class="ap-facts">
@@ -200,7 +240,8 @@ const steps = ta.journey.steps.map((s) => ({
         </div>
 
         <div class="ap-cards">
-          {people.map((p, i) => (
+          {cardPeople.map((p, i) => (
+            <div class="ap-card-slot" data-ap-card-slot>
             <article class={`ap-card ap-card--${p.tone}`} data-ap-card>
               <div class="ap-card-media" data-ap-card-media>
                 <Picture
@@ -230,6 +271,7 @@ const steps = ta.journey.steps.map((s) => ({
                 </ul>
               </div>
             </article>
+            </div>
           ))}
         </div>
       </div>

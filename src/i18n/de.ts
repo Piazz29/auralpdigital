@@ -18,12 +18,14 @@ const de = {
     items: {
       projects: "Projekte",
       services: "Was wir tun",
+      method: "So arbeiten wir",
       about: "Über uns",
       faq: "FAQ",
     },
     aria: {
       projects: "Zu den Projekten",
       services: "Entdecke, was wir tun",
+      method: "Entdecke, wie wir arbeiten",
       about: "Erfahre, wer wir sind",
       faq: "Häufige Fragen",
     },
@@ -313,6 +315,7 @@ const de = {
     links: {
       projects: "Projekte",
       services: "Was wir tun",
+      method: "So arbeiten wir",
       about: "Über uns",
       contact: "Kontakt",
     },
@@ -338,6 +341,16 @@ const de = {
     },
     manifesto: {
       kicker: "Das Manifest",
+      chain: {
+        before: "Normalerweise",
+        after: "Bei uns",
+        beforeNote: "Jede Anfrage geht durch viele Hände.",
+        afterNote: "Du sprichst direkt mit denen, die planen und entwickeln.",
+        you: "Du",
+        us: "Alice & Julian",
+        usShort: "Wir",
+        hops: ["Berater", "PM", "Freelancer"],
+      },
       statement: "Wenige Projekte gleichzeitig, *vollständig betreut.*",
       facts: [
         { n: 0, label: "Zwischenstellen", text: "Du sprichst direkt mit denen, die planen und entwickeln. Entscheidungen fallen schnell und nichts geht verloren." },

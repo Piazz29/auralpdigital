@@ -73,8 +73,11 @@ const ASSETS = [
 // Geometria condivisa con JourneyPath: il cursore deve sapere DOVE sta ogni
 // asset (lato, grandezza, X responsiva) per andarci sopra e "cliccarlo".
 export const ASSET_LAYOUT = ASSETS.map((a) => ({ side: a.side, size: a.size }));
-export const assetY = (anchorY, mobile) => anchorY + (mobile ? MOBILE_Y_LIFT : 0);
-export const assetScale = (mobile) => (mobile ? MOBILE_SCALE : 1);
+export const assetY = (anchorY, mobile) => anchorY + (mobile ? mobileLift() : 0);
+// Sui telefoni bassi (SE) l'oggetto rimpicciolisce un filo: alzato di più,
+// altrimenti finirebbe sotto la navbar.
+export const assetScale = (mobile) =>
+  mobile ? MOBILE_SCALE * (typeof window !== 'undefined' && window.innerHeight < 620 ? 0.86 : 1) : 1;
 export function assetX(side, halfW, mobile, size = 0) {
   // Su mobile l'oggetto non deve uscire dal bordo (il logo è largo).
   if (mobile) return side * Math.max(0, Math.min(MOBILE_X, halfW - (size * MOBILE_SCALE) / 2 - 0.06));
@@ -118,9 +121,19 @@ const ENTRANCE_RISE = 0.24; // l'asset "sale" di tanto durante l'entrata
 const ENTRANCE_TWIST = 0.9; // rad: l'asset nasce ruotato e si raddrizza
 
 // Fattori mobile: più piccoli, sopra il testo (che è centrato full-width).
-const MOBILE_SCALE = 0.62;
+const MOBILE_SCALE = 0.56;
 const MOBILE_X = 0; // mobile: oggetto centrato sopra il testo
-const MOBILE_Y_LIFT = 0.95;
+const MOBILE_Y_LIFT = 1.3; // alzata a 390×664 (iPhone con barre di Safari)
+// In unità di scena l'alzata vale più o meno pixel a seconda dell'altezza del
+// viewport (la camera inquadra sempre la stessa altezza di mondo), mentre il
+// testo della tappa è in px: su un telefono basso l'oggetto ricadeva sul
+// titolo. Si scala per tenere costante lo stacco in px (sui telefoni bassi il
+// testo, in CSS, scende anche verso la HUD).
+function mobileLift() {
+  if (typeof window === 'undefined') return MOBILE_Y_LIFT;
+  const k = THREE.MathUtils.clamp(664 / window.innerHeight, 0.85, 1.6);
+  return MOBILE_Y_LIFT * k;
+}
 
 // Stesso look del cursore (JourneyPath.makeGlossyMaterial), ma col colore
 // parametrico: valori duplicati consapevolmente per evitare import circolare.
@@ -318,7 +331,7 @@ function StepAsset({ cfg, index, params, progressRef, anchorsRef, tipsRef, click
     const halfW = (worldH * state.size.width) / state.size.height / 2;
     return assetX(cfg.side, halfW, mobile, cfg.size);
   });
-  const baseScale = mobile ? MOBILE_SCALE : 1;
+  const baseScale = assetScale(mobile);
   const hoverScale = useRef(baseScale);
 
   // La rotta tratteggiata si spegne attorno alla sagoma di questo oggetto.
@@ -340,8 +353,7 @@ function StepAsset({ cfg, index, params, progressRef, anchorsRef, tipsRef, click
     // l'asset a world-Y 0 in quello stesso istante. Fallback: valori statici.
     const anchors = anchorsRef?.current;
     const par = anchors?.[index]?.p ?? params[index];
-    const baseY =
-      (anchors?.[index]?.y ?? cfg.y) + (mobile ? MOBILE_Y_LIFT : 0);
+    const baseY = assetY(anchors?.[index]?.y ?? cfg.y, mobile);
 
     // Finestra attiva DISGIUNTA dai vicini: il confine con lo step precedente/
     // successivo è il punto medio tra le ancore meno HANDOFF_GAP → mai due

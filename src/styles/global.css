@@ -1435,10 +1435,10 @@ button {
     to bottom,
     var(--color-bg) 0%,
     rgba(254, 253, 236, 0) 12%,
-    rgba(254, 253, 236, 0) 26%,
-    rgba(254, 253, 236, 0.66) 46%,
-    rgba(254, 253, 236, 0.93) 62%,
-    var(--color-bg) 82%
+    rgba(254, 253, 236, 0) 24%,
+    rgba(254, 253, 236, 0.72) 42%,
+    rgba(254, 253, 236, 0.95) 56%,
+    var(--color-bg) 76%
   );
 }
 @media (min-width: 1024px) {
@@ -1827,6 +1827,32 @@ button {
   transform-origin: 0 50%;
 }
 
+/* Mobile (reel): alone di carta attorno alle lettere, come il titolo della
+   hero, così titolo e numerazione restano netti anche dove la clip sotto è
+   ancora piena (sui telefoni bassi il titolo cade a metà schermo). Le
+   etichette dei tab prendono la larghezza del loro testo: a 320px "Social &
+   Ads" non si tronca più. */
+@media (max-width: 1023px) {
+  .svc-title,
+  .svc-num,
+  .svc-desc {
+    text-shadow:
+      0 0 14px rgba(254, 253, 236, 0.9),
+      0 0 34px rgba(254, 253, 236, 0.7);
+  }
+  .svc-dot {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 64px;
+    padding-block: 12px;
+  }
+  .svc-dot-label { font-size: 11px; }
+}
+@media (max-width: 360px) {
+  .svc-dots { gap: 14px; }
+  .svc-dot-label { letter-spacing: 0.07em; }
+}
+
 /* ---- Fallback statico (no-JS / reduced-motion) ----
    Niente pin e niente cambi: tutto torna a flusso, una card sopra l'altra
    con la sua descrizione a fianco. */
@@ -1892,6 +1918,40 @@ button {
     align-items: start;
   }
   .svc:not(.is-live) .svc-frame { order: 2; }
+}
+/* Ogni servizio con la SUA immagine: cornice, muro e colonna dei testi si
+   dissolvono (display: contents) e clip e descrizioni diventano celle della
+   stessa griglia, riordinate a coppie. In colonna: immagine, poi testo. Da
+   600px (telefono in orizzontale, tablet): due colonne a zig-zag, testo e
+   clip che si alternano di lato come lo scambio del desktop. */
+.svc:not(.is-live) .svc-frame,
+.svc:not(.is-live) .svc-track,
+.svc:not(.is-live) .svc-copies {
+  display: contents;
+}
+.svc:not(.is-live) .svc-shot {
+  width: min(100%, 340px, 64svh);
+  justify-self: center;
+}
+.svc:not(.is-live) .svc-shot:nth-child(1) { order: 1; }
+.svc:not(.is-live) .svc-copy:nth-child(1) { order: 2; }
+.svc:not(.is-live) .svc-shot:nth-child(2) { order: 3; }
+.svc:not(.is-live) .svc-copy:nth-child(2) { order: 4; }
+.svc:not(.is-live) .svc-shot:nth-child(3) { order: 5; }
+.svc:not(.is-live) .svc-copy:nth-child(3) { order: 6; }
+@media (min-width: 600px) {
+  .svc:not(.is-live) .svc-scene {
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    column-gap: clamp(28px, 5vw, 72px);
+  }
+  .svc:not(.is-live) .svc-copy {
+    align-items: flex-start;
+    text-align: left;
+  }
+  /* riga centrale a specchio: prima il testo, poi la clip */
+  .svc:not(.is-live) .svc-shot:nth-child(2) { order: 4; }
+  .svc:not(.is-live) .svc-copy:nth-child(2) { order: 3; }
 }
 
 /* (Viewport bassi: niente più regola dedicata — --svc-stage-h in .svc si
@@ -2276,6 +2336,25 @@ button {
   .point-item { grid-template-columns: 30px 1fr; }
   .point-item-text { font-size: clamp(22px, 6.4vw, 30px); }
   .point-turn { font-size: clamp(36px, 10.6vw, 56px); }
+}
+/* Telefoni bassi (iPhone SE, ~570px visibili): centrato, il blocco di testo
+   lascia sopra solo 50px e le due notifiche alte ci cadevano sopra. Qui il
+   palco scende (padding alto maggiore), testo e notifiche si compattano e le
+   notifiche alte si fissano in px sotto la navbar: fascia alta per le
+   notifiche, testo al centro, terza notifica nella fascia bassa. */
+@media (max-width: 700px) and (max-height: 640px) {
+  .point-stage { padding-block: 150px 64px; }
+  .point-lead { font-size: 27px; }
+  .point-but { margin-top: 18px; }
+  .point-item-text { font-size: 19px; }
+  .point-ping { width: 200px; }
+  .point-ping-in { padding: 7px 11px 7px 7px; gap: 9px; }
+  .point-ping-icon { width: 28px; height: 28px; border-radius: 9px; }
+  .point-ping-title,
+  .point-ping-body { font-size: 11.5px; }
+  .point-ping--1 { top: 76px; }
+  .point-ping--2 { top: 110px; }
+  .point-ping--3 { bottom: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .point-ping-in,
@@ -4079,6 +4158,18 @@ nav:has(#burger-menu.is-open) .pill {
   text-decoration: none;
 }
 .site-footer .footer-link:hover { color: var(--fin-ink); }
+/* Touch: i link del footer erano alti 23px. Area di tocco a 44px con il
+   padding, compensato dal gap della colonna: l'aspetto non cambia. */
+@media (hover: none), (max-width: 960px) {
+  .footer-col:has(.footer-link) { gap: 0; }
+  .site-footer .footer-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .footer-mail { padding-block: 10px 3px; }
+  .footer-col-label { margin-bottom: 0; font-size: 11px; }
+}
 .footer-mail {
   padding-bottom: 3px;
   border-bottom: 1px solid var(--fin-line-2);
@@ -4177,6 +4268,9 @@ nav:has(#burger-menu.is-open) .pill {
 .footer-ghost-p { color: #2748A5; }
 .footer-ghost-d { color: #A6AAB0; }
 @media (max-width: 767px) {
+  /* Il minimo di 72px lo faceva uscire a destra ("AuralpDigi" a 320px): su
+     telefono si dimensiona solo sulla larghezza e la riempie da bordo a bordo. */
+  .footer-ghost { font-size: 15vw; }
   .footer-top { grid-template-columns: 1fr; }
   .footer-bottom {
     flex-direction: column;
@@ -4448,9 +4542,9 @@ nav:has(#burger-menu.is-open) .pill {
   letter-spacing: -0.06em;
   color: transparent;
   -webkit-text-stroke: 1.5px rgba(39, 72, 165, 0.14);
-  translate: -50% -42%;
+  /* centratura nel transform (vedi .ajx-hud): -50% -42%, più la corsa */
   opacity: 0;
-  transform: translateY(14%);
+  transform: translate(-50%, -28%);
   transition:
     opacity 0.7s ease,
     transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
@@ -4460,10 +4554,10 @@ nav:has(#burger-menu.is-open) .pill {
 .ajx-bignum.is-right { left: 73%; }
 .ajx-bignum.is-active {
   opacity: 1;
-  transform: none;
+  transform: translate(-50%, -42%);
 }
 .ajx-bignum.is-past {
-  transform: translateY(-14%);
+  transform: translate(-50%, -56%);
 }
 .ajx-bignum.is-clicked {
   animation: ajx-knock 0.7s cubic-bezier(0.22, 1, 0.36, 1);
@@ -4489,16 +4583,18 @@ nav:has(#burger-menu.is-open) .pill {
   box-shadow: 0 10px 30px -12px rgba(26, 18, 12, 0.22);
   backdrop-filter: blur(14px) saturate(1.2);
   -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  translate: -50% 0;
+  /* Centratura DENTRO il transform: con `translate` + `transform` nella
+     stessa regola il minificatore scartava `translate` e la pillola partiva
+     da metà schermo. */
   opacity: 0;
-  transform: translateY(16px);
+  transform: translate(-50%, 16px);
   transition:
     opacity 0.5s ease,
     transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .ajx-root[data-on="1"] .ajx-hud {
   opacity: 1;
-  transform: none;
+  transform: translate(-50%, 0);
   pointer-events: auto;
 }
 .ajx-hud-label {
@@ -5075,6 +5171,17 @@ nav:has(#burger-menu.is-open) .pill {
   .ajx-hud-nodes { gap: 8px; }
   .ajx-hud-node { padding: 6px 9px; }
 }
+/* Telefoni bassi (SE): la tappa si allunga verso il basso, così il testo
+   scende fin sopra la HUD e lascia spazio all'oggetto 3D sopra il titolo
+   (il centro della tappa, a cui è ancorato l'oggetto, non cambia). */
+@media (max-width: 768px) and (max-height: 640px) {
+  .ajx-step,
+  .ajx-step--left,
+  .ajx-step--right {
+    min-height: 90vh;
+    padding-bottom: calc(13vh + env(safe-area-inset-bottom, 0px));
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .ajx-step,
   .ajx-step-title .ajx-word > span,
@@ -5494,6 +5601,12 @@ nav:has(#burger-menu.is-open) .pill {
 
 /* Corsivo del titolo hero — ARANCIO: la pagina si apre in caldo (vedi
    "assegnazione per sezione" nel blocco @theme). */
+/* Hero alta quanto lo schermo VISIBILE (svh): con 100vh su iOS il fondo
+   della scena (sfumatura, "Scorri") finiva sotto la barra di Safari.
+   `h-screen` nel markup resta come fallback per i browser senza svh. */
+.hero-section {
+  height: 100svh;
+}
 .hero-section h1 em {
   font-style: italic;
   color: var(--color-orange);
@@ -6528,7 +6641,8 @@ html.apd-skip-loader #apd-loader {
     gap: 44px;
   }
   .ap-hero-title {
-    font-size: clamp(44px, 12.4vw, 84px);
+    /* 11vw: "hinter dem Studio." (de, la riga più lunga) sta in 320px */
+    font-size: clamp(34px, 11vw, 84px);
   }
   .ap-stage {
     height: auto;
@@ -6738,6 +6852,9 @@ html.apd-skip-loader #apd-loader {
   --tone-text: var(--color-accent);
   --tone-hl: rgba(132, 162, 245, 0.34);
   --tone-bg: #cedaf3;
+}
+/* La seconda card scende un po' (sfalsata), qualunque sia il tono. */
+.ap-card-slot + .ap-card-slot {
   margin-top: clamp(60px, 15vh, 190px);
 }
 .ap-card:hover {
@@ -6863,12 +6980,29 @@ html.apd-skip-loader #apd-loader {
   .ap-cards {
     grid-template-columns: 1fr;
   }
-  .ap-card--shadow {
+  .ap-card-slot + .ap-card-slot {
     margin-top: 0;
   }
   .ap-card {
     border-radius: 26px;
   }
+}
+/* Tablet verticale e telefono in orizzontale: in colonna singola la foto
+   4:4.3 a tutta larghezza diventava alta quasi due schermate. Da 560px la
+   card torna orizzontale, foto a sinistra e testo a destra, come su desktop. */
+@media (min-width: 560px) and (max-width: 860px) {
+  .ap-card {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    padding: 10px;
+  }
+  .ap-card-media {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: min(420px, 82svh);
+    border-radius: 20px;
+  }
+  .ap-card-body { padding: 18px 18px 10px; }
 }
 
 /* ============================================================
@@ -6910,47 +7044,259 @@ html.apd-skip-loader #apd-loader {
   background: radial-gradient(50% 50% at 50% 50%, rgba(132, 162, 245, 0.2), transparent 70%);
 }
 .ap-manifesto-copy { display: flex; flex-direction: column; }
-/* I tre fatti come tessere: al passaggio si "accendono" (fondo inchiostro,
-   cifra brace) e la cifra rigira come un contachilometri (main.ts). */
+/* Statement a sinistra e la catena a destra (in colonna sotto i 961px),
+   poi i tre numeri come una riga di statistiche: filo in alto, cifra,
+   etichetta, una riga di testo. Niente tessere. */
+.ap-manifesto-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 96px);
+  align-items: center;
+}
+.ap-facts {
+  margin-top: clamp(48px, 9vh, 110px);
+  gap: clamp(20px, 3vw, 56px);
+}
 .ap-manifesto .ap-fact {
-  padding: clamp(20px, 3vh, 30px) clamp(20px, 2vw, 30px) clamp(22px, 3.2vh, 32px);
-  border-radius: 24px;
-  background: rgba(247, 245, 225, 0.72);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 30px 60px -48px rgba(23, 19, 16, 0.4);
-  overflow: hidden;
-  transition: background-color 0.5s ease, border-color 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.6s ease;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 14px;
+  padding-top: clamp(18px, 2.6vh, 26px);
 }
 .ap-manifesto .ap-fact-rule {
-  inset: auto clamp(20px, 2vw, 30px) 0;
-  height: 3px;
-  border-radius: 3px 3px 0 0;
-  background: var(--color-orange);
+  height: 2px;
+  background: var(--color-border-strong);
 }
+/* il filo si riempie di brace dopo la sua cifra (main.ts anima --rule) */
+.ap-manifesto .ap-fact-rule::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-orange);
+  transform-origin: left;
+  transform: scaleX(0.34);
+}
+.ap-manifesto .ap-fact-n {
+  font-size: clamp(56px, min(5vw, 9vh), 92px);
+}
+.ap-manifesto .ap-fact-label { padding-bottom: 0; }
+.ap-manifesto .ap-fact-text { margin-top: 10px; font-size: 0.875rem; }
 .ap-fact-idx {
   position: absolute;
-  top: clamp(18px, 2.6vh, 26px);
-  right: clamp(20px, 2vw, 30px);
+  top: 12px;
+  right: 0;
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   color: var(--color-text-muted);
-  transition: color 0.5s ease;
 }
-.ap-manifesto .ap-fact-n,
-.ap-manifesto .ap-fact-label,
-.ap-manifesto .ap-fact-text { transition: color 0.5s ease; }
-@media (hover: hover) and (pointer: fine) {
-  .ap-manifesto .ap-fact:hover {
-    background: var(--color-ink);
-    border-color: var(--color-ink);
-    transform: translateY(-6px);
-    box-shadow: 0 40px 70px -40px rgba(23, 19, 16, 0.55);
+
+/* --- La catena --- */
+.ap-chain {
+  --chain-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  padding: clamp(18px, 2.6vh, 26px) clamp(18px, 2vw, 28px) clamp(26px, 3.6vh, 38px);
+  border-radius: 26px;
+  background:
+    linear-gradient(to right, rgba(23, 19, 16, 0.045) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(to bottom, rgba(23, 19, 16, 0.045) 1px, transparent 1px) 0 0 / 22px 22px,
+    rgba(247, 245, 225, 0.8);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 34px 70px -52px rgba(23, 19, 16, 0.45);
+}
+.ap-chain-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+/* Le due versioni (prima / dopo) stanno nella stessa cella e si danno il
+   cambio: niente salti di layout. */
+.ap-chain-tag,
+.ap-chain-note {
+  display: inline-grid;
+}
+.ap-chain-tag > span,
+.ap-chain-note > span {
+  grid-area: 1 / 1;
+}
+.ap-chain-tag {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+.ap-chain-note {
+  flex: 1 1 14em;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  text-wrap: pretty;
+}
+[data-ap-chain-after] { opacity: 0; }
+
+.ap-chain-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: clamp(26px, 4.4vh, 44px);
+  min-height: 48px;
+}
+.ap-chain-wire {
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  right: 24px;
+  height: 2px;
+  margin-top: -1px;
+  background: repeating-linear-gradient(to right, var(--color-border-strong) 0 6px, transparent 6px 11px);
+}
+.ap-chain-wire-on {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  background: var(--color-orange);
+  opacity: 0;
+}
+/* il messaggio che viaggia sul filo */
+.ap-chain-pulse {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 2px;
+  background: var(--color-orange);
+  box-shadow: 0 0 0 4px rgba(216, 64, 2, 0.14);
+  animation: ap-chain-pulse 2.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes ap-chain-pulse {
+  0% { left: 0%; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+.ap-chain-end,
+.ap-chain-hop {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+.ap-chain-end {
+  flex: none;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-strong);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+.ap-chain-end--us { padding-left: 6px; }
+.ap-chain.is-linked .ap-chain-end {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-bg);
+}
+.ap-chain-faces { display: inline-flex; }
+.ap-chain-faces img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--color-bg);
+  object-fit: cover;
+}
+.ap-chain-faces img + img { margin-left: -10px; }
+.ap-chain-us-short { display: none; }
+.ap-chain-hops {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+.ap-chain-hop {
+  padding: 7px 12px;
+  background: rgba(254, 253, 236, 0.94);
+  border: 1px dashed var(--color-border-strong);
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+/* barrata: la riga si disegna con lo scroll (--strike, main.ts) */
+.ap-chain-hop::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  top: 50%;
+  height: 1.5px;
+  background: var(--color-orange);
+  transform-origin: left;
+  transform: scaleX(var(--strike, 0));
+}
+
+@media (min-width: 1200px) {
+  .ap-chain-track { min-height: 56px; }
+  .ap-chain-end { height: 54px; padding: 0 22px; font-size: 1.1875rem; }
+  .ap-chain-end--us { padding-left: 8px; }
+  .ap-chain-faces img { width: 38px; height: 38px; }
+  .ap-chain-faces img + img { margin-left: -12px; }
+  .ap-chain-hops { gap: 10px; }
+  .ap-chain-hop { padding: 9px 16px; font-size: 0.9375rem; }
+  .ap-chain-note { font-size: 0.9375rem; }
+}
+@media (max-width: 960px) {
+  .ap-manifesto-top { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  .ap-manifesto { padding-block: 64px 56px; }
+  .ap-statement { font-size: clamp(32px, 9vw, 56px); max-width: 14ch; }
+  .ap-facts { margin-top: 36px; gap: 0; }
+  .ap-manifesto .ap-fact {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 18px;
+    padding: 16px 0 18px;
   }
-  .ap-manifesto .ap-fact:hover .ap-fact-n { color: var(--color-amber); }
-  .ap-manifesto .ap-fact:hover .ap-fact-label { color: var(--color-bg); }
-  .ap-manifesto .ap-fact:hover .ap-fact-text { color: rgba(254, 253, 236, 0.7); }
-  .ap-manifesto .ap-fact:hover .ap-fact-idx { color: var(--color-amber); }
+  .ap-manifesto .ap-fact-n {
+    grid-row: 1 / span 2;
+    font-size: clamp(48px, 14vw, 68px);
+  }
+  .ap-manifesto .ap-fact-label { align-self: end; padding-right: 28px; font-size: 19px; }
+  .ap-manifesto .ap-fact-text { grid-column: 2; align-self: start; margin-top: 4px; line-height: 1.5; }
+  .ap-fact-idx { top: 18px; }
+}
+@media (max-width: 520px) {
+  .ap-chain { border-radius: 22px; padding: 16px 14px 22px; }
+  .ap-chain-track { margin-top: 22px; gap: 4px; }
+  .ap-chain-end { height: 38px; padding: 0 12px; font-size: 0.9375rem; }
+  .ap-chain-end--us { padding-left: 4px; gap: 6px; }
+  .ap-chain-faces img { width: 26px; height: 26px; }
+  .ap-chain-us-long { display: none; }
+  .ap-chain-us-short { display: inline; }
+  .ap-chain-hops { gap: 4px; }
+  .ap-chain-hop { padding: 5px 8px; font-size: 0.6875rem; }
+  .ap-chain-hop::after { left: 6px; right: 6px; }
+}
+@media (max-width: 374px) {
+  .ap-chain-hop:nth-child(3) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap-chain-pulse { animation: none; opacity: 0; }
 }
 
 @media (min-width: 961px) {
@@ -6963,14 +7309,11 @@ html.apd-skip-loader #apd-loader {
     padding-block: clamp(92px, 11.5vh, 116px) clamp(28px, 4.5vh, 56px);
   }
   .ap-screen { width: 100%; }
-  .ap-manifesto .ap-screen { gap: clamp(36px, 7vh, 88px); }
+  .ap-manifesto .ap-screen { gap: clamp(40px, 8vh, 96px); }
   .ap-statement {
-    max-width: 16ch;
-    font-size: clamp(48px, min(6vw, 10.6vh), 108px);
+    max-width: 13ch;
+    font-size: clamp(44px, min(4.9vw, 9vh), 92px);
   }
-  .ap-facts { margin-top: 0; gap: clamp(16px, 1.6vw, 28px); }
-  .ap-fact-n { font-size: clamp(56px, min(5.4vw, 9.6vh), 104px); }
-  .ap-fact-text { margin-top: 10px; }
 
   /* --- IL DUO: due card orizzontali affiancate, tutto in una schermata --- */
   .ap-duo .ap-screen { gap: clamp(24px, 4.2vh, 48px); }
@@ -6982,7 +7325,7 @@ html.apd-skip-loader #apd-loader {
     gap: clamp(20px, 2.4vw, 40px);
     align-items: stretch;
   }
-  .ap-card--shadow { margin-top: 0; }
+  .ap-card-slot + .ap-card-slot { margin-top: 0; }
   .ap-card {
     display: grid;
     grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
@@ -7014,6 +7357,104 @@ html.apd-skip-loader #apd-loader {
 }
 @media (max-width: 960px) {
   .ap-manifesto-grid { display: none; }
+}
+
+/* --- IL DUO su telefono: ogni card occupa una schermata intera, tutta
+   visibile. La foto prende lo spazio che resta sopra il testo; main.ts la
+   tiene ferma un attimo (pin breve) e ci si posa sopra da soli. --- */
+@media (max-width: 559px) {
+  .ap-cards { gap: 24px; }
+  .ap-card {
+    display: flex;
+    flex-direction: column;
+    height: calc(100svh - 24px);
+    max-height: 860px;
+    padding: 10px;
+    border-radius: 24px;
+  }
+  .ap-card-media {
+    aspect-ratio: auto;
+    flex: 1 1 0;
+    min-height: 110px;
+    border-radius: 17px;
+  }
+  .ap-card-img { object-position: 50% 24%; }
+  .ap-card-chip { top: 12px; left: 12px; }
+  .ap-card-body { flex: none; padding: 16px 8px 6px; }
+  .ap-card-name { font-size: clamp(40px, 12vw, 52px); }
+  .ap-card-bio { margin-top: 12px; font-size: 14px; line-height: 1.55; }
+  .ap-card-quote { margin-top: 14px; padding-top: 12px; font-size: clamp(18px, 5vw, 21px); }
+  .ap-card-tags { margin-top: 12px; gap: 6px; }
+  .ap-card-tags li { padding: 6px 11px; font-size: 0.75rem; }
+}
+@media (max-width: 559px) and (max-height: 700px) {
+  .ap-card-body { padding-top: 12px; }
+  .ap-card-name { font-size: 38px; }
+  .ap-card-bio { margin-top: 8px; font-size: 13px; line-height: 1.5; }
+  .ap-card-quote { margin-top: 10px; padding-top: 10px; font-size: 17px; }
+  .ap-card-tags { margin-top: 10px; }
+  .ap-card-tags li { padding: 5px 10px; font-size: 11px; }
+}
+
+/* --- HERO di Chi siamo su telefono e tablet verticali: tutto in una
+   schermata. Il testo in alto, i due ritratti prendono l'altezza che resta
+   (container query: la larghezza dei ritratti segue l'altezza del palco). --- */
+@media (max-width: 960px) and (orientation: portrait) {
+  .ap-hero {
+    height: 100svh;
+    min-height: 540px;
+    padding-block: calc(86px + env(safe-area-inset-top, 0px)) 20px;
+  }
+  .ap-hero-inner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: clamp(18px, 3.4svh, 40px);
+  }
+  .ap-hero-copy { flex: none; }
+  .ap-hero-top { margin-bottom: clamp(14px, 2.4svh, 26px); }
+  .ap-hero-sub { margin-top: clamp(12px, 2.2svh, 24px); }
+  .ap-hero-cta { margin-top: clamp(16px, 3svh, 32px); }
+  .ap-stage {
+    --hint-h: 52px;
+    flex: 1 1 0;
+    min-height: 0;
+    container-type: size;
+    align-content: start;
+    justify-content: center;
+    /* gli angoli del mirino sporgono di 12px: fra le due cornici serve aria */
+    column-gap: clamp(36px, 10vw, 72px);
+    padding: 14px 14px 0;
+  }
+  .ap-portrait {
+    /* cornice 4:5 + didascalia (~46px) + scarto del secondo + suggerimento */
+    width: min(100%, calc((100cqh - 56px - 16px - var(--hint-h)) * 0.8));
+    justify-self: center;
+  }
+  .ap-portrait-frame { aspect-ratio: 4 / 5; }
+  .ap-portrait--2 { margin-top: 16px; }
+  .ap-portrait-cap { margin-top: 10px; gap: 2px 8px; }
+  .ap-portrait-name { font-size: 1.125rem; }
+  .ap-portrait-area { font-size: 11px; letter-spacing: 0.08em; }
+  .ap-stage-hint { margin-top: 12px; justify-self: center; }
+}
+@media (max-width: 960px) and (orientation: portrait) and (max-height: 700px) {
+  /* il suggerimento lascia spazio ai ritratti: la lente parte comunque da sola */
+  .ap-stage { --hint-h: 0px; }
+  .ap-stage-hint { display: none; }
+  .ap-hero-title { font-size: clamp(34px, 10.4vw, 84px); }
+  .ap-hero-sub { font-size: 14px; line-height: 1.5; }
+  .ap-hero-status { padding-block: 5px; font-size: 12px; }
+  .ap-hero-btn { padding: 13px 24px; }
+}
+@media (max-width: 960px) and (orientation: portrait) and (max-height: 600px) {
+  /* telefoni da 4": il kicker lo dice già la navbar, spazio ai ritratti */
+  .ap-hero { padding-top: calc(80px + env(safe-area-inset-top, 0px)); }
+  .ap-hero-top { display: none; }
+  .ap-hero-title { font-size: clamp(30px, 9.6vw, 84px); }
+  .ap-hero-sub { font-size: 13px; }
+  .ap-hero-inner { gap: 14px; }
 }
 
 /* ============================================================
@@ -7169,7 +7610,6 @@ html.apd-skip-loader #apd-loader {
   z-index: -1;
   left: -0.06em;
   top: 50%;
-  translate: 0 -54%;
   font-family: var(--font-display);
   font-weight: 500;
   font-size: clamp(160px, 19vw, 320px);
@@ -7178,12 +7618,13 @@ html.apd-skip-loader #apd-loader {
   color: transparent;
   -webkit-text-stroke: 1.5px rgba(39, 72, 165, 0.12);
   opacity: 0;
-  transform: translateY(8%);
+  /* centratura nel transform (vedi .ajx-hud): -54%, più la corsa */
+  transform: translateY(-46%);
   transition: opacity 0.5s ease, transform 1.2s var(--apm-ease);
   pointer-events: none;
   user-select: none;
 }
-.apm-phase.is-active .apm-bignum { opacity: 1; transform: none; transition-delay: 0.1s; }
+.apm-phase.is-active .apm-bignum { opacity: 1; transform: translateY(-54%); transition-delay: 0.1s; }
 .apm-phase-meta {
   display: block;
   margin-bottom: 18px;
@@ -7974,10 +8415,6 @@ html.apd-skip-loader #apd-loader {
     margin-top: 10px;
     font-size: 14px;
     line-height: 1.55;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
   .apm-get { margin-top: 12px; font-size: 13.5px; }
   .apm-get-icon { width: 26px; height: 26px; }
@@ -7990,6 +8427,11 @@ html.apd-skip-loader #apd-loader {
   .apm-scores, .apm-stats { transform-origin: 100% 100%; }
   .apm-chat, .apm-phone { transform-origin: 0 100%; }
 }
+/* Telefoni stretti: il testo della fase resta intero (niente "…"), un filo
+   più piccolo per stare nelle stesse righe. */
+@media (max-width: 360px) {
+  .apm-phase-text { font-size: 13.5px; line-height: 1.5; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .apm-w > span { transform: none; transition: none; }
@@ -8000,3 +8442,63 @@ html.apd-skip-loader #apd-loader {
   .apm-s-cursor { display: none; }
 }
 
+
+/* Telefoni: le micro-etichette maiuscole (10–10.5px su desktop) salgono a
+   11px, la soglia sotto cui su uno schermo piccolo si legge a fatica. */
+@media (max-width: 767px) {
+  .cta-foot,
+  .about-cta-foot,
+  .cflow-label,
+  .cflow-cal-week span,
+  .ajx-board-head,
+  .ajx-board-year,
+  .ajx-step-tag,
+  .apm-rail-n,
+  .apm-get-txt small {
+    font-size: 11px;
+  }
+}
+
+/* Telefono in orizzontale (~390px d'altezza, touch). In main.ts le scene
+   pinnate della home restano impilate; qui si compattano le schermate che
+   restano "da una schermata". */
+@media (max-height: 500px) and (orientation: landscape) and (hover: none) {
+  /* hero: il contenuto scende sotto la navbar */
+  [data-anim="hero-content"] { padding-top: 64px; }
+  .hero-scroll-hint { display: none; }
+  /* Come lavoriamo: testo e cantiere affiancati, titoli compatti */
+  .apm-inner { gap: 8px; padding-block: 64px 10px; }
+  .apm-head { grid-template-columns: 1fr; grid-template-areas: "kicker" "title"; row-gap: 4px; }
+  .apm-lead { display: none; }
+  .apm-title { font-size: 22px; }
+  .apm-body {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 24px;
+    align-items: center;
+  }
+  .apm-rail { margin-bottom: 8px; }
+  .apm-bignum { display: none; }
+  .apm-phase-meta { margin-bottom: 4px; }
+  .apm-phase-title { font-size: 22px; }
+  .apm-phase-text { margin-top: 6px; font-size: 12.5px; line-height: 1.45; }
+  .apm-get { margin-top: 8px; font-size: 12.5px; }
+  .apm-build { max-height: calc(100svh - 150px); }
+}
+
+/* Tablet verticale (iPad e simili, 701–1023px): usa l'impaginazione mobile,
+   ma con i caratteri del telefono il palco sembrava vuoto. Scala intermedia
+   per Il punto e per i Servizi (reel a tutta schermata). */
+@media (min-width: 701px) and (max-width: 1023px) and (min-height: 700px) {
+  .point-lead { font-size: clamp(38px, 5.4vw, 54px); }
+  .point-pain { width: min(660px, 100%); }
+  .point-item-text { font-size: clamp(28px, 3.9vw, 38px); }
+  .point-but { font-size: 14px; }
+  .point-ping { width: 260px; }
+  .svc-title { font-size: clamp(44px, 6vw, 60px); }
+  .svc-desc { font-size: 17px; max-width: 44ch; }
+  .svc-copies {
+    left: 12vw;
+    right: 12vw;
+    height: clamp(260px, 30svh, 340px);
+  }
+}

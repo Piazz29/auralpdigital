@@ -28,13 +28,21 @@
 
 .pnav-dock {
   position: fixed;
-  top: 14px;
+  top: calc(14px + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
   padding: 0 16px;
   pointer-events: none;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Ritirata scorrendo verso il basso (main.ts, solo schermi stretti). */
+.pnav-dock.is-tucked {
+  transform: translateY(calc(-100% - 14px - env(safe-area-inset-top, 0px)));
+}
+@media (prefers-reduced-motion: reduce) {
+  .pnav-dock { transition: none; }
 }
 
 .pnav-shell {
@@ -326,6 +334,12 @@
 @media (max-width: 767px) {
   .pnav-links {
     display: none;
+  }
+  /* Voci grandi su una riga anche a 320px ("Come Lavoriamo", "So arbeiten
+     wir"): la maschera del roll è alta una riga, una voce a capo si taglia. */
+  .pnav-big-link {
+    font-size: min(2.5rem, 9.6vw);
+    white-space: nowrap;
   }
   .pnav-bar {
     gap: 48px;

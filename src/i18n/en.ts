@@ -18,12 +18,14 @@ const en = {
     items: {
       projects: "Projects",
       services: "What We Do",
+      method: "How We Work",
       about: "About Us",
       faq: "FAQ",
     },
     aria: {
       projects: "Go to projects",
       services: "Discover what we do",
+      method: "See how we work",
       about: "Find out who we are",
       faq: "Frequently asked questions",
     },
@@ -313,6 +315,7 @@ const en = {
     links: {
       projects: "Projects",
       services: "What we do",
+      method: "How we work",
       about: "About us",
       contact: "Contact",
     },
@@ -338,6 +341,16 @@ const en = {
     },
     manifesto: {
       kicker: "The manifesto",
+      chain: {
+        before: "Usually",
+        after: "With us",
+        beforeNote: "Every request passes from hand to hand.",
+        afterNote: "You talk directly to the people who design and build.",
+        you: "You",
+        us: "Alice & Julian",
+        usShort: "Us",
+        hops: ["Account", "PM", "Freelancer"],
+      },
       statement: "Few projects at a time, *followed all the way.*",
       facts: [
         { n: 0, label: "middlemen", text: "You talk directly to the people who plan and build. Decisions are quick and nothing gets lost." },

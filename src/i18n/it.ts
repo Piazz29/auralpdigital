@@ -19,12 +19,14 @@ const it = {
     items: {
       projects: "Progetti",
       services: "Cosa Facciamo",
+      method: "Come Lavoriamo",
       about: "Chi Siamo",
       faq: "FAQ",
     },
     aria: {
       projects: "Vai ai progetti",
       services: "Scopri cosa facciamo",
+      method: "Scopri come lavoriamo",
       about: "Scopri chi siamo",
       faq: "Domande frequenti",
     },
@@ -329,6 +331,7 @@ const it = {
     links: {
       projects: "Progetti",
       services: "Cosa facciamo",
+      method: "Come lavoriamo",
       about: "Chi siamo",
       contact: "Contatti",
     },
@@ -354,6 +357,16 @@ const it = {
     },
     manifesto: {
       kicker: "Il manifesto",
+      chain: {
+        before: "Di solito",
+        after: "Con noi",
+        beforeNote: "Ogni richiesta passa di mano in mano.",
+        afterNote: "Parli direttamente con chi progetta e sviluppa.",
+        you: "Tu",
+        us: "Alice & Julian",
+        usShort: "Noi",
+        hops: ["Account", "PM", "Freelance"],
+      },
       statement: "Pochi progetti alla volta, *seguiti per intero.*",
       facts: [
         { n: 0, label: "intermediari", text: "Parli direttamente con chi progetta e sviluppa. Le decisioni sono rapide e niente va perso." },
