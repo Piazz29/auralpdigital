@@ -20,6 +20,12 @@ export default defineConfig({
     plugins: [tailwindcss()],
     // Il modello 3D del Lanyard (card.glb) viene importato come asset.
     assetsInclude: ['**/*.glb'],
+    // Il minificatore CSS di Astro 7 scrive le media query in sintassi range
+    // (`width<=767px`), che Safari < 16.4 ignora: su iPhone meno recenti
+    // salterebbe tutto il responsive. Con questo target torna `max-width`.
+    build: {
+      cssTarget: ['chrome107', 'edge107', 'firefox104', 'safari15'],
+    },
     // DEV: le isole React di Chi siamo e FAQ (freccia 3D, BlurText, titolo
     // hero, accordion…) importano librerie che la home non usa. Senza questa
     // lista Vite le scopriva solo alla prima visita di quelle pagine e le

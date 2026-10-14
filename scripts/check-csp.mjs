@@ -20,6 +20,12 @@ if (!csp) {
   console.error("check-csp: nessuna Content-Security-Policy in vercel.json");
   process.exit(1);
 }
+// Un header HTTP non può contenere a-capo o caratteri di controllo: Vercel
+// rifiuterebbe la config o il browser scarterebbe l'header.
+if (/[\x00-\x1f\x7f]/.test(csp)) {
+  console.error("check-csp: la Content-Security-Policy contiene a-capo o caratteri di controllo");
+  process.exit(1);
+}
 const scriptSrc = csp.split(";").map((d) => d.trim()).find((d) => d.startsWith("script-src ")) ?? "";
 const allowed = new Set(scriptSrc.match(/'sha256-[^']+'/g) ?? []);
 
@@ -43,13 +49,26 @@ for (const file of htmlFiles(DIST)) {
   }
 }
 
+// BOOKING_ENDPOINT (src/config/contact.ts): se punta a un altro dominio, il
+// form ci fa una fetch → quel dominio dev'essere in connect-src, o il browser
+// blocca la prenotazione (e si ripiega sempre sulla mail).
+const endpoint = readFileSync("src/config/contact.ts", "utf8").match(/BOOKING_ENDPOINT\s*=\s*["'`]([^"'`]*)["'`]/)?.[1];
+if (endpoint && /^https?:/.test(endpoint)) {
+  const origin = new URL(endpoint).origin;
+  const connectSrc = csp.split(";").map((d) => d.trim()).find((d) => d.startsWith("connect-src ")) ?? "";
+  if (!connectSrc.split(/\s+/).includes(origin)) {
+    console.error(`check-csp: BOOKING_ENDPOINT punta a ${origin}, che manca in connect-src di vercel.json`);
+    process.exitCode = 1;
+  }
+}
+
 const missing = [...found].filter(([h]) => !allowed.has(h));
 const unused = [...allowed].filter((h) => !found.has(h));
 for (const [h, pages] of missing) console.error(`check-csp: script inline non ammesso ${h} (${pages[0]}${pages.length > 1 ? ` +${pages.length - 1}` : ""})`);
 for (const h of unused) console.warn(`check-csp: hash in vercel.json non più usato ${h}`);
 
 if (missing.length) {
-  console.error(`\nscript-src corretto per vercel.json:\nscript-src 'self' 'wasm-unsafe-eval' ${[...found.keys()].join(" ")}`);
+  console.error(`\nSostituire in vercel.json la direttiva con:\n  script-src 'self' 'wasm-unsafe-eval' ${[...found.keys()].join(" ")}`);
   process.exit(1);
 }
 if (!process.exitCode) console.log(`check-csp: ok — ${found.size} script inline, tutti ammessi dalla CSP`);
