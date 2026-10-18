@@ -8398,18 +8398,6 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 .hj-line {
   display: block;
 }
-.hj-sub {
-  max-width: min(92vw, 720px);
-  color: var(--color-text);
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(24px, 2.6vw, 40px);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  text-wrap: balance;
-  text-shadow: 0 0 16px rgba(254, 253, 236, 0.95);
-  margin-bottom: 26px;
-}
 
 /* Entrata dopo il loader: righe che salgono e si mettono a fuoco. */
 .hj-badge,
@@ -8494,12 +8482,9 @@ html.apd-loading .hj-track {
   transform: translateY(calc((1 - var(--k)) * 34px));
   filter: blur(calc((1 - var(--k)) * 8px));
   pointer-events: none;
-  /* sopra il sole, in alto: il disco resta libero sotto */
+  /* il nome della vetta sta sopra il disco del sole */
   justify-content: flex-start;
-  padding-top: clamp(110px, 17vh, 180px);
-}
-.hero-journey.is-live.is-final .hj-final {
-  pointer-events: auto;
+  padding-top: 31vh;
 }
 .hero-journey:not(.is-live) .hj-enter,
 .hero-journey:not(.is-live) .hj-hud,
@@ -8536,9 +8521,19 @@ html.apd-loading .hj-track {
   font-size: clamp(15px, 1.4vw, 20px);
   font-weight: 500;
 }
-.hj-mark-name em {
-  font-style: italic;
-  color: var(--color-accent);
+.hj-mark-alt {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.hj-summit {
+  font-size: 12px;
+}
+.hj-summit-alt {
+  margin-left: 12px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* HUD: coordinate e quota, come uno strumento di volo. */
@@ -8579,4 +8574,10 @@ html.apd-loading .hj-track {
   .hj-hud span:not(.hj-hud-alt) {
     display: none;
   }
+}
+/* All'arrivo in vetta HUD e barra hanno finito il loro lavoro: sfumano prima
+   che il palco lasci il posto a Il Punto. */
+.hero-journey.is-live .hj-hud,
+.hero-journey.is-live .hj-track {
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.95) / 0.05), 1));
 }

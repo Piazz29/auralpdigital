@@ -171,10 +171,14 @@ const en = {
       l1: "Digital systems",
       l2: "that *bring*",
       l3: "clients.",
-      sub: "Websites, social media and software designed to turn visits into clients.",
-      cta: "See our projects",
-      scroll: "Scroll",
       enter: "Scroll into the valley",
+      // Tappe del viaggio: luoghi veri (vedi it.ts).
+      stops: [
+        { name: "Fiè allo Sciliar", alt: "880 m" },
+        { name: "Castelrotto", alt: "1,060 m" },
+        { name: "Alpe di Siusi", alt: "1,850 m" },
+      ],
+      summit: { name: "Sciliar", alt: "2,563 m" },
     },
     services: {
       // Three services (vedi it.ts).

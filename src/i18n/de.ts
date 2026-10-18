@@ -171,10 +171,14 @@ const de = {
       l1: "Digitale Systeme",
       l2: "die *Kunden*",
       l3: "bringen.",
-      sub: "Websites, Social Media und Software, die aus Besuchern Kunden machen.",
-      cta: "Unsere Projekte ansehen",
-      scroll: "Scrollen",
       enter: "Scrollen und ins Tal eintauchen",
+      // Tappe del viaggio: luoghi veri (vedi it.ts).
+      stops: [
+        { name: "Völs am Schlern", alt: "880 m" },
+        { name: "Kastelruth", alt: "1.060 m" },
+        { name: "Seiser Alm", alt: "1.850 m" },
+      ],
+      summit: { name: "Schlern", alt: "2.563 m" },
     },
     services: {
       // Drei Leistungen (vedi it.ts).

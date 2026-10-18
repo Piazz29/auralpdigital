@@ -172,10 +172,17 @@ const it = {
       l1: "Sistemi digitali",
       l2: "che *portano*",
       l3: "clienti.",
-      sub: "Siti web, social e gestionali pensati per trasformare le visite in clienti.",
-      cta: "Guarda i nostri progetti",
-      scroll: "Scorri",
       enter: "Scorri ed entra nella valle",
+      // IL VIAGGIO — la camera vola da Bolzano allo Sciliar (lo stesso che fa
+      // da fondale a "Il punto", subito dopo): le tappe sono luoghi veri, non
+      // servizi, così la hero non anticipa nulla delle sezioni successive.
+      // Nomi propri: restano come sui cartelli (it/de).
+      stops: [
+        { name: "Fiè allo Sciliar", alt: "880 m" },
+        { name: "Castelrotto", alt: "1.060 m" },
+        { name: "Alpe di Siusi", alt: "1.850 m" },
+      ],
+      summit: { name: "Sciliar", alt: "2.563 m" },
     },
     services: {
       // COSA FACCIAMO — tre servizi, uno per ogni dolore nominato in "Il
