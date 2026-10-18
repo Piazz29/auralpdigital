@@ -8308,3 +8308,275 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
     height: clamp(260px, 30svh, 340px);
   }
 }
+
+/* =========================================================================
+   HERO — IL VIAGGIO (HeroJourney). Sezione alta con palco sticky; l'isola
+   scrive --p ∈ [0,1] sulla sezione e qui il testo si muove solo con quella
+   variabile (opacità, transform, filter: niente layout per frame).
+   NB: niente `translate` nelle regole con `transform` (il minificatore lo
+   scarterebbe) — solo transform.
+   Senza .is-live (no WebGL, reduced motion, telefono in orizzontale): una
+   schermata ferma, titolo + sottotitolo + CTA impilati al centro.
+   ========================================================================= */
+.hero-journey {
+  --p: 0;
+  position: relative;
+  height: 100svh;
+  background: var(--color-bg);
+}
+.hero-section.hero-journey.is-live {
+  height: 480vh;
+}
+@media (max-width: 767px) {
+  .hero-section.hero-journey.is-live {
+    height: 400vh;
+  }
+}
+/* Fermate di scroll alle tappe: la posizione che le porta in cima al
+   viewport è esattamente il progresso --s della corsa sticky. */
+.hj-detent {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  top: calc(var(--s) * (100% - 100vh));
+  pointer-events: none;
+}
+.hero-journey:not(.is-live) .hj-detent {
+  display: none;
+}
+.hj-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 0 20px;
+  text-align: center;
+}
+.hj-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.hj-canvas canvas {
+  display: block;
+}
+/* Velo di carta: alone dietro al titolo (leggibilità sulle curve) e
+   dissolvenza in fondo verso Il Punto. */
+.hj-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 46% 34% at 50% 50%, rgba(254, 253, 236, calc(0.8 * (1 - min(1, var(--p) * 12)))) 0%, rgba(254, 253, 236, 0) 100%),
+    linear-gradient(to bottom, rgba(254, 253, 236, 0) 78%, var(--color-bg) 100%);
+}
+
+.hj-intro,
+.hj-final {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.hj-title {
+  margin-top: 22px;
+  color: var(--color-ink);
+  font-size: clamp(40px, 6.4vw, 104px);
+  line-height: 0.96;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 22px rgba(254, 253, 236, 0.85);
+}
+.hj-line {
+  display: block;
+}
+.hj-sub {
+  max-width: min(92vw, 720px);
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(24px, 2.6vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  text-shadow: 0 0 16px rgba(254, 253, 236, 0.95);
+  margin-bottom: 26px;
+}
+
+/* Entrata dopo il loader: righe che salgono e si mettono a fuoco. */
+.hj-badge,
+.hj-line,
+.hj-enter,
+.hj-hud,
+.hj-track {
+  transition: opacity 1.1s cubic-bezier(0.2, 0.7, 0.2, 1), transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1), filter 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+html.apd-loading .hj-badge,
+html.apd-loading .hj-line,
+html.apd-loading .hj-enter,
+html.apd-loading .hj-hud,
+html.apd-loading .hj-track {
+  opacity: 0;
+  transform: translateY(26px);
+  filter: blur(8px);
+}
+.hj-line:nth-child(1) { transition-delay: 0.15s; }
+.hj-line:nth-child(2) { transition-delay: 0.27s; }
+.hj-line:nth-child(3) { transition-delay: 0.39s; }
+.hj-enter { transition-delay: 0.7s; }
+.hj-hud,
+.hj-track { transition-delay: 0.9s; }
+
+.hj-enter {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.hj-enter-line {
+  position: relative;
+  width: 1px;
+  height: 44px;
+  overflow: hidden;
+  background: var(--color-border-strong);
+}
+.hj-enter-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -40%;
+  width: 1px;
+  height: 40%;
+  background: var(--color-orange);
+  animation: hj-drip 1.8s cubic-bezier(0.6, 0, 0.3, 1) infinite;
+}
+@keyframes hj-drip {
+  to { top: 100%; }
+}
+
+/* ---- Modalità viaggio ---- */
+.hero-journey.is-live .hj-stage {
+  display: block;
+  padding: 0;
+}
+.hero-journey.is-live .hj-intro,
+.hero-journey.is-live .hj-final {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+  padding: 0 20px;
+}
+/* Il titolo si "attraversa": si ingrandisce verso la camera, si sfoca e
+   svanisce mentre ci si tuffa nella valle. */
+.hero-journey.is-live .hj-intro {
+  --k: clamp(0, calc((var(--p) - 0.012) / 0.09), 1);
+  opacity: calc(1 - var(--k));
+  transform: scale(calc(1 + var(--k) * var(--k) * 2.4));
+  filter: blur(calc(var(--k) * 14px));
+  pointer-events: none;
+}
+.hero-journey.is-live .hj-final {
+  --k: clamp(0, calc((var(--p) - 0.85) / 0.06), 1);
+  opacity: var(--k);
+  transform: translateY(calc((1 - var(--k)) * 34px));
+  filter: blur(calc((1 - var(--k)) * 8px));
+  pointer-events: none;
+  /* sopra il sole, in alto: il disco resta libero sotto */
+  justify-content: flex-start;
+  padding-top: clamp(110px, 17vh, 180px);
+}
+.hero-journey.is-live.is-final .hj-final {
+  pointer-events: auto;
+}
+.hero-journey:not(.is-live) .hj-enter,
+.hero-journey:not(.is-live) .hj-hud,
+.hero-journey:not(.is-live) .hj-track {
+  display: none;
+}
+
+/* Etichette delle tappe (drei Html, sopra il picchetto). */
+.hj-mark-wrap {
+  pointer-events: none;
+}
+.hj-mark {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 16px 10px;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: rgba(254, 253, 236, 0.88);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-premium);
+  backdrop-filter: blur(6px);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  will-change: opacity, transform;
+}
+.hj-mark-num {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--color-orange-deep);
+  font-variant-numeric: tabular-nums;
+}
+.hj-mark-name {
+  font-size: clamp(15px, 1.4vw, 20px);
+  font-weight: 500;
+}
+.hj-mark-name em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+
+/* HUD: coordinate e quota, come uno strumento di volo. */
+.hj-hud {
+  position: absolute;
+  z-index: 2;
+  left: clamp(16px, 3vw, 40px);
+  bottom: clamp(18px, 4vh, 36px);
+  display: flex;
+  gap: 18px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+.hj-hud b {
+  font-weight: 500;
+  color: var(--color-ink);
+}
+.hj-track {
+  position: absolute;
+  z-index: 2;
+  right: clamp(16px, 3vw, 40px);
+  bottom: clamp(22px, 4vh, 40px);
+  width: clamp(80px, 12vw, 160px);
+  height: 1px;
+  background: var(--color-border-strong);
+}
+.hj-track span {
+  position: absolute;
+  inset: 0;
+  background: var(--color-orange);
+  transform-origin: left center;
+  transform: scaleX(var(--p));
+}
+@media (max-width: 767px) {
+  .hj-hud span:not(.hj-hud-alt) {
+    display: none;
+  }
+}

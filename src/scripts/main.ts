@@ -635,7 +635,7 @@ if (heroVideo) {
 
 // ---------- Hero text entrance ----------
 // Solo sulla homepage: la pagina /chi-siamo ha la propria hero (vedi sotto).
-if (document.querySelector(".hero-section")) {
+if (document.querySelector("[data-anim='hero-content']")) {
   const heroEls: { sel: string; delay: number; y?: number }[] = [
     { sel: "[data-anim='hero-label']", delay: 0.5, y: 16 },
     { sel: "[data-anim='hero-line-1']", delay: 0.65, y: 30 },
