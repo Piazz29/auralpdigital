@@ -59,6 +59,8 @@ const i18n = {
 ---
 
 <form class="cflow" data-cflow novalidate data-i18n={JSON.stringify(i18n)} data-prog="0" data-pane="service">
+  <!-- Riflesso: passa una volta quando la card si è posata (main.ts). -->
+  <span class="cflow-sheen" aria-hidden="true"></span>
   <!-- Testata della card: cos'è + avanzamento a 3 segmenti (riempiti da
        contactFlow.ts via --f; un segmento già raggiunto riporta al suo passo). -->
   <div class="cflow-top">

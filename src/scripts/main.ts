@@ -1993,6 +1993,54 @@ revealRise(".cta-panel", {
   duration: 1.1,
 });
 
+// ---------- Finale — l'invito e il brief entrano come le altre scene ----------
+// Stessa grammatica di Servizi, Progetti e Il punto: il titolo sale dalla
+// sfocatura parola per parola, il resto si mette a fuoco in cascata, la card
+// del brief si alza dal tavolo in prospettiva e si posa piatta. A card
+// posata passa una volta il riflesso. Tutto legato allo scroll (si riavvolge).
+{
+  const screen = document.querySelector<HTMLElement>(".finale-screen");
+  if (screen && !staticScenes) {
+    const title = screen.querySelector<HTMLElement>(".finale-title");
+    const card = screen.querySelector<HTMLElement>(".cflow");
+    const rest = screen.querySelectorAll<HTMLElement>(".finale-kicker, .finale-sub, .cflow-foot");
+    const words = title ? SplitText.create(title, { type: "words", mask: "words" }).words : [];
+    const tl = gsap.timeline({
+      scrollTrigger: { trigger: screen, start: "top 85%", end: "top 4%", scrub: SCRUB },
+    });
+    if (card) {
+      tl.fromTo(
+        card,
+        { y: 110, rotationX: 22, scale: 0.92, transformPerspective: 1400, transformOrigin: "50% 100%" },
+        { y: 0, rotationX: 0, scale: 1, duration: 1.4, ease: "power1.out" },
+        0
+      );
+    }
+    if (words.length) {
+      tl.fromTo(
+        words,
+        { yPercent: 110, filter: "blur(8px)" },
+        { yPercent: 0, filter: "blur(0px)", duration: 0.8, stagger: 0.08, ease: "expo.out" },
+        0.1
+      );
+    }
+    tl.fromTo(
+      rest,
+      { autoAlpha: 0, y: 18, filter: "blur(6px)" },
+      { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.7, stagger: 0.14, ease: "expo.out" },
+      0.35
+    );
+    if (card) {
+      ScrollTrigger.create({
+        trigger: screen,
+        start: "top 6%",
+        onEnter: () => card.classList.add("is-landed"),
+        onLeaveBack: () => card.classList.remove("is-landed"),
+      });
+    }
+  }
+}
+
 // Il testo dentro al pannello (kicker, titolo, sottotitolo) NON ha comparse:
 // sale insieme al pannello ed è già leggibile. In home nessun titolo entra in
 // scena da solo — vedi `isHome` più sopra.
@@ -2418,25 +2466,30 @@ if (!reduceMotion) {
   });
 }
 
-// ---------- Footer — il ghost wordmark emerge in parallasse ----------
-// Il wordmark gigante parte più in basso e risale a posto mentre il footer
-// entra: l'ultima riga della pagina è anche l'ultimo movimento.
+// ---------- Footer — il wordmark gigante emerge lettera per lettera ----------
+// Il wordmark parte più in basso e risale a posto mentre il footer entra; le
+// lettere salgono in onda da sinistra, dalla sfocatura. L'ultima riga della
+// pagina è anche l'ultimo movimento.
 let ghostTrigger: ScrollTrigger | undefined;
-if (!reduceMotion && document.querySelector(".footer-ghost")) {
-  ghostTrigger = gsap.fromTo(
-    ".footer-ghost",
-    { yPercent: 36 },
-    {
-      yPercent: 0,
-      ease: "none",
-      scrollTrigger: {
-        trigger: ".site-footer",
-        start: "top 95%",
-        end: "bottom bottom",
-        scrub: 0.6,
-      },
-    }
-  ).scrollTrigger;
+const ghost = document.querySelector<HTMLElement>(".footer-ghost");
+if (!reduceMotion && ghost) {
+  const chars = SplitText.create(ghost, { type: "chars" }).chars;
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: ".site-footer",
+      start: "top 95%",
+      end: "bottom bottom",
+      scrub: 0.6,
+    },
+  });
+  tl.fromTo(ghost, { yPercent: 30 }, { yPercent: 0, ease: "none", duration: 1 }, 0);
+  tl.fromTo(
+    chars,
+    { yPercent: 70, autoAlpha: 0, filter: "blur(10px)" },
+    { yPercent: 0, autoAlpha: 1, filter: "blur(0px)", ease: "power3.out", duration: 0.55, stagger: 0.035 },
+    0
+  );
+  ghostTrigger = tl.scrollTrigger;
 }
 
 // ---------- Footer — torna su ----------
