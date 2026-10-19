@@ -2,9 +2,11 @@
 // COME LAVORIAMO — il metodo in 4 fasi, raccontato COSTRUENDO un sito.
 // Tutta la sezione sta in una scena sticky alta 100svh che attraversa le
 // fasi con lo scroll (ogni fase è una fermata [data-scroll-detent], vedi
-// main.ts). A sinistra la fase (titolo a parole mascherate, testo, cosa
-// ricevi); a destra un browser con un sito di esempio che nasce davanti agli
-// occhi:
+// main.ts). Prima delle fasi c'è un INGRESSO legato allo scroll: il titolo
+// parte grande al centro e si posa in alto, il cantiere sale dal basso
+// inclinato e si appoggia piatto. A sinistra l'indice delle fasi (l'attiva si
+// inchiostra e si apre, la linea accanto si riempie in continuo); a destra un
+// browser con un sito di esempio che nasce davanti agli occhi:
 //   01 Ascolto   → schizzo a matita + post-it con le cose emerse
 //   02 Design    → il design "pennella" sopra lo schizzo; la palette si può
 //                  provare (click), e la revisione chiesta viene fatta
@@ -60,7 +62,6 @@ const { lang, flow } = Astro.props;
 const c = flow.card;
 const d = flow.demo;
 const n = flow.items.length;
-const words = (s: string) => s.split(/\s+/).filter(Boolean);
 const pad = (i: number) => String(i + 1).padStart(2, "0");
 
 // Palette provabile nella fase Design (il primo è quello di partenza).
@@ -91,6 +92,7 @@ const MOUNTAINS = `
 
 <section id="come-lavoriamo" class="apm" data-apm data-lang={lang} style={`--n:${n}`}>
   <div class="apm-track">
+    <span class="apm-intro-end" aria-hidden="true"></span>
     {flow.items.map((_, i) => (
       <span class="apm-anchor" id={`metodo-${i + 1}`} data-scroll-detent="hard" style={`--i:${i}`} aria-hidden="true" />
     ))}
@@ -105,41 +107,30 @@ const MOUNTAINS = `
 
         <div class="apm-body">
           <div class="apm-left">
-            <ol class="apm-rail">
+            <!-- Indice delle fasi: tutte visibili, l'attiva si inchiostra e si
+                 apre; la linea accanto si riempie con lo scroll. -->
+            <ol class="apm-steps">
               {flow.items.map((it, i) => (
-                <li class:list={["apm-rail-item", { "is-active": i === 0 }]} data-i={i}>
-                  <a href={`#metodo-${i + 1}`}>
-                    <span class="apm-rail-n">{pad(i)}</span>
-                    <span class="apm-rail-name">{it.title}</span>
-                    <span class="apm-rail-bar" aria-hidden="true"><span></span></span>
+                <li class:list={["apm-step", { "is-active": i === 0 }]} data-i={i}>
+                  <span class="apm-step-line" aria-hidden="true"><span></span></span>
+                  <a class="apm-step-head" href={`#metodo-${i + 1}`}>
+                    <span class="apm-step-n">{pad(i)}<span class="apm-step-of"> / {pad(n - 1)}</span></span>
+                    <span class="apm-step-title">{it.title} <em>{it.titleEm}</em></span>
                   </a>
+                  <div class="apm-step-body">
+                    <div class="apm-step-inner">
+                      <p class="apm-phase-text">{it.text}</p>
+                      <p class="apm-get">
+                        <span class="apm-get-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24"><path d="M5 12l5 5l10 -10" /></svg>
+                        </span>
+                        <span class="apm-get-txt"><small>{c.get}</small> {it.deliverable}</span>
+                      </p>
+                    </div>
+                  </div>
                 </li>
               ))}
             </ol>
-
-            <div class="apm-phases">
-              {flow.items.map((it, i) => (
-                <article class:list={["apm-phase", { "is-active": i === 0 }]} data-i={i}>
-                  <span class="apm-phase-meta">
-                    {c.phase} {pad(i)} <span aria-hidden="true">·</span> {it.tag}
-                  </span>
-                  <h3 class="apm-phase-title">
-                    {words(it.title).map((w, wi) => (
-                      <span class="apm-w" style={`--wi:${wi}`}><span>{w}</span></span>
-                    ))}<em>{words(it.titleEm).map((w, wi) => (
-                      <span class="apm-w" style={`--wi:${wi + words(it.title).length}`}><span>{w}</span></span>
-                    ))}</em>
-                  </h3>
-                  <p class="apm-phase-text">{it.text}</p>
-                  <p class="apm-get">
-                    <span class="apm-get-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24"><path d="M5 12l5 5l10 -10" /></svg>
-                    </span>
-                    <span class="apm-get-txt"><small>{c.get}</small> {it.deliverable}</span>
-                  </p>
-                </article>
-              ))}
-            </div>
           </div>
 
           <!-- IL CANTIERE: il sito di esempio che si costruisce -->
@@ -276,46 +267,77 @@ const MOUNTAINS = `
   // (.apm-fx) sono accesi solo nella loro fase.
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
+  const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
   function setup(root: HTMLElement) {
     const track = root.querySelector<HTMLElement>(".apm-track")!;
+    const introEnd = root.querySelector<HTMLElement>(".apm-intro-end")!;
     const stage = root.querySelector<HTMLElement>(".apm-stage")!;
+    const head = root.querySelector<HTMLElement>(".apm-head")!;
+    const title = root.querySelector<HTMLElement>(".apm-title")!;
     const build = root.querySelector<HTMLElement>("[data-build]")!;
     const site = root.querySelector<HTMLElement>("[data-site]")!;
-    const rail = Array.from(root.querySelectorAll<HTMLElement>(".apm-rail-item"));
-    const phases = Array.from(root.querySelectorAll<HTMLElement>(".apm-phase"));
+    const steps = Array.from(root.querySelectorAll<HTMLElement>(".apm-step"));
     const fx = Array.from(root.querySelectorAll<HTMLElement>(".apm-fx"));
-    const n = phases.length;
+    const n = steps.length;
     let current = -1;
     let visible = false;
     let raf = 0;
+    // Ingresso: dove sta il titolo "a riposo" e quanto va spostato/ingrandito
+    // per partire al centro della scena. Misurato senza transform.
+    let fly = { x: 0, y: 0, k: 1 };
 
+    const measure = () => {
+      head.style.transform = "none";
+      const s = stage.getBoundingClientRect();
+      const h = head.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(title);
+      const t = range.getBoundingClientRect();
+      const k = Math.min(1.75, (s.width * 0.84) / t.width);
+      // centro del testo (relativo alla testata) portato al centro della scena
+      const cx = t.left + t.width / 2 - h.left;
+      const cy = t.top + t.height / 2 - h.top;
+      fly = {
+        x: s.left + s.width / 2 - h.left - k * cx,
+        y: s.top + s.height * 0.46 - h.top - k * cy,
+        k,
+      };
+      head.style.transform = "";
+    };
+
+    // Fase -1 = ingresso: il cantiere è ancora vuoto, così lo schizzo si
+    // disegna quando il browser si è posato (e si ridisegna se si torna su).
     const activate = (i: number) => {
       if (i === current) return;
       current = i;
-      // riavvio: si toglie la fase, si rimette al frame dopo
-      phases.forEach((el) => el.classList.remove("is-active"));
+      steps.forEach((el) => el.classList.remove("is-active"));
       fx.forEach((el) => el.classList.remove("is-on"));
       for (let k = 1; k < n; k++) stage.classList.toggle(`is-p${k}`, i >= k);
       requestAnimationFrame(() => {
         stage.dataset.phase = String(i);
-        phases[i].classList.add("is-active");
+        if (i < 0) return;
+        steps[i].classList.add("is-active");
         fx.forEach((el) => el.classList.toggle("is-on", Number(el.dataset.on) === i));
       });
-      rail.forEach((el, k) => {
-        el.classList.toggle("is-active", k === i);
-        el.classList.toggle("is-past", k < i);
-      });
+      steps.forEach((el, k) => el.classList.toggle("is-past", k < i));
     };
 
     const update = () => {
       raf = 0;
+      const vh = window.innerHeight;
       const r = track.getBoundingClientRect();
-      const range = Math.max(r.height - window.innerHeight, 1);
-      const p = Math.min(Math.max(-r.top / range, 0), 1);
-      const f = p * n;
-      const i = Math.min(n - 1, Math.floor(f));
-      rail.forEach((el, k) => el.style.setProperty("--lp", String(Math.min(Math.max(f - k, 0), 1))));
-      activate(i);
+      const intro = Math.max(introEnd.offsetTop, 1);
+      const y = -r.top;
+      const ip = reduced ? 1 : easeInOut(clamp01(y / intro));
+      stage.style.setProperty("--ip", ip.toFixed(4));
+      const u = 1 - ip;
+      head.style.transform = u > 0.001 ? `translate(${(fly.x * u).toFixed(1)}px, ${(fly.y * u).toFixed(1)}px) scale(${(1 + (fly.k - 1) * u).toFixed(4)})` : "";
+      const range = Math.max(r.height - vh - intro, 1);
+      const f = clamp01((y - intro) / range) * n;
+      steps.forEach((el, k) => el.style.setProperty("--lp", clamp01(f - k).toFixed(4)));
+      activate(ip < 0.7 ? -1 : Math.min(n - 1, Math.floor(f)));
     };
     const queue = () => {
       if (visible && !raf) raf = requestAnimationFrame(update);
@@ -330,7 +352,14 @@ const MOUNTAINS = `
       { rootMargin: "10% 0px" }
     ).observe(root);
     window.addEventListener("scroll", queue, { passive: true });
-    window.addEventListener("resize", queue);
+    window.addEventListener("resize", () => {
+      measure();
+      queue();
+    });
+    document.fonts?.ready.then(() => {
+      measure();
+      update();
+    });
 
     // Palette provabile: il colore scelto passa a tutto il sito di esempio.
     root.querySelectorAll<HTMLButtonElement>("[data-swatch]").forEach((b, _, all) =>
@@ -372,6 +401,7 @@ const MOUNTAINS = `
       });
       site.addEventListener("pointerleave", () => site.classList.remove("is-lens"));
     }
+    measure();
     update();
   }
 

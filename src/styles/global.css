@@ -7275,18 +7275,25 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   position: relative;
 }
 
+/* Traccia: ingresso (--apm-intro) + una corsa per fase (--apm-step). */
+.apm {
+  --apm-intro: 90vh;
+  --apm-step: 85vh;
+}
 .apm-track {
   position: relative;
-  height: calc(100vh + var(--n, 4) * 85vh);
+  height: calc(100vh + var(--apm-intro) + var(--n, 4) * var(--apm-step));
 }
+.apm-intro-end,
 .apm-anchor {
   position: absolute;
   left: 0;
   width: 1px;
   height: 1px;
-  top: calc((var(--i) + 0.5) / var(--n, 4) * (100% - 100vh));
   pointer-events: none;
 }
+.apm-intro-end { top: var(--apm-intro); }
+.apm-anchor { top: calc(var(--apm-intro) + (var(--i) + 0.5) * var(--apm-step)); }
 .apm-stage {
   position: sticky;
   top: 0;
@@ -7321,7 +7328,10 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   padding-block: clamp(84px, 11vh, 112px) clamp(20px, 4vh, 48px);
 }
 
-/* --- Testata (dentro la scena) ------------------------------------------ */
+/* --- Testata (dentro la scena) ------------------------------------------
+   Nell'ingresso lo script la sposta e la ingrandisce (transform inline): il
+   titolo parte grande al centro e si posa qui. --ip = avanzamento
+   dell'ingresso (0…1, già addolcito), 1 senza JS. */
 .apm-head {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
@@ -7329,6 +7339,10 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   align-items: end;
   column-gap: clamp(32px, 6vw, 120px);
   row-gap: clamp(10px, 1.6vh, 16px);
+  position: relative;
+  z-index: 2;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 .apm-kicker { grid-area: kicker; }
 .apm-title {
@@ -7341,7 +7355,7 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   color: var(--color-ink);
   text-wrap: balance;
 }
-.apm-title em { font-style: italic; color: var(--color-orange); }
+.apm-title em { font-style: italic; color: var(--color-accent); }
 .apm-lead {
   grid-area: lead;
   margin: 0;
@@ -7349,6 +7363,7 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   font-size: clamp(14px, 1.05vw, 16.5px);
   line-height: 1.6;
   color: var(--color-secondary);
+  opacity: clamp(0, (var(--ip, 1) - 0.86) * 7, 1);
 }
 
 .apm-body {
@@ -7358,131 +7373,159 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   gap: clamp(24px, 4vw, 80px);
 }
 
-/* --- Rail delle fasi ---------------------------------------------------- */
-.apm-rail {
+/* Ingresso: la colonna di sinistra arriva quando il titolo si è posato; il
+   cantiere sale dal basso inclinato e si appoggia piatto. */
+.apm-left {
+  opacity: clamp(0, (var(--ip, 1) - 0.6) * 2.5, 1);
+  transform: translateY(calc((1 - var(--ip, 1)) * 48px));
+}
+.apm-build {
+  transform-origin: 50% 100%;
+  transform:
+    perspective(1400px)
+    translateY(calc((1 - var(--ip, 1)) * 34vh))
+    rotateX(calc((1 - var(--ip, 1)) * 26deg))
+    scale(calc(1 - (1 - var(--ip, 1)) * 0.16));
+  opacity: clamp(0, var(--ip, 1) * 1.8 - 0.15, 1);
+}
+
+/* --- Indice delle fasi ---------------------------------------------------
+   Quattro righe sempre in vista. L'attiva si "inchiostra" da sinistra
+   (testo con sfondo a due tinte che scorre) e si apre su testo e consegna;
+   la linea a sinistra si riempie in continuo con lo scroll (--lp). */
+.apm-steps {
   list-style: none;
-  margin: 0 0 clamp(20px, 4.4vh, 48px);
+  margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
 }
-.apm-rail a {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: baseline;
-  column-gap: 8px;
-  row-gap: 10px;
-  color: var(--color-muted);
-  text-decoration: none;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  transition: color 0.4s ease;
-}
-.apm-rail-n { font-size: 10.5px; letter-spacing: 0.14em; font-weight: 600; }
-.apm-rail-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.apm-rail-bar {
-  grid-column: 1 / -1;
+.apm-step {
+  --dot: 9px;
   position: relative;
-  height: 2px;
-  border-radius: 2px;
+  padding: clamp(10px, 1.7vh, 18px) 0 clamp(10px, 1.7vh, 18px) 34px;
+}
+/* il nodo sulla linea */
+.apm-step::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc(clamp(10px, 1.7vh, 18px) + 0.62em);
+  width: var(--dot);
+  height: var(--dot);
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border-strong);
+  background: var(--color-bg);
+  transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.6s var(--apm-ease);
+  z-index: 1;
+}
+.apm-step.is-past::before { background: var(--color-accent); border-color: var(--color-accent); }
+.apm-step.is-active::before {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 6px rgba(39, 72, 165, 0.12);
+}
+.apm-step-line {
+  position: absolute;
+  left: calc(var(--dot) / 2 - 0.5px);
+  top: calc(clamp(10px, 1.7vh, 18px) + 0.62em + var(--dot));
+  bottom: calc(-1 * (clamp(10px, 1.7vh, 18px) + 0.62em));
+  width: 1px;
   background: var(--color-border);
   overflow: hidden;
 }
-.apm-rail-bar > span {
+.apm-step:last-child .apm-step-line { bottom: 0; }
+.apm-step-line > span {
   position: absolute;
   inset: 0;
-  transform-origin: left;
-  transform: scaleX(var(--lp, 0));
-  background: linear-gradient(90deg, var(--color-accent), var(--color-orange));
+  transform-origin: top;
+  transform: scaleY(var(--lp, 0));
+  background: var(--color-accent);
 }
-.apm-rail-item.is-active a,
-.apm-rail-item.is-past a { color: var(--color-ink); }
-.apm-rail-item.is-active .apm-rail-n { color: var(--color-orange-deep); }
-.apm-rail a:hover { color: var(--color-ink); }
-
-/* --- Fase (testo) ------------------------------------------------------- */
-.apm-phases { display: grid; }
-.apm-phase {
-  grid-area: 1 / 1;
-  position: relative;
-  visibility: hidden;
+.apm-step-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  font-size: clamp(16px, 1.1vw, 18px);
+  color: inherit;
+  text-decoration: none;
 }
-.apm-phase.is-active { visibility: visible; }
-.apm-bignum {
-  position: absolute;
-  z-index: -1;
-  left: -0.06em;
-  top: 50%;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(160px, 19vw, 320px);
-  line-height: 0.8;
-  letter-spacing: -0.06em;
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(39, 72, 165, 0.12);
-  opacity: 0;
-  /* centratura nel transform (vedi .ajx-hud): -54%, più la corsa */
-  transform: translateY(-46%);
-  transition: opacity 0.5s ease, transform 1.2s var(--apm-ease);
-  pointer-events: none;
-  user-select: none;
-}
-.apm-phase.is-active .apm-bignum { opacity: 1; transform: translateY(-54%); transition-delay: 0.1s; }
-.apm-phase-meta {
-  display: block;
-  margin-bottom: 18px;
+.apm-step-n {
+  flex: none;
+  min-width: 2ch;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-orange-deep);
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.4s ease, transform 0.6s var(--apm-ease);
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  transition: color 0.5s ease;
 }
-.apm-phase-title {
-  margin: 0;
+.apm-step-of { display: none; }
+.apm-step.is-active .apm-step-n { color: var(--color-accent); }
+.apm-step-title,
+.apm-step-title em {
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-position 1.1s var(--apm-ease);
+}
+.apm-step-title {
+  font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(36px, 3.9vw, 68px);
-  line-height: 1;
-  letter-spacing: -0.035em;
-  color: var(--color-ink);
+  font-size: clamp(24px, 2.25vw, 38px);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  background-image: linear-gradient(90deg, var(--color-ink) 50%, rgba(23, 19, 16, 0.24) 50%);
+  transform-origin: 0 50%;
+  transform: scale(0.9);
+  transition: background-position 1.1s var(--apm-ease), transform 0.9s var(--apm-ease);
 }
-.apm-phase-title em { font-style: italic; color: var(--color-accent); }
-.apm-w {
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: top;
-  /* aria sotto e di lato per discendenti e corsivo ("and"), compensata dai
-     margini negativi: ingombro invariato */
-  padding: 0 0.12em 0.24em;
-  margin: 0 0.12em -0.24em -0.12em;
+.apm-step-title em {
+  font-style: italic;
+  background-image: linear-gradient(90deg, var(--color-accent) 50%, rgba(23, 19, 16, 0.24) 50%);
 }
-.apm-w > span {
-  display: inline-block;
-  transform: translateY(135%);
-  transition: transform 0.35s ease-in;
+.apm-step.is-active .apm-step-title { transform: none; }
+.apm-step.is-active .apm-step-title,
+.apm-step.is-active .apm-step-title em { background-position: 0 0; }
+.apm-step.is-active .apm-step-title em { transition-delay: 0.22s; }
+.apm-step-head:hover .apm-step-title { background-image: linear-gradient(90deg, var(--color-ink) 50%, rgba(23, 19, 16, 0.5) 50%); }
+.apm-step-head:hover .apm-step-title em { background-image: linear-gradient(90deg, var(--color-accent) 50%, rgba(23, 19, 16, 0.5) 50%); }
+
+/* il corpo si apre (0fr → 1fr) e il contenuto emerge da una sfocatura */
+.apm-step-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.8s var(--apm-ease);
 }
-.apm-phase-text {
-  margin: clamp(14px, 2.4vh, 26px) 0 0;
-  max-width: 44ch;
-  font-size: clamp(15px, 1.1vw, 17px);
-  line-height: 1.7;
-  color: var(--color-secondary);
+.apm-step.is-active .apm-step-body { grid-template-rows: 1fr; }
+.apm-step-inner { overflow: hidden; min-height: 0; padding-left: calc(2ch + 16px); }
+.apm-phase-text,
+.apm-get {
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.3s ease, transform 0.5s var(--apm-ease);
+  filter: blur(6px);
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, filter 0.3s ease, transform 0.4s ease;
 }
-.apm-phase.is-active .apm-phase-meta,
-.apm-phase.is-active .apm-phase-text { opacity: 1; transform: none; transition-duration: 0.8s, 1s; }
-.apm-phase.is-active .apm-phase-meta { transition-delay: 0.05s; }
-.apm-phase.is-active .apm-phase-text { transition-delay: 0.35s; }
-.apm-phase.is-active .apm-w > span {
+.apm-step.is-active .apm-phase-text,
+.apm-step.is-active .apm-get {
+  opacity: 1;
+  filter: blur(0);
   transform: none;
-  transition: transform 1s var(--apm-ease);
-  transition-delay: calc(0.08s + var(--wi, 0) * 0.07s);
+  transition: opacity 0.9s ease, filter 0.9s ease, transform 1s var(--apm-ease);
+  transition-delay: 0.3s;
+}
+.apm-step.is-active .apm-get { transition-delay: 0.48s; }
+.apm-phase-text {
+  margin: clamp(10px, 1.6vh, 16px) 0 0;
+  max-width: 44ch;
+  font-size: clamp(15px, 1.05vw, 16.5px);
+  line-height: 1.65;
+  color: var(--color-secondary);
 }
 
 /* --- Cosa ricevi (sotto il testo della fase) ----------------------------- */
@@ -7490,27 +7533,23 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: clamp(16px, 2.8vh, 28px) 0 0;
+  margin: clamp(12px, 2vh, 20px) 0 clamp(4px, 0.8vh, 8px);
   max-width: 44ch;
-  font-size: clamp(14px, 1.05vw, 16px);
+  font-size: clamp(14px, 1vw, 15.5px);
   line-height: 1.4;
   color: var(--color-ink);
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.3s ease, transform 0.5s var(--apm-ease);
 }
-.apm-phase.is-active .apm-get { opacity: 1; transform: none; transition: opacity 0.8s ease 0.55s, transform 1s var(--apm-ease) 0.55s; }
 .apm-get-icon {
   flex: none;
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--color-orange);
   color: #FEFDEC;
 }
-.apm-get-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.apm-get-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .apm-get-txt small {
   display: block;
   font-size: 10.5px;
@@ -8195,14 +8234,13 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   .apm-inner { gap: 3vh; padding-top: 84px; }
   .apm-title { font-size: clamp(30px, 3.1vw, 50px); }
   .apm-lead { font-size: 14px; }
-  .apm-rail { margin-bottom: 3vh; }
-  .apm-phase-title { font-size: clamp(32px, 3.3vw, 54px); }
-  .apm-phase-text { font-size: 15px; line-height: 1.6; }
+  .apm-step-title { font-size: clamp(22px, 2vw, 32px); }
+  .apm-phase-text { font-size: 14.5px; line-height: 1.6; }
 }
 
 /* --- Mobile: stessa scena, impilata e compatta ----------------------------- */
 @media (max-width: 900px) {
-  .apm-track { height: calc(100svh + var(--n, 4) * 80svh); }
+  .apm { --apm-intro: 70svh; --apm-step: 80svh; }
   .apm-inner {
     justify-content: flex-start;
     gap: 16px;
@@ -8212,11 +8250,22 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   .apm-title { font-size: clamp(26px, 7vw, 34px); }
   .apm-lead { display: none; }
   .apm-body { grid-template-columns: 1fr; gap: 10px; }
-  .apm-rail { margin-bottom: 14px; gap: 6px; }
-  .apm-rail-name { display: none; }
-  .apm-bignum { font-size: 40vw; top: 30%; left: auto; right: -0.04em; }
-  .apm-phase-meta { margin-bottom: 8px; }
-  .apm-phase-title { font-size: clamp(26px, 7.4vw, 38px); }
+  /* una fase alla volta: le altre righe si nascondono, il numero dice dove si è */
+  .apm-step:not(.is-active) { display: none; }
+  .apm-step { padding: 0; }
+  .apm-step::before,
+  .apm-step-line { display: none; }
+  .apm-step-of { display: inline; }
+  .apm-step-head { flex-direction: column; gap: 6px; }
+  .apm-step-title { font-size: clamp(26px, 7.4vw, 38px); }
+  .apm-step-inner { padding-left: 0; }
+  /* la riga arriva da display:none (niente transizioni): entra con un keyframe */
+  .apm-step.is-active .apm-step-head,
+  .apm-step.is-active .apm-phase-text,
+  .apm-step.is-active .apm-get { animation: apm-step-in 0.8s var(--apm-ease) backwards; }
+  .apm-step.is-active .apm-phase-text { animation-delay: 0.12s; }
+  .apm-step.is-active .apm-get { animation-delay: 0.24s; }
+  @keyframes apm-step-in { from { opacity: 0; transform: translateY(12px); filter: blur(5px); } }
   .apm-phase-text {
     margin-top: 10px;
     font-size: 14px;
@@ -8240,7 +8289,11 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .apm-w > span { transform: none; transition: none; }
+  .apm-step-title,
+  .apm-step-title em,
+  .apm-step-body,
+  .apm-phase-text,
+  .apm-get { transition: none !important; }
   .apm-build *,
   .apm-build *::before,
   .apm-build *::after { animation-duration: 0.01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0.01s !important; transition-delay: 0s !important; }
@@ -8259,7 +8312,7 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   .ajx-board-head,
   .ajx-board-year,
   .ajx-step-tag,
-  .apm-rail-n,
+  .apm-step-n,
   .apm-get-txt small {
     font-size: 11px;
   }
@@ -8282,10 +8335,8 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
     gap: 24px;
     align-items: center;
   }
-  .apm-rail { margin-bottom: 8px; }
-  .apm-bignum { display: none; }
-  .apm-phase-meta { margin-bottom: 4px; }
-  .apm-phase-title { font-size: 22px; }
+  .apm-step { padding-block: 4px; }
+  .apm-step-title { font-size: 18px; }
   .apm-phase-text { margin-top: 6px; font-size: 12.5px; line-height: 1.45; }
   .apm-get { margin-top: 8px; font-size: 12.5px; }
   .apm-build { max-height: calc(100svh - 150px); }
@@ -8335,7 +8386,6 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 .ap-statement em,
 .ap-card-quote em,
 .apm-title em,
-.apm-phase-title em,
 .about-cta-title em,
 .ajx-intro-title em,
 .ajx-outro-title em {
@@ -8380,9 +8430,7 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   border: 0;
   color: #FFFFFF;
 }
-.apm-rail-bar > span { background: var(--color-accent); }
-.apm-rail-item.is-active .apm-rail-n,
-.apm-phase-meta { color: var(--color-accent); }
+.apm-get-txt small { color: var(--color-accent); }
 .apm-note:nth-child(1),
 .apm-note:nth-child(2),
 .apm-note:nth-child(3) {
