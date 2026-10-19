@@ -278,9 +278,9 @@ const de = {
       lead: "Du leistest hervorragende Arbeit.",
       but: "Aber Kunden…",
       pains: [
-        "schreiben dir **per DM**,",
-        "rufen **zu jeder Uhrzeit** an",
-        "und buchen am Ende bei dem, den sie **zuerst auf Google** finden.",
+        "schreiben dir **per DM,**",
+        "rufen an, **zu jeder Uhrzeit**",
+        "und buchen bei dem, der **zuerst auf Google steht.**",
       ],
       // Virgola dentro il grassetto: fuori, SplitText ne fa una parola a sé
       // che può andare a capo da sola (", das sie…").

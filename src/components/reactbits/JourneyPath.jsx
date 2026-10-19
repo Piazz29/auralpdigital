@@ -1197,6 +1197,11 @@ function JourneyStage({ steps, copy, mobile, webgl }) {
             <h3 className="ajx-step-title font-display">
               <MaskedWords text={s.title} />
             </h3>
+            {/* Il gradino: sotto il titolo grande, il tema della tappa in
+                corsivo, una taglia sotto (come "Siti web / che convertono."). */}
+            <p className="ajx-step-sub font-display">
+              <em>{s.kicker}</em>
+            </p>
             <p className="ajx-step-text">
               {String(s.text)
                 .split(' ')
@@ -1209,7 +1214,6 @@ function JourneyStage({ steps, copy, mobile, webgl }) {
                   return wi === 0 ? [word] : [' ', word];
                 })}
             </p>
-            <span className="ajx-step-tag">{s.kicker}</span>
           </article>
         ))}
 

@@ -54,6 +54,12 @@ const people = await Promise.all(
 const cardPeople = [people[1], people[0]];
 
 const chain = ta.manifesto.chain;
+// Lo statement come blocco a gradino: le prime due parole fanno da metro
+// (riempiono la colonna), il resto della frase e il corsivo scendono di un
+// gradino sotto. "Pochi progetti / alla volta, / seguiti per intero."
+const [stPlain, stEm = ""] = ta.manifesto.statement.split("*");
+const stWords = stPlain.trim().split(/\s+/);
+const stLines = [stWords.slice(0, 2).join(" "), stWords.slice(2).join(" ")].filter(Boolean);
 
 // Il manifesto: le parole dello statement si accendono una a una con lo
 // scroll; le cifre dei fatti girano come un contachilometri. La striscia di
@@ -158,8 +164,8 @@ const steps = ta.journey.steps.map((s) => ({
         <div class="ap-manifesto-top">
           <div class="ap-manifesto-copy">
             <span class="works-kicker" data-ap-rise>{ta.manifesto.kicker}</span>
-            <p class="ap-statement font-display" data-ap-statement>
-              <Rich text={ta.manifesto.statement} />
+            <p class="ap-statement font-display" data-ap-statement data-type-block data-tb-static data-tb-ratio="0.56">
+              {stLines.map((l) => <span class="tb-line">{l} </span>)}{stEm && <span class="tb-line"><em>{stEm}</em></span>}
             </p>
           </div>
 

@@ -278,9 +278,9 @@ const en = {
       lead: "You do excellent work.",
       but: "But clients…",
       pains: [
-        "**DM you**,",
-        "call **at all hours**",
-        "and end up booking whoever they find **first on Google**.",
+        "message you **in your DMs,**",
+        "call you **at all hours**",
+        "and book whoever they find **first on Google.**",
       ],
       turn: "We build **the system** that brings them to you.",
       turnSub: "Even when you're busy with your own work.",

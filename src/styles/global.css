@@ -8789,6 +8789,7 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 [data-type-block] em { display: inline; }
 /* Il corsivo sul gradino è più piccolo: con la crenatura stretta delle
    taglie grandi le lettere si toccherebbero. */
+[data-type-block].is-blocked:has(em) .tb-line:not(:first-child),
 [data-type-block].is-blocked .tb-line:not(:first-child) em { letter-spacing: -0.02em; }
 .deck-title[data-type-block] { width: min(38vw, 560px); }
 .about-cta-title[data-type-block] { width: min(100%, 760px); max-width: none; }
@@ -8846,3 +8847,78 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 /* Lente di grassetto (data-tb-hover): il titolo riceve il cursore anche se
    sta in un livello che di solito lo lascia passare. */
 [data-tb-hover] { pointer-events: auto; cursor: default; }
+
+/* ======================================================================
+   IL GRADINO NEL PROBLEMA — Il punto ("Ma i clienti… 01 02 03")
+   Ogni riga è in due tempi: la frase e, sotto, la parola chiave. La riga
+   che entra cresce (--big 0→1, da main.ts): frase un gradino sotto, parola
+   chiave grande; quando arriva la successiva rientra piccola e si spegne.
+   Una sola riga grande alla volta: l'altezza del blocco non cambia.
+   ====================================================================== */
+.point.is-live .point-pain {
+  --ps: clamp(17px, 1.4vw, 22px);
+  --pp: clamp(24px, min(3vw, 5vh), 50px);
+}
+.point.is-live .point-item-text {
+  font-size: calc(var(--ps) + (var(--pp) - var(--ps)) * var(--big, 0));
+  line-height: 1.08;
+}
+.point.is-live .point-item-text strong {
+  display: block;
+  width: fit-content;
+  margin-top: 0.04em;
+  font-size: calc(1em + 0.72em * var(--big, 0));
+  line-height: 1;
+  letter-spacing: calc(-0.02em - 0.025em * var(--big, 0));
+}
+.point.is-live .point-item { padding-block: clamp(10px, 1.8vh, 18px); }
+@media (max-width: 700px) {
+  .point.is-live .point-pain { --ps: 16px; --pp: clamp(20px, 5.6vw, 24px); }
+}
+@media (max-width: 700px) and (max-height: 640px) {
+  .point.is-live .point-pain { --ps: 14px; --pp: 18px; }
+}
+
+/* La differenza: lo statement è un blocco a gradino e prende la colonna. */
+.ap-statement[data-type-block] { width: 100%; max-width: 640px; line-height: 0.98; }
+
+/* ======================================================================
+   IL GRADINO NELLE TAPPE — Chi siamo, il Percorso
+   Numero e anno piccoli, titolo grande, il tema della tappa in corsivo un
+   gradino sotto (0.58), poi il testo. La tappa è un filo più larga per
+   lasciare respirare il titolo.
+   ====================================================================== */
+.ajx-step { width: min(46ch, 42vw); }
+.ajx-step-title {
+  font-size: clamp(44px, 5.4vw, 96px);
+  line-height: 0.94;
+  letter-spacing: var(--t-track-display);
+  text-wrap: balance;
+}
+.ajx-step-sub {
+  margin: -0.1em 0 0.15em;
+  font-weight: 500;
+  font-size: calc(clamp(44px, 5.4vw, 96px) * 0.58);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-accent);
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(14px);
+  transition:
+    opacity 0.9s ease 0.3s,
+    filter 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s,
+    transform 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+}
+.ajx-step-sub em { font-style: italic; }
+.ajx-step.is-in .ajx-step-sub { opacity: 1; filter: none; transform: none; }
+@media (max-width: 768px) {
+  .ajx-step,
+  .ajx-step--left,
+  .ajx-step--right { width: min(88vw, 40ch); }
+  .ajx-step-title { font-size: clamp(40px, 11.4vw, 56px); }
+  .ajx-step-sub { font-size: calc(clamp(40px, 11.4vw, 56px) * 0.58); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ajx-step-sub { opacity: 1; filter: none; transform: none; transition: none; }
+}

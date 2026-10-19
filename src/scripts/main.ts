@@ -1595,7 +1595,11 @@ if (
         { opacity: 0.32, duration: 0.6, ease: "power2.out" },
         at + 0.15
       );
+      // Il gradino passa di mano: la riga nuova cresce, la vecchia rientra
+      // (vedi "IL GRADINO NEL PROBLEMA" in global.css).
+      tl.fromTo(items[i - 1], { "--big": 1 }, { "--big": 0, duration: 0.8, ease: "power3.inOut", immediateRender: false }, at);
     }
+    tl.fromTo(item, { "--big": 0 }, { "--big": 1, duration: 0.9, ease: "power3.inOut" }, at + 0.05);
     const mark = marks[i];
     if (mark) tl.fromTo(mark, { "--mark": 0 }, { "--mark": 1, duration: 0.6, ease: "power2.inOut" }, at + 0.45);
     // La notifica scivola dentro un filo storta e si posa dritta, senza

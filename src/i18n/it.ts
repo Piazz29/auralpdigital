@@ -289,9 +289,9 @@ const it = {
       lead: "Fai un lavoro eccellente.",
       but: "Ma i clienti…",
       pains: [
-        "ti scrivono **in DM**,",
+        "ti scrivono **in DM,**",
         "ti chiamano **a qualsiasi ora**",
-        "e alla fine prenotano da chi trovano **prima su Google**.",
+        "e prenotano da chi trovano **prima su Google.**",
       ],
       turn: "Costruiamo **il sistema** che li porta da te.",
       turnSub: "Anche quando sei impegnato con il tuo lavoro.",
