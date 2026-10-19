@@ -216,7 +216,7 @@ const en = {
     },
     flow: {
       kicker: "How we work",
-      title: "A method *in four phases.*",
+      title: "A clear path, *from start to finish.*",
       lead: "From the first call to launch you always know where we are, what we're working on and what you'll receive.",
       card: { phase: "Phase", get: "What you get" },
       // Sito di esempio che si costruisce fase per fase (MethodRoom).

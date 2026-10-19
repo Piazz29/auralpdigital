@@ -223,7 +223,7 @@ const it = {
     },
     flow: {
       kicker: "Come lavoriamo",
-      title: "Un metodo *in quattro fasi.*",
+      title: "Un percorso chiaro, *dall’inizio alla fine.*",
       lead: "Dalla prima call alla messa online sai sempre a che punto siamo, su cosa stiamo lavorando e cosa riceverai.",
       card: { phase: "Fase", get: "Cosa ricevi" },
       // Sito di esempio che si costruisce fase per fase (MethodRoom).

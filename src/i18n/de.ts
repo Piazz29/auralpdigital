@@ -216,7 +216,7 @@ const de = {
     },
     flow: {
       kicker: "So arbeiten wir",
-      title: "Eine Methode *in vier Phasen.*",
+      title: "Ein klarer Weg, *vom Anfang bis zum Ende.*",
       lead: "Vom ersten Gespräch bis zur Veröffentlichung weißt du immer, wo wir stehen, woran wir arbeiten und was du bekommst.",
       card: { phase: "Phase", get: "Was du bekommst" },
       // Sito di esempio che si costruisce fase per fase (MethodRoom).
