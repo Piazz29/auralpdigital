@@ -1,10 +1,8 @@
 // HeroJourney — la hero della home come un VIAGGIO: lo scroll fa volare la
 // camera dentro una valle dolomitica disegnata a curve di livello, come una
-// carta topografica stampata sulla carta del sito. È la strada da Bolzano
-// allo Sciliar: tre "picchetti" lungo la valle sono luoghi veri, in fondo la
-// camera scavalca il passo e arriva allo Sciliar, con un sole EMBER che sorge
-// dalla foschia. Lo Sciliar è il fondale di "Il punto", la sezione dopo: la
-// carta diventa la foto. Le tappe NON sono i servizi (verrebbero ripetuti).
+// carta topografica stampata sulla carta del sito. Tre "picchetti" lungo la
+// valle sono i tre servizi; in fondo la camera scavalca il passo e la valle si
+// apre su un sole EMBER che sorge dalla foschia.
 //
 // Regia: la sezione è alta (vedi .hero-journey in global.css) e il palco è
 // sticky. Il progresso p ∈ [0,1] si legge dal rettangolo della sezione a ogni
@@ -22,7 +20,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 // ---------- Percorso della valle (identico nello shader) ----------
 const pathX = (z) => Math.sin(z * 0.031) * 7 + Math.sin(z * 0.0123 + 1.3) * 11;
@@ -46,30 +43,12 @@ const camZAt = (s) => mix(Z_START, Z_END, travel(s));
 // Il passo da scavalcare sta dove la camera arriva a s ≈ 0.82.
 const Z_PASS = -195;
 
-// Le tre tappe: progresso a cui la camera "si ferma" (fermata di
+// Le tre tappe (servizi): progresso a cui la camera "si ferma" (fermata di
 // scroll) e il picchetto sta 14 unità più avanti, alternato ai lati del solco.
 export const STOP_S = [0.36, 0.5, 0.64];
 const MARK_AHEAD = 14;
 // Su telefono il picchetto sta quasi sull'asse: l'etichetta non esce dallo
 // schermo stretto.
-// La strada vera: Bolzano → Fiè → Castelrotto → Alpe di Siusi → Sciliar
-// (Monte Pez), agganciata ai progressi delle tappe e dell'arrivo.
-const ROUTE = [
-  { s: 0, lat: 46.4983, lon: 11.3548, alt: 262 },
-  { s: STOP_S[0], lat: 46.5167, lon: 11.5, alt: 880 },
-  { s: STOP_S[1], lat: 46.5667, lon: 11.5594, alt: 1060 },
-  { s: STOP_S[2], lat: 46.5411, lon: 11.6214, alt: 1850 },
-  { s: 0.92, lat: 46.5047, lon: 11.6008, alt: 2563 },
-];
-const routeAt = (s) => {
-  let i = 0;
-  while (i < ROUTE.length - 2 && s > ROUTE[i + 1].s) i++;
-  const a = ROUTE[i];
-  const b = ROUTE[i + 1];
-  const t = smooth(a.s, b.s, s);
-  return { lat: mix(a.lat, b.lat, t), lon: mix(a.lon, b.lon, t), alt: mix(a.alt, b.alt, t) };
-};
-
 const makeMarks = (mobile) =>
   STOP_S.map((s, i) => {
     const z = camZAt(s) - MARK_AHEAD;
@@ -336,8 +315,9 @@ function Marker({ mark, index, label, labelRef, poleRef }) {
       <Html position={[0, 6.6, 0]} center zIndexRange={[20, 10]} wrapperClass="hj-mark-wrap">
         <div ref={labelRef} className="hj-mark" style={{ opacity: 0 }}>
           <span className="hj-mark-num">{String(index + 1).padStart(2, "0")}</span>
-          <span className="hj-mark-name">{label.name}</span>
-          <span className="hj-mark-alt">{label.alt}</span>
+          <span className="hj-mark-name">
+            {label.name} <em>{label.em}</em>
+          </span>
         </div>
       </Html>
     </group>
@@ -409,6 +389,7 @@ function Rig({ section, stops, mobile, still }) {
     if (Math.abs(raw - st.p) < 1e-4) st.p = raw;
     const s = st.p;
     section.style.setProperty("--p", s.toFixed(4));
+    section.classList.toggle("is-final", s > 0.86);
     section.classList.toggle("is-travelling", s > 0.06);
 
     // Mouse: la camera "guarda attorno" di poco, con inerzia.
@@ -466,15 +447,11 @@ function Rig({ section, stops, mobile, still }) {
       sunMat.uniforms.uOpacity.value = smooth(0.74, 0.86, s);
     }
 
-    // HUD: posizione vera lungo la strada (tappa per tappa) e quota = quota
-    // del luogo + altezza di volo della camera, che all'arrivo si annulla:
-    // in vetta l'HUD dice esattamente la quota dello Sciliar.
+    // HUD: da Bolzano verso lo Sciliar, quota in metri.
     if (hud.lat) {
-      const r = routeAt(s);
-      const fly = (y - 4.2) * 40 * (1 - smooth(0.84, 0.92, s));
-      hud.lat.textContent = `${r.lat.toFixed(4)}° N`;
-      hud.lon.textContent = `${r.lon.toFixed(4)}° E`;
-      hud.alt.textContent = `${Math.round(r.alt + fly).toLocaleString("it-IT")} m`;
+      hud.lat.textContent = `${mix(46.4983, 46.5174, travel(s)).toFixed(4)}° N`;
+      hud.lon.textContent = `${mix(11.3548, 11.5512, travel(s)).toFixed(4)}° E`;
+      hud.alt.textContent = `${Math.round(262 + y * 62).toLocaleString("it-IT")} m`;
     }
   });
 
@@ -524,23 +501,21 @@ export default function HeroJourney({ stops }) {
 
   useEffect(() => {
     const sec = host.current?.closest(".hero-journey");
-    if (!sec) return;
-    // La sezione nasce GIÀ .is-live (alta, nel markup): così i pin delle
-    // sezioni sotto (Il punto…) si misurano sull'altezza giusta fin dal primo
-    // calcolo. Solo se il viaggio non parte la si accorcia, e allora pin e
-    // fermate vanno rimisurati.
-    if (!env.ok || env.still) {
-      sec.classList.remove("is-live");
-      ScrollTrigger.refresh();
+    if (!sec || !env.ok) return;
+    setSection(sec);
+    if (!env.still) {
+      sec.classList.add("is-live");
+      // Le fermate dentro la sezione hanno cambiato posizione: riletture.
       window.dispatchEvent(new Event("apd:detents"));
     }
-    if (!env.ok) return;
-    setSection(sec);
     const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), {
       rootMargin: "10% 0px",
     });
     io.observe(sec);
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      sec.classList.remove("is-live");
+    };
   }, [env]);
 
   return (

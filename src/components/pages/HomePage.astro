@@ -41,15 +41,11 @@ const t = getDict(lang);
        in CSS dalla variabile --p che l'isola scrive sulla sezione:
          0.00  titolo sopra la valle, vista dall'alto;
          0.05  ci si tuffa: il titolo si apre e sfuma "attraversandolo";
-         0.36 / 0.50 / 0.64  tre tappe, luoghi veri sulla strada da Bolzano
-               allo Sciliar (fermate di scroll);
-         0.84  si scavalca il passo, sorge il sole: si è arrivati allo
-               Sciliar, lo stesso che fa da fondale a Il Punto qui sotto.
-       Nessun testo qui anticipa le sezioni successive: la promessa è il
-       titolo, il resto lo racconta la pagina.
-       Senza WebGL / reduced motion l'isola toglie .is-live: una schermata
-       ferma col titolo. -->
-  <section class="hero-section hero-journey is-live" data-hero-journey aria-labelledby="hero-title">
+         0.36 / 0.50 / 0.64  le tre tappe = i tre servizi (fermate di scroll);
+         0.84  si scavalca il passo, sorge il sole, frase finale + CTA.
+       Senza WebGL / reduced motion (niente .is-live): una schermata ferma con
+       titolo, sottotitolo e CTA impilati. -->
+  <section class="hero-section hero-journey" data-hero-journey aria-labelledby="hero-title">
     <span class="hj-detent" data-scroll-detent style="--s: 0.36" aria-hidden="true"></span>
     <span class="hj-detent" data-scroll-detent style="--s: 0.5" aria-hidden="true"></span>
     <span class="hj-detent" data-scroll-detent style="--s: 0.64" aria-hidden="true"></span>
@@ -58,7 +54,7 @@ const t = getDict(lang);
     <div class="hj-stage">
       <HeroJourney
         client:only="react"
-        stops={t.home.hero.stops}
+        stops={t.home.services.items.map((s) => ({ name: s.name, em: s.nameEm }))}
       />
       <div class="hj-veil" aria-hidden="true"></div>
 
@@ -77,10 +73,11 @@ const t = getDict(lang);
         </div>
       </div>
 
-      <div class="hj-final" aria-hidden="true">
-        <span class="hero-badge hj-summit text-[11px] font-medium tracking-[0.15em] uppercase">
-          {t.home.hero.summit.name}<span class="hj-summit-alt">{t.home.hero.summit.alt}</span>
-        </span>
+      <div class="hj-final">
+        <p class="hj-sub">{t.home.hero.sub}</p>
+        <a href="#projects" class="pill text-[13px] px-7 py-[14px]">
+          {t.home.hero.cta} <span aria-hidden="true">↗</span>
+        </a>
       </div>
 
       <div class="hj-hud" aria-hidden="true">
