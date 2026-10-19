@@ -8921,3 +8921,13 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 @media (prefers-reduced-motion: reduce) {
   .ajx-step-sub { opacity: 1; filter: none; transform: none; transition: none; }
 }
+
+/* La notifica "ok" sta dentro .point-turn, che ha la crenatura stretta della
+   taglia display: in em si eredita già calcolata in px (a ~130px ≈ -6px) e
+   schiacciava le lettere della scheda. La scheda torna al suo testo. */
+.point-ok {
+  letter-spacing: normal;
+  line-height: 1.3;
+  font-family: var(--font-body);
+  text-align: left;
+}
