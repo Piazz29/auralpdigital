@@ -8310,23 +8310,21 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 }
 
 /* ======================================================================
-   POLISH — livello di pulizia (ott 2026).
-   Stessa palette, meno segni. Regole:
+   POLISH — livello premium (ott 2026).
+   Stessa palette, meno rumore, più sicurezza. Regole:
    - il corsivo dei titoli è SEMPRE blu SHADOW sulla carta e periwinkle
-     sullo scuro: niente alternanza arancio/blu sezione per sezione,
-     niente evidenziatori sotto le parole;
-   - EMBER resta solo per l'azione (hover dei bottoni, invio del form);
-   - kicker in testo semplice, senza la cima davanti;
-   - niente chip: le etichette sono testo separato da un punto;
-   - numeri, icone e note in tinta neutra.
+     sullo scuro, senza evidenziatori sotto le parole;
+   - la cima arancio davanti ai kicker resta: è la firma del brand, un
+     segno solo e ripetuto, non una decorazione;
+   - numeri, ruoli, icone e consegne parlano in blu: il colore segna le
+     informazioni, non riempie lo sfondo;
+   - niente stelline, scarabocchi, numeri fantasma o pill colorate.
    Sta in fondo al file apposta: vince sulle regole storiche a pari
    specificità e si toglie da un punto solo.
    ====================================================================== */
 
-/* --- Kicker: solo testo --- */
-.works-kicker::before,
-.hero-badge::before { display: none; }
-.works-kicker { color: var(--color-text-muted); font-weight: 500; }
+/* --- Kicker: cima arancio + testo deciso --- */
+.works-kicker { font-weight: 600; letter-spacing: 0.18em; }
 
 /* --- Corsivi dei titoli: un colore solo, nessun evidenziatore --- */
 .hero-section h1 em,
@@ -8347,14 +8345,13 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 .finale-title em,
 .cta-title em { color: var(--color-accent-soft); }
 .point-item-text strong { background: none; }
-.point-but { color: var(--color-text-muted); }
 
-/* --- Servizi: niente contatore né filetto accanto al kicker --- */
+/* --- Servizi: niente filetto accanto al kicker --- */
 .svc-num::after { display: none; }
 
-/* --- Etichette: elenco in riga con un puntino davanti, niente pill --- */
+/* --- Etichette: elenco in riga con un puntino blu davanti, niente pill --- */
 .svc-tags,
-.ap-card-tags { column-gap: 18px; row-gap: 6px; }
+.ap-card-tags { column-gap: 20px; row-gap: 8px; }
 .svc-tag,
 .ap-card-tags li,
 .ap-card-tags li:hover {
@@ -8363,53 +8360,54 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   border-radius: 0;
   background: none;
   font-size: 0.875rem;
-  color: var(--color-text-secondary);
+  font-weight: 500;
+  color: var(--color-ink);
 }
 .svc-tag,
-.ap-card-tags li { display: inline-flex; align-items: center; gap: 8px; }
+.ap-card-tags li { display: inline-flex; align-items: center; gap: 9px; }
 .svc-tag::before,
 .ap-card-tags li::before {
   content: "";
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: var(--color-text-muted);
+  background: var(--color-accent);
 }
 
-/* --- Il punto: icone delle notifiche tutte in inchiostro --- */
-.point-ping-icon--1,
-.point-ping-icon--2,
-.point-ping-icon--3 { background: var(--color-ink); }
-
-/* --- Metodo: meta e consegne in tinta neutra, note dritte e bianche --- */
-.apm-phase-meta,
-.apm-get-txt small,
-.apm-rail-item.is-active .apm-rail-n { color: var(--color-text-muted); }
+/* --- Metodo: note dritte, consegne e fase attiva in blu --- */
 .apm-get-icon {
-  background: none;
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-ink);
+  background: var(--color-accent);
+  border: 0;
+  color: #FFFFFF;
 }
 .apm-rail-bar > span { background: var(--color-accent); }
+.apm-rail-item.is-active .apm-rail-n,
+.apm-phase-meta { color: var(--color-accent); }
 .apm-note:nth-child(1),
 .apm-note:nth-child(2),
 .apm-note:nth-child(3) {
   --r: 0deg;
   background: #FFFFFF;
   border: 1px solid var(--color-border);
-  box-shadow: 0 12px 28px -18px rgba(23, 19, 16, 0.28);
+  box-shadow: 0 18px 40px -22px rgba(23, 19, 16, 0.32);
 }
 .apm-note::before { display: none; }
 
-/* --- Chi siamo: numeri e ruoli in inchiostro --- */
+/* --- Chi siamo: numeri dritti in blu, ruoli in blu --- */
 .ap-fact-n {
   font-style: normal;
-  color: var(--color-ink);
+  color: var(--color-accent);
 }
-.ap-manifesto .ap-fact-rule::after { background: var(--color-ink); }
-.ap-card-area { color: var(--color-text-muted); }
+.ap-manifesto .ap-fact-rule::after { background: var(--color-accent); }
+.ap-card-area { color: var(--color-accent); }
+.ap-card-chip {
+  background: rgba(23, 19, 16, 0.72);
+  color: #FEFDEC;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
 
-/* --- Footer: wordmark gigante in un tono solo, appena percettibile --- */
+/* --- Footer: wordmark gigante in un tono solo --- */
 .footer-ghost-a,
 .footer-ghost-p,
-.footer-ghost-d { color: rgba(254, 253, 236, 0.07); }
+.footer-ghost-d { color: rgba(254, 253, 236, 0.1); }

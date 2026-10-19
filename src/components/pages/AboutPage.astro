@@ -36,7 +36,7 @@ const heroLines = ta.hero.title.split("\n").map((line) =>
 const peopleMeta = [
   // zoom: quanto stringere sul volto nel ritratto a pixel della hero.
   { name: "Julian", photo: julianPhoto, tone: "ember", zoom: 1 },
-  { name: "Alice", photo: alicePhoto, tone: "shadow", zoom: 1.3 },
+  { name: "Alice", photo: alicePhoto, tone: "shadow", zoom: 1 },
 ] as const;
 // CTA — i due volti dentro al bottone: risponde chi hai appena conosciuto.
 const ctaFaces = await Promise.all(
@@ -81,6 +81,8 @@ const steps = ta.journey.steps.map((s) => ({
          griglie di tessere nei colori del brand e la lente (il cursore, o un
          percorso automatico) li rimette a fuoco. Fondo: l'aurora. -->
     <section class="ap-hero" data-ap-hero>
+      <div class="ap-hero-aurora" aria-hidden="true"></div>
+
       <div class="ap-hero-inner">
         <div class="ap-hero-copy" data-ap-hero-copy>
           <div class="ap-hero-top" data-ap-hero-fade>
@@ -218,6 +220,7 @@ const steps = ta.journey.steps.map((s) => ({
          una frase in prima persona e le aree di lavoro. -->
     <section id="il-duo" class="ap-duo" data-ap-duo>
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
+      <div class="ap-duo-glow" aria-hidden="true"></div>
       <div class="works-screen ap-screen">
         <div class="ap-duo-head">
           <div>
@@ -242,6 +245,7 @@ const steps = ta.journey.steps.map((s) => ({
                   loading="lazy"
                 />
                 <canvas class="ap-card-canvas" data-px-reveal data-src={p.pixelSrc} data-tone={p.tone} aria-hidden="true"></canvas>
+                <span class="ap-card-chip">0{i + 1} · {p.title}</span>
               </div>
 
               <div class="ap-card-body">
@@ -289,6 +293,7 @@ const steps = ta.journey.steps.map((s) => ({
     <!-- CTA FINALE -->
     <section id="contatti" class="about-cta" data-anim="contact">
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
+      <span class="about-cta-glow" aria-hidden="true"></span>
 
       <span class="works-kicker about-cta-kicker">{ta.cta.kicker}</span>
 
