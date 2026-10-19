@@ -7363,8 +7363,8 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 }
 
 /* --- Testata (dentro la scena) ------------------------------------------
-   Nell'ingresso lo script la sposta e la ingrandisce (transform inline): il
-   titolo parte grande al centro e si posa qui. --ip = avanzamento
+   Nell'ingresso le parole del titolo salgono dalla sfocatura al loro posto
+   (stile inline per parola, dallo script). --ip = avanzamento
    dell'ingresso (0…1, già addolcito), 1 senza JS. */
 .apm-head {
   display: grid;
@@ -7375,10 +7375,9 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   row-gap: clamp(10px, 1.6vh, 16px);
   position: relative;
   z-index: 2;
-  transform-origin: 0 0;
-  will-change: transform;
 }
 .apm-kicker { grid-area: kicker; }
+.apm-tw { display: inline-block; will-change: transform, filter, opacity; }
 .apm-title {
   grid-area: title;
   margin: 0;

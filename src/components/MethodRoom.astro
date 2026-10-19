@@ -2,9 +2,9 @@
 // COME LAVORIAMO — il metodo in 4 fasi, raccontato COSTRUENDO un sito.
 // Tutta la sezione sta in una scena sticky alta 100svh che attraversa le
 // fasi con lo scroll (ogni fase è una fermata [data-scroll-detent], vedi
-// main.ts). Prima delle fasi c'è un INGRESSO legato allo scroll: il titolo
-// parte grande al centro e si posa in alto, il cantiere sale dal basso
-// inclinato e si appoggia piatto. A sinistra l'indice delle fasi (l'attiva si
+// main.ts). Prima delle fasi c'è un INGRESSO legato allo scroll: le parole
+// del titolo salgono dalla sfocatura al loro posto, il cantiere sale dal
+// basso inclinato e si appoggia piatto. A sinistra l'indice delle fasi (l'attiva si
 // inchiostra e si apre, la linea accanto si riempie in continuo); a destra un
 // browser con un sito di esempio che nasce davanti agli occhi:
 //   01 Ascolto   → schizzo a matita + post-it con le cose emerse
@@ -274,7 +274,6 @@ const MOUNTAINS = `
     const track = root.querySelector<HTMLElement>(".apm-track")!;
     const introEnd = root.querySelector<HTMLElement>(".apm-intro-end")!;
     const stage = root.querySelector<HTMLElement>(".apm-stage")!;
-    const head = root.querySelector<HTMLElement>(".apm-head")!;
     const title = root.querySelector<HTMLElement>(".apm-title")!;
     const build = root.querySelector<HTMLElement>("[data-build]")!;
     const site = root.querySelector<HTMLElement>("[data-site]")!;
@@ -284,27 +283,37 @@ const MOUNTAINS = `
     let current = -1;
     let visible = false;
     let raf = 0;
-    // Ingresso: dove sta il titolo "a riposo" e quanto va spostato/ingrandito
-    // per partire al centro della scena. Misurato senza transform.
-    let fly = { x: 0, y: 0, k: 1 };
-
-    const measure = () => {
-      head.style.transform = "none";
-      const s = stage.getBoundingClientRect();
-      const h = head.getBoundingClientRect();
-      const range = document.createRange();
-      range.selectNodeContents(title);
-      const t = range.getBoundingClientRect();
-      const k = Math.min(2.6, (s.width * 0.86) / t.width);
-      // centro del testo (relativo alla testata) portato al centro della scena
-      const cx = t.left + t.width / 2 - h.left;
-      const cy = t.top + t.height / 2 - h.top;
-      fly = {
-        x: s.left + s.width / 2 - h.left - k * cx,
-        y: s.top + s.height * 0.46 - h.top - k * cy,
-        k,
-      };
-      head.style.transform = "";
+    // Ingresso: il titolo resta al suo posto, alla sua misura. Le parole
+    // salgono dalla sfocatura una dopo l'altra mentre la sezione entra e si
+    // ferma (legate allo scroll: tornando su si ritirano).
+    const words: HTMLElement[] = [];
+    const walk = (node: Node) => {
+      Array.from(node.childNodes).forEach((c) => {
+        if (c.nodeType !== Node.TEXT_NODE) return walk(c);
+        const frag = document.createDocumentFragment();
+        (c.textContent ?? "").split(/(\s+)/).forEach((part) => {
+          if (!part) return;
+          if (/^\s+$/.test(part)) return frag.append(part);
+          const w = document.createElement("span");
+          w.className = "apm-tw";
+          w.textContent = part;
+          words.push(w);
+          frag.append(w);
+        });
+        c.replaceWith(frag);
+      });
+    };
+    if (!reduced) walk(title);
+    const STAGGER = 0.22;
+    const reveal = (tp: number) => {
+      const span = 1 + (words.length - 1) * STAGGER;
+      words.forEach((w, k) => {
+        const p = clamp01(tp * span - k * STAGGER);
+        const e = 1 - Math.pow(1 - p, 3);
+        w.style.opacity = e.toFixed(3);
+        w.style.filter = e < 0.999 ? `blur(${((1 - e) * 12).toFixed(1)}px)` : "";
+        w.style.transform = e < 0.999 ? `translateY(${((1 - e) * 0.55).toFixed(3)}em)` : "";
+      });
     };
 
     // Fase -1 = ingresso: il cantiere è ancora vuoto, così lo schizzo si
@@ -332,8 +341,9 @@ const MOUNTAINS = `
       const y = -r.top;
       const ip = reduced ? 1 : easeInOut(clamp01(y / intro));
       stage.style.setProperty("--ip", ip.toFixed(4));
-      const u = 1 - ip;
-      head.style.transform = u > 0.001 ? `translate(${(fly.x * u).toFixed(1)}px, ${(fly.y * u).toFixed(1)}px) scale(${(1 + (fly.k - 1) * u).toFixed(4)})` : "";
+      // il titolo comincia ad apparire quando la sezione è a metà schermo e
+      // ha finito a metà dell'ingresso
+      reveal(clamp01((y + vh * 0.5) / (vh * 0.5 + intro * 0.5)));
       const range = Math.max(r.height - vh - intro, 1);
       const f = clamp01((y - intro) / range) * n;
       steps.forEach((el, k) => el.style.setProperty("--lp", clamp01(f - k).toFixed(4)));
@@ -352,14 +362,7 @@ const MOUNTAINS = `
       { rootMargin: "10% 0px" }
     ).observe(root);
     window.addEventListener("scroll", queue, { passive: true });
-    window.addEventListener("resize", () => {
-      measure();
-      queue();
-    });
-    document.fonts?.ready.then(() => {
-      measure();
-      update();
-    });
+    window.addEventListener("resize", queue);
 
     // Palette provabile: il colore scelto passa a tutto il sito di esempio.
     root.querySelectorAll<HTMLButtonElement>("[data-swatch]").forEach((b, _, all) =>
@@ -401,7 +404,6 @@ const MOUNTAINS = `
       });
       site.addEventListener("pointerleave", () => site.classList.remove("is-lens"));
     }
-    measure();
     update();
   }
 
