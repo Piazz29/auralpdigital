@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Draggable } from "gsap/Draggable";
 import { SplitText } from "gsap/SplitText";
 import { initContactFlow } from "./contactFlow";
+import { initTypeBlocks } from "./typeBlock";
 import { PixelPortrait, RAMPS } from "./pixelPortrait";
 
 gsap.registerPlugin(ScrollTrigger, Draggable, SplitText);
@@ -755,7 +756,7 @@ const isHome = !!document.querySelector("[data-home]");
 if (!reduceMotion && !isHome) {
   document
     .querySelectorAll<HTMLElement>(
-      ".works-title:not(.split-parent), .cta-title:not(.split-parent)"
+      ".works-title:not(.split-parent):not([data-type-block]), .cta-title:not(.split-parent)"
     )
     .forEach((title) => {
       const words = splitTitleWords(title);
@@ -1500,9 +1501,15 @@ if (
     }
     return { x, y };
   };
-  // Il lead parte al centro della schermata, ingrandito fin dove ci sta.
-  const leadScale = () =>
-    Math.min(1.9, (pointStage.clientWidth * 0.88) / pointLead.offsetWidth);
+  // Il lead parte al centro della schermata, ingrandito fin quasi a bordo
+  // (misura del testo, non del blocco): in apertura è il protagonista, in
+  // scala MEGA come i nomi dei fondatori, poi si ritira a testata.
+  const leadScale = () => {
+    const range = document.createRange();
+    range.selectNodeContents(pointLead);
+    const w = range.getBoundingClientRect().width / (gsap.getProperty(pointLead, "scale") as number || 1);
+    return Math.min(3.2, (pointStage.clientWidth * 0.9) / Math.max(w, 1));
+  };
   const leadShift = (axis: "x" | "y") => {
     const o = offsetIn(pointLead);
     return axis === "x"
@@ -1899,14 +1906,19 @@ if (deck) {
     });
     // Il titolo sotto il mazzo esce da una sfocatura mentre le carte se ne
     // vanno: si "mette a fuoco" quando la scena è aperta.
+    // Il titolo è un blocco tipografico (typeBlock.ts) e si compone da
+    // solo; qui il sottotitolo si mette a fuoco a mazzo quasi aperto.
     const deckCopy = deck.querySelector<HTMLElement>("[data-deck-copy]");
     if (deckCopy) {
-      tl.fromTo(
-        deckCopy,
-        { autoAlpha: 0.15, scale: 0.94, filter: "blur(10px)" },
-        { autoAlpha: 1, scale: 1, filter: "blur(0px)", ease: "power2.out", duration: 0.9 },
-        0.25
-      );
+      const deckSub = deckCopy.querySelector<HTMLElement>(".deck-sub");
+      if (deckSub) {
+        tl.fromTo(
+          deckSub,
+          { autoAlpha: 0, filter: "blur(8px)" },
+          { autoAlpha: 1, filter: "blur(0px)", ease: "power2.out", duration: 0.4 },
+          0.7
+        );
+      }
     }
   }
 }
@@ -2004,7 +2016,10 @@ revealRise(".cta-panel", {
     const title = screen.querySelector<HTMLElement>(".finale-title");
     const card = screen.querySelector<HTMLElement>(".cflow");
     const rest = screen.querySelectorAll<HTMLElement>(".finale-kicker, .finale-sub, .cflow-foot");
-    const words = title ? SplitText.create(title, { type: "words", mask: "words" }).words : [];
+    // il titolo è un blocco tipografico (typeBlock.ts): entra da solo
+    const words = title && !title.hasAttribute("data-type-block")
+      ? SplitText.create(title, { type: "words", mask: "words" }).words
+      : [];
     const tl = gsap.timeline({
       scrollTrigger: { trigger: screen, start: "top 85%", end: "top 4%", scrub: SCRUB },
     });
@@ -2053,7 +2068,9 @@ revealRise(".cta-panel", {
     // sfocatura, il resto si mette a fuoco in fila.
     const ctaTitle = aboutCta.querySelector<HTMLElement>(".about-cta-title");
     if (!reduceMotion) {
-      const words = ctaTitle ? SplitText.create(ctaTitle, { type: "words", mask: "words" }).words : [];
+      const words = ctaTitle && !ctaTitle.hasAttribute("data-type-block")
+        ? SplitText.create(ctaTitle, { type: "words", mask: "words" }).words
+        : [];
       gsap
         .timeline({ scrollTrigger: { trigger: aboutCta, start: "top 72%", once: true } })
         .fromTo(
@@ -2578,6 +2595,11 @@ if (!reduceMotion) {
     );
   });
 }
+
+// ---------- Il blocco tipografico ----------
+// I titoli [data-type-block] si compongono a righe della stessa larghezza e
+// si incastrano con lo scroll (typeBlock.ts): il tratto del sito.
+initTypeBlocks({ gsap, ScrollTrigger, SplitText, animate: !reduceMotion, scrub: SCRUB });
 
 // ---------- Footer — il wordmark gigante emerge lettera per lettera ----------
 // Il wordmark parte più in basso e risale a posto mentre il footer entra; le

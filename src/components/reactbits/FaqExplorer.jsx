@@ -43,7 +43,7 @@ export default function FaqExplorer({ categories = [], kicker, title, subtitle, 
       <div className="faqx-side">
         <header className="faqx-head">
           <span className="works-kicker">{kicker}</span>
-          <h1 className="faqx-title">{title}</h1>
+          <h1 className="faqx-title" data-type-block data-tb-start="top 100%" data-tb-end="top 40%">{title}</h1>
           <p className="faqx-sub">{subtitle}</p>
         </header>
 

@@ -1122,7 +1122,7 @@ function JourneyStage({ steps, copy, mobile, webgl }) {
         {/* Finale: fermo nel layer pinnato, se ne va con la pagina. */}
         <div className="ajx-outro" data-i="4">
           <span className="works-kicker ajx-outro-kicker">{copy.outro.kicker}</span>
-          <p className="ajx-outro-title font-display">
+          <p className="ajx-outro-title font-display" data-type-block="" data-tb-static="">
             <MaskedWords text={copy.outro.title} />
           </p>
           <a className="ajx-outro-btn" href={copy.ctaHref} ref={endBtn} data-i="4" data-click>
@@ -1157,7 +1157,7 @@ function JourneyStage({ steps, copy, mobile, webgl }) {
         <header className="ajx-intro" data-i="-1">
           <div className="ajx-intro-copy">
             <span className="works-kicker ajx-intro-kicker">{copy.kicker}</span>
-            <h2 className="ajx-intro-title font-display">
+            <h2 className="ajx-intro-title font-display" data-type-block="" data-tb-static="">
               <MaskedWords text={copy.title} />
             </h2>
             <p className="ajx-intro-lead">{copy.lead}</p>

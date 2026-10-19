@@ -6848,9 +6848,9 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   z-index: 0;
   margin: -0.06em 0 0 calc(-1 * var(--fgap) + 0.06em);
   font-weight: 500;
-  font-size: clamp(76px, 13vw, 240px);
+  font-size: var(--t-mega);
   line-height: 0.9;
-  letter-spacing: -0.055em;
+  letter-spacing: var(--t-track-mega);
   color: var(--color-ink);
   white-space: nowrap;
 }
@@ -8660,4 +8660,133 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 @media (prefers-reduced-motion: reduce) {
   .ap-chain-sheen,
   .ap-founder-sheen { display: none; }
+}
+
+/* ======================================================================
+   SCALA TIPOGRAFICA — il carattere dei fondatori su tutto il sito (ott 2026)
+   Tre taglie, non di più, sempre allo stesso posto:
+   - MEGA: il protagonista di una scena, una o due parole come i nomi di
+     Alice e Julian (Progetti, "Costruiamolo insieme.");
+   - DISPLAY: il titolo di ogni sezione;
+   - HEAD: titoli di tappa e testate in scena fissa.
+   Accanto restano piccole le etichette in maiuscoletto e il testo: il
+   contrasto viene dalla distanza fra le taglie, non da colori o forme.
+   Più il carattere è grande, più l'interlinea e la spaziatura si stringono.
+   ====================================================================== */
+:root {
+  --t-mega: clamp(56px, 11.5vw, 220px);
+  --t-display: clamp(44px, 7.2vw, 136px);
+  --t-head: clamp(32px, 4.2vw, 76px);
+  --t-track-mega: -0.055em;
+  --t-track-display: -0.045em;
+  --t-track-head: -0.035em;
+}
+
+/* --- MEGA --- */
+.deck-title,
+.ajx-outro-title {
+  max-width: none;
+  font-size: var(--t-mega);
+  line-height: 0.9;
+  letter-spacing: var(--t-track-mega);
+}
+/* Una parola per riga: "Progetti / online" sta nel varco fra le carte,
+   come i nomi accanto ai ritratti. */
+.deck-line { display: block; }
+.ajx-outro-title em { display: block; }
+
+/* --- DISPLAY --- */
+.point-turn,
+.svc-title,
+.finale-title,
+.ap-statement,
+.ap-duo-title,
+.about-cta-title,
+.faqx-title {
+  font-size: var(--t-display);
+  line-height: 0.94;
+  letter-spacing: var(--t-track-display);
+}
+.point-turn-title { line-height: 0.94; letter-spacing: var(--t-track-display); }
+/* La hero di Chi siamo sta in una schermata coi ritratti: taglia display
+   solo da desktop (su telefono resta la misura pensata per il tedesco). */
+@media (min-width: 961px) {
+  .ap-hero-title {
+    font-size: clamp(44px, min(7.2vw, 13vh), 136px);
+    line-height: 0.92;
+    letter-spacing: var(--t-track-display);
+  }
+  .ap-statement { font-size: clamp(44px, min(7.2vw, 11vh), 136px); }
+}
+.point-turn { max-width: 15ch; }
+.about-cta-title { max-width: 14ch; }
+.ajx-intro-title { letter-spacing: var(--t-track-mega); line-height: 0.9; }
+
+/* --- HEAD --- */
+.point-lead,
+.apm-title,
+.ajx-step-title {
+  font-size: var(--t-head);
+  line-height: 0.98;
+  letter-spacing: var(--t-track-head);
+}
+
+/* Le cifre del manifesto: numeri grandi come titoli, etichette piccole. */
+.ap-manifesto .ap-fact-n {
+  font-size: clamp(64px, min(8vw, 13vh), 148px);
+  letter-spacing: var(--t-track-mega);
+}
+
+/* Le maschere delle parole divise seguono l'interlinea stretta: più aria
+   sopra e sotto, glifi interi (vedi la nota su .point-lead più sopra). */
+:is(.svc-title, .ap-duo-title, .ap-statement, .faqx-title) div[style*="overflow"],
+.deck-title div[style*="overflow"] {
+  line-height: 1.44;
+  margin-block: -0.25em;
+  padding-inline: 0.08em;
+  margin-inline: -0.08em;
+}
+.finale-title div[style*="overflow"],
+.about-cta-title div[style*="overflow"],
+.point-turn-title div[style*="overflow"] {
+  margin-block: -0.25em;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --t-mega: clamp(52px, 15vw, 96px);
+    --t-display: clamp(40px, 11.4vw, 64px);
+    --t-head: clamp(30px, 8.4vw, 44px);
+  }
+}
+
+/* ======================================================================
+   IL BLOCCO — il tratto tipografico (typeBlock.ts)
+   Le righe di un titolo [data-type-block] vengono portate tutte alla stessa
+   larghezza: ognuna prende la sua taglia. La misura del blocco la decide la
+   larghezza del titolo, quindi qui si danno larghezze, non font-size.
+   ====================================================================== */
+[data-type-block] {
+  text-wrap: balance;
+  hyphens: manual;
+}
+[data-type-block].is-blocked .tb-line {
+  display: block;
+  white-space: nowrap;
+}
+/* aria sotto l'ultima riga: i discendenti grandi non toccano il testo dopo */
+[data-type-block].is-blocked .tb-line:last-child { padding-bottom: 0.08em; }
+.ajx-intro-title[data-type-block] { width: min(100%, 680px); }
+.ajx-outro-title[data-type-block] { width: min(86vw, 1100px); margin-inline: auto; }
+[data-type-block] em { display: inline; }
+.deck-title[data-type-block] { width: min(38vw, 560px); }
+.about-cta-title[data-type-block] { width: min(100%, 980px); max-width: none; }
+.ap-duo-title[data-type-block] { width: min(100%, 640px); }
+@media (max-width: 767px) {
+  .deck-title[data-type-block] { width: min(78vw, 320px); }
+}
+/* Servizi: il blocco prende tutta la colonna del testo, non la sua misura */
+.svc-title[data-type-block] { align-self: stretch; width: 100%; max-width: 620px; }
+@media (max-width: 1023px) {
+  .svc-title[data-type-block] { margin-inline: auto; max-width: min(100%, 520px); }
 }

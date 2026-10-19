@@ -228,7 +228,7 @@ const steps = ta.journey.steps.map((s) => ({
         <div class="ap-duo-head">
           <div>
             <span class="works-kicker" data-ap-rise>{ta.duo.kicker}</span>
-            <h2 class="works-title ap-duo-title"><Rich text={ta.duo.title} /></h2>
+            <h2 class="works-title ap-duo-title" data-type-block><Rich text={ta.duo.title} /></h2>
           </div>
           <p class="ap-duo-lead" data-ap-rise>{ta.duo.lead}</p>
         </div>
@@ -309,7 +309,7 @@ const steps = ta.journey.steps.map((s) => ({
 
       <span class="works-kicker about-cta-kicker">{ta.cta.kicker}</span>
 
-      <h2 class="about-cta-title font-display">
+      <h2 class="about-cta-title font-display" data-type-block>
         <Rich text={ta.cta.title} />
       </h2>
 
