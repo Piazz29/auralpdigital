@@ -61,14 +61,15 @@ const domain = (url: string) => url.replace(/^https?:\/\/(www\.)?/, "").replace(
 // Una carta per angolo: abbastanza lontane dal centro da lasciare libero il
 // titolo, abbastanza grandi (vedi --card in global.css) da riempire la scena.
 //
+// r piccole (±1.5°): a mazzo aperto le carte sono quasi dritte, ordinate.
 // fy/fr/fd/fdelay = la fluttuazione a mazzo aperto: di quanto respira la carta
 // (px e gradi), in quanto tempo e con che ritardo. Ampiezze e durate tutte
 // diverse così le quattro carte non oscillano mai all'unisono.
 const cards = [
-  { x: -0.33, y: -0.25, mx: -0.24, my: -0.31, r: -4, dx: -8, dy: 6, dr: -6, fy: -8, fr: 0.8, fd: 6.4, fdelay: 0 },
-  { x: 0.34, y: -0.27, mx: 0.25, my: -0.28, r: 3, dx: 5, dy: -4, dr: 4, fy: 7, fr: -0.6, fd: 7.6, fdelay: 0.5 },
-  { x: 0.32, y: 0.26, mx: 0.24, my: 0.31, r: -3, dx: -3, dy: -8, dr: 9, fy: -6, fr: -0.9, fd: 5.9, fdelay: 1.1 },
-  { x: -0.34, y: 0.27, mx: -0.25, my: 0.28, r: 4, dx: 9, dy: 3, dr: -3, fy: 8, fr: 0.7, fd: 8.2, fdelay: 0.3 },
+  { x: -0.33, y: -0.25, mx: -0.24, my: -0.31, r: -1.5, dx: -8, dy: 6, dr: -6, fy: -5, fr: 0.3, fd: 7.4, fdelay: 0 },
+  { x: 0.34, y: -0.27, mx: 0.25, my: -0.28, r: 1.2, dx: 5, dy: -4, dr: 4, fy: 4, fr: -0.25, fd: 8.6, fdelay: 0.5 },
+  { x: 0.32, y: 0.26, mx: 0.24, my: 0.31, r: -1, dx: -3, dy: -8, dr: 9, fy: -4, fr: -0.3, fd: 6.9, fdelay: 1.1 },
+  { x: -0.34, y: 0.27, mx: -0.25, my: 0.28, r: 1.4, dx: 9, dy: 3, dr: -3, fy: 5, fr: 0.25, fd: 9.2, fdelay: 0.3 },
 ];
 ---
 
@@ -104,7 +105,7 @@ const cards = [
             data-dx={c.dx}
             data-dy={c.dy}
             data-dr={c.dr}
-            style={`--x-d:${c.x}; --y-d:${c.y}; --x-m:${c.mx}; --y-m:${c.my}; --r:${c.r}deg; --dx:${c.dx}px; --dy:${c.dy}px; --dr:${c.dr}deg; --fy:${c.fy}px; --fr:${c.fr}deg; --fd:${c.fd}s; --fdelay:${c.fdelay}s; --z:${cards.length - i}`}
+            style={`--x-d:${c.x}; --y-d:${c.y}; --x-m:${c.mx}; --y-m:${c.my}; --r:${c.r}deg; --dx:${c.dx}px; --dy:${c.dy}px; --dr:${c.dr}deg; --fy:${c.fy}px; --fr:${c.fr}deg; --fd:${c.fd}s; --fdelay:${c.fdelay}s; --z:${cards.length - i}; --i:${i}`}
             {...link}
           >
             <div class="deck-card-float">
@@ -161,6 +162,7 @@ const cards = [
                       <span class="deck-create-label">{copy.create}</span>
                     </div>
                   )}
+                  <span class="deck-sheen" aria-hidden="true" />
                 </div>
               </div>
             </div>

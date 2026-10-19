@@ -1826,22 +1826,44 @@ if (deck) {
         },
       },
     });
+    // In pila le carte sono coricate sul tavolo (inclinate all'indietro, più
+    // piccole) e voltate verso il centro: aprendosi si alzano e si
+    // raddrizzano, e si posano piatte nel loro angolo.
     deckCards.forEach((card, i) => {
+      const side = Math.sign(parseFloat(getComputedStyle(card).getPropertyValue("--x"))) || 1;
       tl.fromTo(
         card,
         {
           x: () => pile[i].x,
           y: () => pile[i].y,
           rotation: num(card.dataset.dr),
+          rotationX: 26,
+          rotationY: -side * 12,
+          scale: 0.84,
+          transformPerspective: 1200,
         },
         {
           x: 0,
           y: 0,
           rotation: () => finalRotation(card),
+          rotationX: 0,
+          rotationY: 0,
+          scale: 1,
         },
         order.indexOf(i) * STEP
       );
     });
+    // Il titolo sotto il mazzo esce da una sfocatura mentre le carte se ne
+    // vanno: si "mette a fuoco" quando la scena è aperta.
+    const deckCopy = deck.querySelector<HTMLElement>("[data-deck-copy]");
+    if (deckCopy) {
+      tl.fromTo(
+        deckCopy,
+        { autoAlpha: 0.15, scale: 0.94, filter: "blur(10px)" },
+        { autoAlpha: 1, scale: 1, filter: "blur(0px)", ease: "power2.out", duration: 0.9 },
+        0.25
+      );
+    }
   }
 }
 
