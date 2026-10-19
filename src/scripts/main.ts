@@ -982,16 +982,16 @@ if (
     if (num) tl.fromTo(num, { autoAlpha: 0, x: -14 }, { autoAlpha: 1, x: 0, duration: 0.5 }, 0);
     if (title) {
       const words = SplitText.create(title, { type: "words", mask: "words" }).words;
-      tl.fromTo(words, { yPercent: 112 }, { yPercent: 0, duration: 0.75, stagger: 0.06 }, 0.05);
+      tl.fromTo(words, { yPercent: 112 }, { yPercent: 0, duration: 0.9, stagger: 0.06, ease: "expo.out" }, 0.05);
       const em = title.querySelector("em");
       if (em) tl.fromTo(em, { "--hl": 0 }, { "--hl": 1, duration: 0.55, ease: "power2.inOut" }, 0.5);
     }
-    if (desc) tl.fromTo(desc, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.6 }, 0.3);
+    if (desc) tl.fromTo(desc, { autoAlpha: 0, y: 14, filter: "blur(6px)" }, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, clearProps: "filter" }, 0.3);
     if (tags.length) {
       tl.fromTo(
         tags,
-        { autoAlpha: 0, y: 12 },
-        { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.07, ease: "back.out(1.6)" },
+        { autoAlpha: 0, y: 10 },
+        { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.06 },
         0.45
       );
     }
@@ -1000,9 +1000,9 @@ if (
     if (fix) {
       tl.fromTo(
         fix,
-        { autoAlpha: 0, y: 30, rotation: k % 2 ? 6 : -6 },
-        { autoAlpha: 1, y: 0, rotation: 0, duration: 0.7, ease: "back.out(1.5)", force3D: false },
-        0.35
+        { autoAlpha: 0, y: 22, rotation: k % 2 ? 2 : -2 },
+        { autoAlpha: 1, y: 0, rotation: 0, duration: 0.9, ease: "expo.out", force3D: false },
+        0.5
       );
     }
     return tl;
@@ -1036,7 +1036,18 @@ if (
     const t = gsap.utils.clamp(0, 1, p - i);
     const pos = frameAt(i) + (frameAt(i + 1) - frameAt(i)) * t;
 
-    setFrame(pos);
+    // Peso fisico della card in viaggio: a metà corsa si solleva (un filo
+    // più piccola, ruotata verso dove va) e si posa
+    // all'arrivo. lift = 0 a card ferma, quindi a riposo resta nitida.
+    const lift = reel ? 0 : Math.sin(Math.PI * t);
+    const dir = Math.sign(frameAt(i + 1) - frameAt(i)) || 0;
+    gsap.set(svcFrame, {
+      ...(vertical ? { y: pos } : { x: pos }),
+      scale: 1 - 0.06 * lift,
+      rotationY: vertical ? 0 : dir * 9 * lift,
+      rotationX: vertical ? dir * -6 * lift : 0,
+      transformPerspective: 1400,
+    });
     // swap → controtraslazione: i pannelli restano fermi nello spazio e la
     // card ci scorre sopra come una finestra.
     // reel → il muro avanza di una schermata per scena dentro alla cornice
@@ -1084,9 +1095,15 @@ if (
       else el.removeAttribute("aria-current");
     });
 
+    // Card posata: l'immagine si mette a fuoco (lo zoom si assesta) e il
+    // riflesso di luce la attraversa una volta. Ripartendo si resetta.
+    const live = !!st?.isActive;
+    const landed = live && Math.abs(p - near) < 0.004;
+    svcFrame.classList.toggle("is-landed", landed);
+    svcShots.forEach((el, k) => el.classList.toggle("is-focus", landed ? k === near : Math.abs(p - k) < 0.5 && !live));
+
     // Entrata a tempo: parte quando la card è posata (solo a sezione in
     // pin, non al caricamento); torna a zero a scena spenta.
-    const live = !!st?.isActive;
     copyTls.forEach((tl, k) => {
       const d = Math.abs(p - k);
       if (live && d < 0.004 && tl.progress() === 0 && !tl.isActive()) {
