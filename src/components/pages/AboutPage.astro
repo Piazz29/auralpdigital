@@ -167,6 +167,7 @@ const steps = ta.journey.steps.map((s) => ({
                passaggi. Con lo scroll i passaggi vengono barrati e cadono, i
                due capi si avvicinano e il filo diventa pieno (main.ts). -->
           <div class="ap-chain" data-ap-chain>
+            <span class="ap-chain-sheen" aria-hidden="true"></span>
             <div class="ap-chain-head">
               <span class="ap-chain-tag" aria-hidden="true">
                 <span data-ap-chain-before>{chain.before}</span>
@@ -215,9 +216,11 @@ const steps = ta.journey.steps.map((s) => ({
       </div>
     </section>
 
-    <!-- IL DUO — due card editoriali sfalsate: la foto entra pixelata e si
-         mette a fuoco (lo stesso gesto della hero), poi nome, ruolo, bio,
-         una frase in prima persona e le aree di lavoro. -->
+    <!-- IL DUO — due "pagine di rivista" a specchio, non card: ritratto alto
+         che sale dal tavolo e si mette a fuoco dai pixel (lo stesso gesto
+         della hero), nome gigante che esce da dietro la foto, poi bio, una
+         frase in prima persona e le aree di lavoro. Un filo sottile apre
+         ogni pagina con numero, ruolo e area. -->
     <section id="il-duo" class="ap-duo" data-ap-duo>
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
       <div class="ap-duo-glow" aria-hidden="true"></div>
@@ -225,43 +228,52 @@ const steps = ta.journey.steps.map((s) => ({
         <div class="ap-duo-head">
           <div>
             <span class="works-kicker" data-ap-rise>{ta.duo.kicker}</span>
-            <h2 class="works-title ap-duo-title" data-ap-rise><Rich text={ta.duo.title} /></h2>
+            <h2 class="works-title ap-duo-title"><Rich text={ta.duo.title} /></h2>
           </div>
           <p class="ap-duo-lead" data-ap-rise>{ta.duo.lead}</p>
         </div>
 
-        <div class="ap-cards">
+        <div class="ap-founders">
           {cardPeople.map((p, i) => (
             <div class="ap-card-slot" data-ap-card-slot>
-            <article class={`ap-card ap-card--${p.tone}`} data-ap-card>
-              <div class="ap-card-media" data-ap-card-media>
-                <Picture
-                  src={p.photo}
-                  formats={["avif", "webp"]}
-                  widths={[480, 720, 960]}
-                  sizes="(max-width: 860px) 92vw, 44vw"
-                  alt={`${p.name} — ${p.title}, ${p.area}`}
-                  class="ap-card-img"
-                  loading="lazy"
-                />
-                <canvas class="ap-card-canvas" data-px-reveal data-src={p.pixelSrc} data-tone={p.tone} aria-hidden="true"></canvas>
-                <span class="ap-card-chip">0{i + 1} · {p.title}</span>
-              </div>
+              <article class={`ap-founder ap-founder--${i % 2 ? "flip" : "std"} ap-founder--${p.tone}`} data-ap-card>
+                <p class="ap-founder-rule" data-ap-card-rule>
+                  <span class="ap-founder-idx">0{i + 1}</span>
+                  <span>{p.title}</span>
+                  <span class="ap-founder-area">{p.area}</span>
+                </p>
 
-              <div class="ap-card-body">
-                <div class="ap-card-namerow">
-                  <h3 class="ap-card-name font-display" data-ap-card-name>{p.name}</h3>
-                  <span class="ap-card-area">{p.area}</span>
+                <div class="ap-founder-media" data-ap-card-media>
+                  <div class="ap-founder-frame" data-ap-card-frame>
+                    <div class="ap-founder-zoom" data-ap-card-zoom>
+                      <Picture
+                        src={p.photo}
+                        formats={["avif", "webp"]}
+                        widths={[480, 720, 960]}
+                        sizes="(max-width: 559px) 92vw, 42vw"
+                        alt={`${p.name} — ${p.title}, ${p.area}`}
+                        class="ap-founder-img"
+                        loading="lazy"
+                      />
+                    </div>
+                    <canvas class="ap-founder-canvas" data-px-reveal data-src={p.pixelSrc} data-tone={p.tone} aria-hidden="true"></canvas>
+                    <span class="ap-founder-sheen" aria-hidden="true"></span>
+                  </div>
                 </div>
-                <p class="ap-card-bio" data-ap-card-in>{p.bio}</p>
-                <blockquote class="ap-card-quote font-display" data-ap-card-in>
-                  <span aria-hidden="true">«</span><Rich text={p.quote} /><span aria-hidden="true">»</span>
-                </blockquote>
-                <ul class="ap-card-tags" data-ap-card-in>
-                  {p.focus.map((f) => <li>{f}</li>)}
-                </ul>
-              </div>
-            </article>
+
+                <div class="ap-founder-body">
+                  <h3 class="ap-founder-name font-display" data-ap-card-name>{p.name}</h3>
+                  <div class="ap-founder-copy">
+                    <p class="ap-founder-bio" data-ap-card-in>{p.bio}</p>
+                    <blockquote class="ap-card-quote font-display" data-ap-card-in>
+                      <span aria-hidden="true">«</span><Rich text={p.quote} /><span aria-hidden="true">»</span>
+                    </blockquote>
+                    <ul class="ap-card-tags" data-ap-card-in>
+                      {p.focus.map((f) => <li>{f}</li>)}
+                    </ul>
+                  </div>
+                </div>
+              </article>
             </div>
           ))}
         </div>

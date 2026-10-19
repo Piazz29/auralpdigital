@@ -105,7 +105,7 @@ export class PixelPortrait {
     // start()/setWave() chiamati prima che la foto fosse pronta.
     if (this.bootStart >= 0) this.kick();
     this.ro = new ResizeObserver(() => {
-      const r = this.canvas.getBoundingClientRect();
+      const r = { width: this.canvas.clientWidth, height: this.canvas.clientHeight };
       if (Math.abs(r.width - this.w) > 1 || Math.abs(r.height - this.h) > 1) {
         this.layout();
         if (this.frozen) {
@@ -127,7 +127,9 @@ export class PixelPortrait {
   private layout() {
     const img = this.img;
     if (!img) return;
-    const r = this.canvas.getBoundingClientRect();
+    // Misure di layout, non a schermo: il canvas può stare dentro un
+    // contenitore inclinato o scalato (il ritratto dei fondatori che sale).
+    const r = { width: this.canvas.clientWidth, height: this.canvas.clientHeight };
     this.w = Math.max(1, r.width);
     this.h = Math.max(1, r.height);
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);

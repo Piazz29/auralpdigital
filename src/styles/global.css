@@ -6723,183 +6723,201 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   line-height: 1.65;
   color: var(--color-text-secondary);
 }
-.ap-cards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(24px, 4vw, 80px);
-  align-items: start;
-  margin-top: clamp(40px, 7vh, 90px);
+/* I fondatori — due pagine di rivista a specchio: ritratto alto da un lato,
+   nome gigante dall'altro che esce da dietro la foto (main.ts lo fa
+   scorrere), sotto bio, frase e aree. Un filo apre ogni pagina. */
+.ap-founders {
+  margin-top: clamp(56px, 10vh, 120px);
 }
-.ap-card {
-  --tone: var(--color-orange);
-  --tone-text: var(--color-orange-deep);
-  --tone-hl: rgba(242, 145, 63, 0.36);
+.ap-card-slot + .ap-card-slot {
+  margin-top: clamp(96px, 16vh, 200px);
+}
+.ap-founder {
+  --fgap: clamp(32px, 5vw, 96px);
   --tone-bg: #f6d3a6;
   position: relative;
-  padding: 12px;
-  border-radius: 30px;
-  background: rgba(247, 245, 225, 0.78);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 40px 90px -50px rgba(23, 19, 16, 0.32);
-  transform-style: preserve-3d;
-  transition: box-shadow 0.6s ease;
+  display: grid;
+  grid-template-columns: minmax(0, 4.4fr) minmax(0, 6.6fr);
+  grid-template-areas:
+    "rule rule"
+    "media body";
+  column-gap: var(--fgap);
 }
-.ap-card--shadow {
-  --tone: var(--color-accent);
-  --tone-text: var(--color-accent);
-  --tone-hl: rgba(132, 162, 245, 0.34);
-  --tone-bg: #cedaf3;
+.ap-founder--shadow { --tone-bg: #cedaf3; }
+.ap-founder--flip {
+  grid-template-columns: minmax(0, 6.6fr) minmax(0, 4.4fr);
+  grid-template-areas:
+    "rule rule"
+    "body media";
 }
-/* La seconda card scende un po' (sfalsata), qualunque sia il tono. */
-.ap-card-slot + .ap-card-slot {
-  margin-top: clamp(60px, 15vh, 190px);
-}
-.ap-card:hover {
-  box-shadow: 0 50px 110px -50px rgba(23, 19, 16, 0.42);
-}
-.ap-card-media {
+.ap-founder-rule {
+  grid-area: rule;
   position: relative;
-  aspect-ratio: 4 / 4.3;
-  border-radius: 21px;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 0 0 clamp(22px, 3.6vh, 40px);
+  padding-bottom: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.ap-founder-rule::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: var(--color-border-strong);
+  transform-origin: left;
+  transform: scaleX(var(--rule, 1));
+}
+.ap-founder--flip .ap-founder-rule::after { transform-origin: right; }
+.ap-founder-idx,
+.ap-founder-area { color: var(--color-accent); }
+.ap-founder-area { margin-left: auto; }
+
+.ap-founder-media {
+  grid-area: media;
+  position: relative;
+  z-index: 1;
+}
+.ap-founder-frame {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  max-height: min(80svh, 780px);
+  width: 100%;
+  border-radius: 28px;
   overflow: hidden;
   background: var(--tone-bg);
+  box-shadow: 0 60px 110px -64px rgba(23, 19, 16, 0.5);
+  isolation: isolate;
 }
-.ap-card-media picture,
-.ap-card-img {
+.ap-founder-zoom {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 40%;
+}
+.ap-founder-zoom picture,
+.ap-founder-img {
   display: block;
   width: 100%;
   height: 100%;
 }
-.ap-card-img {
+.ap-founder-img {
   object-fit: cover;
-  object-position: 50% 30%;
-  transition: transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  object-position: 50% 28%;
 }
-.ap-card:hover .ap-card-img {
-  transform: scale(1.035);
-}
-.ap-card-canvas {
+.ap-founder-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
-.ap-card-chip {
+/* Riflesso di luce: passa una volta sola, a ritratto messo a fuoco. */
+.ap-founder-sheen {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  padding: 7px 13px;
-  border-radius: 999px;
-  background: rgba(254, 253, 236, 0.92);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-ink);
+  inset: 0;
+  pointer-events: none;
 }
-.ap-card-body {
-  padding: clamp(24px, 3vh, 34px) clamp(14px, 1.8vw, 26px) clamp(16px, 2vh, 24px);
+.ap-founder-sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 32%, rgba(255, 255, 255, 0.26) 50%, transparent 68%);
+  transform: translateX(-110%);
 }
-.ap-card-namerow {
+.ap-founder.is-landed .ap-founder-sheen::before {
+  transform: translateX(110%);
+  transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ap-founder-body {
+  grid-area: body;
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  flex-direction: column;
   justify-content: space-between;
-  gap: 6px 18px;
+  gap: clamp(28px, 5vh, 56px);
+  min-width: 0;
 }
-.ap-card-name {
-  margin: 0;
+/* Il nome sta a filo del ritratto, sotto di lui (z-index più basso): con lo
+   scroll esce da dietro la foto (main.ts) e si ferma intero. */
+.ap-founder-name {
+  position: relative;
+  z-index: 0;
+  margin: -0.06em 0 0 calc(-1 * var(--fgap) + 0.06em);
   font-weight: 500;
-  font-size: clamp(54px, 6vw, 104px);
+  font-size: clamp(76px, 13vw, 240px);
   line-height: 0.9;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.055em;
   color: var(--color-ink);
+  white-space: nowrap;
 }
-.ap-card-name .ap-px-dot {
-  color: var(--tone);
+.ap-founder--flip .ap-founder-name {
+  margin: -0.06em calc(-1 * var(--fgap) + 0.06em) 0 0;
+  text-align: right;
 }
-.ap-card-area {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--tone-text);
+.ap-founder-name div[style*="overflow"] {
+  line-height: 1.44;
+  margin-block: -0.27em;
+  padding-inline: 0.08em;
+  margin-inline: -0.08em;
 }
-.ap-card-bio {
-  margin: 20px 0 0;
-  max-width: 48ch;
+.ap-founder-copy {
+  max-width: 46ch;
+}
+.ap-founder--flip .ap-founder-copy { margin-left: auto; }
+.ap-founder-bio {
+  margin: 0;
   font-size: clamp(15px, 1.1vw, 17px);
-  line-height: 1.65;
+  line-height: 1.7;
   color: var(--color-text-secondary);
 }
 .ap-card-quote {
-  margin: 26px 0 0;
-  padding-top: 22px;
+  margin: clamp(22px, 3.4vh, 34px) 0 0;
+  padding-top: clamp(18px, 2.8vh, 26px);
   border-top: 1px solid var(--color-border);
-  font-size: clamp(22px, 2vw, 32px);
-  line-height: 1.2;
-  letter-spacing: -0.015em;
+  font-size: clamp(22px, 2.1vw, 34px);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
   color: var(--color-ink);
 }
-.ap-card-quote em {
-  font-style: italic;
-  color: var(--tone-text);
-  padding-inline: 0.06em;
-  margin-inline: -0.06em;
-  background: linear-gradient(var(--tone-hl), var(--tone-hl)) no-repeat 0 88% /
-    calc(var(--hl, 1) * 100%) 0.36em;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
+.ap-card-quote em { font-style: italic; }
 .ap-card-tags {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 24px 0 0;
+  margin: clamp(18px, 3vh, 28px) 0 0;
   padding: 0;
 }
-.ap-card-tags li {
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border-strong);
-  font-size: 0.8125rem;
-  color: var(--color-ink);
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-}
-.ap-card-tags li:hover {
-  background: var(--tone);
-  border-color: var(--tone);
-  color: var(--color-bg);
-}
+
 @media (max-width: 860px) {
-  .ap-duo-head,
-  .ap-cards {
-    grid-template-columns: 1fr;
-  }
-  .ap-card-slot + .ap-card-slot {
-    margin-top: 0;
-  }
-  .ap-card {
-    border-radius: 26px;
-  }
+  .ap-duo-head { grid-template-columns: 1fr; }
 }
-/* Tablet verticale e telefono in orizzontale: in colonna singola la foto
-   4:4.3 a tutta larghezza diventava alta quasi due schermate. Da 560px la
-   card torna orizzontale, foto a sinistra e testo a destra, come su desktop. */
-@media (min-width: 560px) and (max-width: 860px) {
-  .ap-card {
-    display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    padding: 10px;
+/* Telefono: la pagina diventa una colonna, il nome sotto il ritratto. */
+@media (max-width: 559px) {
+  .ap-founders { margin-top: 44px; }
+  .ap-card-slot + .ap-card-slot { margin-top: 72px; }
+  .ap-founder,
+  .ap-founder--flip {
+    display: flex;
+    flex-direction: column;
   }
-  .ap-card-media {
-    aspect-ratio: auto;
-    height: 100%;
-    min-height: min(420px, 82svh);
-    border-radius: 20px;
+  .ap-founder-rule { margin-bottom: 16px; padding-bottom: 12px; font-size: 0.6875rem; gap: 10px; }
+  .ap-founder-frame { aspect-ratio: 4 / 4.4; border-radius: 22px; }
+  .ap-founder-img { object-position: 50% 24%; }
+  .ap-founder-body { gap: 0; }
+  .ap-founder-name,
+  .ap-founder--flip .ap-founder-name {
+    margin: 14px 0 0;
+    text-align: left;
+    font-size: clamp(56px, 19vw, 84px);
   }
-  .ap-card-body { padding: 18px 18px 10px; }
+  .ap-founder--flip .ap-founder-copy { margin-left: 0; }
+  .ap-founder-bio { margin-top: 10px; font-size: 14.5px; line-height: 1.6; }
+  .ap-card-quote { margin-top: 16px; padding-top: 14px; font-size: clamp(19px, 5.4vw, 22px); }
+  .ap-card-tags { margin-top: 14px; }
 }
 
 /* ============================================================
@@ -7196,8 +7214,7 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 }
 
 @media (min-width: 961px) {
-  .ap-manifesto,
-  .ap-duo {
+  .ap-manifesto {
     min-height: 100svh;
     display: flex;
     flex-direction: column;
@@ -7211,85 +7228,11 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
     font-size: clamp(44px, min(4.9vw, 9vh), 92px);
   }
 
-  /* --- IL DUO: due card orizzontali affiancate, tutto in una schermata --- */
-  .ap-duo .ap-screen { gap: clamp(24px, 4.2vh, 48px); }
-  .ap-duo-head { gap: 16px clamp(32px, 5vw, 96px); }
-  .ap-duo-title { font-size: clamp(40px, min(4.4vw, 8vh), 80px); }
-  .ap-duo .works-kicker { margin-bottom: 0.6rem; }
-  .ap-cards {
-    margin-top: 0;
-    gap: clamp(20px, 2.4vw, 40px);
-    align-items: stretch;
-  }
-  .ap-card-slot + .ap-card-slot { margin-top: 0; }
-  .ap-card {
-    display: grid;
-    grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
-    height: clamp(420px, calc(100svh - 310px), 600px);
-    padding: 10px;
-    border-radius: 28px;
-  }
-  .ap-card-media { aspect-ratio: auto; height: 100%; border-radius: 20px; }
-  .ap-card-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    padding: clamp(14px, 2.2vh, 26px) clamp(14px, 1.6vw, 26px) clamp(8px, 1.4vh, 16px);
-  }
-  .ap-card-namerow { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .ap-card-name { font-size: clamp(44px, min(4.4vw, 8.4vh), 80px); }
-  .ap-card-bio { margin-top: clamp(12px, 2vh, 20px); font-size: clamp(14px, min(1vw, 1.9vh), 16px); line-height: 1.6; }
-  .ap-card-quote {
-    margin-top: auto;
-    padding-top: clamp(12px, 2vh, 20px);
-    font-size: clamp(20px, min(2.1vw, 3.8vh), 36px);
-    line-height: 1.15;
-  }
-  .ap-card-tags { margin-top: clamp(12px, 2vh, 20px); gap: 6px; }
-  .ap-card-tags li { padding: 6px 12px; font-size: 0.75rem; }
-
   /* --- CTA finale: una schermata piena, contenuto al centro --- */
   .about-cta { min-height: 100svh; justify-content: center; padding-block: clamp(92px, 11.5vh, 116px) clamp(40px, 6vh, 72px); }
 }
 @media (max-width: 960px) {
   .ap-manifesto-grid { display: none; }
-}
-
-/* --- IL DUO su telefono: ogni card occupa una schermata intera, tutta
-   visibile. La foto prende lo spazio che resta sopra il testo; main.ts la
-   tiene ferma un attimo (pin breve) e ci si posa sopra da soli. --- */
-@media (max-width: 559px) {
-  .ap-cards { gap: 24px; }
-  .ap-card {
-    display: flex;
-    flex-direction: column;
-    height: calc(100svh - 24px);
-    max-height: 860px;
-    padding: 10px;
-    border-radius: 24px;
-  }
-  .ap-card-media {
-    aspect-ratio: auto;
-    flex: 1 1 0;
-    min-height: 110px;
-    border-radius: 17px;
-  }
-  .ap-card-img { object-position: 50% 24%; }
-  .ap-card-chip { top: 12px; left: 12px; }
-  .ap-card-body { flex: none; padding: 16px 8px 6px; }
-  .ap-card-name { font-size: clamp(40px, 12vw, 52px); }
-  .ap-card-bio { margin-top: 12px; font-size: 14px; line-height: 1.55; }
-  .ap-card-quote { margin-top: 14px; padding-top: 12px; font-size: clamp(18px, 5vw, 21px); }
-  .ap-card-tags { margin-top: 12px; gap: 6px; }
-  .ap-card-tags li { padding: 6px 11px; font-size: 0.75rem; }
-}
-@media (max-width: 559px) and (max-height: 700px) {
-  .ap-card-body { padding-top: 12px; }
-  .ap-card-name { font-size: 38px; }
-  .ap-card-bio { margin-top: 8px; font-size: 13px; line-height: 1.5; }
-  .ap-card-quote { margin-top: 10px; padding-top: 10px; font-size: 17px; }
-  .ap-card-tags { margin-top: 10px; }
-  .ap-card-tags li { padding: 5px 10px; font-size: 11px; }
 }
 
 /* --- HERO di Chi siamo su telefono e tablet verticali: tutto in una
@@ -8549,13 +8492,6 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   color: var(--color-accent);
 }
 .ap-manifesto .ap-fact-rule::after { background: var(--color-accent); }
-.ap-card-area { color: var(--color-accent); }
-.ap-card-chip {
-  background: rgba(23, 19, 16, 0.72);
-  color: #FEFDEC;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-}
 
 /* --- Footer: wordmark gigante in un tono solo --- */
 /* --- Footer: il wordmark gigante torna nei colori del logo, da bordo a
@@ -8603,4 +8539,125 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 }
 @media (prefers-reduced-motion: reduce) {
   .cflow-sheen { display: none; }
+}
+
+/* --- Chi siamo: la catena su carta pulita (niente quadretti), etichetta a
+   puntino al posto della pill scura, riflesso a catena chiusa --- */
+.ap-chain {
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 40px 80px -56px rgba(23, 19, 16, 0.42);
+}
+.ap-chain-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--color-ink);
+  overflow: visible;
+}
+.ap-chain-tag::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-orange);
+  transition: background-color 0.5s ease;
+}
+.ap-chain.is-linked .ap-chain-tag::before { background: var(--color-accent); }
+.ap-chain-tag > span { overflow: hidden; }
+.ap-chain-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ap-chain-sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.7) 50%, transparent 65%);
+  transform: translateX(-100%);
+}
+.ap-chain.is-landed .ap-chain-sheen::before {
+  transform: translateX(100%);
+  transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s;
+}
+
+/* --- Chi siamo, il Percorso: stesse entrate del resto (le parole salgono
+   dalla sfocatura), niente numeri fantasma, etichette a puntino, filetti
+   pieni nel tabellone. Percorso e oggetti 3D invariati. --- */
+.ajx-bignum { display: none; }
+.ajx-intro .ajx-word > span,
+.ajx-outro .ajx-word > span,
+.ajx-step-title .ajx-word > span {
+  transform: translateY(110%);
+  filter: blur(8px);
+  transition:
+    transform 1.3s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ajx-intro .ajx-word > span { transition-delay: calc(0.05s + var(--wi, 0) * 0.08s); }
+.ajx-outro .ajx-word > span { transition-delay: calc(0.1s + var(--wi, 0) * 0.08s); }
+.ajx-step-title .ajx-word > span { transition-delay: calc(0.1s + var(--wi, 0) * 0.06s); }
+.ajx-intro.is-in .ajx-word > span,
+.ajx-outro.is-active .ajx-word > span,
+.ajx-step.is-in .ajx-step-title .ajx-word > span {
+  transform: none;
+  filter: blur(0);
+}
+.ajx-intro-kicker,
+.ajx-intro-lead,
+.ajx-start,
+.ajx-board {
+  filter: blur(6px);
+  transition:
+    opacity 0.9s ease,
+    transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ajx-intro.is-in :is(.ajx-intro-kicker, .ajx-intro-lead, .ajx-start, .ajx-board) { filter: none; }
+.ajx-step-text .ajx-tword {
+  filter: blur(4px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.7s ease;
+  transition-delay: calc(0.34s + var(--wi, 0) * 0.014s);
+}
+.ajx-step.is-in .ajx-step-text .ajx-tword { filter: none; }
+.ajx-board li + li { border-top-style: solid; border-top-color: var(--color-border); }
+.ajx-step-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+.ajx-step-tag::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+/* --- Chi siamo, invito finale: maschere del titolo diviso, niente onda
+   che pulsa attorno al bottone; il riflesso lo attraversa una volta --- */
+.about-cta-title div[style*="overflow"] {
+  line-height: 1.44;
+  margin-block: -0.2em;
+  padding-inline: 0.12em;
+  margin-inline: -0.12em;
+}
+.about-cta.is-drawn .about-cta-btn:not(:hover) { animation: none; }
+.about-cta-btn::before { animation-iteration-count: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .ap-chain-sheen,
+  .ap-founder-sheen { display: none; }
 }

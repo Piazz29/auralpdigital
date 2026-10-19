@@ -762,12 +762,12 @@ if (!reduceMotion && !isHome) {
       const isCta = title.classList.contains("cta-title");
       gsap.fromTo(
         words,
-        { yPercent: 115, rotate: 5 },
+        { yPercent: 110, filter: "blur(8px)" },
         {
           yPercent: 0,
-          rotate: 0,
-          duration: 1.05,
-          ease: "power4.out",
+          filter: "blur(0px)",
+          duration: 1.2,
+          ease: "expo.out",
           stagger: 0.07,
           // La CTA aspetta che il pannello scuro sia salito (vedi reveal sotto).
           delay: isCta ? 0.35 : 0,
@@ -2049,12 +2049,32 @@ revealRise(".cta-panel", {
 {
   const aboutCta = document.querySelector<HTMLElement>(".about-cta");
   if (aboutCta) {
-    revealRise(aboutCta.querySelectorAll(":scope > .works-kicker, :scope > .about-cta-title, :scope > .about-cta-sub, :scope > .about-cta-actions, :scope > .about-cta-foot"), {
-      trigger: ".about-cta",
-      start: "top 80%",
-      stagger: 0.09,
-      y: 24,
-    });
+    // Stessa grammatica del resto: il titolo sale parola per parola dalla
+    // sfocatura, il resto si mette a fuoco in fila.
+    const ctaTitle = aboutCta.querySelector<HTMLElement>(".about-cta-title");
+    if (!reduceMotion) {
+      const words = ctaTitle ? SplitText.create(ctaTitle, { type: "words", mask: "words" }).words : [];
+      gsap
+        .timeline({ scrollTrigger: { trigger: aboutCta, start: "top 72%", once: true } })
+        .fromTo(
+          aboutCta.querySelectorAll(":scope > .works-kicker"),
+          { autoAlpha: 0, y: 12, filter: "blur(6px)" },
+          { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1.1, ease: "expo.out" },
+          0
+        )
+        .fromTo(
+          words,
+          { yPercent: 110, filter: "blur(10px)" },
+          { yPercent: 0, filter: "blur(0px)", duration: 1.4, ease: "expo.out", stagger: 0.07 },
+          0.1
+        )
+        .fromTo(
+          aboutCta.querySelectorAll(":scope > .about-cta-sub, :scope > .about-cta-actions, :scope > .about-cta-foot"),
+          { autoAlpha: 0, y: 14, filter: "blur(8px)" },
+          { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1.2, ease: "expo.out", stagger: 0.14 },
+          0.55
+        );
+    }
     // la sottolineatura a mano si disegna quando il titolo è in vista
     ScrollTrigger.create({
       trigger: aboutCta.querySelector(".about-cta-title"),
@@ -2203,11 +2223,16 @@ if (aboutPage) {
     afterLoader(() => {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.set(title, { opacity: 1 })
-        .fromTo(fades[0], { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.8 }, 0)
+        .fromTo(
+          fades[0],
+          { opacity: 0, y: 12, filter: "blur(6px)" },
+          { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.1, ease: "expo.out" },
+          0
+        )
         .fromTo(
           plain?.words ?? [],
-          { yPercent: 115 },
-          { yPercent: 0, duration: 1.1, ease: "power4.out", stagger: 0.08 },
+          { yPercent: 110, filter: "blur(10px)" },
+          { yPercent: 0, filter: "blur(0px)", duration: 1.4, ease: "expo.out", stagger: 0.08 },
           0.1
         )
         // "i pixel." si scrive a scatti, come un display che si accende.
@@ -2216,8 +2241,8 @@ if (aboutPage) {
         .to(dots, { opacity: 0, duration: 0.14, ease: "steps(1)", repeat: 3, yoyo: true }, 1.5)
         .fromTo(
           Array.from(fades).slice(1),
-          { opacity: 0, y: 18 },
-          { opacity: 1, y: 0, duration: 0.9, stagger: 0.12 },
+          { opacity: 0, y: 14, filter: "blur(8px)" },
+          { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.2, ease: "expo.out", stagger: 0.14 },
           0.8
         )
         .call(() => lenses.forEach((p) => p.start()), [], 0.35)
@@ -2244,9 +2269,21 @@ if (aboutPage) {
   }
 
   // --- MANIFESTO ---
-  aboutPage.querySelectorAll<HTMLElement>("[data-ap-manifesto] [data-ap-rise]").forEach((el) =>
-    revealRise(el, { trigger: el, start: "top 86%", y: 24, duration: 0.9 })
-  );
+  aboutPage.querySelectorAll<HTMLElement>("[data-ap-manifesto] [data-ap-rise]").forEach((el) => {
+    if (reduceMotion) return;
+    gsap.fromTo(
+      el,
+      { autoAlpha: 0, y: 14, filter: "blur(6px)" },
+      {
+        autoAlpha: 1,
+        y: 0,
+        filter: "blur(0px)",
+        duration: 1.1,
+        ease: "expo.out",
+        scrollTrigger: { trigger: el, start: "top 86%", once: true },
+      }
+    );
+  });
   const statement = aboutPage.querySelector<HTMLElement>("[data-ap-statement]");
   if (statement && !reduceMotion) {
     // Le parole si accendono una a una mentre la frase attraversa lo schermo;
@@ -2257,12 +2294,12 @@ if (aboutPage) {
     // ai refresh di ScrollTrigger le parole non ancora raggiunte tornavano
     // piene, e arrivandoci si spegnevano e riaccendevano (sembrava un lag).
     gsap.set(em, { "--hl": 0 });
-    gsap.set(words, { opacity: 0.13 });
+    gsap.set(words, { opacity: 0.13, filter: "blur(3px)" });
     gsap
       .timeline({
         scrollTrigger: { trigger: statement, start: "top 85%", end: "bottom 58%", scrub: SCRUB },
       })
-      .to(words, { opacity: 1, duration: 0.3, stagger: 0.12, ease: "none" })
+      .to(words, { opacity: 1, filter: "blur(0px)", duration: 0.3, stagger: 0.12, ease: "none" })
       .to(em, { "--hl": 1, duration: 0.6, ease: "power2.out" });
   }
   aboutPage.querySelectorAll<HTMLElement>("[data-ap-fact]").forEach((fact, i) => {
@@ -2277,7 +2314,12 @@ if (aboutPage) {
       .fromTo(fact, { "--rule": 0 }, { "--rule": 1, duration: 1.1, ease: "power3.inOut" }, 0)
       // Contachilometri: la striscia gira e si ferma sulla cifra vera.
       .fromTo(reel, { y: 0, yPercent: 0 }, { y: 0, yPercent: -90, duration: 1.7, ease: "power4.out" }, 0.1)
-      .fromTo(rest, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: "power3.out" }, 0.45);
+      .fromTo(
+        rest,
+        { opacity: 0, y: 12, filter: "blur(6px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.1, stagger: 0.12, ease: "expo.out" },
+        0.45
+      );
     // Al passaggio del mouse la cifra rigira e si riferma sul valore vero.
     fact.addEventListener("mouseenter", () => {
       if (!reel || gsap.isTweening(reel)) return;
@@ -2325,11 +2367,28 @@ if (aboutPage) {
       .fromTo(after, { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.3 }, 1.15)
       .set({}, {}, 1.5);
     // l'inchiostro sui due capi arriva solo a catena chiusa
-    tl.eventCallback("onUpdate", () => chain.classList.toggle("is-linked", tl.progress() > 0.9));
+    // a catena chiusa passa anche il riflesso di luce, una volta sola
+    tl.eventCallback("onUpdate", () => {
+      const linked = tl.progress() > 0.9;
+      chain.classList.toggle("is-linked", linked);
+      if (linked) chain.classList.add("is-landed");
+    });
 
     if (reduceMotion) {
       tl.progress(1);
     } else {
+      // Prima la card sale dal tavolo in prospettiva e si posa piatta.
+      gsap.fromTo(
+        chain,
+        { y: 80, rotationX: 18, scale: 0.94, transformPerspective: 1400, transformOrigin: "50% 100%" },
+        {
+          y: 0,
+          rotationX: 0,
+          scale: 1,
+          ease: "power1.out",
+          scrollTrigger: { trigger: chain, start: "top 100%", end: "top 64%", scrub: SCRUB },
+        }
+      );
       ScrollTrigger.create({
         trigger: chain,
         // si legge prima "Di solito" (catena intera), poi la si vede chiudersi
@@ -2344,61 +2403,115 @@ if (aboutPage) {
   }
 
   // --- IL DUO ---
-  revealRise(aboutPage.querySelectorAll("[data-ap-duo] .ap-duo-head [data-ap-rise]"), {
-    trigger: "[data-ap-duo]",
-    start: "top 78%",
-    stagger: 0.12,
-    y: 36,
-  });
+  // Stessa grammatica della home: il testo esce dalla sfocatura (expo, niente
+  // rimbalzi), il ritratto sale dal tavolo in prospettiva e si posa piatto,
+  // un riflesso di luce una volta sola a scena posata. Il titolo lo anima il
+  // reveal comune dei .works-title.
+  const duoHead = aboutPage.querySelector<HTMLElement>("[data-ap-duo] .ap-duo-head");
+  if (duoHead && !reduceMotion) {
+    gsap
+      .timeline({ scrollTrigger: { trigger: duoHead, start: "top 80%", once: true } })
+      .fromTo(
+        duoHead.querySelectorAll("[data-ap-rise]"),
+        { autoAlpha: 0, y: 18, filter: "blur(8px)" },
+        { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1.1, ease: "expo.out", stagger: 0.18 },
+        0
+      );
+  }
+  const wide = window.matchMedia("(min-width: 560px)").matches;
   aboutPage.querySelectorAll<HTMLElement>("[data-ap-card]").forEach((card) => {
     const canvas = card.querySelector<HTMLCanvasElement>("[data-px-reveal]");
     if (reduceMotion) {
       if (canvas) canvas.hidden = true;
       return;
     }
+    const flip = card.classList.contains("ap-founder--flip");
+    const media = card.querySelector<HTMLElement>("[data-ap-card-media]");
+    const frame = card.querySelector<HTMLElement>("[data-ap-card-frame]");
+    const zoom = card.querySelector<HTMLElement>("[data-ap-card-zoom]");
     const name = card.querySelector<HTMLElement>("[data-ap-card-name]");
-    const dot = name?.querySelector<HTMLElement>(".ap-px-dot");
+    const rule = card.querySelectorAll<HTMLElement>("[data-ap-card-rule] > span");
     const ins = card.querySelectorAll<HTMLElement>("[data-ap-card-in]");
-    const quoteEm = card.querySelectorAll<HTMLElement>(".ap-card-quote em");
     const chars = name ? SplitText.create(name, { type: "chars", mask: "chars" }).chars : [];
     const px = canvas
       ? new PixelPortrait(canvas, { src: canvas.dataset.src!, ramp: rampOf(canvas), block: 22, mode: "reveal" })
       : null;
     const wave = { v: 0 };
-    gsap.set(quoteEm, { "--hl": 0 });
-    gsap.set(dot, { scale: 0 });
 
-    const tl = gsap.timeline({ scrollTrigger: { trigger: card, start: "top 80%", once: true } });
-    tl.fromTo(card, { opacity: 0, y: 90 }, { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }, 0)
+    // Scrub: il ritratto sale inclinato e si posa, la foto dentro scende di
+    // scala (parallasse), il nome scivola fuori da dietro il ritratto.
+    gsap
+      .timeline({
+        scrollTrigger: { trigger: card, start: "top 96%", end: "top 30%", scrub: SCRUB },
+      })
+      .fromTo(
+        media,
+        { y: 110, rotationX: 16, scale: 0.93, transformPerspective: 1600, transformOrigin: "50% 100%" },
+        { y: 0, rotationX: 0, scale: 1, ease: "power1.out", duration: 1 },
+        0
+      )
+      .fromTo(zoom, { scale: 1.22 }, { scale: 1, ease: "none", duration: 1 }, 0);
+    if (wide && name) {
+      gsap.fromTo(
+        name,
+        { xPercent: flip ? 34 : -34 },
+        {
+          xPercent: 0,
+          ease: "none",
+          scrollTrigger: { trigger: card, start: "top 90%", end: "top 20%", scrub: SCRUB },
+        }
+      );
+    }
+
+    // Una volta: filo che si disegna, pixel che si mettono a fuoco, nome e
+    // testi che escono dalla sfocatura, poi il riflesso.
+    gsap.set(card, { "--rule": 0 });
+    gsap
+      .timeline({ scrollTrigger: { trigger: card, start: "top 72%", once: true } })
+      .to(card, { "--rule": 1, duration: 1.4, ease: "expo.out" }, 0)
+      .fromTo(
+        rule,
+        { autoAlpha: 0, filter: "blur(6px)" },
+        { autoAlpha: 1, filter: "blur(0px)", duration: 0.9, ease: "expo.out", stagger: 0.1 },
+        0.1
+      )
       // La foto si mette a fuoco a ondata dall'alto, poi resta la <img> vera.
-      .to(wave, { v: 1.1, duration: 1.7, ease: "power1.inOut", onUpdate: () => px?.setWave(wave.v) }, 0.35)
+      .to(wave, { v: 1.1, duration: 1.6, ease: "power1.inOut", onUpdate: () => px?.setWave(wave.v) }, 0.15)
       .to(canvas, { autoAlpha: 0, duration: 0.35, onComplete: () => px?.destroy() }, ">-0.1")
-      .fromTo(chars, { yPercent: 108 }, { yPercent: 0, duration: 0.9, ease: "power4.out", stagger: 0.05 }, 0.5)
-      .to(dot, { scale: 1, duration: 0.5, ease: "back.out(3)" }, 0.95)
-      .fromTo(ins, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.12, ease: "power3.out" }, 0.75)
-      .to(quoteEm, { "--hl": 1, duration: 0.8, ease: "power2.inOut" }, 1.45);
+      .call(() => card.classList.add("is-landed"), [], ">-0.1")
+      .fromTo(
+        chars,
+        { yPercent: 100, filter: "blur(10px)" },
+        { yPercent: 0, filter: "blur(0px)", duration: 1.3, ease: "expo.out", stagger: 0.05 },
+        0.35
+      )
+      .fromTo(
+        ins,
+        { autoAlpha: 0, y: 16, filter: "blur(8px)" },
+        { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1.1, ease: "expo.out", stagger: 0.14 },
+        0.7
+      );
 
-    // Inclinazione leggera verso il cursore (solo mouse).
-    if (finePointer) {
-      gsap.set(card, { transformPerspective: 1400 });
-      const rx = gsap.quickTo(card, "rotationX", { duration: 0.8, ease: "power3.out" });
-      const ry = gsap.quickTo(card, "rotationY", { duration: 0.8, ease: "power3.out" });
-      card.addEventListener("pointermove", (e) => {
-        const r = card.getBoundingClientRect();
-        rx(((e.clientY - r.top) / r.height - 0.5) * -4);
-        ry(((e.clientX - r.left) / r.width - 0.5) * 5);
+    // Inclinazione leggera del ritratto verso il cursore (solo mouse).
+    if (finePointer && frame) {
+      gsap.set(frame, { transformPerspective: 1400 });
+      const rx = gsap.quickTo(frame, "rotationX", { duration: 0.9, ease: "power3.out" });
+      const ry = gsap.quickTo(frame, "rotationY", { duration: 0.9, ease: "power3.out" });
+      frame.addEventListener("pointermove", (e) => {
+        const r = frame.getBoundingClientRect();
+        rx(((e.clientY - r.top) / r.height - 0.5) * -5);
+        ry(((e.clientX - r.left) / r.width - 0.5) * 6);
       });
-      card.addEventListener("pointerleave", () => {
+      frame.addEventListener("pointerleave", () => {
         rx(0);
         ry(0);
       });
     }
   });
 
-  // Il duo su telefono: ogni card è alta una schermata e ognuna è una
-  // fermata, posata al centro del viewport: la si legge intera prima di
-  // passare all'altra. Finché la card occupa la scena la pillola resta
-  // ritirata (copriva il chip in cima alla card).
+  // Il duo su telefono: ogni fondatore è una fermata, posata al centro del
+  // viewport (o in cima, se è più alto): lo si legge intero prima di
+  // passare all'altro. Finché occupa la scena la pillola resta ritirata.
   if (!staticScenes && window.matchMedia("(max-width: 559px)").matches) {
     aboutPage.querySelectorAll<HTMLElement>("[data-ap-card-slot]").forEach((slot) => {
       extraDetents.push(
