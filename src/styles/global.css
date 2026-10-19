@@ -8581,3 +8581,108 @@ html.apd-loading .hj-track {
 .hero-journey.is-live .hj-track {
   opacity: calc(1 - clamp(0, calc((var(--p) - 0.95) / 0.05), 1));
 }
+
+/* ======================================================================
+   POLISH — livello di pulizia (ott 2026).
+   Stessa palette, meno segni. Regole:
+   - il corsivo dei titoli è SEMPRE blu SHADOW sulla carta e periwinkle
+     sullo scuro: niente alternanza arancio/blu sezione per sezione,
+     niente evidenziatori sotto le parole;
+   - EMBER resta solo per l'azione (hover dei bottoni, invio del form);
+   - kicker in testo semplice, senza la cima davanti;
+   - niente chip: le etichette sono testo separato da un punto;
+   - numeri, icone e note in tinta neutra.
+   Sta in fondo al file apposta: vince sulle regole storiche a pari
+   specificità e si toglie da un punto solo.
+   ====================================================================== */
+
+/* --- Kicker: solo testo --- */
+.works-kicker::before,
+.hero-badge::before { display: none; }
+.works-kicker { color: var(--color-text-muted); font-weight: 500; }
+
+/* --- Corsivi dei titoli: un colore solo, nessun evidenziatore --- */
+.hero-section h1 em,
+.works-title em,
+.chapter-title em,
+.svc-title em,
+.ap-hero-accent,
+.ap-statement em,
+.ap-card-quote em,
+.apm-title em,
+.apm-phase-title em,
+.about-cta-title em,
+.ajx-intro-title em,
+.ajx-outro-title em {
+  color: var(--color-accent);
+  background: none;
+}
+.finale-title em,
+.cta-title em { color: var(--color-accent-soft); }
+.point-item-text strong { background: none; }
+.point-but { color: var(--color-text-muted); }
+
+/* --- Servizi: niente contatore né filetto accanto al kicker --- */
+.svc-num::after { display: none; }
+
+/* --- Etichette: elenco in riga con un puntino davanti, niente pill --- */
+.svc-tags,
+.ap-card-tags { column-gap: 18px; row-gap: 6px; }
+.svc-tag,
+.ap-card-tags li,
+.ap-card-tags li:hover {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+.svc-tag,
+.ap-card-tags li { display: inline-flex; align-items: center; gap: 8px; }
+.svc-tag::before,
+.ap-card-tags li::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+/* --- Il punto: icone delle notifiche tutte in inchiostro --- */
+.point-ping-icon--1,
+.point-ping-icon--2,
+.point-ping-icon--3 { background: var(--color-ink); }
+
+/* --- Metodo: meta e consegne in tinta neutra, note dritte e bianche --- */
+.apm-phase-meta,
+.apm-get-txt small,
+.apm-rail-item.is-active .apm-rail-n { color: var(--color-text-muted); }
+.apm-get-icon {
+  background: none;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-ink);
+}
+.apm-rail-bar > span { background: var(--color-accent); }
+.apm-note:nth-child(1),
+.apm-note:nth-child(2),
+.apm-note:nth-child(3) {
+  --r: 0deg;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 12px 28px -18px rgba(23, 19, 16, 0.28);
+}
+.apm-note::before { display: none; }
+
+/* --- Chi siamo: numeri e ruoli in inchiostro --- */
+.ap-fact-n {
+  font-style: normal;
+  color: var(--color-ink);
+}
+.ap-manifesto .ap-fact-rule::after { background: var(--color-ink); }
+.ap-card-area { color: var(--color-text-muted); }
+
+/* --- Footer: wordmark gigante in un tono solo, appena percettibile --- */
+.footer-ghost-a,
+.footer-ghost-p,
+.footer-ghost-d { color: rgba(254, 253, 236, 0.07); }

@@ -96,7 +96,6 @@ const MOUNTAINS = `
     ))}
 
     <div class="apm-stage" data-phase="0">
-      <span class="apm-aura" aria-hidden="true"></span>
       <div class="apm-inner works-screen">
         <header class="apm-head">
           <span class="works-kicker apm-kicker">{flow.kicker}</span>
@@ -121,7 +120,6 @@ const MOUNTAINS = `
             <div class="apm-phases">
               {flow.items.map((it, i) => (
                 <article class:list={["apm-phase", { "is-active": i === 0 }]} data-i={i}>
-                  <span class="apm-bignum" aria-hidden="true">{pad(i)}</span>
                   <span class="apm-phase-meta">
                     {c.phase} {pad(i)} <span aria-hidden="true">·</span> {it.tag}
                   </span>

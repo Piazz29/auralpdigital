@@ -22,8 +22,7 @@ const { lang = defaultLang } = Astro.props;
 const t = getDict(lang);
 const ta = t.about;
 
-// HERO — titolo "Normale *accento*" con "\n" come a-capo esplicito. Il punto
-// finale dell'accento diventa un pixel quadrato (stesso segno delle card).
+// HERO — titolo "Normale *accento*" con "\n" come a-capo esplicito.
 const heroLines = ta.hero.title.split("\n").map((line) =>
   line
     .split("*")
@@ -82,13 +81,10 @@ const steps = ta.journey.steps.map((s) => ({
          griglie di tessere nei colori del brand e la lente (il cursore, o un
          percorso automatico) li rimette a fuoco. Fondo: l'aurora. -->
     <section class="ap-hero" data-ap-hero>
-      <div class="ap-hero-aurora" aria-hidden="true"></div>
-
       <div class="ap-hero-inner">
         <div class="ap-hero-copy" data-ap-hero-copy>
           <div class="ap-hero-top" data-ap-hero-fade>
             <span class="works-kicker ap-hero-kicker">{ta.hero.badge}</span>
-            <span class="ap-hero-status"><span class="ap-hero-status-dot" aria-hidden="true"></span>{ta.hero.status}</span>
           </div>
 
           <h1 class="ap-hero-title font-display" data-ap-hero-title>
@@ -96,7 +92,7 @@ const steps = ta.journey.steps.map((s) => ({
               <>{li > 0 && " "}<span class="ap-hero-line">
                 {line.map((p) =>
                   p.accent ? (
-                    <em class="ap-hero-accent" data-ap-hero-accent>{p.text.replace(/\.$/, "")}{p.text.endsWith(".") && <span class="ap-px-dot" data-ap-px-dot aria-hidden="true"></span>}</em>
+                    <em class="ap-hero-accent" data-ap-hero-accent>{p.text}</em>
                   ) : (
                     <span>{p.text}</span>
                   )
@@ -118,12 +114,6 @@ const steps = ta.journey.steps.map((s) => ({
         </div>
 
         <div class="ap-stage" data-ap-stage>
-          <span class="ap-bit ap-bit--1" data-ap-bit style="--d: 0.6" aria-hidden="true"></span>
-          <span class="ap-bit ap-bit--2" data-ap-bit style="--d: -0.9" aria-hidden="true"></span>
-          <span class="ap-bit ap-bit--3" data-ap-bit style="--d: 1.2" aria-hidden="true"></span>
-          <span class="ap-bit ap-bit--4" data-ap-bit style="--d: -0.5" aria-hidden="true"></span>
-          <span class="ap-bit ap-bit--5" data-ap-bit style="--d: 0.8" aria-hidden="true"></span>
-
           {people.map((p, i) => (
             <figure class={`ap-portrait ap-portrait--${i + 1}`} data-ap-portrait>
               <div class="ap-portrait-frame">
@@ -162,7 +152,6 @@ const steps = ta.journey.steps.map((s) => ({
          di scroll (main.ts). -->
     <section class="ap-manifesto" data-ap-manifesto>
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
-      <div class="ap-manifesto-grid" aria-hidden="true"></div>
       <div class="works-screen ap-screen">
         <div class="ap-manifesto-top">
           <div class="ap-manifesto-copy">
@@ -229,7 +218,6 @@ const steps = ta.journey.steps.map((s) => ({
          una frase in prima persona e le aree di lavoro. -->
     <section id="il-duo" class="ap-duo" data-ap-duo>
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
-      <div class="ap-duo-glow" aria-hidden="true"></div>
       <div class="works-screen ap-screen">
         <div class="ap-duo-head">
           <div>
@@ -254,12 +242,11 @@ const steps = ta.journey.steps.map((s) => ({
                   loading="lazy"
                 />
                 <canvas class="ap-card-canvas" data-px-reveal data-src={p.pixelSrc} data-tone={p.tone} aria-hidden="true"></canvas>
-                <span class="ap-card-chip">0{i + 1} · {p.title}</span>
               </div>
 
               <div class="ap-card-body">
                 <div class="ap-card-namerow">
-                  <h3 class="ap-card-name font-display" data-ap-card-name>{p.name}<span class="ap-px-dot" aria-hidden="true"></span></h3>
+                  <h3 class="ap-card-name font-display" data-ap-card-name>{p.name}</h3>
                   <span class="ap-card-area">{p.area}</span>
                 </div>
                 <p class="ap-card-bio" data-ap-card-in>{p.bio}</p>
@@ -302,18 +289,11 @@ const steps = ta.journey.steps.map((s) => ({
     <!-- CTA FINALE -->
     <section id="contatti" class="about-cta" data-anim="contact">
       <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
-      <span class="about-cta-glow" aria-hidden="true"></span>
-      <span class="deco deco--star deco-accent deco-float-2" style="left: 12%; top: 22%;" aria-hidden="true">✦</span>
-      <span class="deco deco--ring deco-peri deco-float-1" style="right: 13%; bottom: 24%;" aria-hidden="true"></span>
 
       <span class="works-kicker about-cta-kicker">{ta.cta.kicker}</span>
 
       <h2 class="about-cta-title font-display">
         <Rich text={ta.cta.title} />
-        <svg class="about-cta-scribble" viewBox="0 0 320 24" preserveAspectRatio="none" aria-hidden="true">
-          <path pathLength="1" d="M6 16C62 7 128 5 196 8c44 2 82 5 118 9" />
-          <path pathLength="1" d="M70 21c52-6 120-8 190-4" />
-        </svg>
       </h2>
 
       <p class="about-cta-sub">
