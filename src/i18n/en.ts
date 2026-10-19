@@ -174,7 +174,6 @@ const en = {
       sub: "Websites, social media and software designed to turn visits into clients.",
       cta: "See our projects",
       scroll: "Scroll",
-      enter: "Scroll into the valley",
     },
     services: {
       // Three services (vedi it.ts).

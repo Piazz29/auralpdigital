@@ -175,7 +175,6 @@ const it = {
       sub: "Siti web, social e gestionali pensati per trasformare le visite in clienti.",
       cta: "Guarda i nostri progetti",
       scroll: "Scorri",
-      enter: "Scorri ed entra nella valle",
     },
     services: {
       // COSA FACCIAMO — tre servizi, uno per ogni dolore nominato in "Il

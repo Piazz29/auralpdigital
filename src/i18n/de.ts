@@ -174,7 +174,6 @@ const de = {
       sub: "Websites, Social Media und Software, die aus Besuchern Kunden machen.",
       cta: "Unsere Projekte ansehen",
       scroll: "Scrollen",
-      enter: "Scrollen und ins Tal eintauchen",
     },
     services: {
       // Drei Leistungen (vedi it.ts).

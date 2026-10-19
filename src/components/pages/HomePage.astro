@@ -15,7 +15,6 @@ import Rich from "../Rich.astro";
 import ServicesSwap from "../ServicesSwap.astro";
 import ProjectsShowcase from "../ProjectsShowcase.astro";
 import MethodRoom from "../MethodRoom.astro";
-import HeroJourney from "../reactbits/HeroJourney.jsx";
 import { Picture } from "astro:assets";
 import sciliarBw from "../../assets/point/sciliar-bw.png";
 import "../../styles/global.css";
@@ -35,57 +34,81 @@ const t = getDict(lang);
 <BaseLayout lang={lang} title={t.meta.home.title} description={t.meta.home.description}>
   <Navbar home lang={lang} route="/" />
 
-  <!-- HERO — IL VIAGGIO. La sezione è alta e il palco è sticky: lo scroll
-       fa volare la camera dentro una valle disegnata a curve di livello
-       (isola HeroJourney, WebGL). Il testo resta HTML qui sotto ed è guidato
-       in CSS dalla variabile --p che l'isola scrive sulla sezione:
-         0.00  titolo sopra la valle, vista dall'alto;
-         0.05  ci si tuffa: il titolo si apre e sfuma "attraversandolo";
-         0.36 / 0.50 / 0.64  le tre tappe = i tre servizi (fermate di scroll);
-         0.84  si scavalca il passo, sorge il sole, frase finale + CTA.
-       Senza WebGL / reduced motion (niente .is-live): una schermata ferma con
-       titolo, sottotitolo e CTA impilati. -->
-  <section class="hero-section hero-journey" data-hero-journey aria-labelledby="hero-title">
-    <span class="hj-detent" data-scroll-detent style="--s: 0.36" aria-hidden="true"></span>
-    <span class="hj-detent" data-scroll-detent style="--s: 0.5" aria-hidden="true"></span>
-    <span class="hj-detent" data-scroll-detent style="--s: 0.64" aria-hidden="true"></span>
-    <span class="hj-detent" data-scroll-detent style="--s: 0.92" aria-hidden="true"></span>
+  <!-- HERO — sezione a tutta schermo, scroll normale -->
+  <section class="hero-section relative h-screen w-full overflow-hidden" data-anim="hero">
+    <video
+      data-anim="hero-video"
+      autoplay
+      muted
+      playsinline
+      preload="auto"
+      class="hero-video absolute inset-0 w-full h-full object-cover"
+      style="opacity: 0;"
+    >
+      <source src="/videos/hero.mp4?v=2" type="video/mp4" />
+    </video>
 
-    <div class="hj-stage">
-      <HeroJourney
-        client:only="react"
-        stops={t.home.services.items.map((s) => ({ name: s.name, em: s.nameEm }))}
-      />
-      <div class="hj-veil" aria-hidden="true"></div>
+    <!-- Layer 1 — overlay caldo: scalda il grigio freddo del video verso il warm white -->
+    <div class="hero-warm-overlay absolute inset-0 z-[1] pointer-events-none"></div>
 
-      <div class="hj-intro">
-        <span class="hero-badge hj-badge text-[11px] font-medium tracking-[0.15em] uppercase">
-          {t.home.hero.badge}
-        </span>
-        <h1 id="hero-title" class="hj-title font-display font-medium">
-          <span class="hj-line">{t.home.hero.l1}</span>{" "}
-          <span class="hj-line"><Rich text={t.home.hero.l2} /></span>{" "}
-          <span class="hj-line">{t.home.hero.l3}</span>
-        </h1>
-        <div class="hj-enter" aria-hidden="true">
-          <span>{t.home.hero.enter}</span>
-          <span class="hj-enter-line"></span>
-        </div>
-      </div>
+    <!-- Layer 2 — fusione ai bordi: vignettatura calda che fa "emergere" il video dalla pagina -->
+    <div class="hero-edge-fade absolute inset-0 z-[2] pointer-events-none"></div>
 
-      <div class="hj-final">
-        <p class="hj-sub">{t.home.hero.sub}</p>
-        <a href="#projects" class="pill text-[13px] px-7 py-[14px]">
+    <!-- Layer 3 — fade in fondo: il video sfuma nel warm white della sezione progetti -->
+    <div class="hero-bottom-fade absolute inset-x-0 bottom-0 z-[3] pointer-events-none"></div>
+
+    <!-- Segni di stampa — forme di palette che fluttuano ai margini della scena -->
+    <div class="hero-deco absolute inset-0 z-[4] pointer-events-none" aria-hidden="true">
+      <span class="deco deco--ring deco-orange deco-float-1" style="left: 11%; top: 26%;"></span>
+      <span class="deco deco--plus deco-accent deco-float-2" style="right: 13%; top: 32%;"></span>
+      <span class="deco deco--dot deco-navy deco-float-3" style="left: 17%; bottom: 24%;"></span>
+      <span class="deco deco--star deco-amber deco-float-2" style="right: 19%; bottom: 30%;">✦</span>
+    </div>
+
+    <div data-anim="hero-content" class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center" style="background: radial-gradient(ellipse 50% 38% at 50% 50%, rgba(254, 253, 236, 0.72) 0%, rgba(254, 253, 236, 0.55) 35%, rgba(254, 253, 236, 0.22) 65%, transparent 90%);">
+      <span
+        data-anim="hero-label"
+        class="hero-badge text-[11px] font-medium tracking-[0.15em] uppercase"
+        style="opacity: 0;"
+      >
+        {t.home.hero.badge}
+      </span>
+
+      <h1
+        class="font-display font-medium text-[#171310] mt-6"
+        style="font-size: clamp(38px, 5vw, 80px); line-height: 0.98; text-shadow: 0 0 18px rgba(254, 253, 236, 0.75), 0 0 42px rgba(254, 253, 236, 0.5);"
+      >
+        <span data-anim="hero-line-1" class="block" style="opacity: 0;">{t.home.hero.l1}</span>{" "}
+        <span data-anim="hero-line-2" class="block" style="opacity: 0;"><Rich text={t.home.hero.l2} /></span>{" "}
+        <span data-anim="hero-line-3" class="block" style="opacity: 0;">{t.home.hero.l3}</span>
+      </h1>
+
+      <p
+        data-anim="hero-subline"
+        class="mt-5 text-[14px] tracking-[0.04em] text-[#544C40]"
+        style="opacity: 0; text-shadow: 0 0 12px rgba(254, 253, 236, 0.9);"
+      >
+        {t.home.hero.sub}
+      </p>
+
+      <div
+        data-anim="hero-cta"
+        class="mt-8 flex justify-center"
+        style="opacity: 0;"
+      >
+        <a
+          href="#projects"
+          class="pill text-[13px] px-7 py-[14px]"
+        >
           {t.home.hero.cta} <span aria-hidden="true">↗</span>
         </a>
       </div>
 
-      <div class="hj-hud" aria-hidden="true">
-        <span data-hj-lat>46.4983° N</span>
-        <span data-hj-lon>11.3548° E</span>
-        <span class="hj-hud-alt">ALT <b data-hj-alt>2.122 m</b></span>
+      <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
+      <div class="hero-scroll-hint" data-anim="hero-hint" style="opacity: 0;" aria-hidden="true">
+        <span class="hero-scroll-label">{t.home.hero.scroll}</span>
+        <span class="hero-scroll-line"></span>
       </div>
-      <div class="hj-track" aria-hidden="true"><span></span></div>
     </div>
   </section>
 
