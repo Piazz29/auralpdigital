@@ -1484,6 +1484,8 @@ if (
   const ok = point.querySelector<HTMLElement>("[data-point-ok]");
   const bgImg = pointBg.querySelector<HTMLElement>("img");
   const turnKey = pointTurnTitle.querySelector<HTMLElement>("strong");
+  const glow = point.querySelector<HTMLElement>("[data-point-glow]");
+  const check = point.querySelector<SVGPathElement>("[data-point-check]");
 
   // Posizione di un elemento nel palco dal layout (offset* ignora i
   // transform): corretta anche a scena già mossa.
@@ -1538,9 +1540,10 @@ if (
   );
   gsap.fromTo(
     leadWords,
-    { yPercent: 110 },
+    { yPercent: 110, filter: "blur(8px)" },
     {
       yPercent: 0,
+      filter: "blur(0px)",
       ease: "power3.out",
       stagger: 0.12,
       scrollTrigger: { trigger: point, start: "top 70%", end: "top 12%", scrub: SCRUB },
@@ -1558,23 +1561,46 @@ if (
     { x: 0, y: 0, scale: 1, duration: 1.1, ease: "power3.inOut" },
     0.5
   );
-  if (but) tl.fromTo(but, { autoAlpha: 0, x: -16 }, { autoAlpha: 1, x: 0, duration: 0.6 }, 1.25);
+  if (but) {
+    tl.fromTo(
+      but,
+      { autoAlpha: 0, x: -16, filter: "blur(6px)" },
+      { autoAlpha: 1, x: 0, filter: "blur(0px)", duration: 0.7, ease: "expo.out" },
+      1.25
+    );
+  }
 
+  // Ogni riga entra dalla sfocatura e prende la scena: quelle prima
+  // restano leggibili ma fanno un passo indietro, così l'occhio legge una
+  // riga alla volta. La parola chiave si colora da sinistra (--mark).
   items.forEach((item, i) => {
     const at = 1.55 + i * 1.05;
     tl.fromTo(item, { "--rule": 0 }, { "--rule": 1, duration: 0.6, ease: "power2.inOut" }, at);
-    tl.fromTo(item, { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duration: 0.7 }, at + 0.1);
+    tl.fromTo(
+      item,
+      { autoAlpha: 0, y: 30, filter: "blur(8px)" },
+      { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "expo.out" },
+      at + 0.1
+    );
+    if (i > 0) {
+      tl.to(
+        items[i - 1].querySelectorAll(".point-item-text, .point-num"),
+        { opacity: 0.32, duration: 0.6, ease: "power2.out" },
+        at + 0.15
+      );
+    }
     const mark = marks[i];
-    if (mark) tl.fromTo(mark, { "--mark": 0 }, { "--mark": 1, duration: 0.55, ease: "power2.inOut" }, at + 0.45);
-    // La notifica arriva storta e si posa dritta. Niente scala in entrata e
-    // force3D off: Chrome rasterizzerebbe la scheda alla taglia piccola
-    // d'inizio e la terrebbe sgranata; così a riposo è un 2D pulito.
+    if (mark) tl.fromTo(mark, { "--mark": 0 }, { "--mark": 1, duration: 0.6, ease: "power2.inOut" }, at + 0.45);
+    // La notifica scivola dentro un filo storta e si posa dritta, senza
+    // rimbalzi. Niente scala in entrata e force3D off: Chrome rasterizzerebbe
+    // la scheda alla taglia piccola d'inizio e la terrebbe sgranata; così a
+    // riposo è un 2D pulito.
     const ping = pings[i];
     if (ping) {
       tl.fromTo(
         ping,
-        { autoAlpha: 0, y: 46, rotation: i % 2 ? 7 : -7 },
-        { autoAlpha: 1, y: 0, rotation: 0, duration: 0.7, ease: "back.out(1.5)", force3D: false },
+        { autoAlpha: 0, y: 36, rotation: i % 2 ? 3 : -3 },
+        { autoAlpha: 1, y: 0, rotation: 0, duration: 0.9, ease: "expo.out", force3D: false },
         at + 0.3
       );
     }
@@ -1584,7 +1610,7 @@ if (
   const turnAt = 1.55 + items.length * 1.05 + 0.6;
   tl.to(
     pointPain,
-    { autoAlpha: 0, y: -70, scale: 0.97, duration: 0.9, ease: "power2.in" },
+    { autoAlpha: 0, y: -60, scale: 0.97, filter: "blur(10px)", duration: 0.9, ease: "power2.in" },
     turnAt
   );
   pings.forEach((ping, i) => {
@@ -1604,26 +1630,42 @@ if (
   });
   // Il fondale si schiarisce di un filo: dopo il caos, aria.
   if (bgImg) tl.to(bgImg, { opacity: 0.36, duration: 1.4, ease: "sine.inOut" }, turnAt);
+  if (glow) tl.fromTo(glow, { autoAlpha: 0, scale: 0.7 }, { autoAlpha: 1, scale: 1, duration: 1.6, ease: "sine.out" }, turnAt + 0.5);
 
   const riseAt = turnAt + 0.85;
   tl.set(pointTurn, { autoAlpha: 1 }, riseAt - 0.01);
-  tl.fromTo(turnWords, { yPercent: 110 }, { yPercent: 0, duration: 0.8, stagger: 0.07 }, riseAt);
+  tl.fromTo(
+    turnWords,
+    { yPercent: 110, filter: "blur(8px)" },
+    { yPercent: 0, filter: "blur(0px)", duration: 0.9, stagger: 0.07, ease: "expo.out" },
+    riseAt
+  );
+  // "il sistema" nasce in inchiostro e si accende di blu, parola per parola.
   if (turnKey) {
     tl.fromTo(
-      turnKey,
-      { "--line": 0 },
-      { "--line": 1, duration: 0.6, ease: "power2.inOut" },
-      riseAt + 0.75
+      turnKey.querySelectorAll<HTMLElement>("div div"),
+      { color: "#171310" },
+      { color: getComputedStyle(turnKey).color, duration: 0.5, stagger: 0.12, ease: "sine.inOut" },
+      riseAt + 0.7
     );
   }
-  tl.fromTo(subWords, { yPercent: 110 }, { yPercent: 0, duration: 0.7, stagger: 0.05 }, riseAt + 0.95);
+  tl.fromTo(
+    subWords,
+    { yPercent: 110 },
+    { yPercent: 0, duration: 0.8, stagger: 0.05, ease: "expo.out" },
+    riseAt + 0.95
+  );
   if (ok) {
     tl.fromTo(
       ok,
-      { autoAlpha: 0, scale: 0.85, y: 24 },
-      { autoAlpha: 1, scale: 1, y: 0, duration: 0.7, ease: "back.out(1.6)" },
+      { autoAlpha: 0, y: 20, filter: "blur(6px)" },
+      { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "expo.out" },
       riseAt + 1.45
     );
+    // La spunta si disegna appena la scheda è posata.
+    if (check) {
+      tl.fromTo(check, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.45, ease: "power2.out" }, riseAt + 1.75);
+    }
   }
   // Coda: la promessa resta in scena da sola prima di lasciare il pin.
   tl.to({}, { duration: 0.8 });
@@ -1662,6 +1704,8 @@ if (
     // Primo pin della pagina, prima dei Servizi (3): ogni spacer a valle
     // legge posizioni già spostate.
     refreshPriority: 4,
+    // Promessa chiusa: sulla notifica "ok" passa il riflesso (CSS, una volta).
+    onUpdate: () => ok?.classList.toggle("is-done", tl.time() >= riseAt + 2),
   });
 
   // Fermate dentro al pin (vedi "Fermate di scroll"): il lead al centro,

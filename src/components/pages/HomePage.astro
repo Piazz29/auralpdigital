@@ -136,6 +136,9 @@ const t = getDict(lang);
         />
       </div>
       <div class="point-veil" aria-hidden="true"></div>
+      <!-- Alone della svolta: dopo il caos la scena si apre in una luce
+           fredda appena percettibile dietro la promessa. -->
+      <div class="point-glow" aria-hidden="true" data-point-glow></div>
 
       <!-- Notifiche: decorazione del caos (una per riga del problema) e la
            notifica della svolta. Il galleggiare è CSS sull'interno, la regia
@@ -186,8 +189,9 @@ const t = getDict(lang);
           </p>
           <p class="point-turn-sub" data-point-turn-sub><em>{t.home.point.turnSub}</em></p>
           <div class="point-ok" data-point-ok aria-hidden="true">
+            <span class="point-ok-sheen"></span>
             <span class="point-ok-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" pathLength="1" data-point-check /></svg>
             </span>
             <span class="point-ping-text">
               <span class="point-ping-title">{t.home.point.ok.title}</span>

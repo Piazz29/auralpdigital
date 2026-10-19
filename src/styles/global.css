@@ -2393,6 +2393,50 @@ button {
 .point-ok-icon {
   background: var(--color-accent);
 }
+.point-ok {
+  overflow: hidden;
+  padding-right: 20px;
+  border-color: rgba(43, 76, 180, 0.16);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 26px 50px -24px rgba(43, 76, 180, 0.35),
+    0 4px 12px -6px rgba(23, 19, 16, 0.12);
+}
+.point-ok-icon svg path {
+  stroke-dasharray: 1;
+}
+/* Riflesso: passa una volta quando la promessa è chiusa (.is-done). */
+.point-ok-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.85) 50%, transparent 70%);
+  transform: translateX(-110%);
+  will-change: transform;
+}
+.point-ok.is-done .point-ok-sheen {
+  transform: translateX(110%);
+  transition: transform 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+}
+/* Alone della svolta — luce fredda e larghissima dietro la promessa. */
+.point-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: min(1100px, 120vw);
+  aspect-ratio: 1.6;
+  margin: calc(min(1100px, 120vw) / -3.2) 0 0 calc(min(1100px, 120vw) / -2);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(132, 162, 245, 0.3), rgba(132, 162, 245, 0.1) 55%, transparent);
+  opacity: 0;
+  visibility: hidden;
+}
+.point:not(.is-live) .point-glow { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .point-ok-sheen { display: none; }
+}
 
 /* Statico (niente regia): le notifiche del caos non hanno senso senza il
    racconto; restano lead, problema e svolta in colonna. */
@@ -8441,7 +8485,18 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 }
 .finale-title em,
 .cta-title em { color: var(--color-accent-soft); }
-.point-item-text strong { background: none; }
+/* Il punto — le parole chiave si colorano da sinistra (--mark) invece
+   dell'evidenziatore: arancio nel problema, blu nella svolta. */
+.point-item-text strong {
+  background: linear-gradient(90deg, var(--color-orange-deep) 50%, var(--color-ink) 50%)
+    no-repeat calc((1 - var(--mark, 1)) * 100%) 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.point-turn-title strong { background: none; }
+.point-num { color: var(--color-accent); font-weight: 600; }
+.point-item::before { background: var(--color-border); }
 
 /* --- Servizi: niente filetto accanto al kicker --- */
 .svc-num::after { display: none; }
