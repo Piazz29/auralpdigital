@@ -296,8 +296,8 @@ const de = {
     },
     contact: {
       kicker: "Los geht's",
-      headline: "Erzähl uns *von deinem Projekt.*",
-      sub: "Drei kurze Fragen, damit wir verstehen, was du brauchst. Danach entscheidest du, ob du einen kostenlosen 30-Minuten-Call buchst oder uns direkt schreibst.",
+      headline: "Dein Projekt, *in drei Fragen.*",
+      sub: "Eine Minute, damit wir verstehen, was du brauchst. Danach entscheidest du: ein kostenloser 30-Minuten-Call oder eine direkte Nachricht.",
     },
   },
 

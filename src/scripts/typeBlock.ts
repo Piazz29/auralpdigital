@@ -5,11 +5,19 @@
 // Ogni riga prende la taglia che le serve: le parole corte diventano enormi,
 // le frasi lunghe restano più piccole. Il gioco di taglie nasce da una regola
 // (la larghezza), non dal caso.
+// Quando il titolo ha due toni (tondo + corsivo) vale invece il GRADINO:
+// la prima riga riempie la larghezza, le righe in corsivo scendono di un
+// gradino fisso (data-tb-ratio, default 0.58) — "Siti web" grande, "che
+// convertono." sotto più piccolo. Il gradino è lo stesso ovunque, così la
+// gerarchia non dipende dalla lunghezza delle parole.
 // Con lo scroll le righe arrivano alternate da sinistra e da destra, escono
 // dalla sfocatura e si incastrano nel blocco; tornando su si sfilano.
 // Opzioni via data-attribute: data-tb-start / data-tb-end (ScrollTrigger),
-// data-tb-max (ingrandimento massimo di una riga, default 2), data-tb-static
-// (solo composizione, senza entrata).
+// data-tb-max (ingrandimento massimo di una riga, default 2), data-tb-ratio
+// (gradino delle righe dopo la prima; 1 = tutte larghe uguali),
+// data-tb-static (solo composizione, senza entrata), data-tb-hover (le
+// lettere vicino al cursore si fanno nere: il peso del variabile sale con
+// la vicinanza, come una lente di grassetto).
 import type { gsap as GSAP } from "gsap";
 import type { ScrollTrigger as ST } from "gsap/ScrollTrigger";
 import type { SplitText as SPLIT } from "gsap/SplitText";
@@ -34,6 +42,8 @@ export function initTypeBlocks({ gsap, ScrollTrigger, SplitText, animate, scrub 
   const compose = (el: HTMLElement) => {
     const source = el.innerHTML;
     const max = Number(el.dataset.tbMax) || 2;
+    const toned = el.querySelector("em") !== null;
+    const ratio = Number(el.dataset.tbRatio) || (toned ? 0.58 : 1);
     let split: SplitText | null = null;
     let tween: gsap.core.Tween | null = null;
     let width = 0;
@@ -55,6 +65,7 @@ export function initTypeBlocks({ gsap, ScrollTrigger, SplitText, animate, scrub 
         split?.revert();
         split = null;
         el.innerHTML = source;
+        el.style.whiteSpace = "";
         el.classList.remove("is-blocked");
       }
 
@@ -71,21 +82,27 @@ export function initTypeBlocks({ gsap, ScrollTrigger, SplitText, animate, scrub 
           if (em.nextSibling && em.nextSibling.textContent?.trim())
             em.after(document.createElement("br"));
         });
+        // con due toni le righe sono i toni: niente a capo dentro un tono
+        if (toned) el.style.whiteSpace = "nowrap";
         split = SplitText.create(el, { type: "lines", linesClass: "tb-line" });
         lines = split.lines as HTMLElement[];
       }
       const base = parseFloat(getComputedStyle(el).fontSize);
       el.classList.add("is-blocked");
-      lines.forEach((line) => {
+      let lead = 0;
+      lines.forEach((line, i) => {
         line.style.fontSize = `${base}px`;
+        // la prima riga fa da metro; le altre al massimo un gradino sotto
+        const cap = i && ratio < 1 ? lead * ratio : max * base;
         // due passate: la crenatura non scala in modo perfettamente lineare
         for (let pass = 0; pass < 2; pass++) {
           const w = lineWidth(line);
           if (!w) break;
           const size = parseFloat(line.style.fontSize);
-          const k = Math.min(max * base, (size * width * 0.996) / w) / size;
+          const k = Math.min(cap, (size * width * 0.996) / w) / size;
           line.style.fontSize = `${(size * k).toFixed(2)}px`;
         }
+        if (!i) lead = parseFloat(line.style.fontSize);
       });
 
       // data-tb-static: solo composizione, l'entrata la fa già il componente
@@ -115,6 +132,7 @@ export function initTypeBlocks({ gsap, ScrollTrigger, SplitText, animate, scrub 
 
     build();
     refresh();
+    if ("tbHover" in el.dataset) weightLens(el);
     let t = 0;
     new ResizeObserver(() => {
       if (Math.abs(el.clientWidth - width) < 2) return;
@@ -124,6 +142,57 @@ export function initTypeBlocks({ gsap, ScrollTrigger, SplitText, animate, scrub 
         refresh();
       }, 120);
     }).observe(el);
+  };
+
+  // LENTE DI GRASSETTO — ogni lettera ha il suo peso (asse wght 300..900
+  // di Satoshi): più il cursore è vicino, più pesa. Il peso insegue il
+  // bersaglio con un'inerzia corta, così la scia si chiude morbida.
+  const weightLens = (el: HTMLElement) => {
+    if (!animate || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    el.querySelectorAll<HTMLElement>(".tb-line").forEach((line) => {
+      const text = line.textContent ?? "";
+      line.textContent = "";
+      for (const ch of text) {
+        const span = document.createElement("span");
+        span.className = "tb-ch";
+        span.textContent = ch;
+        line.append(span);
+      }
+    });
+    const chars = Array.from(el.querySelectorAll<HTMLElement>(".tb-ch"));
+    const rest = 500;
+    const peak = 820;
+    const weights = chars.map(() => rest);
+    let mx = -1e4;
+    let my = -1e4;
+    let raf = 0;
+    const tick = () => {
+      let moving = false;
+      chars.forEach((ch, i) => {
+        const r = ch.getBoundingClientRect();
+        const reach = parseFloat(getComputedStyle(ch).fontSize) * 1.1;
+        const d = Math.hypot(r.left + r.width / 2 - mx, r.top + r.height / 2 - my);
+        const near = Math.max(0, 1 - d / reach);
+        const target = rest + (peak - rest) * near * near * (3 - 2 * near);
+        const w = weights[i] + (target - weights[i]) * 0.2;
+        weights[i] = Math.abs(target - w) < 0.5 ? target : w;
+        if (weights[i] !== target) moving = true;
+        ch.style.fontWeight = weights[i].toFixed(0);
+      });
+      raf = moving ? requestAnimationFrame(tick) : 0;
+    };
+    const wake = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    el.addEventListener("pointermove", (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+      wake();
+    });
+    el.addEventListener("pointerleave", () => {
+      mx = my = -1e4;
+      wake();
+    });
   };
 
   document.fonts.ready.then(() => {

@@ -306,8 +306,8 @@ const it = {
     },
     contact: {
       kicker: "Iniziamo",
-      headline: "Raccontaci *il tuo progetto.*",
-      sub: "Tre domande veloci per capire di cosa hai bisogno. Poi scegli tu se prenotare una call gratuita di 30 minuti o scriverci direttamente.",
+      headline: "Il tuo progetto, *in tre domande.*",
+      sub: "Un minuto per capire di cosa hai bisogno. Poi scegli tu: una call gratuita di 30 minuti o un messaggio diretto.",
     },
   },
 

@@ -293,8 +293,8 @@ const en = {
     },
     contact: {
       kicker: "Let's start",
-      headline: "Tell us about *your project.*",
-      sub: "Three quick questions so we understand what you need. Then you choose whether to book a free 30-minute call or write to us directly.",
+      headline: "Your project, *in three questions.*",
+      sub: "One minute to understand what you need. Then you choose: a free 30-minute call or a direct message.",
     },
   },
 
