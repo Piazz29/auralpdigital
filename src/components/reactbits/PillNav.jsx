@@ -109,7 +109,7 @@ export default function PillNav({ home = false, lang = defaultLang, route = '/' 
   // Stato iniziale del contenuto del pannello (nascosto, pronto a entrare).
   useLayoutEffect(() => {
     const { bigLines, foot } = parts();
-    gsap.set(bigLines, { yPercent: 110 });
+    gsap.set(bigLines, { yPercent: 125 });
     gsap.set(foot, { autoAlpha: 0, y: 14 });
     gsap.set(scrimRef.current, { autoAlpha: 0 });
   }, []);
@@ -155,7 +155,7 @@ export default function PillNav({ home = false, lang = defaultLang, route = '/' 
       onComplete: () => {
         // Di nuovo pillola "naturale": la larghezza torna a seguire il contenuto.
         gsap.set(shell, { clearProps: 'width,height' });
-        gsap.set(bigLines, { yPercent: 110 });
+        gsap.set(bigLines, { yPercent: 125 });
         gsap.set(foot, { y: 14 });
       }
     });

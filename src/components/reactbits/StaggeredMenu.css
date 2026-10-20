@@ -248,11 +248,11 @@
 
 .staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-toggle {
   /* Vince sul color inline impostato da GSAP sul bottone. */
-  color: #FEFDEC !important;
+  color: #FFFFFF !important;
 }
 
 .staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-lang-link {
-  color: #FEFDEC;
+  color: #FFFFFF;
 }
 
 .staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-lang-link.is-active {
@@ -268,7 +268,7 @@
   height: 100%;
   /* Fondo pieno: un backdrop-filter qui sotto non si vedrebbe (niente
      traspare) ma costerebbe comunque un blur a tutto schermo. */
-  background: #FEFDEC;
+  background: #FFFFFF;
   display: flex;
   flex-direction: column;
   padding: clamp(7em, 14vh, 9em) clamp(1.5em, 7vw, 7em) clamp(2em, 5vh, 3.5em);
@@ -330,7 +330,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1.5rem 3rem;
-  border-top: 1px solid #E6E3C9;
+  border-top: 1px solid #E7E5DF;
 }
 
 .sm-socials {
@@ -413,7 +413,7 @@
   height: 48px;
   padding: 0;
   border-radius: 9999px;
-  border: 1px solid #E6E3C9;
+  border: 1px solid #E7E5DF;
   color: #171310;
   background: rgba(255, 255, 255, 0.5);
   transition:
@@ -430,7 +430,7 @@
 }
 
 .sm-socials-link--icon:hover {
-  color: #FEFDEC;
+  color: #FFFFFF;
   background: var(--sm-accent, #2748A5);
   border-color: var(--sm-accent, #2748A5);
   transform: translateY(-2px);

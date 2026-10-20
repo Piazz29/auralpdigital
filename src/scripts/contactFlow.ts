@@ -266,11 +266,14 @@ export function initContactFlow(opts: Opts = {}) {
 
     const lead = (new Date(y, m, 1).getDay() + 6) % 7;
     const days = new Date(y, m + 1, 0).getDate();
-    let html = "<span></span>".repeat(lead);
+    // Settimane già tutte passate: segnate, su telefono spariscono (righe
+    // spente che allungavano la card senza servire).
+    const gone = (d: number) => new Date(y, m, d + 6 - ((lead + d - 1) % 7)) < minDay;
+    let html = `<span${gone(1) ? ' class="is-gone"' : ""}></span>`.repeat(lead);
     for (let d = 1; d <= days; d++) {
       const date = new Date(y, m, d);
       const on = selected && keyOf(selected) === keyOf(date);
-      html += `<button type="button" class="cflow-day" data-day="${keyOf(date)}"${
+      html += `<button type="button" class="cflow-day${gone(d) ? " is-gone" : ""}" data-day="${keyOf(date)}"${
         bookable(date) ? "" : " disabled"
       } aria-pressed="${on ? "true" : "false"}" aria-label="${fmtDayLong.format(date)}">${d}</button>`;
     }

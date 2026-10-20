@@ -33,6 +33,13 @@ shortViewportMq.addEventListener("change", () => location.reload());
 document.documentElement.classList.toggle("is-short-vp", shortViewport);
 const staticScenes = reduceMotion || shortViewport;
 
+// Telefoni e tablet: lo scroll col dito resta NATIVO. Lo slancio del sistema
+// è quello che la mano si aspetta; passarlo da Lenis (syncTouch) e fermarlo
+// sulle fermate dava attrito: la pagina si inchiodava sotto il dito, gli swipe
+// si accorciavano, i Servizi si prendevano lo scroll. Su touch quindi niente
+// fermate né prese in carico: le scene seguono lo scroll e basta (scrub).
+const touchUI = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+
 // ---------- Ritardo unico dello scroll ----------
 // Ogni animazione agganciata allo scroll (uscita della hero, zoom del suo
 // video, passaggio di Chi Siamo, virata di colore del canvas) insegue lo
@@ -54,6 +61,8 @@ const lenis = new Lenis({
   // utente, mai durante uno scroll programmato.
   virtualScroll: (data) => {
     const type = data.event.type;
+    // touch nativo (vedi touchUI): Lenis non lo tocca, noi nemmeno
+    if (touchUI && type.startsWith("touch")) return true;
     // Contato anche a input bloccato: serve a riconoscere la coda d'inerzia
     // di un gesto che arriva dopo un cambio scena dei Servizi.
     if (type === "wheel") trackWheelGesture(data.deltaY);
@@ -94,7 +103,9 @@ const lenis = new Lenis({
   // (le tappe del Percorso passavano prima che l'animazione partisse). Il
   // dito resta 1:1 (lerp 1 durante il trascinamento), lo slancio decelera
   // con lo stesso smorzamento della rotella.
-  syncTouch: true,
+  // Solo dove c'è anche un mouse (portatili touch): sui telefoni il dito
+  // scorre la pagina in modo nativo (vedi touchUI).
+  syncTouch: !touchUI,
   syncTouchLerp: 0.075,
 });
 
@@ -349,6 +360,8 @@ window.addEventListener("touchstart", () => (touching = true), { passive: true }
 window.addEventListener("touchend", () => (touching = false), { passive: true });
 let detentTimer = 0;
 const settleOnDetent = () => {
+  // su touch la pagina non si sposta mai da sola: si ferma dove la lascia il dito
+  if (touchUI) return;
   window.clearTimeout(detentTimer);
   detentTimer = window.setTimeout(() => {
     if (touching || lenis.isLocked || isTravelling() || Math.abs(lenis.velocity) > 0.4) return;
@@ -1304,78 +1317,124 @@ if (
     });
   };
 
-  st = ScrollTrigger.create({
-    trigger: "#cosa-facciamo",
-    start: "top top",
-    end: () => "+=" + svcPinDistance(),
-    pin: true,
-    // Niente anticipatePin: bloccava la sezione qualche frame PRIMA del suo
-    // posto (~25px) e la faceva scattare in posizione. L'arrivo lo ammortizza
-    // già glideInto, quindi la sezione arriva al pin praticamente ferma.
-    invalidateOnRefresh: true,
-    // Primo pin della pagina: si ricalcola prima di progetti (2), chi-siamo
-    // (1) e morph (0), così ogni spacer a valle legge posizioni già spostate.
-    refreshPriority: 3,
-    onRefresh: () => {
-      measure();
-      apply();
-    },
-    // Entrando nel pin la scena a fuoco fa la sua entrata (vedi apply).
-    onToggle: () => apply(),
-    onUpdate: (self) => {
-      if (isBusy() || isTravelling()) return;
-      const delta = self.scroll() - anchorOf(index);
-      if (delta > TRIGGER_PX) goTo(index + 1);
-      else if (delta < -TRIGGER_PX) goTo(index - 1);
-    },
-    // Niente atterraggio se si sta solo attraversando la sezione: durante un
-    // viaggio verso un'ancora, o con un salto diretto che è già oltre il
-    // pin (progress 1 entrando dall'alto, 0 rientrando dal basso — scattano
-    // onEnter e onLeave nello stesso aggiornamento).
-    onEnter: (self) => {
-      if (!isGliding() && !isTravelling() && self.progress < 1) land(0);
-    },
-    onEnterBack: (self) => {
-      if (!isGliding() && !isTravelling() && self.progress > 0) land(N - 1);
-    },
-  });
-
-  // Zone d'avvicinamento, appena prima e appena dopo il pin (posizioni di
-  // scroll assolute, ricalcolate dopo il pin che ha priorità di refresh 3).
-  ScrollTrigger.create({
-    start: () => (st ? st.start : 0) - window.innerHeight * APPROACH_VH,
-    end: () => (st ? st.start : 0),
-    refreshPriority: 3,
-    onEnter: () => {
-      if (st) glideInto(st.start + 1, 0);
-    },
-  });
-  ScrollTrigger.create({
-    start: () => (st ? st.end : 0),
-    end: () => (st ? st.end : 0) + window.innerHeight * APPROACH_VH,
-    refreshPriority: 3,
-    onEnterBack: () => {
-      if (st) glideInto(st.end - 1, N - 1);
-    },
-  });
-
-  // Navigazione: un clic porta alla scena (anche saltandone una). Il
-  // viaggio dichiara di essere tale, così l'atterraggio d'ingresso non lo
-  // intercetta se si clicca a sezione non ancora in pin.
-  svcSteps.forEach((el, k) =>
-    el.addEventListener("click", () => {
-      if (!st) return;
-      if (!st.isActive) {
-        travelFor(STEP_TIME);
-        index = k;
-        state.p = k;
+  // ---- Touch: la scena segue il dito ----
+  // Niente scatti, prese in carico né input bloccato (lo scroll nativo non
+  // si lascia guidare senza strappi): `p` segue il progresso del pin. Ogni
+  // servizio ha una sosta (SVC_HOLD) in cui resta fermo e fa la sua entrata,
+  // poi il fondale successivo sale insieme al dito.
+  const SVC_HOLD = 0.9; // sosta, in "cambi di scena"
+  const SVC_UNIT = 0.38; // schermate di scroll per cambio di scena
+  const svcTotal = N * SVC_HOLD + (N - 1);
+  const sceneAt = (progress: number) => {
+    const x = progress * svcTotal;
+    const k = Math.min(N - 1, Math.floor(x / (1 + SVC_HOLD)));
+    return Math.min(N - 1, k + gsap.utils.clamp(0, 1, x - k * (1 + SVC_HOLD) - SVC_HOLD));
+  };
+  if (touchUI) {
+    st = ScrollTrigger.create({
+      trigger: "#cosa-facciamo",
+      start: "top top",
+      end: () => "+=" + Math.round(window.innerHeight * SVC_UNIT * svcTotal),
+      pin: true,
+      invalidateOnRefresh: true,
+      refreshPriority: 3,
+      onRefresh: () => {
+        measure();
         apply();
-        lockedScrollTo(anchorOf(k), STEP_TIME);
-        return;
-      }
-      goTo(k);
-    })
-  );
+      },
+      onToggle: () => apply(),
+      onUpdate: (self) =>
+        gsap.to(state, {
+          p: sceneAt(self.progress),
+          duration: 0.35,
+          ease: "power2.out",
+          overwrite: true,
+          onUpdate: apply,
+        }),
+    });
+    // un clic sui passi porta a metà della sosta di quel servizio
+    svcSteps.forEach((el, k) =>
+      el.addEventListener("click", () => {
+        if (!st) return;
+        const at = (k * (1 + SVC_HOLD) + SVC_HOLD / 2) / svcTotal;
+        travelFor(0.8);
+        lenis.scrollTo(st.start + (st.end - st.start) * at, { duration: 0.8 });
+      })
+    );
+  } else {
+    st = ScrollTrigger.create({
+      trigger: "#cosa-facciamo",
+      start: "top top",
+      end: () => "+=" + svcPinDistance(),
+      pin: true,
+      // Niente anticipatePin: bloccava la sezione qualche frame PRIMA del suo
+      // posto (~25px) e la faceva scattare in posizione. L'arrivo lo ammortizza
+      // già glideInto, quindi la sezione arriva al pin praticamente ferma.
+      invalidateOnRefresh: true,
+      // Primo pin della pagina: si ricalcola prima di progetti (2), chi-siamo
+      // (1) e morph (0), così ogni spacer a valle legge posizioni già spostate.
+      refreshPriority: 3,
+      onRefresh: () => {
+        measure();
+        apply();
+      },
+      // Entrando nel pin la scena a fuoco fa la sua entrata (vedi apply).
+      onToggle: () => apply(),
+      onUpdate: (self) => {
+        if (isBusy() || isTravelling()) return;
+        const delta = self.scroll() - anchorOf(index);
+        if (delta > TRIGGER_PX) goTo(index + 1);
+        else if (delta < -TRIGGER_PX) goTo(index - 1);
+      },
+      // Niente atterraggio se si sta solo attraversando la sezione: durante un
+      // viaggio verso un'ancora, o con un salto diretto che è già oltre il
+      // pin (progress 1 entrando dall'alto, 0 rientrando dal basso — scattano
+      // onEnter e onLeave nello stesso aggiornamento).
+      onEnter: (self) => {
+        if (!isGliding() && !isTravelling() && self.progress < 1) land(0);
+      },
+      onEnterBack: (self) => {
+        if (!isGliding() && !isTravelling() && self.progress > 0) land(N - 1);
+      },
+    });
+
+    // Zone d'avvicinamento, appena prima e appena dopo il pin (posizioni di
+    // scroll assolute, ricalcolate dopo il pin che ha priorità di refresh 3).
+    ScrollTrigger.create({
+      start: () => (st ? st.start : 0) - window.innerHeight * APPROACH_VH,
+      end: () => (st ? st.start : 0),
+      refreshPriority: 3,
+      onEnter: () => {
+        if (st) glideInto(st.start + 1, 0);
+      },
+    });
+    ScrollTrigger.create({
+      start: () => (st ? st.end : 0),
+      end: () => (st ? st.end : 0) + window.innerHeight * APPROACH_VH,
+      refreshPriority: 3,
+      onEnterBack: () => {
+        if (st) glideInto(st.end - 1, N - 1);
+      },
+    });
+
+    // Navigazione: un clic porta alla scena (anche saltandone una). Il
+    // viaggio dichiara di essere tale, così l'atterraggio d'ingresso non lo
+    // intercetta se si clicca a sezione non ancora in pin.
+    svcSteps.forEach((el, k) =>
+      el.addEventListener("click", () => {
+        if (!st) return;
+        if (!st.isActive) {
+          travelFor(STEP_TIME);
+          index = k;
+          state.p = k;
+          apply();
+          lockedScrollTo(anchorOf(k), STEP_TIME);
+          return;
+        }
+        goTo(k);
+      })
+    );
+  }
 
   // ARRIVO del palco: compare (con un filo di salita) mentre la scena del
   // Punto svanisce, nella stessa finestra di scroll e con la stessa curva
@@ -1478,6 +1537,11 @@ if (
   !staticScenes
 ) {
   point.classList.add("is-live");
+  // Telefono: il lead ci sta già quasi a tutta riga, quindi non fa il giro
+  // "grande al centro → testata" (lì era solo una riga piccola in una
+  // schermata vuota). È grande al suo posto e il racconto parte subito.
+  const compact = window.matchMedia("(max-width: 700px)").matches;
+  const P0 = compact ? 0.3 : 1.55; // quando entra la prima riga del problema
 
   const but = point.querySelector<HTMLElement>("[data-point-but]");
   const items = gsap.utils.toArray<HTMLElement>("[data-point-item]", point);
@@ -1531,11 +1595,13 @@ if (
   const marks = items.map((el) => el.querySelector<HTMLElement>("strong"));
 
   // ---- 0. Arrivo dalla hero (prima del pin) ----
-  gsap.set(pointLead, {
-    x: () => leadShift("x"),
-    y: () => leadShift("y"),
-    scale: leadScale,
-  });
+  if (!compact) {
+    gsap.set(pointLead, {
+      x: () => leadShift("x"),
+      y: () => leadShift("y"),
+      scale: leadScale,
+    });
+  }
   gsap.fromTo(
     pointBg,
     { autoAlpha: 0 },
@@ -1559,21 +1625,23 @@ if (
 
   // ---- 1-2. Il racconto, dentro al pin ----
   const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-  // Respiro: il lead resta solo per un attimo.
-  tl.to({}, { duration: 0.5 });
-  // Il lead va al suo posto di testata.
-  tl.fromTo(
-    pointLead,
-    { x: () => leadShift("x"), y: () => leadShift("y"), scale: leadScale },
-    { x: 0, y: 0, scale: 1, duration: 1.1, ease: "power3.inOut" },
-    0.5
-  );
+  if (!compact) {
+    // Respiro: il lead resta solo per un attimo.
+    tl.to({}, { duration: 0.5 });
+    // Il lead va al suo posto di testata.
+    tl.fromTo(
+      pointLead,
+      { x: () => leadShift("x"), y: () => leadShift("y"), scale: leadScale },
+      { x: 0, y: 0, scale: 1, duration: 1.1, ease: "power3.inOut" },
+      0.5
+    );
+  }
   if (but) {
     tl.fromTo(
       but,
       { autoAlpha: 0, x: -16, filter: "blur(6px)" },
       { autoAlpha: 1, x: 0, filter: "blur(0px)", duration: 0.7, ease: "expo.out" },
-      1.25
+      P0 - 0.3
     );
   }
 
@@ -1581,7 +1649,7 @@ if (
   // restano leggibili ma fanno un passo indietro, così l'occhio legge una
   // riga alla volta. La parola chiave si colora da sinistra (--mark).
   items.forEach((item, i) => {
-    const at = 1.55 + i * 1.05;
+    const at = P0 + i * 1.05;
     tl.fromTo(item, { "--rule": 0 }, { "--rule": 1, duration: 0.6, ease: "power2.inOut" }, at);
     tl.fromTo(
       item,
@@ -1618,7 +1686,7 @@ if (
   });
 
   // SVOLTA — il caos si ritira e viene risucchiato al centro.
-  const turnAt = 1.55 + items.length * 1.05 + 0.6;
+  const turnAt = P0 + items.length * 1.05 + 0.6;
   tl.to(
     pointPain,
     { autoAlpha: 0, y: -60, scale: 0.97, filter: "blur(10px)", duration: 0.9, ease: "power2.in" },
@@ -1707,7 +1775,7 @@ if (
     start: "top top",
     // ~0.34 schermate per unità di timeline: ogni riga del problema vale
     // poco più di un terzo di schermata di scroll.
-    end: () => "+=" + Math.round(window.innerHeight * 0.34 * tl.duration()),
+    end: () => "+=" + Math.round(window.innerHeight * (compact ? 0.3 : 0.34) * tl.duration()),
     pin: pointStage,
     animation: tl,
     scrub: SCRUB,
@@ -1724,7 +1792,7 @@ if (
   // svolta chiusa dalla notifica "ok".
   const pointStops = [
     0,
-    ...items.map((_, i) => 1.55 + i * 1.05 + 1),
+    ...items.map((_, i) => P0 + i * 1.05 + 1),
     riseAt + (ok ? 2.15 : 1.65),
   ];
   pointStops.forEach((t) =>
@@ -2024,8 +2092,11 @@ revealRise(".cta-panel", {
     const words = title && !title.hasAttribute("data-type-block")
       ? SplitText.create(title, { type: "words", mask: "words" }).words
       : [];
+    // Su telefono lo schermo è più alto della finestra: l'entrata finisce
+    // a metà salita, se no titolo e testo restavano sfocati mentre si leggono.
+    const narrow = window.matchMedia("(max-width: 767px)").matches;
     const tl = gsap.timeline({
-      scrollTrigger: { trigger: screen, start: "top 85%", end: "top 4%", scrub: SCRUB },
+      scrollTrigger: { trigger: screen, start: "top 85%", end: narrow ? "top 40%" : "top 4%", scrub: SCRUB },
     });
     if (card) {
       tl.fromTo(
