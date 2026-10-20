@@ -9039,13 +9039,20 @@ div[aria-hidden="true"][style*="overflow: clip"] {
    colonne (tocchi sempre da 44px) e la riga finale tiene "Torna su" a
    destra delle note, invece che sotto. */
 @media (max-width: 767px) {
-  .footer-top { gap: 28px; }
+  /* Il logo piccolo doppiava il wordmark gigante in fondo: resta la frase.
+     Il menu va a capo come una frase (2 righe da 44px invece di 3). */
+  .finale .footer-inner { padding-top: 40px; }
+  .footer-top { gap: 24px; }
+  .footer-logo { display: none; }
   .footer-col:has(.footer-link) {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: 22px;
   }
-  .footer-col:has(.footer-link) .footer-col-label { grid-column: 1 / -1; }
+  .footer-col:has(.footer-link) .footer-col-label { flex-basis: 100%; }
+  .footer-social { margin-top: 4px; }
+  .footer-social-link { width: 44px; height: 44px; }
+  .footer-bottom { margin-top: 28px; }
   .footer-bottom {
     display: grid;
     grid-template-columns: 1fr auto;
