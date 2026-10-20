@@ -12,6 +12,7 @@ import Footer from "../Footer.astro";
 import ContactForm from "../ContactForm.astro";
 import ContactReply from "../ContactReply.astro";
 import Rich from "../Rich.astro";
+import HomeHero from "../HomeHero.astro";
 import ServicesSwap from "../ServicesSwap.astro";
 import ProjectsShowcase from "../ProjectsShowcase.astro";
 import MethodRoom from "../MethodRoom.astro";
@@ -34,75 +35,8 @@ const t = getDict(lang);
 <BaseLayout lang={lang} title={t.meta.home.title} description={t.meta.home.description}>
   <Navbar home lang={lang} route="/" />
 
-  <!-- HERO — sezione a tutta schermo, scroll normale -->
-  <section class="hero-section relative h-screen w-full overflow-hidden" data-anim="hero">
-    <video
-      data-anim="hero-video"
-      autoplay
-      muted
-      playsinline
-      preload="auto"
-      class="hero-video absolute inset-0 w-full h-full object-cover"
-      style="opacity: 0;"
-    >
-      <source src="/videos/hero.mp4?v=2" type="video/mp4" />
-    </video>
-
-    <!-- Layer 1 — overlay caldo: scalda il grigio freddo del video verso il warm white -->
-    <div class="hero-warm-overlay absolute inset-0 z-[1] pointer-events-none"></div>
-
-    <!-- Layer 2 — fusione ai bordi: vignettatura calda che fa "emergere" il video dalla pagina -->
-    <div class="hero-edge-fade absolute inset-0 z-[2] pointer-events-none"></div>
-
-    <!-- Layer 3 — fade in fondo: il video sfuma nel warm white della sezione progetti -->
-    <div class="hero-bottom-fade absolute inset-x-0 bottom-0 z-[3] pointer-events-none"></div>
-
-    <div data-anim="hero-content" class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center" style="background: radial-gradient(ellipse 50% 38% at 50% 50%, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.55) 35%, rgba(255, 255, 255, 0.22) 65%, transparent 90%);">
-      <span
-        data-anim="hero-label"
-        class="hero-badge text-[11px] font-medium tracking-[0.15em] uppercase"
-        style="opacity: 0;"
-      >
-        {t.home.hero.badge}
-      </span>
-
-      <h1
-        class="hero-title font-display font-medium text-[#171310] mt-6"
-        style="line-height: 0.98; text-shadow: 0 0 18px rgba(255, 255, 255, 0.75), 0 0 42px rgba(255, 255, 255, 0.5);"
-      >
-        <span data-anim="hero-line-1" class="block" style="opacity: 0;">{t.home.hero.l1}</span>{" "}
-        <span data-anim="hero-line-2" class="block" style="opacity: 0;"><Rich text={t.home.hero.l2} /></span>{" "}
-        <span data-anim="hero-line-3" class="block" style="opacity: 0;">{t.home.hero.l3}</span>
-      </h1>
-
-      <p
-        data-anim="hero-subline"
-        class="mt-5 text-[14px] tracking-[0.04em] text-[#544C40]"
-        style="opacity: 0; text-shadow: 0 0 12px rgba(255, 255, 255, 0.9);"
-      >
-        {t.home.hero.sub}
-      </p>
-
-      <div
-        data-anim="hero-cta"
-        class="mt-8 flex justify-center"
-        style="opacity: 0;"
-      >
-        <a
-          href="#projects"
-          class="pill text-[13px] px-7 py-[14px]"
-        >
-          {t.home.hero.cta} <span aria-hidden="true">↗</span>
-        </a>
-      </div>
-
-      <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
-      <div class="hero-scroll-hint" data-anim="hero-hint" style="opacity: 0;" aria-hidden="true">
-        <span class="hero-scroll-label">{t.home.hero.scroll}</span>
-        <span class="hero-scroll-line"></span>
-      </div>
-    </div>
-  </section>
+  <!-- HERO — fondale + due figure; il logo arriva da LogoHandoff (layout) -->
+  <HomeHero lang={lang} />
 
   <!-- CONTENUTO — flusso normale -->
   <div class="post-reveal relative z-10" data-home>

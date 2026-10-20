@@ -1,0 +1,136 @@
+---
+// HERO della home — fondale da studio + due figure separate, una per persona.
+// Le figure sono DUE elementi distinti (mai un'immagine sola): parallasse e
+// uscita differenziale dipendono da questo. Finché non ci sono le foto, ogni
+// strato è un segnaposto con la stessa struttura della versione finale:
+// sostituire un asset è una riga qui sotto.
+//
+// Il logo NON vive qui: è l'elemento fisso di LogoHandoff (layout). Qui c'è
+// solo il suo posto (data-logo-slot), che lo script misura per lo stato 2.
+import type { Lang } from "../i18n";
+import { getDict } from "../i18n";
+import Rich from "./Rich.astro";
+
+// Foto di studio con tutti e due (16:9, già pronta).
+const HERO_BACKDROP_SRC = "/pics/hero-auralpdigital-16x9.jpg";
+// TODO: replace with cut-out PNG
+const HERO_FIGURE_LEFT_SRC = "";
+// TODO: replace with cut-out PNG
+const HERO_FIGURE_RIGHT_SRC = "";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = getDict(lang);
+
+// Le persone sono già nella foto di fondo: finché non ci sono i ritagli, gli
+// strati delle figure restano vuoti (il segnaposto solo senza foto).
+const figurePlaceholder = (src: string) => !src && !HERO_BACKDROP_SRC;
+const layer = (src: string) => (src ? `background-image: url("${src}");` : undefined);
+---
+
+<section class="hero-section relative h-screen w-full overflow-hidden" data-anim="hero" data-handoff-hero>
+  <!-- Strato 0 — fondale: la foto a pieno contrasto, ancorata in basso al
+       centro (cover: se la hero è più alta del 16:9 taglia dall'alto), in
+       DUE ANTE divise a metà, nel vuoto centrale della foto: allo scroll si
+       aprono e dietro c'è Il punto (scripts/logoHandoff.ts). A riposo le ante
+       combaciano: si vede una foto sola. Ogni anta ha il suo fade in fondo,
+       così il fade si apre insieme alla foto. Senza foto, carta segnaposto. -->
+  {(["left", "right"] as const).map((side) => (
+    <div class={`hero-door hero-door--${side} absolute inset-0`} data-door={side} aria-hidden="true">
+      <div class="hero-door-pane absolute inset-0">
+        {HERO_BACKDROP_SRC ? (
+          <img
+            class="hero-backdrop absolute inset-0"
+            data-layer={side === "left" ? "backdrop" : undefined}
+            data-src={side === "left" ? HERO_BACKDROP_SRC : undefined}
+            src={HERO_BACKDROP_SRC}
+            width="5120"
+            height="2880"
+            alt=""
+            fetchpriority="high"
+            decoding="async"
+          />
+        ) : (
+          <div
+            class="hero-backdrop is-placeholder absolute inset-0"
+            data-layer={side === "left" ? "backdrop" : undefined}
+          >
+          </div>
+        )}
+        <!-- Unico strato sopra la foto: il fade che la scioglie nella carta
+             della sezione dopo. Niente veli: il testo sta nel vuoto centrale. -->
+        <div class="hero-bottom-fade absolute inset-0 pointer-events-none"></div>
+      </div>
+      <!-- Ombra morbida sul bordo interno dell'anta: si accende solo mentre
+           le ante si aprono. -->
+      <span class="hero-door-shade"></span>
+    </div>
+  ))}
+
+  <!-- Strati 1 e 2 — le due figure, ognuna dal suo lato. -->
+  <div
+    class:list={["hero-figure hero-figure--left", { "is-placeholder": figurePlaceholder(HERO_FIGURE_LEFT_SRC) }]}
+    data-layer="figure-left"
+    style={layer(HERO_FIGURE_LEFT_SRC)}
+    aria-hidden="true"
+  >
+  </div>
+  <div
+    class:list={["hero-figure hero-figure--right", { "is-placeholder": figurePlaceholder(HERO_FIGURE_RIGHT_SRC) }]}
+    data-layer="figure-right"
+    style={layer(HERO_FIGURE_RIGHT_SRC)}
+    aria-hidden="true"
+  >
+  </div>
+
+  <div data-anim="hero-content" class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center">
+    <!-- Posto del logo nello stato 2 (centrato, sopra il titolo). -->
+    <span class="hero-logo-slot" data-logo-slot aria-hidden="true"></span>
+
+    <span
+      data-anim="hero-label"
+      class="hero-badge text-[11px] font-medium tracking-[0.15em] uppercase"
+      style="opacity: 0;"
+    >
+      {t.home.hero.badge}
+    </span>
+
+    <h1
+      class="hero-title font-display font-medium text-[#171310] mt-6"
+      style="line-height: 0.98; text-shadow: 0 0 18px rgba(255, 255, 255, 0.75), 0 0 42px rgba(255, 255, 255, 0.5);"
+    >
+      <span data-anim="hero-line-1" class="block" style="opacity: 0;">{t.home.hero.l1}</span>{" "}
+      <span data-anim="hero-line-2" class="block" style="opacity: 0;"><Rich text={t.home.hero.l2} /></span>{" "}
+      <span data-anim="hero-line-3" class="block" style="opacity: 0;">{t.home.hero.l3}</span>
+    </h1>
+
+    <p
+      data-anim="hero-subline"
+      class="mt-5 text-[14px] tracking-[0.04em] text-[#544C40]"
+      style="opacity: 0; text-shadow: 0 0 12px rgba(255, 255, 255, 0.9);"
+    >
+      {t.home.hero.sub}
+    </p>
+
+    <div
+      data-anim="hero-cta"
+      class="mt-8 flex justify-center"
+      style="opacity: 0;"
+    >
+      <a
+        href="#projects"
+        class="pill text-[13px] px-7 py-[14px]"
+      >
+        {t.home.hero.cta} <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+
+    <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
+    <div class="hero-scroll-hint" data-anim="hero-hint" style="opacity: 0;" aria-hidden="true">
+      <span class="hero-scroll-label">{t.home.hero.scroll}</span>
+      <span class="hero-scroll-line"></span>
+    </div>
+  </div>
+</section>

@@ -437,7 +437,14 @@ window.addEventListener("pillnav:toggle", (e) => {
     const dy = scroll - lastY;
     lastY = scroll;
     if (!narrow.matches || menuOpen) return setTucked(false);
-    if (scroll < 120) return setTucked(false);
+    // Home: la navbar compare solo quando il logo ci arriva, a fine hero
+    // (logoHandoff.ts). Fino ad allora, e per mezza schermata dopo, resta
+    // giù: il logo non la segue fuori schermo e appena arrivata non sparisce.
+    const tuckFrom = document.querySelector("[data-handoff-hero]") ? window.innerHeight * 1.5 : 120;
+    if (scroll < tuckFrom) {
+      run = 0;
+      return setTucked(false);
+    }
     if (hushed) return setTucked(true);
     run = Math.sign(dy) === Math.sign(run) ? run + dy : dy;
     if (run > 36) setTucked(true);
@@ -556,160 +563,9 @@ if (document.querySelector("[data-anim='nav']")) {
   );
 }
 
-// ---------- Hero video ----------
-const heroVideo = document.querySelector<HTMLVideoElement>(
-  "[data-anim='hero-video']"
-);
-if (heroVideo) {
-  const BASE_RATE = 1;
-  const MIN_RATE = 0.08;
-  // Slow-down zone: last 2.5s of video time. As currentTime enters this window,
-  // ease playbackRate from BASE_RATE down to MIN_RATE.
-  const SLOWDOWN_WINDOW = 2.5;
-
-  heroVideo.playbackRate = BASE_RATE;
-
-  const easeOut = (t: number) => 1 - Math.pow(1 - t, 2.2);
-
-  // Il playbackRate si riscrive solo quando cambia davvero: ogni assegnazione
-  // fa riconfigurare il decoder, e farlo a ogni frame (anche col valore
-  // identico) fa singhiozzare la riproduzione proprio mentre la hero entra.
-  let lastRate = BASE_RATE;
-  const setRate = (r: number) => {
-    if (Math.abs(r - lastRate) < 0.01) return;
-    lastRate = r;
-    heroVideo.playbackRate = r;
-  };
-
-  // Il loop vive solo mentre il video sta davvero suonando: lo accende
-  // l'evento `playing`. Prima partiva al primo frame e, se il video era
-  // ancora in caricamento (in pausa), moriva subito → il rallentamento
-  // finale non scattava mai.
-  let rateLoop = 0;
-  const tickPlaybackRate = () => {
-    rateLoop = 0;
-    if (heroVideo.paused || heroVideo.ended) return;
-    const d = heroVideo.duration;
-    if (Number.isFinite(d) && d > 0) {
-      const remaining = d - heroVideo.currentTime;
-      if (remaining <= SLOWDOWN_WINDOW) {
-        const t = 1 - remaining / SLOWDOWN_WINDOW; // 0 → 1 across the window
-        const eased = easeOut(Math.min(1, Math.max(0, t)));
-        setRate(BASE_RATE - (BASE_RATE - MIN_RATE) * eased);
-      } else {
-        setRate(BASE_RATE);
-      }
-    }
-    rateLoop = requestAnimationFrame(tickPlaybackRate);
-  };
-  const startRateLoop = () => {
-    if (!rateLoop) rateLoop = requestAnimationFrame(tickPlaybackRate);
-  };
-  heroVideo.addEventListener("playing", startRateLoop);
-  startRateLoop();
-
-  // Freeze on last frame
-  heroVideo.addEventListener("ended", () => {
-    heroVideo.pause();
-    if (Number.isFinite(heroVideo.duration)) {
-      heroVideo.currentTime = heroVideo.duration;
-    }
-  });
-
-  // Fade-in only — no scroll-driven fade-out, so the frozen last frame stays
-  // fully visible as the user scrolls past the hero
-  gsap.fromTo(
-    heroVideo,
-    { opacity: 0 },
-    { opacity: 1, duration: 1.2, ease: "power2.out", delay: 0.2 }
-  );
-
-  // ---------- Hero zoom on scroll ----------
-  // Leggero zoom-in del video mentre si scrolla via dalla hero. È puramente
-  // visivo (transform: scale) e NON tocca la riproduzione: il video prosegue
-  // fino all'ultimo frame.
-  if (!reduceMotion) {
-    gsap.fromTo(
-      heroVideo,
-      { scale: 1 },
-      {
-        scale: 1.12,
-        ease: "none",
-        transformOrigin: "center center",
-        scrollTrigger: {
-          trigger: ".hero-section",
-          start: "top top",
-          end: "bottom top",
-          scrub: SCRUB, // ritardo condiviso con tutto il resto della pagina
-        },
-      }
-    );
-  }
-}
-
-// ---------- Hero text entrance ----------
-// Solo sulla homepage: la pagina /chi-siamo ha la propria hero (vedi sotto).
-if (document.querySelector(".hero-section")) {
-  const heroEls: { sel: string; delay: number; y?: number }[] = [
-    { sel: "[data-anim='hero-label']", delay: 0.5, y: 16 },
-    { sel: "[data-anim='hero-line-1']", delay: 0.65, y: 30 },
-    { sel: "[data-anim='hero-line-2']", delay: 0.78, y: 30 },
-    { sel: "[data-anim='hero-line-3']", delay: 0.91, y: 30 },
-    { sel: "[data-anim='hero-subline']", delay: 1.05, y: 16 },
-    { sel: "[data-anim='hero-cta']", delay: 1.18, y: 16 },
-  ];
-
-  heroEls.forEach(({ sel, delay, y = 16 }) => {
-    gsap.fromTo(
-      sel,
-      { opacity: 0, y },
-      { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", delay }
-    );
-  });
-
-  // Hint di scroll — solo opacity: il centraggio è un translateX CSS che non
-  // va toccato dal transform di GSAP.
-  gsap.fromTo(
-    "[data-anim='hero-hint']",
-    { opacity: 0 },
-    { opacity: 1, duration: 0.9, ease: "power2.out", delay: 1.35 }
-  );
-
-  // ---------- Hero — uscita in parallasse ----------
-  // Scrollando via dalla hero il blocco testo sale più veloce del video e
-  // sfuma: la pagina "consegna" la scena alla sezione successiva. L'hint sta
-  // dentro al blocco, quindi sparisce gratis.
-  //
-  // La corsa è la STESSA dello zoom del video qui sopra (tutta la hero) e la
-  // stessa su cui Chi Siamo comincia a salire: le tre animazioni condividono
-  // inizio, fine e ritardo, quindi la consegna tra le due sezioni è un gesto
-  // unico invece di tre movimenti scollegati. Il testo resta comunque più
-  // veloce del video — la parallasse è nella differenza di spostamento, non
-  // in una durata diversa.
-  if (!reduceMotion) {
-    const heroExit = {
-      trigger: ".hero-section",
-      start: "top top",
-      end: "bottom top",
-      scrub: SCRUB,
-    };
-    // Il MOVIMENTO occupa tutta la corsa della hero: è questo che va a tempo
-    // con l'ingresso di Chi Siamo.
-    gsap.to("[data-anim='hero-content']", {
-      yPercent: -28,
-      ease: "none",
-      scrollTrigger: { ...heroExit },
-    });
-    // La DISSOLVENZA invece si consuma subito (power2.out) sulla stessa corsa:
-    // il blocco continua a salire in sincrono, ma è già trasparente prima di
-    // passare sotto la navbar, senza lasciarci sopra un fantasma di testo.
-    gsap.to("[data-anim='hero-content']", {
-      opacity: 0,
-      ease: "power2.out",
-      scrollTrigger: { ...heroExit },
-    });
-  }
-}
+// ---------- Hero ----------
+// Entrata, pin e uscita della hero (logo che passa alla navbar, figure in
+// parallasse, cerchio che apre Il punto) vivono in logoHandoff.ts.
 
 // ---------- Titoli di sezione — reveal parola per parola ----------
 // Ogni titolo viene diviso in parole; ognuna sale dentro una maschera

@@ -240,7 +240,7 @@ export default function PillNav({ home = false, lang = defaultLang, route = '/' 
         <nav ref={shellRef} className="pnav-shell" aria-label={t.nav.mainLabel}>
           <div ref={barRef} className="pnav-bar">
             <a href={homeHref} className="pnav-logo" aria-label="AuralpDigital — Home" {...linkProps}>
-              <img src="/logo/wordmark.svg" alt="AuralpDigital" width={110} height={24} draggable={false} />
+              <img src="/logo/wordmark.svg" alt="AuralpDigital" width={110} height={24} draggable={false} data-logo-target />
             </a>
 
             <ul ref={linksRef} className="pnav-links" role="list" inert={open || undefined}>

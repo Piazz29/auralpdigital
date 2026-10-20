@@ -535,53 +535,11 @@ button {
   background-color: var(--color-bg);
 }
 
-/* Hero — fusione video/pagina (Punto 2).
-   Layer 1: overlay caldo che scalda il grigio freddo del video verso il warm white.
-   Layer 2: fusione ai bordi (vignettatura calda) per far emergere il video dalla
-   pagina invece di sembrare un rettangolo appiccicato. */
-.hero-warm-overlay {
-  /* Velo crema su TUTTO il video: al 25% lo sbiancava (colori slavati,
-     contrasto basso). Basta un filo per scaldarne il grigio. */
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.hero-edge-fade {
-  /* Vignettatura simmetrica sui 4 lati: stessa intensità in alto/basso e
-     sinistra/destra, così nessun bordo pesa più degli altri. Le due sfumature
-     si sommano agli angoli per un decadimento morbido e bilanciato. */
-  background:
-    linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.3) 0%,
-      transparent 20%,
-      transparent 80%,
-      rgba(255, 255, 255, 0.3) 100%
-    ),
-    linear-gradient(
-      to right,
-      rgba(255, 255, 255, 0.3) 0%,
-      transparent 14%,
-      transparent 86%,
-      rgba(255, 255, 255, 0.3) 100%
-    );
-}
-
-/* Fusione hero → progetti: banda in fondo alla hero che sfuma fino al warm
-   white della pagina, così non c'è uno stacco netto tra video e sezione sotto. */
+/* Fusione hero → sezione dopo: l'UNICO strato sopra la foto della hero.
+   Sfuma solo l'ultimo 18% (dall'82% al 100% dell'altezza) nella carta della
+   pagina; sopra la cintura le persone restano intere e a pieno contrasto. */
 .hero-bottom-fade {
-  /* Banda alta e a pendenza costante: il video della hero è già sciolto nel
-     colore della pagina ben prima del bordo della sezione, così la giunzione
-     con Chi Siamo (che sotto continua con lo stesso warm white del canvas)
-     non ha nessuna linea percepibile. */
-  height: 52vh;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(255, 255, 255, 0.35) 34%,
-    rgba(255, 255, 255, 0.78) 64%,
-    var(--color-bg) 88%,
-    var(--color-bg) 100%
-  );
+  background: linear-gradient(to bottom, transparent 82%, var(--color-bg) 100%);
 }
 
 /* Hero label — kicker essenziale: small caps con la cima dei kicker davanti
@@ -5542,14 +5500,267 @@ nav:has(#burger-menu.is-open) .pill {
 }
 
 /* =========================================================================
-   FIRST-LOAD LOADER — schermata di caricamento solo alla prima entrata della
-   sessione. Wordmark del brand (colori IDENTICI al logo SVG) e, ben separato
-   sotto, un loader 3D a cuboide. Resta visibile per un minimo di 3s. Lo script
-   scripts/loader.ts gestisce l'uscita e imposta sessionStorage['apd:loaded'];
-   lo script inline in <head> decide skip vs loading prima del render.
+   LOGO HANDOFF — un solo logo fisso (components/LogoHandoff.astro): preloader
+   al primo ingresso della sessione, poi stato hero, poi navbar. Regia e tempi
+   in scripts/logoHandoff.ts (HANDOFF). Lo script inline in <head> mette
+   .apd-loading (primo ingresso) o .apd-skip-loader prima del render.
    ========================================================================= */
 html.apd-loading {
   overflow: hidden;
+}
+
+/* Taglie del logo: stato 1 (preloader) e stato 2 (hero, in proporzione). */
+:root {
+  --handoff-w: clamp(200px, 56vw, 420px); /* come la wordmark del vecchio loader */
+  --handoff-hero-scale: 0.85;
+}
+
+/* Velo del preloader: copre la pagina (navbar compresa) finché il logo si
+   disegna. Visibile solo con .apd-loading: nelle visite dopo non esiste. */
+.handoff-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: var(--color-bg);
+  visibility: hidden;
+}
+html.apd-loading .handoff-cover {
+  visibility: visible;
+}
+
+/* Il logo: box esatto del disegno (stesso rapporto del viewBox), centrato.
+   Lo script lo sposta e lo scala con transform. Prima dello script si vede
+   solo durante il preloader; altrimenti aspetta di essere al suo posto. */
+.handoff-logo {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  width: var(--handoff-w);
+  height: calc(var(--handoff-w) * var(--handoff-ar));
+  margin: auto;
+  pointer-events: none;
+  visibility: hidden;
+  will-change: transform;
+}
+html.apd-loading .handoff-logo {
+  visibility: visible;
+}
+.handoff-logo svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* Colori del file del logo, sui loro token; inverso = il blu notte diventa
+   carta (come wordmark-reversed.svg). */
+.handoff-logo [data-tone="navy"] { --c: var(--color-navy); }
+.handoff-logo [data-tone="accent"] { --c: var(--color-accent); }
+.handoff-logo [data-tone="steel"] { --c: var(--color-steel); }
+.handoff-logo.is-inverted [data-tone="navy"] { --c: var(--color-bg); }
+.handoff-outline path {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  /* pathLength="1": tratto pieno = 1, offset 1 = niente ancora disegnato. */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.handoff-fill path {
+  fill: var(--c);
+  transition: fill var(--handoff-fade, 0.2s) ease;
+}
+
+/* Il logo della navbar resta al suo posto come bersaglio di misura, ma
+   nascosto mentre il logo fisso è in giro: durante il preloader, sulla home
+   (hero) e durante il volo delle pagine interne. Torna visibile quando il
+   logo fisso gli si posa sopra (.handoff-docked, ultima regola). */
+html.apd-loading .pnav-logo img,
+html.handoff-hold .pnav-logo img,
+html:has([data-handoff-hero]) .pnav-logo img {
+  visibility: hidden;
+}
+html.handoff-docked .pnav-logo img {
+  visibility: visible;
+}
+/* Navbar sulla home: in hero non c'è. La pillola compare mentre il logo le
+   arriva incontro e le voci entrano al suo arrivo (scrub, logoHandoff.ts). */
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-handoff-hero]) .pnav-shell {
+    opacity: var(--handoff-nav, 0);
+    transform: translateY(calc((var(--handoff-nav, 0) - 1) * var(--handoff-nav-rise, 10px)))
+      scale(calc(var(--handoff-nav-scale, 0.94) + (1 - var(--handoff-nav-scale, 0.94)) * var(--handoff-nav, 0)));
+  }
+  html:has([data-handoff-hero]):not(.handoff-nav-on) .pnav-shell {
+    visibility: hidden;
+  }
+  html:has([data-handoff-hero]) .pnav-links {
+    opacity: var(--handoff-links, 0);
+    transform: translateY(calc((1 - var(--handoff-links, 0)) * var(--handoff-links-rise, 6px)));
+  }
+  html:has([data-handoff-hero]):not(.handoff-links-on) .pnav-links {
+    visibility: hidden;
+  }
+}
+/* Burger d'angolo della home (LogoHandoff.astro): stesso disegno del burger
+   della navbar (PillNav.css), all'altezza della sua pillola. Lo script lo
+   porta al suo posto con lo scroll; lì il burger vero torna visibile. */
+.handoff-burger {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-handoff-hero]) .handoff-burger {
+    display: block;
+    position: fixed;
+    top: calc(22px + env(safe-area-inset-top, 0px));
+    right: clamp(16px, 2.5vw, 32px);
+    z-index: 61; /* sopra la navbar (60), sotto il velo del preloader */
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-ink);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  html:has([data-handoff-hero]) .handoff-burger:hover {
+    background: var(--color-orange);
+  }
+  html:has([data-handoff-hero]):not(.handoff-docked) .pnav-burger {
+    visibility: hidden;
+  }
+  /* Menu aperto dalla hero: la pillola c'è comunque, con la sua X. */
+  html:has([data-handoff-hero]) .pnav[data-open] .pnav-shell {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+  }
+  html:has([data-handoff-hero]) .pnav[data-open] .pnav-burger {
+    visibility: visible;
+  }
+}
+.handoff-burger-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16px;
+  height: 1.5px;
+  margin-left: -8px;
+  border-radius: 2px;
+  background: var(--color-bg);
+}
+.handoff-burger-line:first-child {
+  transform: translateY(-3.5px);
+}
+.handoff-burger-line:last-child {
+  transform: translateY(3.5px);
+}
+
+html.handoff-inverted .pnav-links {
+  --pnav-ink: var(--color-bg);
+  --pnav-ink-2: var(--color-bg);
+}
+
+/* ---- Hero: fondale + due figure (HomeHero.astro) ------------------------
+   Segnaposto con la struttura finale: con l'asset vero arriva solo il
+   background-image inline e .is-placeholder se ne va. */
+.hero-backdrop {
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 100%;
+}
+.hero-backdrop.is-placeholder {
+  /* Fondale da studio: carta che scurisce appena verso il pavimento, luce
+     morbida in alto al centro, grana sottile. */
+  background:
+    radial-gradient(ellipse 60% 55% at 50% 36%, var(--color-bg) 0%, transparent 70%),
+    linear-gradient(180deg, var(--color-surface) 0%, var(--color-warm-deeper) 78%, var(--color-surface) 100%);
+}
+.hero-backdrop.is-placeholder::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.hero-figure {
+  position: absolute;
+  bottom: 0;
+  z-index: 1;
+  width: clamp(150px, 26vw, 420px);
+  height: min(78%, 760px);
+  background: center bottom / contain no-repeat;
+  pointer-events: none;
+}
+.hero-figure--left {
+  left: clamp(-40px, 4vw, 96px);
+}
+.hero-figure--right {
+  right: clamp(-40px, 4vw, 96px);
+}
+.hero-figure.is-placeholder {
+  background-color: var(--color-border);
+  border-radius: 999px 999px 0 0;
+}
+@media (max-width: 767px) {
+  .hero-figure {
+    width: 38vw;
+    height: 46%;
+  }
+}
+
+/* Le due ante del fondale: stessa foto, ognuna tagliata sulla sua metà (il
+   taglio cade nel vuoto centrale, mai su una persona). Le muove lo scroll
+   (scripts/logoHandoff.ts, HANDOFF.scroll); a riposo combaciano. */
+.hero-door {
+  z-index: 0;
+  pointer-events: none;
+}
+.hero-door--left {
+  transform-origin: 0% 55%;
+}
+.hero-door--right {
+  transform-origin: 100% 55%;
+}
+.hero-door--left .hero-door-pane {
+  clip-path: inset(0 50% 0 0);
+}
+.hero-door--right .hero-door-pane {
+  clip-path: inset(0 0 0 50%);
+}
+/* Ombra del bordo interno: dà spessore alle ante mentre si separano. */
+.hero-door-shade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(20px, 2.4vw, 40px);
+  opacity: 0;
+}
+.hero-door--left .hero-door-shade {
+  left: 50%;
+  background: linear-gradient(to right, color-mix(in srgb, var(--color-ink) 9%, transparent), transparent);
+}
+.hero-door--right .hero-door-shade {
+  right: 50%;
+  background: linear-gradient(to left, color-mix(in srgb, var(--color-ink) 9%, transparent), transparent);
+}
+/* In regia la hero passa SOPRA la sezione dopo (.post-reveal è z 10): Il
+   punto sale dietro le ante e si vede solo dove si aprono. */
+html.apd-scenes .hero-section[data-handoff-hero] {
+  z-index: 11;
+}
+
+/* Posto del logo nello stato 2: stessa taglia del logo in hero. */
+.hero-logo-slot {
+  display: block;
+  flex: none;
+  width: calc(var(--handoff-w) * var(--handoff-hero-scale));
+  height: calc(var(--handoff-w) * var(--handoff-hero-scale) * 119 / 556);
+  margin-bottom: clamp(18px, 3vh, 32px);
 }
 /* Visite successive nella stessa sessione: il loader non esiste visivamente
    (niente flash). */
@@ -5633,253 +5844,6 @@ html.vt-arrive::view-transition-group(page-in) {
   }
   to {
     transform: translateX(0);
-  }
-}
-
-html.apd-skip-loader #apd-loader {
-  display: none !important;
-}
-
-.apd-loader {
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg);
-  /* L'animazione di uscita usa autoAlpha + y; evita ripaint pesanti. */
-  will-change: opacity, transform;
-}
-
-.apd-loader-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* gap ampio: il cuboide (che salta) non deve mai toccare la wordmark. */
-  gap: clamp(56px, 10vh, 108px);
-  width: min(86vw, 520px);
-  padding: 0 24px;
-}
-
-/* Wordmark = logo SVG reale → colori identici a quelli del marchio. */
-.apd-mark-img {
-  display: block;
-  width: clamp(200px, 56vw, 420px);
-  height: auto;
-  user-select: none;
-  -webkit-user-drag: none;
-  animation: apd-mark-in 0.6s ease both;
-}
-@keyframes apd-mark-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ---- Loader 3D a cuboide (adattato al brand: navy / blu / periwinkle) -------
-   La scala globale del demo (applicata al body) qui vive sul wrapper .apd-cuboid;
-   preserve-3d è scopato SOLO ai discendenti del loader per non toccare il sito. */
-.apd-cuboid {
-  --size: 66;
-  --coefficient: 1px;
-  --timeline: 2.6s;
-  --delay: 0.4s;
-  --rotation-y: -24;
-  --rotation-x: 28;
-  /* Le tre facce portano le famiglie della palette (token di @theme):
-     navy sopra/sotto, blu SHADOW davanti, EMBER sui fianchi. */
-  --color-one: var(--color-navy);
-  --color-two: #2748A5;
-  --color-three: var(--color-orange);
-  display: grid;
-  place-items: center;
-  width: 220px;
-  height: 206px;
-  transform-origin: 50% 50%;
-  animation: apd-cube-scale var(--timeline) var(--delay) infinite linear;
-}
-.apd-cuboid *,
-.apd-cuboid *::before,
-.apd-cuboid *::after {
-  box-sizing: border-box;
-  transform-style: preserve-3d;
-}
-
-.apd-cuboid .scene {
-  position: relative;
-  transform: translate3d(0, 0, 100vmin)
-    rotateX(calc(var(--rotation-y, 0) * 1deg))
-    rotateY(calc(var(--rotation-x, 0) * 1deg)) rotateX(0deg);
-}
-
-@keyframes apd-cube-scale {
-  0%,
-  10% {
-    transform: scaleX(1) scaleY(1);
-  }
-  35%,
-  100% {
-    transform: scaleX(0.5) scaleY(0.5);
-  }
-}
-
-.apd-cuboid .shadow {
-  width: calc(var(--size) * var(--coefficient));
-  position: absolute;
-  bottom: 0;
-  aspect-ratio: 1;
-  transform-origin: 50% 50%;
-  transform: rotateX(90deg)
-    translate3d(0, 0, calc((var(--size) * (var(--coefficient) * -0.5)) - 1px))
-    scale(0.96);
-  /* Ombra tinta navy, non inchiostro: sulla carta resta morbida. */
-  background: rgba(28, 43, 95, 0.28);
-  animation: apd-cube-squish var(--timeline) var(--delay) infinite,
-    apd-cube-fade var(--timeline) var(--delay) infinite;
-}
-
-.apd-cuboid .loader {
-  --depth: var(--size);
-  --color: var(--color-one);
-  width: calc(var(--depth) * var(--coefficient));
-  aspect-ratio: 1;
-  transform-origin: 50% 50%;
-  animation: apd-cube-squish var(--timeline) var(--delay) infinite;
-}
-.apd-cuboid .spinner {
-  animation: apd-cube-spin var(--timeline) var(--delay) infinite;
-}
-.apd-cuboid .jumper {
-  animation: apd-cube-jump var(--timeline) var(--delay) infinite;
-}
-
-@keyframes apd-cube-squish {
-  0%,
-  50%,
-  60% {
-    scale: 1 1 1;
-  }
-  10%,
-  35% {
-    scale: 1.2 0.8 1.2;
-  }
-  25% {
-    scale: 0.8 1.2 0.8;
-  }
-  70% {
-    scale: 1 1 2;
-  }
-  80% {
-    scale: 2 1 2;
-  }
-  90%,
-  100% {
-    scale: 2 2 2;
-  }
-}
-@keyframes apd-cube-fade {
-  0%,
-  10%,
-  40%,
-  50%,
-  60%,
-  100% {
-    opacity: 1;
-  }
-  25% {
-    opacity: 0.5;
-  }
-}
-@keyframes apd-cube-spin {
-  0%,
-  10% {
-    rotate: 0deg;
-  }
-  30%,
-  100% {
-    rotate: -360deg;
-  }
-}
-@keyframes apd-cube-jump {
-  0%,
-  10%,
-  35%,
-  50% {
-    translate: 0 0;
-  }
-  25% {
-    translate: 0 -150%;
-  }
-}
-
-/* Cuboid boilerplate (facce del cubo) */
-.apd-cuboid .cuboid {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-.apd-cuboid .cuboid__side {
-  background: var(--color);
-  position: absolute;
-}
-.apd-cuboid .cuboid__side:nth-of-type(1) {
-  height: calc(var(--depth, 20) * var(--coefficient));
-  width: 100%;
-  top: 0;
-  transform: translate(0, -50%) rotateX(90deg);
-}
-.apd-cuboid .cuboid__side:nth-of-type(2) {
-  --color: var(--color-three);
-  height: 100%;
-  width: calc(var(--depth, 20) * var(--coefficient));
-  top: 50%;
-  right: 0;
-  transform: translate(50%, -50%) rotateY(90deg);
-}
-.apd-cuboid .cuboid__side:nth-of-type(3) {
-  width: 100%;
-  height: calc(var(--depth, 20) * var(--coefficient));
-  bottom: 0;
-  transform: translate(0%, 50%) rotateX(90deg);
-}
-.apd-cuboid .cuboid__side:nth-of-type(4) {
-  --color: var(--color-three);
-  height: 100%;
-  width: calc(var(--depth, 20) * var(--coefficient));
-  left: 0;
-  top: 50%;
-  transform: translate(-50%, -50%) rotateY(90deg);
-}
-.apd-cuboid .cuboid__side:nth-of-type(5) {
-  --color: var(--color-two);
-  height: 100%;
-  width: 100%;
-  transform: translate3d(0, 0, calc(var(--depth, 20) * (var(--coefficient) * 0.5)));
-  top: 0;
-  left: 0;
-}
-.apd-cuboid .cuboid__side:nth-of-type(6) {
-  height: 100%;
-  width: 100%;
-  transform: translate3d(0, 0, calc(var(--depth, 20) * (var(--coefficient) * -0.5)))
-    rotateY(180deg);
-  top: 0;
-  left: 0;
-}
-
-/* Reduced-motion: niente cubo che salta/scala — resta la sola wordmark. */
-@media (prefers-reduced-motion: reduce) {
-  .apd-mark-img {
-    animation: none;
-  }
-  .apd-cuboid {
-    display: none;
   }
 }
 

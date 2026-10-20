@@ -2,6 +2,7 @@
 import type { Lang } from "../i18n";
 import { defaultLang, getDict, languages } from "../i18n";
 import { baseRoute, jsonLd, localeUrl, ogLocale, siteOrigin } from "../lib/seo";
+import LogoHandoff from "../components/LogoHandoff.astro";
 
 interface Props {
   lang?: Lang;
@@ -73,8 +74,6 @@ const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, tit
     <meta name="geo.position" content="46.4983;11.3548" />
     <meta name="ICBM" content="46.4983, 11.3548" />
     {schema && <script type="application/ld+json" set:html={schema} />}
-    <!-- La wordmark è nel loader: preload così è lì dal primo frame. -->
-    <link rel="preload" as="image" href="/logo/wordmark.svg" type="image/svg+xml" />
     <!-- Sistema tipografico: Satoshi (Fontshare, licenza ITF FFL) su tutto il
          sito — display e body sulla stessa famiglia. Le due varianti
          VARIABILI (tondo + corsivo, asse wght 300..900) sono ospitate qui in
@@ -229,43 +228,11 @@ const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, tit
     </script>
   </head>
   <body class="bg-[#FFFFFF] text-[#171310] overflow-x-clip">
-    <!-- First-load loader: wordmark del brand (colori identici al logo SVG) e,
-         sotto, un loader 3D a cuboide. Primo figlio del body così copre tutto
-         fin da subito; rimosso dallo script dopo un minimo di 3s. -->
-{loader && (
-    <div id="apd-loader" class="apd-loader" role="presentation" aria-hidden="true">
-      <div class="apd-loader-inner">
-        <img
-          class="apd-mark-img"
-          src="/logo/wordmark.svg"
-          alt="AuralpDigital"
-          width="556"
-          height="119"
-        />
-        <div class="apd-cuboid" aria-hidden="true">
-          <div class="scene">
-            <div class="shadow"></div>
-            <div class="jumper">
-              <div class="spinner">
-                <div class="scaler">
-                  <div class="loader">
-                    <div class="cuboid">
-                      <div class="cuboid__side"></div>
-                      <div class="cuboid__side"></div>
-                      <div class="cuboid__side"></div>
-                      <div class="cuboid__side"></div>
-                      <div class="cuboid__side"></div>
-                      <div class="cuboid__side"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    )}
+    <!-- Logo handoff: l'UNICO logo animato della pagina, fisso e sopra a
+         tutto, fuori da navbar e hero. Al primo ingresso della sessione fa da
+         preloader (con il suo velo); poi si posa nella hero e con lo scroll
+         arriva al posto del logo della navbar (scripts/logoHandoff.ts). -->
+{loader && <LogoHandoff />}
 
 
     <!-- Transizione tra pagine: le due fasce blu del vecchio menu. Restano
@@ -292,8 +259,8 @@ const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, tit
     <slot />
 
     <script>
-      import "../scripts/loader.ts";
       import "../scripts/main.ts";
+      import "../scripts/logoHandoff.ts";
     </script>
   </body>
 </html>
