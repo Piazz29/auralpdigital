@@ -168,12 +168,21 @@ const de = {
   home: {
     hero: {
       badge: "Digital Growth Studio · Südtirol",
-      l1: "Digitale Systeme",
-      l2: "die *Kunden*",
-      l3: "bringen.",
+      l1: "Wir entwickeln",
+      l2: "digitale Produkte",
+      l3: "für *anspruchsvolle*\nUnternehmen.",
       sub: "Websites, Social Media und Software, die aus Besuchern Kunden machen.",
       cta: "Unsere Projekte ansehen",
+      contact: "Projekt besprechen",
       scroll: "Scrollen",
+      device: {
+        caption: "Projekte online",
+        app: "Termine",
+        today: "Heute",
+        slots: ["09:30 · Beratung", "11:00 · Behandlung", "15:30 · Kontrolle", "17:00 · Erstgespräch"],
+        confirmed: "Bestätigt",
+        book: "Neuer Termin",
+      },
     },
     services: {
       // Drei Leistungen (vedi it.ts).

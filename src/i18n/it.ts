@@ -169,12 +169,23 @@ const it = {
   home: {
     hero: {
       badge: "Digital Growth Studio · Alto Adige",
-      l1: "Sistemi digitali",
-      l2: "che *portano*",
-      l3: "clienti.",
+      l1: "Costruiamo prodotti",
+      l2: "digitali per realtà",
+      l3: "*esigenti.*",
       sub: "Siti web, social e gestionali pensati per trasformare le visite in clienti.",
       cta: "Guarda i nostri progetti",
+      contact: "Parliamo del tuo progetto",
       scroll: "Scorri",
+      // Composizione a destra: un browser con i nostri siti veri e un
+      // telefono con un gestionale di prenotazioni (dati di esempio).
+      device: {
+        caption: "Progetti online",
+        app: "Prenotazioni",
+        today: "Oggi",
+        slots: ["09:30 · Consulenza", "11:00 · Trattamento", "15:30 · Ritocco", "17:00 · Prima visita"],
+        confirmed: "Confermato",
+        book: "Nuovo appuntamento",
+      },
     },
     services: {
       // COSA FACCIAMO — tre servizi, uno per ogni dolore nominato in "Il

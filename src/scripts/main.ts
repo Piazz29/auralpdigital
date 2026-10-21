@@ -437,10 +437,7 @@ window.addEventListener("pillnav:toggle", (e) => {
     const dy = scroll - lastY;
     lastY = scroll;
     if (!narrow.matches || menuOpen) return setTucked(false);
-    // Home: la navbar compare solo quando il logo ci arriva, a fine hero
-    // (logoHandoff.ts). Fino ad allora, e per mezza schermata dopo, resta
-    // giù: il logo non la segue fuori schermo e appena arrivata non sparisce.
-    const tuckFrom = document.querySelector("[data-handoff-hero]") ? window.innerHeight * 1.5 : 120;
+    const tuckFrom = 120;
     if (scroll < tuckFrom) {
       run = 0;
       return setTucked(false);
@@ -564,8 +561,8 @@ if (document.querySelector("[data-anim='nav']")) {
 }
 
 // ---------- Hero ----------
-// Entrata, pin e uscita della hero (logo che passa alla navbar, figure in
-// parallasse, cerchio che apre Il punto) vivono in logoHandoff.ts.
+// Entrata e parallasse della hero (cerchio d'apertura, logo che passa alla
+// navbar, finestra / tavolo / testo a velocità diverse) vivono in logoHandoff.ts.
 
 // ---------- Titoli di sezione — reveal parola per parola ----------
 // Ogni titolo viene diviso in parole; ognuna sale dentro una maschera

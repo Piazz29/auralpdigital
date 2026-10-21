@@ -1,94 +1,115 @@
 ---
-// HERO della home — fondale da studio + due figure separate, una per persona.
-// Le figure sono DUE elementi distinti (mai un'immagine sola): parallasse e
-// uscita differenziale dipendono da questo. Finché non ci sono le foto, ogni
-// strato è un segnaposto con la stessa struttura della versione finale:
-// sostituire un asset è una riga qui sotto.
+// HERO della home — "luce liquida". Su bianco carta una luce blu e arancio
+// scorre lenta come un fluido (shader WebGL in scripts/heroFluid.ts, segue
+// appena il mouse). A sinistra il titolo, grande, il sottotitolo e la CTA;
+// a destra una composizione di quello che facciamo: un browser in vetro con
+// i nostri siti veri e un telefono con un gestionale di prenotazioni.
+// Niente foto: le persone stanno in Chi siamo.
 //
-// Il logo NON vive qui: è l'elemento fisso di LogoHandoff (layout). Qui c'è
-// solo il suo posto (data-logo-slot), che lo script misura per lo stato 2.
+// Sotto la piega la luce si scioglie nel bianco e la sezione diventa
+// trasparente: Il punto le scorre sotto senza cuciture.
+// Entrate e parallasse in scripts/logoHandoff.ts (il logo del preloader vola
+// nella navbar, la hero si apre col cerchio che lo segue).
 import type { Lang } from "../i18n";
 import { getDict } from "../i18n";
 import Rich from "./Rich.astro";
-
-// Foto di studio con tutti e due (16:9, già pronta).
-const HERO_BACKDROP_SRC = "/pics/hero-auralpdigital-16x9.jpg";
-// TODO: replace with cut-out PNG
-const HERO_FIGURE_LEFT_SRC = "";
-// TODO: replace with cut-out PNG
-const HERO_FIGURE_RIGHT_SRC = "";
+import { Image } from "astro:assets";
+import alessiaShot from "../assets/projects/alessiapmu.png";
+import dimitriShot from "../assets/projects/dimitricavazzana.png";
 
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
 const t = getDict(lang);
-
-// Le persone sono già nella foto di fondo: finché non ci sono i ritagli, gli
-// strati delle figure restano vuoti (il segnaposto solo senza foto).
-const figurePlaceholder = (src: string) => !src && !HERO_BACKDROP_SRC;
-const layer = (src: string) => (src ? `background-image: url("${src}");` : undefined);
+const d = t.home.hero.device;
+// I nostri siti veri, mostrati a turno nel browser (stessi di Progetti).
+const SITES = [
+  { img: alessiaShot, name: "Alessia PMU", url: "alessiapmu.de" },
+  { img: dimitriShot, name: "Dimitri Cavazzana", url: "dimitricavazzana.com" },
+];
 ---
 
-<section class="hero-section relative h-screen w-full overflow-hidden" data-anim="hero" data-handoff-hero>
-  <!-- Strato 0 — fondale: la foto a pieno contrasto, ancorata in basso al
-       centro (cover: se la hero è più alta del 16:9 taglia dall'alto), in
-       DUE ANTE divise a metà, nel vuoto centrale della foto: allo scroll si
-       aprono e dietro c'è Il punto (scripts/logoHandoff.ts). A riposo le ante
-       combaciano: si vede una foto sola. Ogni anta ha il suo fade in fondo,
-       così il fade si apre insieme alla foto. Senza foto, carta segnaposto. -->
-  {(["left", "right"] as const).map((side) => (
-    <div class={`hero-door hero-door--${side} absolute inset-0`} data-door={side} aria-hidden="true">
-      <div class="hero-door-pane absolute inset-0">
-        {HERO_BACKDROP_SRC ? (
-          <img
-            class="hero-backdrop absolute inset-0"
-            data-layer={side === "left" ? "backdrop" : undefined}
-            data-src={side === "left" ? HERO_BACKDROP_SRC : undefined}
-            src={HERO_BACKDROP_SRC}
-            width="5120"
-            height="2880"
-            alt=""
-            fetchpriority="high"
-            decoding="async"
-          />
-        ) : (
-          <div
-            class="hero-backdrop is-placeholder absolute inset-0"
-            data-layer={side === "left" ? "backdrop" : undefined}
-          >
-          </div>
-        )}
-        <!-- Unico strato sopra la foto: il fade che la scioglie nella carta
-             della sezione dopo. Niente veli: il testo sta nel vuoto centrale. -->
-        <div class="hero-bottom-fade absolute inset-0 pointer-events-none"></div>
-      </div>
-      <!-- Ombra morbida sul bordo interno dell'anta: si accende solo mentre
-           le ante si aprono. -->
-      <span class="hero-door-shade"></span>
+<section class="hero-section hero-fluid relative w-full overflow-hidden" data-anim="hero" data-handoff-hero>
+  <!-- La luce: canvas WebGL. Il fondo CSS sotto è la stessa scena, ferma:
+       si vede senza WebGL e prima del primo frame. Il contenitore esterno
+       sfuma il bordo basso e sta fermo; quello interno si muove in
+       parallasse (così la luce non si taglia mai sul bordo della hero). -->
+  <div class="hero-light" aria-hidden="true">
+    <div class="hero-light-inner" data-layer="light">
+      <canvas class="hero-light-canvas" data-hero-fluid></canvas>
+      <span class="hero-grain"></span>
     </div>
-  ))}
-
-  <!-- Strati 1 e 2 — le due figure, ognuna dal suo lato. -->
-  <div
-    class:list={["hero-figure hero-figure--left", { "is-placeholder": figurePlaceholder(HERO_FIGURE_LEFT_SRC) }]}
-    data-layer="figure-left"
-    style={layer(HERO_FIGURE_LEFT_SRC)}
-    aria-hidden="true"
-  >
-  </div>
-  <div
-    class:list={["hero-figure hero-figure--right", { "is-placeholder": figurePlaceholder(HERO_FIGURE_RIGHT_SRC) }]}
-    data-layer="figure-right"
-    style={layer(HERO_FIGURE_RIGHT_SRC)}
-    aria-hidden="true"
-  >
   </div>
 
-  <div data-anim="hero-content" class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center">
-    <!-- Posto del logo nello stato 2 (centrato, sopra il titolo). -->
-    <span class="hero-logo-slot" data-logo-slot aria-hidden="true"></span>
+  <!-- A destra: UNA composizione, quello che facciamo. Un browser in vetro
+       con i nostri siti veri (a turno, scripts/heroDevice.ts) e davanti un
+       telefono con un gestionale di prenotazioni. Tre livelli: esterno
+       (entrata + parallasse di scroll), medio (inclinazione col mouse),
+       interno (la scena in prospettiva). Decorativa per i lettori di schermo:
+       i progetti veri sono nella sezione Progetti. -->
+  <div class="hero-stage" data-hero-stage aria-hidden="true">
+    <div class="hero-stage-tilt" data-hero-tilt>
+      <div class="hero-device">
+        <div class="hd-browser">
+          <div class="hd-bar">
+            <span class="hd-dots"><i></i><i></i><i></i></span>
+            <span class="hd-url">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5" /><path d="M5.5 7V5.5a2.5 2.5 0 0 1 5 0V7" /></svg>
+              {SITES.map((site, i) => <span class:list={["hd-url-text", { "is-active": i === 0 }]} data-hd-slide>{site.url}</span>)}
+            </span>
+          </div>
+          <div class="hd-screen">
+            {SITES.map((site, i) => (
+              <Image
+                class:list={["hd-shot", { "is-active": i === 0 }]}
+                data-hd-slide
+                src={site.img}
+                widths={[640, 960, 1280]}
+                sizes="(min-width: 900px) 40vw, 90vw"
+                quality={80}
+                alt=""
+                loading="eager"
+                decoding="async"
+                fetchpriority={i === 0 ? "high" : "low"}
+              />
+            ))}
+          </div>
+        </div>
 
+        <div class="hd-phone">
+          <div class="hd-phone-screen">
+            <span class="hd-island"></span>
+            <div class="hd-app-head">
+              <span class="hd-app-title">{d.app}</span>
+              <span class="hd-app-avatar"></span>
+            </div>
+            <div class="hd-days">
+              {["14", "15", "16", "17", "18"].map((n, i) => <span class:list={["hd-day", { "is-on": i === 0 }]}>{n}</span>)}
+            </div>
+            <span class="hd-today">{d.today}</span>
+            <ul class="hd-slots">
+              {d.slots.map((slot, i) => (
+                <li class:list={["hd-slot", { "is-new": i === 1 }]}>
+                  <span class="hd-slot-bar"></span>
+                  <span class="hd-slot-text">{slot}</span>
+                  {i === 1 && <span class="hd-slot-tag">{d.confirmed}</span>}
+                </li>
+              ))}
+            </ul>
+            <span class="hd-app-btn">{d.book}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hd-caption">
+      <span class="hd-caption-label">{d.caption}</span>
+      {SITES.map((site, i) => <span class:list={["hd-caption-name", { "is-active": i === 0 }]} data-hd-slide>{site.name}</span>)}
+      <span class="hd-progress"><i data-hd-progress></i></span>
+    </div>
+  </div>
+
+  <div data-anim="hero-content" class="hero-copy">
     <span
       data-anim="hero-label"
       class="hero-badge text-[11px] font-medium tracking-[0.15em] uppercase"
@@ -97,40 +118,38 @@ const layer = (src: string) => (src ? `background-image: url("${src}");` : undef
       {t.home.hero.badge}
     </span>
 
-    <h1
-      class="hero-title font-display font-medium text-[#171310] mt-6"
-      style="line-height: 0.98; text-shadow: 0 0 18px rgba(255, 255, 255, 0.75), 0 0 42px rgba(255, 255, 255, 0.5);"
-    >
-      <span data-anim="hero-line-1" class="block" style="opacity: 0;">{t.home.hero.l1}</span>{" "}
+    <h1 class="hero-title font-display font-medium text-[#171310]">
+      <span data-anim="hero-line-1" class="block" style="opacity: 0;"><Rich text={t.home.hero.l1} /></span>{" "}
       <span data-anim="hero-line-2" class="block" style="opacity: 0;"><Rich text={t.home.hero.l2} /></span>{" "}
-      <span data-anim="hero-line-3" class="block" style="opacity: 0;">{t.home.hero.l3}</span>
+      <span data-anim="hero-line-3" class="block" style="opacity: 0;"><Rich text={t.home.hero.l3} /></span>
     </h1>
 
-    <p
-      data-anim="hero-subline"
-      class="mt-5 text-[14px] tracking-[0.04em] text-[#544C40]"
-      style="opacity: 0; text-shadow: 0 0 12px rgba(255, 255, 255, 0.9);"
-    >
+    <p data-anim="hero-subline" class="hero-sub text-[#544C40]" style="opacity: 0;">
       {t.home.hero.sub}
     </p>
 
-    <div
-      data-anim="hero-cta"
-      class="mt-8 flex justify-center"
-      style="opacity: 0;"
-    >
-      <a
-        href="#projects"
-        class="pill text-[13px] px-7 py-[14px]"
-      >
+    <div data-anim="hero-cta" class="hero-cta flex" style="opacity: 0;">
+      <a href="#projects" class="pill text-[14px] px-8 py-[15px]">
         {t.home.hero.cta} <span aria-hidden="true">↗</span>
       </a>
-    </div>
-
-    <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
-    <div class="hero-scroll-hint" data-anim="hero-hint" style="opacity: 0;" aria-hidden="true">
-      <span class="hero-scroll-label">{t.home.hero.scroll}</span>
-      <span class="hero-scroll-line"></span>
+      <!-- Secondario: vetro chiaro come il browser e la navbar, con il
+           puntino "disponibili" che respira. Porta al form dei contatti. -->
+      <a href="#contatti" class="hero-contact">
+        <span class="hero-contact-dot" aria-hidden="true"></span>
+        {t.home.hero.contact}
+        <span class="hero-contact-arrow" aria-hidden="true">→</span>
+      </a>
     </div>
   </div>
+
+  <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
+  <div class="hero-scroll-hint" data-anim="hero-hint" style="opacity: 0;" aria-hidden="true">
+    <span class="hero-scroll-label">{t.home.hero.scroll}</span>
+    <span class="hero-scroll-line"></span>
+  </div>
 </section>
+
+<script>
+  import "../scripts/heroFluid.ts";
+  import "../scripts/heroDevice.ts";
+</script>

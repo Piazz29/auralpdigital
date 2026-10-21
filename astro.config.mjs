@@ -24,6 +24,14 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    // DEV: cache delle dipendenze SEPARATA da quella di build/sync. Con una
+    // cache sola, un `npm run build` (o un secondo `astro dev`) lanciato a
+    // server acceso riscriveva node_modules/.vite/deps sotto i piedi del dev
+    // server: la pagina caricava due copie di React con hash diversi
+    // ("Cannot read properties of null (reading 'useContext')") e le isole
+    // di Chi siamo non partivano — titolo, percorso e card spariti.
+    // Va tenuto UN solo `astro dev` acceso alla volta.
+    cacheDir: process.argv.includes('dev') ? 'node_modules/.vite-dev' : 'node_modules/.vite',
     // Il modello 3D del Lanyard (card.glb) viene importato come asset.
     assetsInclude: ['**/*.glb'],
     // Il minificatore CSS di Astro 7 scrive le media query in sintassi range

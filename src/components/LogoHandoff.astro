@@ -25,23 +25,16 @@ const paths = [...svg.matchAll(/<path d="([^"]+)" fill="([^"]+)"/g)].map(([, d, 
   if (!tone) throw new Error(`LogoHandoff: colore ${fill} del logo senza token`);
   return { d, tone };
 });
+
+// Spessore 3D del logo in hero: copie del disegno una dietro l'altra, ognuna
+// spostata di un passo (--ex, --ey: direzione dell'estrusione, la muove il
+// mouse) e più scura. Tutto vettoriale, niente filtri: resta leggero anche
+// mentre il logo vola. Visibile solo in hero (--logo-depth, logoHandoff.ts).
+const DEPTH = 12;
+const layers = Array.from({ length: DEPTH }, (_, k) => DEPTH - k);
 ---
 
 <div class="handoff-cover" data-handoff-cover aria-hidden="true"></div>
-<!-- Burger della home: in hero la navbar non c'è ancora, ma il menu deve
-     essere sempre a portata. Sta nell'angolo e con lo scroll scivola al posto
-     del burger della navbar, come il logo; apre il menu vero. -->
-<button
-  type="button"
-  class="handoff-burger"
-  data-handoff-burger
-  aria-controls="pnav-panel"
-  aria-expanded="false"
-  aria-label="Menu"
->
-  <span class="handoff-burger-line"></span>
-  <span class="handoff-burger-line"></span>
-</button>
 <div
   class="handoff-logo"
   data-handoff-logo
@@ -54,6 +47,21 @@ const paths = [...svg.matchAll(/<path d="([^"]+)" fill="([^"]+)"/g)].map(([, d, 
         <rect data-handoff-fill-rect x="0" y={vbH} width={vbW} height={vbH} />
       </clipPath>
     </defs>
+    <g class="handoff-3d" data-handoff-3d>
+      <!-- ombra morbida sotto le lettere, poi l'alone chiaro che le stacca
+           dal vetro, poi lo spessore -->
+      <g class="handoff-shadow" style={`--i: ${DEPTH + 6}`}>
+        <g transform={groupTransform}>{paths.map((p) => <path d={p.d} />)}</g>
+      </g>
+      <g class="handoff-halo">
+        <g transform={groupTransform}>{paths.map((p) => <path d={p.d} />)}</g>
+      </g>
+      {layers.map((i) => (
+        <g class="handoff-depth" style={`--i: ${i}`}>
+          <g transform={groupTransform}>{paths.map((p) => <path d={p.d} data-tone={p.tone} />)}</g>
+        </g>
+      ))}
+    </g>
     <g class="handoff-outline" data-handoff-outline transform={groupTransform}>
       {paths.map((p) => <path d={p.d} data-tone={p.tone} pathLength="1" />)}
     </g>

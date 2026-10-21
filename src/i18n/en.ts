@@ -168,12 +168,21 @@ const en = {
   home: {
     hero: {
       badge: "Digital Growth Studio · South Tyrol",
-      l1: "Digital systems",
-      l2: "that *bring*",
-      l3: "clients.",
+      l1: "We build digital",
+      l2: "products for",
+      l3: "*demanding* brands.",
       sub: "Websites, social media and software designed to turn visits into clients.",
       cta: "See our projects",
+      contact: "Let's talk about your project",
       scroll: "Scroll",
+      device: {
+        caption: "Live projects",
+        app: "Bookings",
+        today: "Today",
+        slots: ["09:30 · Consultation", "11:00 · Treatment", "15:30 · Touch-up", "17:00 · First visit"],
+        confirmed: "Confirmed",
+        book: "New appointment",
+      },
     },
     services: {
       // Three services (vedi it.ts).

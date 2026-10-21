@@ -1,42 +1,37 @@
-// LOGO HANDOFF — preloader → hero → navbar con UN SOLO logo.
+// LOGO HANDOFF — il logo del preloader e dove va a finire.
 //
 // Il logo è l'elemento fisso di LogoHandoff.astro (layout), fuori da navbar e
-// hero. Ha tre stati, tutti MISURATI dal vivo, mai scritti a mano:
+// hero. Stati, tutti MISURATI dal vivo, mai scritti a mano:
 //   1. LOADER  — centrato e grande (box CSS di .handoff-logo, --handoff-w);
-//   2. HERO    — il posto [data-logo-slot] nella hero (centrato, ~55%, sopra
-//                il titolo);
-//   3. NAVBAR  — il logo della navbar [data-logo-target], tenuto in
-//                visibility:hidden come bersaglio di misura.
-// Ogni frame si leggono i rettangoli e si mette il logo fisso nel punto che
-// corrisponde a intro (k) e scroll (p): resize, font caricati, menu che si
-// allarga e navbar che si ritira sono quindi sempre in pari. Quando il logo è
-// arrivato al bersaglio (identico al pixel) il bersaglio torna visibile e il
-// logo fisso si nasconde: il menu continua a funzionare come prima.
+//   2. HERO    — (se la hero ha un posto [data-logo-slot]) il logo cresce,
+//                ci si posa e da lì scorre con la hero;
+//   3. NAVBAR  — (altrimenti: pagine interne e, ora, anche la home) il logo
+//                della navbar [data-logo-target], tenuto in visibility:hidden
+//                come bersaglio: all'arrivo torna visibile e il logo fisso si
+//                nasconde.
 //
 //   A. PRELOAD (solo al primo ingresso della sessione): contorno che si
 //      disegna, poi il pieno che sale dal basso. Tetto HANDOFF.preload.cap.
 //   B. REVEAL: la hero si apre con un clip-path circle() centrato sul logo,
-//      il logo passa da 1 a 2, le figure entrano dai lati, il titolo arriva
-//      per ultimo parola per parola.
-//   C. SCROLL: hero in pin per una schermata (scrub). Il testo si ritira nella
-//      sfocatura, la foto si apre in due ante lungo il suo vuoto centrale
-//      (verso l'esterno, a velocità diverse, avvicinandosi un poco) e dietro
-//      sale Il punto; il logo va da 2 a 3, le voci della navbar entrano
-//      all'arrivo. Tornando su tutto si riavvolge.
+//      la luce si accende, il titolo sale parola per parola dalle maschere. Il cerchio segue il logo mentre va al
+//      suo posto (in hero, se c'è, o nella navbar).
+//   C. SCROLL: niente pin, la pagina scorre normale. Parallasse: la luce
+//      resta indietro e si allarga, il testo sale più veloce e si ritira
+//      nella sfocatura.
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
-/** Tutti i tempi in millisecondi; le corse in frazioni del pin (0–1). */
+/** Tutti i tempi in millisecondi; le corse in frazioni dell'altezza della hero. */
 export const HANDOFF = {
   preload: {
     draw: 760, // contorno: stroke-dashoffset da lunghezza piena a 0
     fillDelay: 620, // il pieno parte mentre il contorno finisce
     fill: 880, // il pieno sale dal fondo alla cima del viewBox
     outlineFade: 240, // il contorno si spegne sotto il pieno, in coda al fill
-    cap: 1500, // tetto del preloader, anche se il fondale non è pronto
+    cap: 1500, // tetto del preloader, anche se le foto non sono pronte
   },
   reveal: {
     coverFade: 200, // il velo del preloader se ne va
@@ -44,43 +39,34 @@ export const HANDOFF = {
     circleTo: 165, // % (come in circle(165% at …))
     logo: 560, // logo dallo stato 1 allo stato 2 (insieme al cerchio)
     navFly: 560, // pagine senza hero: dallo stato 1 dritto alla navbar
-    figuresDelay: 100, // prima figura
-    figuresGap: 120, // seconda figura, dopo la prima
-    figures: 700, // durata dell'entrata di ciascuna figura
-    figuresShift: 8, // % della propria larghezza da cui scivolano dentro
+    light: 1400, // la luce si accende (da scala 1.08 e trasparente)
+    stageDelay: 450, // la composizione a destra arriva mentre sale il titolo
+    stage: 1500,
     badgeDelay: 200,
-    headlineDelay: 360, // prima parola del titolo
-    wordStagger: 80, // tra una parola e la successiva
-    word: 500, // durata di ciascuna parola
-    wordRise: 14, // px di salita, senza rimbalzo
-    subDelay: 520, // sottotitolo, CTA e hint chiudono insieme al titolo
-    ctaDelay: 600,
-    copy: 500, // durata di badge, sottotitolo, CTA, hint
+    headlineDelay: 300, // prima parola del titolo
+    wordStagger: 70, // tra una parola e la successiva
+    word: 900, // durata di ciascuna parola: sale dalla sua maschera
+    subDelay: 760, // sottotitolo, CTA e hint chiudono insieme al titolo
+    ctaDelay: 860,
+    copy: 600, // durata di badge, sottotitolo, CTA, hint
   },
   scroll: {
-    ease: "power1.inOut", // logo lungo il pin
-    doors: [0.06, 0.94], // le ante si aprono in questo tratto del pin
-    doorsEase: "power2.inOut",
-    doorLeft: -62, // xPercent a fine pin: fuori del tutto anche ingrandite
-    doorRight: 66, // (la destra corre un po' di più: niente specchio perfetto)
-    doorScale: 1.08, // le ante si avvicinano mentre si aprono
-    shade: [0.14, 0.34, 0.7, 0.9], // ombra dei bordi interni: si accende, poi si spegne
-    figureLeft: -26, // xPercent a fine pin
-    figureRight: 34,
-    headlineOut: [0, 0.3], // il testo si ritira presto, prima delle ante
-    headlineBlur: 10, // px di sfocatura in uscita
-    headlineScale: 0.96,
-    headlineDrift: -28, // px verso l'alto
-    navIn: [0.7, 0.94], // la pillola della navbar: compare mentre il logo le arriva incontro
-    navRise: 10, // px da cui scende
-    navScale: 0.94, // e si allarga fino alla sua taglia
-    linksIn: [0.8, 1], // voci della navbar: entrano quando il logo arriva
-    linksRise: 6, // px
+    // Parallasse: di quanto ogni piano resta indietro (+) o va avanti (−)
+    // mentre la hero esce (frazioni della sua altezza).
+    light: 0.42, // la luce resta indietro (e si allarga appena)
+    lightScale: 1.12,
+    copy: -0.18, // il testo sale più veloce della pagina
+    copyBlur: 8, // px: si ritira nella sfocatura
+    copyOut: [0, 0.5], // il testo sfuma in questo tratto
+    stage: -0.12, // la composizione sale un filo più veloce della pagina
+    stageTurn: 8, // e si raddrizza di questi gradi mentre esce
+    tilt: { x: 7, y: 5 }, // inclinazione massima col mouse (gradi)
+    hintOut: [0, 0.12],
   },
   invert: {
     crossfade: 200, // logo e voci della navbar sul colore inverso
   },
-  settleBy: 2700, // tutto fermo entro questo tempo dal primo paint
+  settleBy: 4000, // tutto fermo entro questo tempo dal primo paint (titolo e schede comprese)
 } as const;
 
 const s = (v: number) => v / 1000;
@@ -113,17 +99,13 @@ function initHandoff(logo: HTMLElement) {
   const hero = document.querySelector<HTMLElement>("[data-handoff-hero]");
   const slot = hero?.querySelector<HTMLElement>("[data-logo-slot]") ?? null;
   const target = document.querySelector<HTMLElement>("[data-logo-target]");
-  // Burger d'angolo (solo home) e il burger della navbar a cui arriva.
-  const burger = document.querySelector<HTMLButtonElement>("[data-handoff-burger]");
-  const navBurger = document.querySelector<HTMLButtonElement>(".pnav-burger");
-  // La sezione dopo la hero, presa PRIMA del pin (che avvolge la hero).
+  // La sezione dopo la hero.
   const next = (hero?.nextElementSibling as HTMLElement | null) ?? null;
   const home = !!(hero && slot);
 
   const outline = logo.querySelector<SVGGElement>("[data-handoff-outline]");
   const outlinePaths = outline ? Array.from(outline.querySelectorAll("path")) : [];
   const fillRect = logo.querySelector<SVGRectElement>("[data-handoff-fill-rect]");
-  const vbH = fillRect ? Number(fillRect.getAttribute("height")) : 0;
   const AR = parseFloat(getComputedStyle(logo).getPropertyValue("--handoff-ar")) || 119 / 556;
   logo.style.setProperty("--handoff-fade", `${s(HANDOFF.invert.crossfade)}s`);
 
@@ -167,28 +149,6 @@ function initHandoff(logo: HTMLElement) {
   // logo e voci restano nei loro colori (invertiti sparirebbero).
   const nextIsDark = !!next && luminance(getComputedStyle(next).backgroundColor) < 0.4;
 
-  // Posizione di un elemento della navbar a pillola già entrata: dal layout
-  // (offset* ignora i transform), così il bersaglio non ondeggia mentre la
-  // pillola scende e si allarga. Se la catena non arriva al dock, il rettangolo vero.
-  const dock = document.querySelector<HTMLElement>(".pnav-dock");
-  const restingRect = (el: HTMLElement) => {
-    let x = 0;
-    let y = 0;
-    let n: HTMLElement | null = el;
-    while (n && n !== dock) {
-      x += n.offsetLeft;
-      y += n.offsetTop;
-      n = n.offsetParent as HTMLElement | null;
-      if (n && n !== dock) {
-        x += n.clientLeft; // bordo della pillola
-        y += n.clientTop;
-      }
-    }
-    if (!n || !dock) return el.getBoundingClientRect();
-    const d = dock.getBoundingClientRect();
-    return { left: d.left + x, top: d.top + y };
-  };
-
   // ---- Stato --------------------------------------------------------------
   const intro = { k: preload ? 0 : 1, r: preload ? 0 : 1 }; // k: logo 1→2 (o 1→3), r: cerchio della hero
   let introActive = preload;
@@ -196,32 +156,25 @@ function initHandoff(logo: HTMLElement) {
   let docked = false;
   let inverted = false;
   let menuUntil = 0;
-  const ease = gsap.parseEase(HANDOFF.scroll.ease);
 
   function render() {
     // Letture (tutte prima delle scritture).
     const base = baseBox();
     const tRect = target?.getBoundingClientRect();
     const tBox = tRect && tRect.width ? fromRect(tRect) : base;
+    // Il posto nella hero scorre con la pagina: il logo lo segue.
     const slotBox = slot ? fromRect(slot.getBoundingClientRect()) : null;
     const heroRect = hero && intro.r < 1 ? hero.getBoundingClientRect() : null;
     const p = st ? st.progress : 0;
     const nextRect = next && !reduce && p < 1 ? next.getBoundingClientRect() : null;
-    const bRect = home && burger && navBurger ? burger.getBoundingClientRect() : null;
-    const nbRect = bRect ? restingRect(navBurger!) : null;
 
     let box: Box;
     let arrived: boolean;
     if (home && slotBox) {
-      if (reduce) {
-        // Niente pin né viaggio: il logo sta nel suo posto (che scorre con la
-        // hero) e passa alla navbar quando il posto ci finisce sotto.
-        box = slotBox;
-        arrived = !!tRect && slotBox.y - (slotBox.w * AR) / 2 < tRect.bottom;
-      } else {
-        box = mix(mix(base, slotBox, intro.k), tBox, ease(p));
-        arrived = intro.k >= 1 && p >= 1;
-      }
+      // Home: dal preloader al posto nella hero, e lì resta (scorre con la
+      // hero). La navbar ha già il suo logo piccolo: niente viaggio.
+      box = mix(base, slotBox, intro.k);
+      arrived = false;
     } else {
       box = mix(base, tBox, intro.k);
       arrived = intro.k >= 1;
@@ -233,18 +186,6 @@ function initHandoff(logo: HTMLElement) {
 
     // Scritture.
     gsap.set(logo, { x: box.x - base.x, y: box.y - base.y, scale: box.w / base.w });
-    if (burger && bRect && nbRect) {
-      // Dall'angolo al posto del burger della navbar, sulla stessa curva del logo.
-      const bx = gsap.getProperty(burger, "x") as number;
-      const by = gsap.getProperty(burger, "y") as number;
-      const t = reduce ? 0 : ease(p);
-      gsap.set(burger, {
-        x: (nbRect.left - (bRect.left - bx)) * t,
-        y: (nbRect.top - (bRect.top - by)) * t,
-      });
-    }
-    root.classList.toggle("handoff-nav-on", p > HANDOFF.scroll.navIn[0]);
-    root.classList.toggle("handoff-links-on", p > HANDOFF.scroll.linksIn[0]);
 
     if (hero) {
       if (heroRect) {
@@ -254,19 +195,22 @@ function initHandoff(logo: HTMLElement) {
       } else if (hero.style.clipPath) hero.style.clipPath = "";
     }
 
+    // Spessore 3D: si accende col reveal.
+    const depth = home && !reduce ? intro.k : 0;
+    logo.style.setProperty("--logo-depth", depth.toFixed(3));
+
     logo.classList.toggle("is-inverted", inverted);
     root.classList.toggle("handoff-inverted", inverted);
     if (nowDocked !== docked) {
       docked = nowDocked;
       root.classList.toggle("handoff-docked", docked);
       logo.style.visibility = docked ? "hidden" : "visible";
-      if (burger) burger.style.visibility = docked ? "hidden" : "visible";
     }
   }
 
   // Ogni frame finché qualcosa può muovere i bersagli; da fermi basta onUpdate.
   gsap.ticker.add(() => {
-    if (introActive || performance.now() < menuUntil || (st && !reduce && st.progress < 1)) render();
+    if (introActive || performance.now() < menuUntil) render();
   });
 
   // Menu aperto: il logo fisso (se non è già in navbar) non deve stare sopra
@@ -275,22 +219,16 @@ function initHandoff(logo: HTMLElement) {
     const open = (e as CustomEvent<{ open: boolean }>).detail.open;
     menuUntil = performance.now() + 1600;
     gsap.to(logo, { opacity: open ? 0 : 1, duration: 0.2, overwrite: "auto" });
-    // A menu aperto vale il burger vero (diventa la X dentro il pannello).
-    if (burger) {
-      burger.setAttribute("aria-expanded", String(open));
-      burger.style.pointerEvents = open ? "none" : "";
-      gsap.to(burger, { opacity: open ? 0 : 1, duration: 0.2, overwrite: "auto" });
-    }
   });
-  burger?.addEventListener("click", () => navBurger?.click());
-  if (burger && navBurger) burger.setAttribute("aria-label", navBurger.getAttribute("aria-label") ?? "Menu");
   window.addEventListener("resize", render);
   document.fonts?.ready.then(render).catch(() => undefined);
 
   // ---- Hero: stato iniziale e coreografie ----------------------------------
   let reveal: gsap.core.Timeline | null = null;
   if (hero) reveal = buildHero(hero);
-  else if (firstVisit) root.classList.add("handoff-hold"); // bersaglio nascosto durante il volo
+  // Se il logo va in navbar (pagine interne, o home senza posto in hero) il
+  // bersaglio resta nascosto durante il volo.
+  if (firstVisit && !home) root.classList.add("handoff-hold");
 
   // Logo pieno subito se non c'è preloader.
   if (!preload) {
@@ -303,6 +241,7 @@ function initHandoff(logo: HTMLElement) {
 
   if (reduce || !firstVisit) {
     root.classList.remove("apd-loading");
+    root.classList.add("handoff-settled");
     markSeen();
     if (!home) {
       // Pagina interna senza preloader: il logo è già quello della navbar.
@@ -321,20 +260,14 @@ function initHandoff(logo: HTMLElement) {
     .to(fillRect ?? [], { attr: { y: 0 }, duration: s(P.fill), ease: "power2.inOut" }, s(P.fillDelay))
     .to(outline ?? [], { opacity: 0, duration: s(P.outlineFade), ease: "none" }, s(P.fillDelay + P.fill - P.outlineFade));
 
-  // Il fondale della hero (quando sarà una foto) deve essere decodificato.
-  const backdropSrc = hero?.querySelector<HTMLElement>('[data-layer="backdrop"]')?.dataset.src;
-  const backdropReady = backdropSrc
-    ? new Promise<void>((resolve) => {
-        const img = new Image();
-        img.src = backdropSrc;
-        img.decode().then(resolve, resolve);
-      })
-    : Promise.resolve();
+  // Le foto della hero (le due persone) devono essere decodificate.
+  const photos = hero ? Array.from(hero.querySelectorAll<HTMLImageElement>(".hero-person-img")) : [];
+  const photosReady = Promise.all(photos.map((img) => img.decode().catch(() => undefined)));
   const drawn = new Promise<void>((resolve) => pre.eventCallback("onComplete", () => resolve()));
   const capped = new Promise<void>((resolve) =>
     window.setTimeout(resolve, Math.max(0, P.cap - (performance.now() - START))),
   );
-  Promise.race([Promise.all([drawn, backdropReady]), capped]).then(startReveal);
+  Promise.race([Promise.all([drawn, photosReady]), capped]).then(startReveal);
 
   // ---- B. Reveal ----------------------------------------------------------
   function startReveal() {
@@ -342,10 +275,18 @@ function initHandoff(logo: HTMLElement) {
     root.classList.remove("apd-loading");
     markSeen();
     const R = HANDOFF.reveal;
-    const tl = gsap.timeline({ onComplete: () => ((introActive = false), render()) });
+    const tl = gsap.timeline({
+      onComplete: () => {
+        introActive = false;
+        root.classList.add("handoff-settled");
+        render();
+      },
+    });
     if (cover) tl.to(cover, { autoAlpha: 0, duration: s(R.coverFade), ease: "none" }, 0);
     tl.to(intro, { k: 1, duration: s(home ? R.logo : R.navFly), ease: "power3.inOut" }, 0);
-    if (home) {
+    if (hero) {
+      // La hero si apre col cerchio che segue il logo (verso il suo posto in
+      // hero o verso la navbar) e partono le entrate.
       tl.to(intro, { r: 1, duration: s(R.circle), ease: "power3.inOut" }, 0);
       if (reveal) tl.add(reveal.paused(false), 0);
     }
@@ -356,98 +297,102 @@ function initHandoff(logo: HTMLElement) {
     }
   }
 
-  // Hero: entrate (timeline in pausa, la fa partire il reveal) e pin di uscita.
+  // Hero: entrate (timeline in pausa, la fa partire il reveal) e parallasse.
   function buildHero(hero: HTMLElement) {
     const R = HANDOFF.reveal;
     const S = HANDOFF.scroll;
     const q = (sel: string) => hero.querySelector<HTMLElement>(sel);
     const all = (...sels: string[]) => sels.flatMap((sel) => gsap.utils.toArray<HTMLElement>(sel, hero));
-    const doorL = q('[data-door="left"]');
-    const doorR = q('[data-door="right"]');
-    const shades = all(".hero-door-shade");
-    const figL = q('[data-layer="figure-left"]');
+    const light = q('[data-layer="light"]');
     const content = q("[data-anim='hero-content']");
-    const figR = q('[data-layer="figure-right"]');
     const title = q(".hero-title");
     const lines = gsap.utils.toArray<HTMLElement>("[data-anim^='hero-line-']", hero);
     const badge = all("[data-anim='hero-label']");
     const sub = all("[data-anim='hero-subline']");
-    const cta = all("[data-anim='hero-cta']", "[data-anim='hero-hint']");
+    const cta = all("[data-anim='hero-cta']");
+    const hint = all("[data-anim='hero-hint']");
+    const stage = q("[data-hero-stage]");
+    const tiltEl = q("[data-hero-tilt]");
+
+    // Ridisegna il logo fisso finché la hero è in vista (resize, menu).
+    st = ScrollTrigger.create({
+      trigger: hero,
+      start: "top top",
+      end: "bottom top",
+      onUpdate: render,
+      onRefresh: render,
+    });
 
     if (reduce) {
-      gsap.set([...lines, ...badge, ...sub, ...cta], { opacity: 1 });
-      ScrollTrigger.create({ trigger: hero, start: "top top", end: "bottom top", onUpdate: render, onRefresh: render });
+      gsap.set([...lines, ...badge, ...sub, ...cta, ...hint], { opacity: 1 });
       return null;
     }
+    // Prima del reveal: la composizione è nascosta.
+    if (stage) gsap.set(stage, { autoAlpha: 0 });
 
-    // Parole del titolo: nascoste prima di accendere le righe (niente flash).
-    const words = title ? SplitText.create(title, { type: "words" }).words : [];
-    gsap.set(words, { autoAlpha: 0, y: R.wordRise });
+    // Parole del titolo: ognuna sale dalla sua maschera (una fessura), con un
+    // filo di sfocatura che si scioglie. Nascoste prima di accendere le righe.
+    const words = title ? SplitText.create(title, { type: "words", mask: "words" }).words : [];
+    for (const w of words as HTMLElement[]) {
+      w.parentElement?.classList.add("hw-mask");
+      if (w.closest("em")) w.classList.add("hw-em"); // sfumatura blu (vedi CSS)
+    }
+    gsap.set(words, { yPercent: 105, filter: "blur(6px)" });
     gsap.set(lines, { opacity: 1 });
 
     const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
-    if (figL)
-      tl.from(figL, { autoAlpha: 0, x: () => (-R.figuresShift / 100) * figL.offsetWidth, duration: s(R.figures) }, s(R.figuresDelay));
-    if (figR)
-      tl.from(figR, { autoAlpha: 0, x: () => (R.figuresShift / 100) * figR.offsetWidth, duration: s(R.figures) }, s(R.figuresDelay + R.figuresGap));
+    if (light) tl.fromTo(light, { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: s(R.light), ease: "power2.out" }, 0);
     tl.to(badge, { opacity: 1, duration: s(R.copy) }, s(R.badgeDelay))
-      .to(words, { autoAlpha: 1, y: 0, duration: s(R.word), stagger: s(R.wordStagger) }, s(R.headlineDelay))
+      .to(words, { yPercent: 0, filter: "blur(0px)", duration: s(R.word), ease: "expo.out", stagger: s(R.wordStagger) }, s(R.headlineDelay))
       .to(sub, { opacity: 1, duration: s(R.copy) }, s(R.subDelay))
-      .to(cta, { opacity: 1, duration: s(R.copy) }, s(R.ctaDelay));
+      .to([...cta, ...hint], { opacity: 1, duration: s(R.copy) }, s(R.ctaDelay));
+    // La composizione arriva da destra e da più lontano, girata di più, e
+    // si posa nella sua prospettiva.
+    if (stage)
+      tl.fromTo(
+        stage,
+        { autoAlpha: 0, x: 60, rotationY: -14, filter: "blur(12px)" },
+        { autoAlpha: 1, x: 0, rotationY: 0, filter: "blur(0px)", duration: s(R.stage), ease: "expo.out" },
+        s(R.stageDelay),
+      );
 
-    // ---- C. Scroll: pin di una schermata, tutto in scrub ----
+    // ---- C. Scroll: parallasse (scrub, niente pin). Solo transform, opacità
+    // e una sfocatura breve sul testo mentre esce.
     const out = gsap.timeline({
       defaults: { ease: "none" },
-      scrollTrigger: {
-        trigger: hero,
-        start: "top top",
-        end: "+=100%",
-        pin: true,
-        pinSpacing: false, // Il punto sale dietro le ante: la pagina sotto non si allunga
-        scrub: true,
-        onUpdate: render,
-        onRefresh: render,
-      },
+      scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true, invalidateOnRefresh: true },
     });
-    st = out.scrollTrigger ?? null;
-    if (figL) out.to(figL, { xPercent: S.figureLeft, duration: 1 }, 0);
-    if (figR) out.to(figR, { xPercent: S.figureRight, duration: 1 }, 0);
-    // Il testo si ritira nella sfocatura (il posto del logo resta fermo: il
-    // logo lo misura). Poi le ante si aprono e dietro c'è Il punto.
-    const [h0, h1] = S.headlineOut;
-    if (content) out.fromTo(content, { autoAlpha: 1 }, { autoAlpha: 0, ease: "power1.in", duration: h1 - h0 }, h0);
-    out.fromTo(
-      [...badge, ...(title ? [title] : []), ...sub, ...cta],
-      { y: 0, scale: 1, filter: "blur(0px)" },
-      { y: S.headlineDrift, scale: S.headlineScale, filter: `blur(${S.headlineBlur}px)`, ease: "power1.in", duration: h1 - h0 },
-      h0,
-    );
-    const [d0, d1] = S.doors;
-    if (doorL) out.fromTo(doorL, { xPercent: 0, scale: 1 }, { xPercent: S.doorLeft, scale: S.doorScale, ease: S.doorsEase, duration: d1 - d0 }, d0);
-    if (doorR) out.fromTo(doorR, { xPercent: 0, scale: 1 }, { xPercent: S.doorRight, scale: S.doorScale, ease: S.doorsEase, duration: d1 - d0 }, d0);
-    const [s0, s1, s2, s3] = S.shade;
-    out.fromTo(shades, { opacity: 0 }, { opacity: 1, duration: s1 - s0 }, s0).to(shades, { opacity: 0, duration: s3 - s2 }, s2);
-    // Voci della navbar: via variabili CSS sulla radice, non sugli elementi
-    // dell'isola React (gli stili inline prima dell'idratazione la rompono).
-    // Sulla home la navbar non c'è finché il logo non le arriva incontro: la
-    // pillola compare a fine corsa e il logo ci si posa dentro.
-    root.style.setProperty("--handoff-nav-rise", `${S.navRise}px`);
-    root.style.setProperty("--handoff-nav-scale", `${S.navScale}`);
-    out.fromTo(
-      root,
-      { "--handoff-nav": 0 },
-      { "--handoff-nav": 1, ease: "power2.out", duration: S.navIn[1] - S.navIn[0] },
-      S.navIn[0],
-    );
-    root.style.setProperty("--handoff-links-rise", `${S.linksRise}px`);
-    out.fromTo(
-      root,
-      { "--handoff-links": 0 },
-      { "--handoff-links": 1, ease: "power2.out", duration: S.linksIn[1] - S.linksIn[0] },
-      S.linksIn[0],
-    );
-    // La timeline copre esattamente il pin (0 → 1).
-    if (out.duration() < 1) out.to({}, { duration: 1 - out.duration() });
+    const drift = (k: number) => () => hero.offsetHeight * k;
+    if (light) out.fromTo(light, { y: 0, scale: 1 }, { y: drift(S.light), scale: S.lightScale, duration: 1, immediateRender: false }, 0);
+    if (content) {
+      out.fromTo(content, { y: 0 }, { y: drift(S.copy), duration: 1 }, 0);
+      const [c0, c1] = S.copyOut;
+      out.fromTo(
+        content,
+        { autoAlpha: 1, filter: "blur(0px)" },
+        { autoAlpha: 0, filter: `blur(${S.copyBlur}px)`, ease: "power1.in", duration: c1 - c0 },
+        c0,
+      );
+    }
+    const [h0, h1] = S.hintOut;
+    out.fromTo(hint, { autoAlpha: 1 }, { autoAlpha: 0, immediateRender: false, duration: h1 - h0 }, h0);
+    // La composizione sale un filo più veloce e si raddrizza mentre esce.
+    if (stage)
+      out.fromTo(stage, { y: 0, rotationY: 0 }, { y: drift(S.stage), rotationY: S.stageTurn, duration: 1, immediateRender: false }, 0);
+
+    // Mouse (puntatori fini): la composizione si inclina verso il cursore.
+    if (tiltEl && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      const o = { duration: 1.2, ease: "power3.out" };
+      const rotY = gsap.quickTo(tiltEl, "rotationY", o);
+      const rotX = gsap.quickTo(tiltEl, "rotationX", o);
+      window.addEventListener("pointermove", (e) => {
+        if (st && st.progress >= 1) return;
+        const nx = e.clientX / window.innerWidth - 0.5;
+        const ny = e.clientY / window.innerHeight - 0.5;
+        rotY(nx * 2 * S.tilt.x);
+        rotX(-ny * 2 * S.tilt.y);
+      });
+    }
     return tl;
   }
 }
