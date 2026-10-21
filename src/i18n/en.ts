@@ -168,9 +168,9 @@ const en = {
   home: {
     hero: {
       badge: "Digital Growth Studio · South Tyrol",
-      l1: "We build digital",
-      l2: "products for",
-      l3: "*demanding* brands.",
+      l1: "We build",
+      l2: "**next-generation** digital products",
+      l3: "for *demanding* brands.",
       sub: "Websites, social media and software designed to turn visits into clients.",
       cta: "See our projects",
       contact: "Let's talk about your project",

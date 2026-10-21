@@ -5904,7 +5904,7 @@ html.handoff-inverted .pnav-links {
   z-index: 5;
   left: 0;
   top: 0;
-  width: 54%;
+  width: 49%; /* il telefono della composizione parte da ~51% */
   height: var(--stage);
   padding: calc(88px + 2svh) 0 9svh clamp(24px, 6.5vw, 128px);
   display: flex;
@@ -5915,16 +5915,16 @@ html.handoff-inverted .pnav-links {
 }
 .hero-section[data-handoff-hero] .hero-title {
   margin-top: clamp(16px, 2.8svh, 30px);
-  max-width: 11ch;
-  font-size: clamp(44px, min(6.3vw, 11svh), 132px);
+  max-width: 100%; /* va a capo sulla colonna, mai sotto il telefono */
+  font-size: clamp(42px, min(5.5vw, 9.4svh), 118px);
   line-height: 0.9;
   letter-spacing: -0.045em;
   text-wrap: balance;
 }
-/* Tedesco: "anspruchsvolle" è una parola sola e lunga, un filo più piccolo
-   così non arriva al telefono della composizione. */
+/* Tedesco: frase più lunga e parole lunghe ("anspruchsvolle"), un filo
+   più piccolo. */
 html[lang="de"] .hero-section[data-handoff-hero] .hero-title {
-  font-size: clamp(42px, min(5.6vw, 10svh), 120px);
+  font-size: clamp(40px, min(4.9vw, 8.4svh), 104px);
 }
 /* Corsivo con la sfumatura blu: il gradiente sta sulla PAROLA (l'elemento
    più interno, quello che si muove), con spazio in più per discendenti e
@@ -5938,6 +5938,23 @@ html[lang="de"] .hero-section[data-handoff-hero] .hero-title {
   padding: 0 0.08em 0.2em 0.02em;
   margin: 0 -0.08em -0.2em -0.02em;
   background: linear-gradient(100deg, #1D3A8E 0%, var(--color-accent) 35%, #5E82D6 75%, var(--color-accent-soft) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+/* Arancio: "prossima generazione" (**…** nel dizionario). Stesso corsivo e
+   stesso trucco del blu, sfumatura Ember → ambra. */
+.hero-section[data-handoff-hero] .hero-title strong {
+  font-weight: inherit;
+  font-style: italic;
+  color: var(--color-orange); /* senza animazioni (niente SplitText): arancio pieno */
+}
+.hero-section[data-handoff-hero] .hero-title .hw-or {
+  display: inline-block;
+  padding: 0 0.08em 0.2em 0.02em;
+  margin: 0 -0.08em -0.2em -0.02em;
+  background: linear-gradient(100deg, var(--color-orange-deep) 0%, var(--color-orange) 40%, #E8691F 70%, var(--color-amber) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

@@ -168,9 +168,9 @@ const de = {
   home: {
     hero: {
       badge: "Digital Growth Studio · Südtirol",
-      l1: "Wir entwickeln",
-      l2: "digitale Produkte",
-      l3: "für *anspruchsvolle*\nUnternehmen.",
+      l1: "Wir entwickeln digitale Produkte",
+      l2: "der **nächsten Generation**",
+      l3: "für *anspruchsvolle* Unternehmen.",
       sub: "Websites, Social Media und Software, die aus Besuchern Kunden machen.",
       cta: "Unsere Projekte ansehen",
       contact: "Projekt besprechen",

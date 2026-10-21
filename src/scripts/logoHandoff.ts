@@ -336,6 +336,7 @@ function initHandoff(logo: HTMLElement) {
     for (const w of words as HTMLElement[]) {
       w.parentElement?.classList.add("hw-mask");
       if (w.closest("em")) w.classList.add("hw-em"); // sfumatura blu (vedi CSS)
+      else if (w.closest("strong")) w.classList.add("hw-or"); // sfumatura arancio
     }
     gsap.set(words, { yPercent: 105, filter: "blur(6px)" });
     gsap.set(lines, { opacity: 1 });

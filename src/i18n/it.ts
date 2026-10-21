@@ -169,9 +169,10 @@ const it = {
   home: {
     hero: {
       badge: "Digital Growth Studio · Alto Adige",
-      l1: "Costruiamo prodotti",
-      l2: "digitali per realtà",
-      l3: "*esigenti.*",
+      // **…** = arancio (corsivo), *…* = blu (corsivo): vedi .hw-or / .hw-em
+      l1: "Costruiamo prodotti digitali",
+      l2: "di **prossima generazione**",
+      l3: "per realtà *esigenti.*",
       sub: "Siti web, social e gestionali pensati per trasformare le visite in clienti.",
       cta: "Guarda i nostri progetti",
       contact: "Parliamo del tuo progetto",
