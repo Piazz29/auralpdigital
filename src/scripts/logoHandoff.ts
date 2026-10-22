@@ -377,8 +377,15 @@ function initHandoff(logo: HTMLElement) {
 
     // Parole del titolo: ognuna sale dalla sua maschera (una fessura), con un
     // filo di sfocatura che si scioglie. Nascoste prima di accendere le righe.
-    const words = title ? SplitText.create(title, { type: "words", mask: "words" }).words : [];
-    for (const w of words as HTMLElement[]) {
+    // Sul telefono il titolo è quello di .mhero, con le maschere già nel
+    // markup (HomeHero.astro): niente SplitText, niente misure a runtime.
+    const phoneWords = phone ? gsap.utils.toArray<HTMLElement>(".mhero .mw-i", hero) : [];
+    const words = phoneWords.length
+      ? phoneWords
+      : title
+        ? SplitText.create(title, { type: "words", mask: "words" }).words
+        : [];
+    if (!phoneWords.length) for (const w of words as HTMLElement[]) {
       w.parentElement?.classList.add("hw-mask");
       if (w.closest("em")) w.classList.add("hw-em"); // sfumatura blu (vedi CSS)
       else if (w.closest("strong")) w.classList.add("hw-or"); // sfumatura arancio

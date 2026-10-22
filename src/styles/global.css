@@ -6311,7 +6311,6 @@ html[lang="de"] .hero-section[data-handoff-hero] .hero-title {
   .hero-contact-dot::after { animation: none; }
 }
 /* "Scorri" in basso a destra, dentro lo schermo. */
-.hero-logo-slot { display: none; }
 .hero-section[data-handoff-hero] .hero-scroll-hint {
   z-index: 5;
   bottom: calc(var(--tail) + 30px);
@@ -6342,19 +6341,6 @@ html[lang="de"] .hero-section[data-handoff-hero] .hero-title {
     padding: calc(14px + env(safe-area-inset-top, 0px)) 20px calc(var(--tail) + 18px);
   }
   .hero-copy { display: contents; }
-  /* Il logo grande in cima, alla stessa altezza del burger (che sta a
-     destra): ci si posa il logo del preloader, alla sua stessa taglia
-     (--handoff-w), quindi a scala 1, nitido. */
-  .hero-logo-slot {
-    order: 0;
-    position: relative;
-    z-index: 5;
-    display: block;
-    flex: none;
-    width: var(--handoff-w);
-    aspect-ratio: 556 / 119;
-    margin-top: 1px;
-  }
   /* sciolto il blocco, i pezzi del testo vanno sopra la luce da soli */
   .hero-section[data-handoff-hero] :is(.hero-badge, .hero-title, .hero-foot) { position: relative; z-index: 5; }
   .hero-section[data-handoff-hero] .hero-badge {
@@ -10264,34 +10250,58 @@ div[aria-hidden="true"][style*="overflow: clip"] {
 }
 
 /* ======================================================================
-   HERO DEL TELEFONO — IL MARCHIO E LO SCILIAR (< 900px). Il desktop non
-   cambia. Dall'alto: il logo grande da bordo a bordo (ci si posa il logo
-   del preloader, logoHandoff.ts, e scorrendo vola nell'angolo), un filo
-   blu che si allunga sotto, il titolo a sinistra, il sottotitolo, una sola
-   CTA. In basso, sotto il testo, lo Sciliar a curve di livello
-   (.htopo, scripts/heroTopo.ts). Niente vista esplosa, niente luce
-   liquida: sul bianco restano solo il marchio e la montagna.
+   HERO DEL TELEFONO (< 900px) — HomeHero.astro, blocco .mhero. Rifatta da
+   zero il 22 ott 2026: sui telefoni veri la versione "sciolta" (la colonna
+   del desktop in display: contents, titolo a 13ch con text-wrap: balance)
+   si stringeva e il titolo andava a capo a ogni parola, sopra il logo.
+   Qui niente di tutto questo: il resto della sezione è spento, il blocco
+   è una colonna a misure esplicite, il titolo ha righe fisse che non vanno
+   mai a capo e una taglia che ci sta sempre (--mh-fit: la riga più lunga,
+   in em).
+   Dall'alto: il posto del logo grande da bordo a bordo (ci si posa il logo
+   del preloader, logoHandoff.ts, e scorrendo vola nell'angolo), il filo
+   blu che si allunga, il titolo, il sottotitolo (solo schermi alti), la
+   CTA; in basso, fino alla fine della prima schermata, lo Sciliar a curve
+   di livello (.htopo, scripts/heroTopo.ts).
    ====================================================================== */
-.htopo,
-.hero-logo-bar { display: none; }
+.mhero { display: none; }
 
 @media (max-width: 899px) {
   .hero-section[data-handoff-hero] {
-    align-items: stretch;
-    padding: calc(84px + env(safe-area-inset-top, 0px)) 20px calc(var(--tail) + 18px);
+    display: block;
+    padding: 0;
   }
-  .hero-section[data-handoff-hero] :is(.hero-light, .hero-stage, .hero-badge, .hero-contact) { display: none; }
+  .hero-section[data-handoff-hero] > :not(.mhero) { display: none !important; }
 
-  .hero-section[data-handoff-hero] .hero-logo-slot {
-    width: min(100%, 520px);
-    margin-top: 0;
-  }
-  /* Il filo sotto il logo: si allunga quando il logo si è posato. */
-  .hero-section[data-handoff-hero] .hero-logo-bar {
-    order: 0;
+  .mhero {
+    --mh-top: 84px;
+    --mh-fs: clamp(34px, min(10vw, 5.4svh), 56px);
+    --mh-fit: 7.9; /* riga più lunga del titolo, in em (it/en) */
     position: relative;
     z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    box-sizing: border-box;
+    width: 100%;
+    height: var(--stage);
+    padding: calc(var(--mh-top) + env(safe-area-inset-top, 0px)) 20px 0;
+    text-align: left;
+  }
+  /* Tedesco: parole lunghe, taglia fissa (come prima del rifacimento). */
+  html[lang="de"] .mhero { --mh-fs: 40px; --mh-fit: 8.7; }
+
+  /* Il posto del logo: largo quanto la colonna (max 520px), alto quanto il
+     disegno (556 × 119). */
+  .mhero-slot {
     display: block;
+    flex: none;
+    width: min(100%, 520px);
+    height: calc(min(100vw - 40px, 520px) * 119 / 556);
+  }
+  .mhero-bar {
+    display: block;
+    flex: none;
     width: 96px;
     height: 3px;
     margin: clamp(12px, 2svh, 18px) 0 0 3px;
@@ -10299,33 +10309,66 @@ div[aria-hidden="true"][style*="overflow: clip"] {
     background: var(--color-accent);
     transform-origin: 0 50%;
     transform: scaleX(0);
-    animation: hero-bar 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.1s forwards;
+    animation: mhero-bar 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.1s forwards;
   }
-  @keyframes hero-bar { to { transform: none; } }
+  @keyframes mhero-bar { to { transform: none; } }
 
-  .hero-section[data-handoff-hero] .hero-title {
-    margin-top: clamp(22px, 4svh, 36px);
-    max-width: 13ch;
-    font-size: clamp(34px, min(10vw, 5.4svh), 56px);
-    line-height: 0.98;
+  .mhero-title {
+    flex: none;
+    margin: clamp(22px, 4svh, 36px) 0 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    color: #171310;
+    font-size: min(var(--mh-fs), (100vw - 40px) / var(--mh-fit));
+    line-height: 1.085; /* il passo delle righe di prima (maschere comprese) */
     letter-spacing: -0.03em;
-    text-align: left;
   }
-  .hero-foot {
-    justify-items: start;
-    gap: clamp(16px, 2.6svh, 24px);
-    margin-top: clamp(14px, 2.4svh, 22px);
+  .mhero-line {
+    display: block;
+    white-space: nowrap;
   }
-  .hero-section[data-handoff-hero] .hero-sub {
+  /* La maschera di ogni parola: la parola ci sale dentro dal basso. Il
+     taglio è un clip-path (non overflow: non sposta la linea di base) e
+     lascia spazio a discendenti e inclinazione del corsivo. */
+  .mw {
+    display: inline-block;
+    padding-bottom: 0.2em;
+    margin-bottom: -0.2em;
+    clip-path: inset(-0.4em -0.3em 0 -0.3em);
+  }
+  .mw-i { display: inline-block; }
+  /* Corsivi in sfumatura: arancio (**…**) e blu (*…*), come sul desktop. */
+  .mw-or,
+  .mw-em {
+    font-style: italic;
+    padding: 0 0.08em 0.2em 0.02em;
+    margin: 0 -0.08em -0.2em -0.02em;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  .mw-or { background-image: linear-gradient(100deg, var(--color-orange-deep) 0%, var(--color-orange) 40%, #E8691F 70%, var(--color-amber) 100%); }
+  .mw-em { background-image: linear-gradient(100deg, #1D3A8E 0%, var(--color-accent) 35%, #5E82D6 75%, var(--color-accent-soft) 100%); }
+
+  .mhero-sub {
+    display: none;
+    flex: none;
     max-width: 30ch;
+    margin: clamp(14px, 2.4svh, 22px) 0 0;
     font-size: 15px;
     line-height: 1.45;
-    text-align: left;
+    letter-spacing: 0.005em;
+    color: #544C40;
   }
-  .hero-section[data-handoff-hero] .hero-cta {
-    flex-direction: row;
-    width: auto;
+  .mhero-sub strong { font-weight: 500; color: var(--color-ink); }
+  .mhero-cta {
+    display: flex;
+    flex: none;
+    margin-top: clamp(14px, 2.4svh, 22px);
   }
+  .mhero-sub + .mhero-cta { margin-top: clamp(16px, 2.6svh, 24px); }
+  .mhero-cta > a { padding-block: 13px; font-size: 14px; }
 
   /* La montagna: prende lo spazio che resta sotto la CTA, da bordo a bordo,
      fino in fondo alla prima schermata; heroTopo.ts la inquadra intera.
@@ -10334,10 +10377,10 @@ div[aria-hidden="true"][style*="overflow: clip"] {
     position: relative;
     z-index: 1;
     display: block;
-    order: 99;
     flex: 1 1 0;
+    align-self: stretch;
     min-height: 200px;
-    margin: clamp(4px, 1.5svh, 16px) -20px -18px;
+    margin: clamp(4px, 1.5svh, 16px) -20px 0;
     pointer-events: none;
   }
   /* Il canvas è bianco pieno: i bordi si sciolgono nel trasparente, così
@@ -10370,11 +10413,14 @@ div[aria-hidden="true"][style*="overflow: clip"] {
   }
   .htopo.is-live .htopo-tag { opacity: 1; }
 }
+@media (max-width: 899px) and (min-height: 761px) {
+  .mhero-sub { display: block; }
+}
 @media (max-width: 899px) and (max-height: 700px) {
-  .hero-section[data-handoff-hero] { padding-top: calc(72px + env(safe-area-inset-top, 0px)); }
+  .mhero { --mh-top: 72px; }
 }
 @media (max-width: 899px) and (prefers-reduced-motion: reduce) {
-  .hero-section[data-handoff-hero] .hero-logo-bar { animation: none; transform: none; }
+  .mhero-bar { animation: none; transform: none; }
 }
 
 /* ==========================================================================
