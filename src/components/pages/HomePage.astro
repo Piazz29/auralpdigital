@@ -13,7 +13,7 @@ import ContactForm from "../ContactForm.astro";
 import ContactReply from "../ContactReply.astro";
 import Rich from "../Rich.astro";
 import HomeHero from "../HomeHero.astro";
-import ServicesSwap from "../ServicesSwap.astro";
+import ServicesTabs from "../ServicesTabs.astro";
 import ProjectsShowcase from "../ProjectsShowcase.astro";
 import MethodRoom from "../MethodRoom.astro";
 import { Picture } from "astro:assets";
@@ -26,10 +26,9 @@ interface Props {
 const { lang = defaultLang } = Astro.props;
 const t = getDict(lang);
 
-// SERVIZI — la sezione è stata rifatta da zero (ServicesSwap): card e
-// descrizione che si scambiano di posto, senza titolo di sezione. Titoli e
-// descrizioni vengono dal dizionario (`t.home.services`); le immagini sono
-// ancora segnaposto.
+// SERVIZI — una schermata, i servizi si sfogliano da menu e frecce
+// (ServicesTabs): niente pin, lo scroll resta libero. Testi dal dizionario
+// (`t.home.services`).
 ---
 
 <BaseLayout lang={lang} title={t.meta.home.title} description={t.meta.home.description}>
@@ -138,14 +137,12 @@ const t = getDict(lang);
   </section>
 
   <!-- SECTION — COSA FACCIAMO
-       Nessun titolo di sezione e fondale NUDO: niente aloni, niente profilo
-       di montagne, niente hint di scroll. In scena ci sono solo la card e la
-       descrizione del servizio, centrate nella schermata. -->
+       Una schermata: card a sinistra, menu e descrizione a destra. Passando
+       sopra un nome del menu (o con le frecce) compare quel servizio; lo
+       scroll non viene trattenuto. -->
   <section id="cosa-facciamo" class="services-section">
     <div class="works-screen">
-      <!-- Palco a scambio: card e descrizione si scambiano di posto a ogni
-           scena, con la cornice che scopre il pannello durante il viaggio. -->
-      <ServicesSwap lang={lang} />
+      <ServicesTabs lang={lang} />
     </div>
   </section>
 
@@ -162,8 +159,8 @@ const t = getDict(lang);
 
   <!-- SECTION — COME LAVORIAMO
        Il metodo in 4 fasi raccontato costruendo un sito di esempio: dopo i
-       progetti risponde a "e adesso cosa succede?" prima del form. Ogni fase
-       è una fermata di scroll (MethodRoom.astro). -->
+       progetti risponde a "e adesso cosa succede?" prima del form. Le fasi
+       scorrono nel flusso, senza fermate (MethodRoom.astro). -->
   <MethodRoom lang={lang} flow={t.home.flow} />
 
   <!-- FINALE — contatti e footer sono un blocco solo: un foglio navy che

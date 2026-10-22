@@ -173,7 +173,7 @@ const it = {
       l1: "Costruiamo prodotti digitali",
       l2: "di **prossima generazione**",
       l3: "per realtà *esigenti.*",
-      sub: "Siti web, social e gestionali pensati per trasformare le visite in clienti.",
+      sub: "**Siti web, social e gestionali** pensati per trasformare le visite in clienti.",
       cta: "Guarda i nostri progetti",
       contact: "Parliamo del tuo progetto",
       scroll: "Scorri",
@@ -186,6 +186,32 @@ const it = {
         slots: ["09:30 · Consulenza", "11:00 · Trattamento", "15:30 · Ritocco", "17:00 · Prima visita"],
         confirmed: "Confermato",
         book: "Nuovo appuntamento",
+      },
+      // Vista esplosa nella hero (heroExplode.ts): un sito d'esempio aperto a
+      // strati. `layers` dal basso (codice) all'alto (interazione).
+      explode: {
+        layers: [
+          { n: "Codice", d: "Veloce, accessibile, tuo" },
+          { n: "Struttura", d: "Griglia, gerarchia, percorsi" },
+          { n: "Design", d: "Colori, caratteri, ritmo" },
+          { n: "Contenuti", d: "Foto, testi e SEO" },
+          { n: "Interazione", d: "Prenota e risponde, 24/7" },
+        ],
+        site: {
+          brand: "Baita Sciliar",
+          nav: ["Camere", "Esperienze", "Contatti"],
+          book: "Prenota",
+          kicker: "Dolomiti · Alto Adige",
+          title: "Dormire sotto lo Sciliar.",
+          sub: "Dodici camere in legno e la colazione con i prodotti della valle.",
+          cta: "Scopri le camere",
+          fields: [["Arrivo", "14 nov"], ["Partenza", "17 nov"], ["Ospiti", "2"]],
+          check: "Verifica",
+          bot: "Assistente",
+          chat: "Sabato c'è posto. Te la blocco?",
+          toast: "Prenotazione confermata",
+          rating: "4,9 su Google",
+        },
       },
     },
     services: {
@@ -429,8 +455,17 @@ const it = {
       sub: "Uno studio digitale indipendente in Alto Adige, fondato da due persone. Strategia, design e sviluppo li seguiamo direttamente noi.",
       cta: "Contattaci",
       meet: "Conoscici",
-      hint: "Passa il cursore sulle foto",
-      hintTouch: "Tocca le foto",
+      // La pagina si fa in diretta: cursori, commenti e barra presenze.
+      live: {
+        file: "chi-siamo",
+        editing: "In modifica",
+        published: "Online",
+        you: "Tu",
+        hello: "Ciao 👋",
+        photo: "insieme.jpg",
+        note1: "Questa la teniamo.",
+        note2: "Fatto. È online.",
+      },
     },
     manifesto: {
       kicker: "La differenza",

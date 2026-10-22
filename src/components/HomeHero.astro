@@ -2,9 +2,9 @@
 // HERO della home — "luce liquida". Su bianco carta una luce blu e arancio
 // scorre lenta come un fluido (shader WebGL in scripts/heroFluid.ts, segue
 // appena il mouse). A sinistra il titolo, grande, il sottotitolo e la CTA;
-// a destra una composizione di quello che facciamo: un browser in vetro con
-// i nostri siti veri e un telefono con un gestionale di prenotazioni.
-// Niente foto: le persone stanno in Chi siamo.
+// a destra la vista esplosa: un sito d'esempio si apre a strati, dal codice
+// all'interazione, come un disegno tecnico.
+// Niente foto del team: le persone stanno in Chi siamo.
 //
 // Sotto la piega la luce si scioglie nel bianco e la sezione diventa
 // trasparente: Il punto le scorre sotto senza cuciture.
@@ -14,19 +14,26 @@ import type { Lang } from "../i18n";
 import { getDict } from "../i18n";
 import Rich from "./Rich.astro";
 import { Image } from "astro:assets";
-import alessiaShot from "../assets/projects/alessiapmu.png";
-import dimitriShot from "../assets/projects/dimitricavazzana.png";
+import sciliar from "../assets/point/sciliar-bw.png";
 
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
 const t = getDict(lang);
-const d = t.home.hero.device;
-// I nostri siti veri, mostrati a turno nel browser (stessi di Progetti).
-const SITES = [
-  { img: alessiaShot, name: "Alessia PMU", url: "alessiapmu.de" },
-  { img: dimitriShot, name: "Dimitri Cavazzana", url: "dimitricavazzana.com" },
+const x = t.home.hero.explode;
+// Il codice dello strato più basso: la stessa pagina che si vede in cima.
+type Tok = [string, string];
+const CODE: Tok[][] = [
+  [["c", "---"]],
+  [["k", "import "], ["t", "Booking"], ["k", " from "], ["s", '"@/ui"']],
+  [["c", "---"]],
+  [["p", "<"], ["t", "Nav"], ["a", " brand"], ["p", "="], ["s", '"Baita Sciliar"'], ["p", " />"]],
+  [["p", "<"], ["t", "Hero"], ["a", " img"], ["p", "="], ["s", '"sciliar.avif"'], ["p", ">"]],
+  [["p", "  <"], ["t", "h1"], ["p", ">"], ["x", `${x.site.title.split(" ").slice(0, 2).join(" ")}…`], ["p", "</"], ["t", "h1"], ["p", ">"]],
+  [["p", "</"], ["t", "Hero"], ["p", ">"]],
+  [["p", "<"], ["t", "Booking"], ["a", " autoReply"], ["a", " seo"], ["p", " />"]],
+  [["p", "<"], ["t", "Chat"], ["a", " ai"], ["p", "="], ["s", '"24/7"'], ["p", " />"]],
 ];
 ---
 
@@ -42,70 +49,109 @@ const SITES = [
     </div>
   </div>
 
-  <!-- A destra: UNA composizione, quello che facciamo. Un browser in vetro
-       con i nostri siti veri (a turno, scripts/heroDevice.ts) e davanti un
-       telefono con un gestionale di prenotazioni. Tre livelli: esterno
-       (entrata + parallasse di scroll), medio (inclinazione col mouse),
-       interno (la scena in prospettiva). Decorativa per i lettori di schermo:
-       i progetti veri sono nella sezione Progetti. -->
-  <div class="hero-stage" data-hero-stage aria-hidden="true">
-    <div class="hero-stage-tilt" data-hero-tilt>
-      <div class="hero-device">
-        <div class="hd-browser">
-          <div class="hd-bar">
-            <span class="hd-dots"><i></i><i></i><i></i></span>
-            <span class="hd-url">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5" /><path d="M5.5 7V5.5a2.5 2.5 0 0 1 5 0V7" /></svg>
-              {SITES.map((site, i) => <span class:list={["hd-url-text", { "is-active": i === 0 }]} data-hd-slide>{site.url}</span>)}
+  <!-- A destra: LA VISTA ESPLOSA. Un sito vero (un cliente d'esempio, una
+       baita sotto lo Sciliar) appare montato, un taglio lo attraversa e si
+       apre a strati come un disegno tecnico: dal basso codice, struttura,
+       design, contenuti e interazione. Ogni strato ha la sua etichetta con
+       una linea di richiamo; gli strati si accendono a turno (o al passaggio
+       del mouse) e scorrendo il sito si richiude.
+       Regia in scripts/heroExplode.ts; entrata e inclinazione col mouse in
+       logoHandoff.ts ([data-hero-stage], [data-hero-tilt]). -->
+  <div class="hero-stage" data-hero-stage>
+    <div class="hx" data-hx aria-hidden="true">
+      <div class="hero-stage-tilt" data-hero-tilt>
+        <div class="hx-iso" data-hx-iso>
+          <span class="hx-ground"></span>
+
+          <!-- 01 · Codice: la pagina com'è scritta. -->
+          <div class="hx-ly hx-l-code" data-hx-ly="0">
+            <span class="hx-code">
+              {CODE.map((toks, i) => (
+                <span class="hx-cl" style={`--i:${i}`}>
+                  <i>{i + 1}</i>
+                  {toks.map(([c, txt]) => <span class={`hx-t-${c}`}>{txt}</span>)}
+                </span>
+              ))}
+            </span>
+            <span class="hx-code-side">
+              <b>build</b><span>0,8 s</span>
+              <b>lighthouse</b><span>100</span>
+              <b>js</b><span>9 kB</span>
             </span>
           </div>
-          <div class="hd-screen">
-            {SITES.map((site, i) => (
-              <Image
-                class:list={["hd-shot", { "is-active": i === 0 }]}
-                data-hd-slide
-                src={site.img}
-                widths={[640, 960, 1280]}
-                sizes="(min-width: 900px) 40vw, 90vw"
-                quality={80}
-                alt=""
-                loading="eager"
-                decoding="async"
-                fetchpriority={i === 0 ? "high" : "low"}
-              />
-            ))}
-          </div>
-        </div>
 
-        <div class="hd-phone">
-          <div class="hd-phone-screen">
-            <span class="hd-island"></span>
-            <div class="hd-app-head">
-              <span class="hd-app-title">{d.app}</span>
-              <span class="hd-app-avatar"></span>
-            </div>
-            <div class="hd-days">
-              {["14", "15", "16", "17", "18"].map((n, i) => <span class:list={["hd-day", { "is-on": i === 0 }]}>{n}</span>)}
-            </div>
-            <span class="hd-today">{d.today}</span>
-            <ul class="hd-slots">
-              {d.slots.map((slot, i) => (
-                <li class:list={["hd-slot", { "is-new": i === 1 }]}>
-                  <span class="hd-slot-bar"></span>
-                  <span class="hd-slot-text">{slot}</span>
-                  {i === 1 && <span class="hd-slot-tag">{d.confirmed}</span>}
-                </li>
-              ))}
-            </ul>
-            <span class="hd-app-btn">{d.book}</span>
+          <!-- 02 · Struttura: griglia e scatole, quote come su un progetto. -->
+          <div class="hx-ly hx-l-grid" data-hx-ly="1">
+            <span class="hx-cols">{Array.from({ length: 12 }, () => <i></i>)}</span>
+            <span class="hx-box hx-p-nav"><em>nav</em></span>
+            <span class="hx-box hx-p-txt"><em>h1 · col 1–6</em></span>
+            <span class="hx-box hx-p-img"><em>img 4:3</em></span>
+            <span class="hx-box hx-p-bk"><em>form</em></span>
+            <span class="hx-box hx-p-chat"><em>chat</em></span>
+            <span class="hx-dim hx-dim-w"><em>1440</em></span>
           </div>
+
+          <!-- 03 · Design: fondo, superfici, colori; i campioni in basso. -->
+          <div class="hx-ly hx-l-design" data-hx-ly="2">
+            <span class="hx-d-nav hx-p-nav"><i class="hx-d-btn"></i></span>
+            <span class="hx-d-img hx-p-img"></span>
+            <span class="hx-d-cta"></span>
+            <span class="hx-d-bk hx-p-bk"><i></i><i></i><i></i><i class="hx-d-go"></i></span>
+            <span class="hx-sw"><i style="--c:#171310"></i><i style="--c:#2748A5"></i><i style="--c:#D84002"></i><i style="--c:#FADFC9"></i><b>Aa</b></span>
+          </div>
+
+          <!-- 04 · Contenuti: testi, foto, campi. -->
+          <div class="hx-ly hx-l-copy" data-hx-ly="3">
+            <span class="hx-c-nav hx-p-nav">
+              <b class="hx-brand"><svg viewBox="0 0 20 14"><path d="M1 13 7.5 3l3.5 5 2.5-3.5L19 13Z" /></svg>{x.site.brand}</b>
+              <span class="hx-links">{x.site.nav.map((l) => <i>{l}</i>)}</span>
+              <span class="hx-c-btn">{x.site.book}</span>
+            </span>
+            <span class="hx-c-txt hx-p-txt">
+              <small>{x.site.kicker}</small>
+              <strong>{x.site.title}</strong>
+              <span>{x.site.sub}</span>
+              <span class="hx-c-cta">{x.site.cta} →</span>
+            </span>
+            <span class="hx-c-img hx-p-img">
+              <Image src={sciliar} widths={[480, 720]} sizes="18vw" quality={72} alt="" loading="eager" decoding="async" />
+            </span>
+            <span class="hx-c-bk hx-p-bk">
+              {x.site.fields.map(([k, v]) => <span><small>{k}</small>{v}</span>)}
+              <b>{x.site.check}</b>
+            </span>
+          </div>
+
+          <!-- 05 · Interazione: quello che succede quando il sito lavora. -->
+          <div class="hx-ly hx-l-ui" data-hx-ly="4">
+            <span class="hx-rate"><b>★</b>{x.site.rating}</span>
+            <span class="hx-toast"><i>✓</i>{x.site.toast}<small>22:47</small></span>
+            <span class="hx-chat hx-p-chat">
+              <span class="hx-chat-head"><i></i>{x.site.bot}<small>AI</small></span>
+              <span class="hx-bubble">{x.site.chat}</span>
+              <span class="hx-typing"><i></i><i></i><i></i></span>
+            </span>
+            <span class="hx-ptr">
+              <svg viewBox="0 0 24 24"><path d="M5 3l14 8.2-6.1 1.3L10 18.6Z" /></svg>
+              <i></i>
+            </span>
+          </div>
+
+          <span class="hx-scan" data-hx-scan></span>
         </div>
       </div>
-    </div>
-    <div class="hd-caption">
-      <span class="hd-caption-label">{d.caption}</span>
-      {SITES.map((site, i) => <span class:list={["hd-caption-name", { "is-active": i === 0 }]} data-hd-slide>{site.name}</span>)}
-      <span class="hd-progress"><i data-hd-progress></i></span>
+
+      <!-- Davanti: linee di montaggio sugli spigoli, richiami ed etichette
+           (disegnati in piano da heroExplode.ts, seguono gli strati). -->
+      <svg class="hx-leads" data-hx-leads></svg>
+      <ol class="hx-labels">
+        {x.layers.map((l, i) => (
+          <li class="hx-lab" data-hx-lab={i}>
+            <span class="hx-lab-n">{String(i + 1).padStart(2, "0")}</span>
+            <span class="hx-lab-t"><b>{l.n}</b><small>{l.d}</small></span>
+          </li>
+        ))}
+      </ol>
     </div>
   </div>
 
@@ -124,8 +170,11 @@ const SITES = [
       <span data-anim="hero-line-3" class="block" style="opacity: 0;"><Rich text={t.home.hero.l3} /></span>
     </h1>
 
+    <!-- Il piede del testo: un filo (come i richiami della scena), il
+         sottotitolo a sinistra e le due CTA impilate a destra. -->
+    <div class="hero-foot">
     <p data-anim="hero-subline" class="hero-sub text-[#544C40]" style="opacity: 0;">
-      {t.home.hero.sub}
+      <Rich text={t.home.hero.sub} />
     </p>
 
     <div data-anim="hero-cta" class="hero-cta flex" style="opacity: 0;">
@@ -140,6 +189,7 @@ const SITES = [
         <span class="hero-contact-arrow" aria-hidden="true">→</span>
       </a>
     </div>
+    </div>
   </div>
 
   <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
@@ -151,5 +201,5 @@ const SITES = [
 
 <script>
   import "../scripts/heroFluid.ts";
-  import "../scripts/heroDevice.ts";
+  import "../scripts/heroExplode.ts";
 </script>

@@ -1,17 +1,18 @@
 ---
 // COME LAVORIAMO — il metodo in 4 fasi, raccontato COSTRUENDO un sito.
-// Tutta la sezione sta in una scena sticky alta 100svh che attraversa le
-// fasi con lo scroll (ogni fase è una fermata [data-scroll-detent], vedi
-// main.ts). Prima delle fasi c'è un INGRESSO legato allo scroll: le parole
-// del titolo salgono dalla sfocatura al loro posto, il cantiere sale dal
-// basso inclinato e si appoggia piatto. A sinistra l'indice delle fasi (l'attiva si
-// inchiostra e si apre, la linea accanto si riempie in continuo); a destra un
-// browser con un sito di esempio che nasce davanti agli occhi:
+// Una schermata sola, niente pin: lo scroll della pagina resta libero. A
+// sinistra il menu delle fasi, a destra il "cantiere", un browser con un
+// sito di esempio che nasce davanti agli occhi. Passando sopra una fase (o
+// cliccandola, o con le frecce) il cantiere va a quel punto; finché nessuno
+// tocca niente le fasi si avvicendano da sole, con la barra della fase
+// attiva che si riempie:
 //   01 Ascolto   → schizzo a matita + post-it con le cose emerse
 //   02 Design    → il design "pennella" sopra lo schizzo; la palette si può
 //                  provare (click), e la revisione chiesta viene fatta
 //   03 Sviluppo  → codice, versione telefono, punteggi che salgono
 //   04 Lancio    → l'indirizzo si scrive, "online", arrivano visite e richieste
+// A ogni cambio una passata di luce scorre sul sito (lo rende di nuovo), il
+// browser accusa il colpo e il titolo della fase arriva lettera per lettera.
 // Dalla fase 2, passando il mouse sul sito, una lente mostra lo schizzo
 // sotto il design. Lo stato lo decide lo script in fondo; le animazioni sono
 // CSS (riavviate a ogni cambio di fase). Senza JS resta la fase 1.
@@ -63,6 +64,11 @@ const c = flow.card;
 const d = flow.demo;
 const n = flow.items.length;
 const pad = (i: number) => String(i + 1).padStart(2, "0");
+const arrows = {
+  it: { prev: "Fase precedente", next: "Fase successiva" },
+  de: { prev: "Vorherige Phase", next: "Nächste Phase" },
+  en: { prev: "Previous phase", next: "Next phase" },
+}[lang as "it" | "de" | "en"] ?? { prev: "‹", next: "›" };
 
 // Palette provabile nella fase Design (il primo è quello di partenza).
 const SWATCHES = ["#D84002", "#2F7D5B", "#2748A5", "#A8326E"];
@@ -91,201 +97,347 @@ const MOUNTAINS = `
 ---
 
 <section id="come-lavoriamo" class="apm" data-apm data-lang={lang} style={`--n:${n}`}>
-  <div class="apm-track">
-    <span class="apm-intro-end" aria-hidden="true"></span>
-    {flow.items.map((_, i) => (
-      <span class="apm-anchor" id={`metodo-${i + 1}`} data-scroll-detent="hard" style={`--i:${i}`} aria-hidden="true" />
-    ))}
+  <div class="apm-inner works-screen">
+    <header class="apm-head" data-apm-head>
+      <span class="works-kicker apm-kicker">{flow.kicker}</span>
+      <h2 class="apm-title"><Rich text={flow.title} /></h2>
+      <p class="apm-lead">{flow.lead}</p>
+    </header>
 
-    <div class="apm-stage" data-phase="0">
-      <div class="apm-inner works-screen">
-        <header class="apm-head">
-          <span class="works-kicker apm-kicker">{flow.kicker}</span>
-          <h2 class="apm-title"><Rich text={flow.title} /></h2>
-          <p class="apm-lead">{flow.lead}</p>
-        </header>
+    <div class="apm-body">
+      <div class="apm-left">
+        <!-- Il menu delle fasi: righe fisse (niente si sposta), un
+             indicatore scorre sotto la fase attiva. Passandoci sopra (o
+             cliccando) la fase cambia all'istante; la barra sotto la fase
+             attiva si riempie nell'avvicendamento automatico. -->
+        <div class="apm-steps" role="tablist" aria-label={flow.kicker} data-apm-menu>
+          <span class="apm-pill" aria-hidden="true"></span>
+          {flow.items.map((it, i) => (
+            <button
+              type="button"
+              role="tab"
+              class:list={["apm-step", { "is-active": i === 0 }]}
+              id={`apm-tab-${i}`}
+              aria-controls={`metodo-${i + 1}`}
+              aria-selected={i === 0 ? "true" : "false"}
+              tabindex={i === 0 ? 0 : -1}
+              data-apm-step
+            >
+              <span class="apm-step-n">{pad(i)}</span>
+              <span class="apm-step-title">{it.title} <em>{it.titleEm}</em></span>
+              <span class="apm-step-go" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </span>
+              <span class="apm-step-bar" aria-hidden="true"><span></span></span>
+            </button>
+          ))}
+        </div>
 
-        <div class="apm-body">
-          <div class="apm-left">
-            <!-- Indice delle fasi: tutte visibili, l'attiva si inchiostra e si
-                 apre; la linea accanto si riempie con lo scroll. -->
-            <ol class="apm-steps">
-              {flow.items.map((it, i) => (
-                <li class:list={["apm-step", { "is-active": i === 0 }]} data-i={i}>
-                  <span class="apm-step-line" aria-hidden="true"><span></span></span>
-                  <a class="apm-step-head" href={`#metodo-${i + 1}`}>
-                    <span class="apm-step-n">{pad(i)}<span class="apm-step-of"> / {pad(n - 1)}</span></span>
-                    <span class="apm-step-title">{it.title} <em>{it.titleEm}</em></span>
-                  </a>
-                  <div class="apm-step-body">
-                    <div class="apm-step-inner">
-                      <p class="apm-phase-text">{it.text}</p>
-                      <p class="apm-get">
-                        <span class="apm-get-icon" aria-hidden="true">
-                          <svg viewBox="0 0 24 24"><path d="M5 12l5 5l10 -10" /></svg>
-                        </span>
-                        <span class="apm-get-txt"><small>{c.get}</small> {it.deliverable}</span>
-                      </p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <!-- IL CANTIERE: il sito di esempio che si costruisce -->
-          <div class="apm-build" data-build style={`--sa:${SWATCHES[0]}`}>
-            <div class="apm-tilt">
-              <div class="apm-browser">
-                <div class="apm-bar" aria-hidden="true">
-                  <span class="apm-dots"><i></i><i></i><i></i></span>
-                  <span class="apm-url">
-                    <svg class="apm-url-lock" viewBox="0 0 24 24"><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6" /><path d="M8 11v-4a4 4 0 1 1 8 0v4" /></svg>
-                    <span class="apm-url-skel"></span>
-                    <span class="apm-url-txt" style={`--len:${d.url.length}`}>{d.url}</span>
-                  </span>
-                  <span class="apm-live"><i></i>{d.live}</span>
-                </div>
-
-                <div class="apm-site" data-site aria-hidden="true">
-                  <!-- schizzo a matita -->
-                  <svg class="apm-wire" viewBox="0 0 600 380" preserveAspectRatio="none">
-                    {WIRE.map((p, i) => <path d={p} pathLength="1" style={`--w:${i}`} />)}
-                  </svg>
-
-                  <!-- design (si stende sopra lo schizzo da sinistra) -->
-                  <div class="apm-design">
-                    <div class="apm-s-nav">
-                      <span class="apm-s-logo"><i></i>{d.brand}</span>
-                      <span class="apm-s-links">{d.nav.map((l) => <span>{l}</span>)}</span>
-                      <span class="apm-s-book">{d.book}</span>
-                    </div>
-                    <div class="apm-s-hero">
-                      <svg class="apm-s-mt" viewBox="0 0 600 176" preserveAspectRatio="xMidYMax slice" set:html={`<circle class="apm-mt-sun" cx="430" cy="70" r="26"/>${MOUNTAINS}`} />
-                      <div class="apm-s-copy">
-                        <span class="apm-s-h1">{d.heroTitle}</span>
-                        <span class="apm-s-sub">{d.heroSub}</span>
-                        <span class="apm-s-cta">{d.heroCta}<span class="apm-s-ripple"></span></span>
-                      </div>
-                    </div>
-                    <div class="apm-s-cards">
-                      {d.nav.map((l, i) => (
-                        <span class="apm-s-card" style={`--c:${i}`}><i></i><b>{l}</b><em></em></span>
-                      ))}
-                    </div>
-                    <span class="apm-s-cursor"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 2-3 6z" /></svg></span>
-                  </div>
-
-                  <!-- lente: lo schizzo sotto il design, dove passa il mouse -->
-                  <div class="apm-xray">
-                    <svg viewBox="0 0 600 380" preserveAspectRatio="none">
-                      {WIRE.map((p) => <path d={p} />)}
-                    </svg>
-                    <span class="apm-xray-tag" style="left:6%;top:6%">&lt;header&gt;</span>
-                    <span class="apm-xray-tag" style="left:9%;top:27%">&lt;h1&gt;</span>
-                    <span class="apm-xray-tag" style="left:9%;top:49%">&lt;button&gt;</span>
-                    <span class="apm-xray-tag" style="left:5%;top:69%">&lt;section&gt;</span>
-                  </div>
-                </div>
-                <span class="apm-demo-tag">{d.tag}</span>
-              </div>
-
-              <!-- 01 · post-it di quello che è emerso -->
-              <div class="apm-fx apm-notes" data-on="0" aria-hidden="true">
-                {d.notes.map((t, i) => <span class="apm-note" style={`--k:${i}`}>{t}</span>)}
-              </div>
-
-              <!-- 02 · palette provabile + revisione -->
-              <div class="apm-fx apm-palette" data-on="1">
-                <span class="apm-fx-label">{d.palette}</span>
-                <span class="apm-swatches">
-                  {SWATCHES.map((s, i) => (
-                    <button type="button" class:list={["apm-swatch", { "is-on": i === 0 }]} style={`--s:${s}`} data-swatch={s} aria-label={s} aria-pressed={i === 0 ? "true" : "false"}></button>
-                  ))}
+        <!-- Il dettaglio della fase: tutti nella stessa cella, si danno il cambio -->
+        <div class="apm-details">
+          {flow.items.map((it, i) => (
+            <div
+              class:list={["apm-detail", { "is-active": i === 0 }]}
+              role="tabpanel"
+              id={`metodo-${i + 1}`}
+              aria-labelledby={`apm-tab-${i}`}
+              data-apm-detail
+            >
+              <p class="apm-phase-text">{it.text}</p>
+              <p class="apm-get">
+                <span class="apm-get-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M5 12l5 5l10 -10" /></svg>
                 </span>
-                <span class="apm-type" aria-hidden="true"><b>Aa</b><span><i></i><i></i></span></span>
-              </div>
-              <div class="apm-fx apm-chat" data-on="1" aria-hidden="true">
-                <span class="apm-bubble apm-bubble--you">{d.comment}</span>
-                <span class="apm-bubble apm-bubble--us"><i>✓</i>{d.reply}</span>
+                <span class="apm-get-txt"><small>{c.get}</small> {it.deliverable}</span>
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div class="step-arrows">
+          <button type="button" class="step-arrow" data-apm-prev aria-label={arrows.prev}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+          </button>
+          <span class="step-count" aria-hidden="true"><b data-apm-count>01</b> / {pad(n - 1)}</span>
+          <button type="button" class="step-arrow" data-apm-next aria-label={arrows.next}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- IL CANTIERE: il sito di esempio che si costruisce -->
+      <div class="apm-build apm-scene" data-build data-phase="0">
+        <div class="apm-tilt">
+          <div class="apm-browser">
+            <div class="apm-bar" aria-hidden="true">
+              <span class="apm-dots"><i></i><i></i><i></i></span>
+              <span class="apm-url">
+                <svg class="apm-url-lock" viewBox="0 0 24 24"><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6" /><path d="M8 11v-4a4 4 0 1 1 8 0v4" /></svg>
+                <span class="apm-url-skel"></span>
+                <span class="apm-url-txt" style={`--len:${d.url.length}`}>{d.url}</span>
+              </span>
+              <span class="apm-live"><i></i>{d.live}</span>
+            </div>
+
+            <div class="apm-site" data-site aria-hidden="true">
+              <!-- la passata di luce a ogni cambio di fase: il sito si "rende" -->
+              <span class="apm-scan" data-apm-scan></span>
+              <!-- schizzo a matita -->
+              <svg class="apm-wire" viewBox="0 0 600 380" preserveAspectRatio="none">
+                {WIRE.map((p, i) => <path d={p} pathLength="1" style={`--w:${i}`} />)}
+              </svg>
+
+              <!-- design (si stende sopra lo schizzo da sinistra) -->
+              <div class="apm-design">
+                <div class="apm-s-nav">
+                  <span class="apm-s-logo"><i></i>{d.brand}</span>
+                  <span class="apm-s-links">{d.nav.map((l) => <span>{l}</span>)}</span>
+                  <span class="apm-s-book">{d.book}</span>
+                </div>
+                <div class="apm-s-hero">
+                  <svg class="apm-s-mt" viewBox="0 0 600 176" preserveAspectRatio="xMidYMax slice" set:html={`<circle class="apm-mt-sun" cx="430" cy="70" r="26"/>${MOUNTAINS}`} />
+                  <div class="apm-s-copy">
+                    <span class="apm-s-h1">{d.heroTitle}</span>
+                    <span class="apm-s-sub">{d.heroSub}</span>
+                    <span class="apm-s-cta">{d.heroCta}<span class="apm-s-ripple"></span></span>
+                  </div>
+                </div>
+                <div class="apm-s-cards">
+                  {d.nav.map((l, i) => (
+                    <span class="apm-s-card" style={`--c:${i}`}><i></i><b>{l}</b><em></em></span>
+                  ))}
+                </div>
+                <span class="apm-s-cursor"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 2-3 6z" /></svg></span>
               </div>
 
-              <!-- 03 · codice, telefono, punteggi -->
-              <div class="apm-fx apm-code" data-on="2" aria-hidden="true">
-                <span style="--k:0"><i>&lt;</i>section <b>class</b>=<em>"hero"</em><i>&gt;</i></span>
-                <span style="--k:1">&nbsp;&nbsp;<i>&lt;</i>h1<i>&gt;</i>{d.heroTitle}<i>&lt;/</i>h1<i>&gt;</i></span>
-                <span style="--k:2">&nbsp;&nbsp;<i>&lt;</i>a <b>href</b>=<em>"/prenota"</em><i>&gt;</i></span>
-                <span style="--k:3"><i>&lt;/</i>section<i>&gt;</i></span>
-              </div>
-              <div class="apm-fx apm-phone" data-on="2" aria-hidden="true">
-                <span class="apm-ph-notch"></span>
-                <span class="apm-ph-nav"><i></i></span>
-                <svg class="apm-ph-mt" viewBox="140 0 320 176" preserveAspectRatio="xMidYMax slice" set:html={MOUNTAINS} />
-                <span class="apm-ph-h1">{d.heroTitle}</span>
-                <span class="apm-ph-cta"></span>
-                <span class="apm-ph-card"></span>
-                <span class="apm-ph-card"></span>
-              </div>
-              <div class="apm-fx apm-scores" data-on="2" aria-hidden="true">
-                {SCORES.map((v, i) => (
-                  <span class="apm-score" style={`--v:${v};--k:${i}`}>
-                    <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" pathLength="100" /><circle class="apm-score-arc" cx="18" cy="18" r="15.5" pathLength="100" /></svg>
-                    <b></b>
-                    <small>{d.scores[i]}</small>
-                  </span>
-                ))}
-                <span class="apm-devices">{d.devices}</span>
-              </div>
-
-              <!-- 04 · online: visite e richieste -->
-              <div class="apm-fx apm-stats" data-on="3" aria-hidden="true">
-                <span class="apm-fx-label">{d.visits}</span>
-                <span class="apm-stats-n"><b></b>% <small>{d.growth}</small></span>
-                <svg viewBox="0 0 200 60" preserveAspectRatio="none">
-                  <path class="apm-chart-fill" d="M0 52 L25 48 L50 50 L75 40 L100 42 L125 30 L150 26 L175 14 L200 8 L200 60 L0 60Z" />
-                  <path class="apm-chart-line" pathLength="1" d="M0 52 L25 48 L50 50 L75 40 L100 42 L125 30 L150 26 L175 14 L200 8" />
+              <!-- lente: lo schizzo sotto il design, dove passa il mouse -->
+              <div class="apm-xray">
+                <svg viewBox="0 0 600 380" preserveAspectRatio="none">
+                  {WIRE.map((p) => <path d={p} />)}
                 </svg>
-              </div>
-              <div class="apm-fx apm-toast" data-on="3" aria-hidden="true">
-                <span class="apm-toast-icon"><svg viewBox="0 0 24 24"><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" /><path d="M9 17v1a3 3 0 0 0 6 0v-1" /></svg></span>
-                <span class="apm-toast-txt"><b>{d.toast}</b><small>{d.brand} · {d.now}</small></span>
+                <span class="apm-xray-tag" style="left:6%;top:6%">&lt;header&gt;</span>
+                <span class="apm-xray-tag" style="left:9%;top:27%">&lt;h1&gt;</span>
+                <span class="apm-xray-tag" style="left:9%;top:49%">&lt;button&gt;</span>
+                <span class="apm-xray-tag" style="left:5%;top:69%">&lt;section&gt;</span>
               </div>
             </div>
-            <span class="apm-hint" aria-hidden="true"><i></i>{d.hint}</span>
+            <span class="apm-demo-tag">{d.tag}</span>
+          </div>
+
+          <!-- 01 · post-it di quello che è emerso -->
+          <div class="apm-fx apm-notes" data-on="0" aria-hidden="true">
+            {d.notes.map((t, i) => <span class="apm-note" style={`--k:${i}`}>{t}</span>)}
+          </div>
+
+          <!-- 02 · palette provabile + revisione -->
+          <div class="apm-fx apm-palette" data-on="1">
+            <span class="apm-fx-label">{d.palette}</span>
+            <span class="apm-swatches">
+              {SWATCHES.map((s, i) => (
+                <button type="button" class:list={["apm-swatch", { "is-on": i === 0 }]} style={`--s:${s}`} data-swatch={s} aria-label={s} aria-pressed={i === 0 ? "true" : "false"}></button>
+              ))}
+            </span>
+            <span class="apm-type" aria-hidden="true"><b>Aa</b><span><i></i><i></i></span></span>
+          </div>
+          <div class="apm-fx apm-chat" data-on="1" aria-hidden="true">
+            <span class="apm-bubble apm-bubble--you">{d.comment}</span>
+            <span class="apm-bubble apm-bubble--us"><i>✓</i>{d.reply}</span>
+          </div>
+
+          <!-- 03 · codice, telefono, punteggi -->
+          <div class="apm-fx apm-code" data-on="2" aria-hidden="true">
+            <span style="--k:0"><i>&lt;</i>section <b>class</b>=<em>"hero"</em><i>&gt;</i></span>
+            <span style="--k:1">&nbsp;&nbsp;<i>&lt;</i>h1<i>&gt;</i>{d.heroTitle}<i>&lt;/</i>h1<i>&gt;</i></span>
+            <span style="--k:2">&nbsp;&nbsp;<i>&lt;</i>a <b>href</b>=<em>"/prenota"</em><i>&gt;</i></span>
+            <span style="--k:3"><i>&lt;/</i>section<i>&gt;</i></span>
+          </div>
+          <div class="apm-fx apm-phone" data-on="2" aria-hidden="true">
+            <span class="apm-ph-notch"></span>
+            <span class="apm-ph-nav"><i></i></span>
+            <svg class="apm-ph-mt" viewBox="140 0 320 176" preserveAspectRatio="xMidYMax slice" set:html={MOUNTAINS} />
+            <span class="apm-ph-h1">{d.heroTitle}</span>
+            <span class="apm-ph-cta"></span>
+            <span class="apm-ph-card"></span>
+            <span class="apm-ph-card"></span>
+          </div>
+          <div class="apm-fx apm-scores" data-on="2" aria-hidden="true">
+            {SCORES.map((v, i) => (
+              <span class="apm-score" style={`--v:${v};--k:${i}`}>
+                <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" pathLength="100" /><circle class="apm-score-arc" cx="18" cy="18" r="15.5" pathLength="100" /></svg>
+                <b></b>
+                <small>{d.scores[i]}</small>
+              </span>
+            ))}
+            <span class="apm-devices">{d.devices}</span>
+          </div>
+
+          <!-- 04 · online: visite e richieste -->
+          <div class="apm-fx apm-stats" data-on="3" aria-hidden="true">
+            <span class="apm-fx-label">{d.visits}</span>
+            <span class="apm-stats-n"><b></b>% <small>{d.growth}</small></span>
+            <svg viewBox="0 0 200 60" preserveAspectRatio="none">
+              <path class="apm-chart-fill" d="M0 52 L25 48 L50 50 L75 40 L100 42 L125 30 L150 26 L175 14 L200 8 L200 60 L0 60Z" />
+              <path class="apm-chart-line" pathLength="1" d="M0 52 L25 48 L50 50 L75 40 L100 42 L125 30 L150 26 L175 14 L200 8" />
+            </svg>
+          </div>
+          <div class="apm-fx apm-toast" data-on="3" aria-hidden="true">
+            <span class="apm-toast-icon"><svg viewBox="0 0 24 24"><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" /><path d="M9 17v1a3 3 0 0 0 6 0v-1" /></svg></span>
+            <span class="apm-toast-txt"><b>{d.toast}</b><small>{d.brand} · {d.now}</small></span>
           </div>
         </div>
+        <span class="apm-hint" aria-hidden="true"><i></i>{d.hint}</span>
       </div>
     </div>
   </div>
 </section>
 
 <script>
-  // Fase attiva = posizione dentro la traccia pinnata. A ogni cambio di fase
-  // le animazioni CSS della fase entrante ripartono (classe tolta e rimessa al
-  // frame dopo). is-p1/is-p2/is-p3 dicono "almeno a questa fase": quello che
-  // il sito ha già (design, cursore) resta nelle fasi dopo. I pezzi attorno
-  // (.apm-fx) sono accesi solo nella loro fase.
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Fase attiva = quella scelta dal menu (hover, click, tastiera, frecce) o
+  // dall'avvicendamento automatico. Lo scroll della pagina non c'entra.
+  // A ogni cambio di fase le animazioni CSS della fase entrante ripartono
+  // (data-phase rimesso al frame dopo). is-p1/is-p2/is-p3 dicono "almeno a
+  // questa fase": quello che il sito ha già (design, cursore) resta nelle
+  // fasi dopo. I pezzi attorno (.apm-fx) sono accesi solo nella loro fase.
+  import { splitChars } from "../scripts/charRoll";
 
-  const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
-  const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const AUTO_MS = 8000; // durata di una fase nell'avvicendamento automatico
 
   function setup(root: HTMLElement) {
-    const track = root.querySelector<HTMLElement>(".apm-track")!;
-    const introEnd = root.querySelector<HTMLElement>(".apm-intro-end")!;
-    const stage = root.querySelector<HTMLElement>(".apm-stage")!;
     const title = root.querySelector<HTMLElement>(".apm-title")!;
+    const head = root.querySelector<HTMLElement>("[data-apm-head]")!;
     const build = root.querySelector<HTMLElement>("[data-build]")!;
     const site = root.querySelector<HTMLElement>("[data-site]")!;
-    const steps = Array.from(root.querySelectorAll<HTMLElement>(".apm-step"));
+    const heads = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-apm-step]"));
+    const details = Array.from(root.querySelectorAll<HTMLElement>("[data-apm-detail]"));
+    const menu = root.querySelector<HTMLElement>("[data-apm-menu]")!;
+    const pill = root.querySelector<HTMLElement>(".apm-pill");
     const fx = Array.from(root.querySelectorAll<HTMLElement>(".apm-fx"));
-    const n = steps.length;
+    const count = root.querySelector<HTMLElement>("[data-apm-count]");
+    const n = heads.length;
     let current = -1;
-    let visible = false;
-    let raf = 0;
-    // Ingresso: il titolo resta al suo posto, alla sua misura. Le parole
-    // salgono dalla sfocatura una dopo l'altra mentre la sezione entra e si
-    // ferma (legate allo scroll: tornando su si ritirano).
+    const scan = root.querySelector<HTMLElement>("[data-apm-scan]");
+    const browser = root.querySelector<HTMLElement>(".apm-browser");
+    const bar = root.querySelector<HTMLElement>(".apm-url");
+    // i titoli delle fasi arrivano lettera per lettera quando si aprono
+    if (!reduced) root.querySelectorAll<HTMLElement>(".apm-step-title").forEach((t) => splitChars(t));
+
+    root.classList.add("is-live");
+    root.style.setProperty("--apm-auto", `${AUTO_MS}ms`);
+
+    // L'indicatore sotto la fase attiva: si sposta (a molla, CSS) sulla riga.
+    const placePill = () => {
+      const h = heads[Math.max(current, 0)];
+      if (!pill || !h) return;
+      pill.style.height = `${h.offsetHeight}px`;
+      pill.style.transform = `translateY(${h.offsetTop}px)`;
+    };
+    placePill();
+    new ResizeObserver(placePill).observe(menu);
+    details.forEach((d, k) => d.setAttribute("aria-hidden", String(k !== 0)));
+
+    // Fase -1 = cantiere ancora vuoto: lo schizzo si disegna quando la
+    // sezione arriva in vista.
+    const activate = (i: number) => {
+      i = ((i % n) + n) % n;
+      if (i === current) return;
+      const from = current;
+      current = i;
+      heads.forEach((el, k) => {
+        el.classList.toggle("is-active", k === i);
+        el.classList.toggle("is-past", k < i);
+      });
+      heads.forEach((h, k) => {
+        h.setAttribute("aria-selected", String(k === i));
+        h.tabIndex = k === i ? 0 : -1;
+      });
+      // il dettaglio uscente se ne va subito, il nuovo sale (CSS)
+      details.forEach((d, k) => {
+        d.classList.toggle("is-active", k === i);
+        d.setAttribute("aria-hidden", String(k !== i));
+      });
+      placePill();
+      if (count) count.textContent = String(i + 1).padStart(2, "0");
+      if (!reduced && from >= 0) {
+        const dir = i > from ? 1 : -1;
+        count?.animate(
+          [
+            { transform: `translateY(${dir * 70}%)`, opacity: 0, filter: "blur(3px)" },
+            { transform: "none", opacity: 1, filter: "blur(0)" },
+          ],
+          { duration: 520, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }
+        );
+        // la passata di luce e la barra di caricamento dell'indirizzo
+        // ripartono da capo
+        [scan, bar].forEach((el) => {
+          if (!el) return;
+          el.classList.remove("is-on");
+          void el.offsetWidth;
+          el.classList.add("is-on");
+        });
+        // il browser accusa il colpo: si inclina verso la direzione del
+        // cambio e torna in piano con un rimbalzo
+        browser?.animate(
+          [
+            { transform: "none" },
+            { transform: `perspective(1200px) rotateX(${dir * 5}deg) translateY(${dir * 0.8}cqw) scale(0.975)`, offset: 0.2 },
+            { transform: `perspective(1200px) rotateX(${dir * -1.2}deg)`, offset: 0.6 },
+            { transform: "none" },
+          ],
+          { duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }
+        );
+      }
+      fx.forEach((el) => el.classList.remove("is-on"));
+      for (let k = 1; k < n; k++) build.classList.toggle(`is-p${k}`, i >= k);
+      build.dataset.phase = "-1";
+      requestAnimationFrame(() => {
+        build.dataset.phase = String(i);
+        fx.forEach((el) => el.classList.toggle("is-on", Number(el.dataset.on) === i));
+      });
+    };
+    build.dataset.phase = "-1";
+
+    // Avvicendamento automatico: la barra della fase attiva si riempie (CSS);
+    // a barra piena si passa alla fase dopo. Solo in vista; si ferma per
+    // sempre al primo gesto di chi guarda.
+    const stopAuto = () => root.classList.remove("is-auto");
+    if (!reduced) {
+      root.classList.add("is-auto");
+      root.addEventListener("animationend", (e) => {
+        if ((e.target as HTMLElement).matches(".apm-step-bar > span") && root.classList.contains("is-auto")) activate(current + 1);
+      });
+    }
+    const pick = (i: number) => {
+      stopAuto();
+      activate(i);
+    };
+
+    // Col mouse basta passarci sopra: le righe non si spostano mai, quindi
+    // basta un attimo di attesa per non cambiare fase solo attraversandole.
+    let hoverTimer = 0;
+    heads.forEach((h, k) => {
+      if (finePointer) {
+        h.addEventListener("pointerenter", () => {
+          window.clearTimeout(hoverTimer);
+          hoverTimer = window.setTimeout(() => pick(k), 45);
+        });
+        h.addEventListener("pointerleave", () => window.clearTimeout(hoverTimer));
+      }
+      h.addEventListener("click", () => pick(k));
+      h.addEventListener("keydown", (e) => {
+        const step = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        pick(current + step);
+        heads[current].focus();
+      });
+    });
+    root.querySelector("[data-apm-prev]")?.addEventListener("click", () => pick(Math.max(current, 0) - 1));
+    root.querySelector("[data-apm-next]")?.addEventListener("click", () => pick(Math.max(current, 0) + 1));
+
+    // Ingresso del titolo: le parole salgono dalla sfocatura mentre la
+    // testata entra (legate allo scroll: tornando su si ritirano).
     const words: HTMLElement[] = [];
     const walk = (node: Node) => {
       Array.from(node.childNodes).forEach((c) => {
@@ -305,7 +457,12 @@ const MOUNTAINS = `
     };
     if (!reduced) walk(title);
     const STAGGER = 0.22;
-    const reveal = (tp: number) => {
+    const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
+    let raf = 0;
+    const reveal = () => {
+      raf = 0;
+      const vh = window.innerHeight;
+      const tp = clamp01((vh - head.getBoundingClientRect().top) / (vh * 0.6));
       const span = 1 + (words.length - 1) * STAGGER;
       words.forEach((w, k) => {
         const p = clamp01(tp * span - k * STAGGER);
@@ -314,59 +471,46 @@ const MOUNTAINS = `
         w.style.filter = e < 0.999 ? `blur(${((1 - e) * 12).toFixed(1)}px)` : "";
         w.style.transform = e < 0.999 ? `translateY(${((1 - e) * 0.55).toFixed(3)}em)` : "";
       });
+      head.style.setProperty("--hp", tp.toFixed(3));
     };
-
-    // Fase -1 = ingresso: il cantiere è ancora vuoto, così lo schizzo si
-    // disegna quando il browser si è posato (e si ridisegna se si torna su).
-    const activate = (i: number) => {
-      if (i === current) return;
-      current = i;
-      steps.forEach((el) => el.classList.remove("is-active"));
-      fx.forEach((el) => el.classList.remove("is-on"));
-      for (let k = 1; k < n; k++) stage.classList.toggle(`is-p${k}`, i >= k);
-      requestAnimationFrame(() => {
-        stage.dataset.phase = String(i);
-        if (i < 0) return;
-        steps[i].classList.add("is-active");
-        fx.forEach((el) => el.classList.toggle("is-on", Number(el.dataset.on) === i));
-      });
-      steps.forEach((el, k) => el.classList.toggle("is-past", k < i));
-    };
-
-    const update = () => {
-      raf = 0;
-      const vh = window.innerHeight;
-      const r = track.getBoundingClientRect();
-      const intro = Math.max(introEnd.offsetTop, 1);
-      const y = -r.top;
-      const ip = reduced ? 1 : easeInOut(clamp01(y / intro));
-      stage.style.setProperty("--ip", ip.toFixed(4));
-      // il titolo comincia ad apparire quando la sezione è a metà schermo e
-      // ha finito a metà dell'ingresso
-      reveal(clamp01((y + vh * 0.5) / (vh * 0.5 + intro * 0.5)));
-      const range = Math.max(r.height - vh - intro, 1);
-      const f = clamp01((y - intro) / range) * n;
-      steps.forEach((el, k) => el.style.setProperty("--lp", clamp01(f - k).toFixed(4)));
-      activate(ip < 0.7 ? -1 : Math.min(n - 1, Math.floor(f)));
-    };
+    let visible = false;
     const queue = () => {
-      if (visible && !raf) raf = requestAnimationFrame(update);
+      if (visible && !raf) raf = requestAnimationFrame(reveal);
     };
+    window.addEventListener("scroll", queue, { passive: true });
+    reveal();
 
+    // In vista: la prima volta menu e cantiere entrano; quando il cantiere
+    // si vede bene parte dalla fase 1. L'avvicendamento corre solo mentre il
+    // cantiere è in vista.
     new IntersectionObserver(
       ([e]) => {
         visible = e.isIntersecting;
-        root.classList.toggle("is-in", visible);
         queue();
       },
       { rootMargin: "10% 0px" }
     ).observe(root);
-    window.addEventListener("scroll", queue, { passive: true });
-    window.addEventListener("resize", queue);
+    const enter = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        root.classList.add("is-in");
+        enter.disconnect();
+      },
+      { rootMargin: "0px 0px -25% 0px" }
+    );
+    enter.observe(root);
+    new IntersectionObserver(
+      ([e]) => {
+        root.classList.toggle("is-visible", e.isIntersecting);
+        if (e.isIntersecting && current < 0) window.setTimeout(() => activate(0), 500);
+      },
+      { threshold: 0.4 }
+    ).observe(build);
 
     // Palette provabile: il colore scelto passa a tutto il sito di esempio.
     root.querySelectorAll<HTMLButtonElement>("[data-swatch]").forEach((b, _, all) =>
       b.addEventListener("click", () => {
+        stopAuto();
         build.style.setProperty("--sa", b.dataset.swatch!);
         all.forEach((o) => {
           o.classList.toggle("is-on", o === b);
@@ -378,17 +522,17 @@ const MOUNTAINS = `
       })
     );
 
-    if (!reduced && window.matchMedia("(pointer: fine)").matches) {
+    if (!reduced && finePointer) {
       // Profondità: il cantiere ruota appena e i "pezzi" attorno al browser
       // si spostano di più (parallasse), seguendo il puntatore.
-      stage.addEventListener("pointermove", (e) => {
+      build.addEventListener("pointermove", (e) => {
         const b = build.getBoundingClientRect();
         const x = Math.max(-1, Math.min(1, ((e.clientX - b.left) / b.width - 0.5) * 2));
         const y = Math.max(-1, Math.min(1, ((e.clientY - b.top) / b.height - 0.5) * 2));
         build.style.setProperty("--px", x.toFixed(3));
         build.style.setProperty("--py", y.toFixed(3));
       });
-      stage.addEventListener("pointerleave", () => {
+      build.addEventListener("pointerleave", () => {
         build.style.setProperty("--px", "0");
         build.style.setProperty("--py", "0");
       });
@@ -404,7 +548,6 @@ const MOUNTAINS = `
       });
       site.addEventListener("pointerleave", () => site.classList.remove("is-lens"));
     }
-    update();
   }
 
   document.querySelectorAll<HTMLElement>("[data-apm]").forEach(setup);
