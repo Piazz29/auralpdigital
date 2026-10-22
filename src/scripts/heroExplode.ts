@@ -100,6 +100,9 @@ function setup(root: HTMLElement) {
   };
 
   // ---- Frame: posa gli strati, poi misura e disegna linee ed etichette.
+  // Chi legge --e (vedi global.css: ombra a terra, fogli di vetro, quote).
+  const eUsers = Array.from(root.querySelectorAll<HTMLElement>(".hx-ground, .hx-l-copy, .hx-l-ui, .hx-dim"));
+  let eShown = "";
   let raf = 0;
   const frame = (now: number) => {
     raf = 0;
@@ -118,7 +121,37 @@ function setup(root: HTMLElement) {
       layers[k].style.transform = `translateZ(${z.toFixed(2)}px)`;
     }
     const e = (open.reduce((a, b) => a + b, 0) / N) * collapse;
-    root.style.setProperty("--e", e.toFixed(3));
+    if (chipsMq.matches) {
+      // Telefono: --e solo sui pochi elementi che lo usano e a passi di
+      // 0.02. Scritto sulla radice (variabile ereditata) obbligava a
+      // ricalcolare lo stile di tutta la scena a ogni frame di scroll, dato
+      // che scorrendo il sito si richiude e --e cambia di continuo.
+      const q = (Math.round(e * 50) / 50).toFixed(2);
+      if (q !== eShown) {
+        eShown = q;
+        eUsers.forEach((n) => n.style.setProperty("--e", q));
+      }
+    } else {
+      if (eShown) {
+        eShown = "";
+        eUsers.forEach((n) => n.style.removeProperty("--e"));
+      }
+      root.style.setProperty("--e", e.toFixed(3));
+    }
+
+    // Telefono: etichette in riga (CSS) e linee nascoste (.hx-leads è
+    // display:none), quindi niente da misurare. Le misure qui sotto, lette
+    // subito dopo aver scritto i transform degli strati, obbligano il
+    // browser a ricalcolare il layout a ogni frame: sul telefono era il
+    // grosso del costo dello scroll nella hero (frame da 33 ms invece di 16).
+    if (chipsMq.matches) {
+      for (let k = 0; k < N; k++) {
+        if (labs[k].style.transform) labs[k].style.transform = "";
+        labs[k].classList.toggle("is-in", open[k] * collapse > 0.55);
+      }
+      if (!reduce && awake()) kick();
+      return;
+    }
 
     // Misure (in coordinate della scena: la scena può essere scalata).
     const rr = root.getBoundingClientRect();

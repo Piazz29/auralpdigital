@@ -22,6 +22,9 @@ interface Props {
 const { lang } = Astro.props;
 const t = getDict(lang);
 const x = t.home.hero.explode;
+// Telefono: la cima dello Sciliar (Monte Pez / Petz) e dove siamo.
+const PEAK = { it: "Monte Pez · 2.563 m", de: "Petz · 2.563 m", en: "Monte Pez · 2,563 m" }[lang];
+const TAG = { it: "Sciliar · Alto Adige", de: "Schlern · Südtirol", en: "Sciliar · South Tyrol" }[lang];
 // Il codice dello strato più basso: la stessa pagina che si vede in cima.
 type Tok = [string, string];
 const CODE: Tok[][] = [
@@ -161,6 +164,7 @@ const CODE: Tok[][] = [
     <!-- Telefono: il posto del logo grande in cima (ci si posa il logo del
          preloader, logoHandoff.ts). Sul desktop non c'è. -->
     <span class="hero-logo-slot" data-logo-slot aria-hidden="true"></span>
+    <span class="hero-logo-bar" aria-hidden="true"></span>
     <span
       data-anim="hero-label"
       class="hero-badge text-[11px] font-medium tracking-[0.15em] uppercase"
@@ -197,6 +201,14 @@ const CODE: Tok[][] = [
     </div>
   </div>
 
+  <!-- Telefono: LO SCILIAR A CURVE DI LIVELLO, in basso sotto il testo.
+       Rilievo vero (quote reali, isoipse ogni 50 m) disegnato in WebGL da
+       scripts/heroTopo.ts; l'etichetta segue la cima. Sul desktop non c'è. -->
+  <div class="htopo" data-topo aria-hidden="true">
+    <canvas class="htopo-canvas" data-topo-canvas></canvas>
+    <span class="htopo-pin" data-topo-pin><i></i><span>{PEAK}<small class="htopo-tag">{TAG}</small></span></span>
+  </div>
+
   <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
   <div class="hero-scroll-hint" data-anim="hero-hint" style="opacity: 0;" aria-hidden="true">
     <span class="hero-scroll-label">{t.home.hero.scroll}</span>
@@ -207,4 +219,8 @@ const CODE: Tok[][] = [
 <script>
   import "../scripts/heroFluid.ts";
   import "../scripts/heroExplode.ts";
+  import { mountTopo } from "../scripts/heroTopo.ts";
+  // Lo Sciliar solo sul telefono: sul desktop non si scaricano nemmeno le quote.
+  const topo = document.querySelector<HTMLElement>("[data-topo]");
+  if (topo && window.matchMedia("(max-width: 899px)").matches) mountTopo(topo);
 </script>

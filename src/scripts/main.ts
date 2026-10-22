@@ -1,14 +1,16 @@
 import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Draggable } from "gsap/Draggable";
 import { SplitText } from "gsap/SplitText";
 import { initContactFlow } from "./contactFlow";
 import { initTypeBlocks } from "./typeBlock";
 import { initAboutLive } from "./aboutLive";
 import { PixelPortrait, RAMPS } from "./pixelPortrait";
 
-gsap.registerPlugin(ScrollTrigger, Draggable, SplitText);
+// Draggable non serve (nessun trascinabile nel sito): registrato metteva su
+// window un listener touchmove NON passivo (vuoto), che obbliga il telefono
+// ad aspettare il main thread prima di scorrere col dito.
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 // Su mobile la barra URL che appare/scompare cambia l'altezza del viewport e
 // scatena un refresh di ScrollTrigger (ricalcolo di tutti i pin) in pieno
@@ -106,7 +108,45 @@ const lenis = new Lenis({
   syncTouchLerp: 0.075,
 });
 
-lenis.on("scroll", ScrollTrigger.update);
+// Touch: via i listener touch di Lenis. Lenis li mette su tutta la pagina e
+// NON passivi (per poter fermare lo scroll), quindi il browser, prima di
+// scorrere, deve aspettare che il main thread li abbia eseguiti: con la hero
+// e Il punto che lavorano a ogni frame lo scroll col dito partiva in
+// ritardo e si inceppava ("va, poi non va"). Sul telefono non servono — il
+// virtualScroll qui sopra lascia passare ogni evento touch — tranne in due
+// casi: menu aperto (lenis.stop) e scroll programmato bloccato (lock). Solo
+// in quei momenti un listener non passivo ferma il dito; il pannello del
+// menu ([data-lenis-prevent]) resta scorribile.
+if (touchUI) {
+  type TouchHandlers = Record<"onTouchStart" | "onTouchMove" | "onTouchEnd", EventListener> & {
+    element?: EventTarget;
+  };
+  const vs = (lenis as unknown as { virtualScroll?: TouchHandlers }).virtualScroll;
+  if (vs?.element) {
+    vs.element.removeEventListener("touchstart", vs.onTouchStart);
+    vs.element.removeEventListener("touchmove", vs.onTouchMove);
+    vs.element.removeEventListener("touchend", vs.onTouchEnd);
+  }
+  const hold = (e: TouchEvent) => {
+    if ((e.target as Element | null)?.closest?.("[data-lenis-prevent]")) return;
+    if (e.cancelable) e.preventDefault();
+  };
+  let holding = false;
+  gsap.ticker.add(() => {
+    const on = lenis.isStopped || lenis.isLocked;
+    if (on === holding) return;
+    holding = on;
+    if (on) window.addEventListener("touchmove", hold, { passive: false });
+    else window.removeEventListener("touchmove", hold);
+  });
+}
+
+// Su touch lo scroll è nativo e ScrollTrigger ascolta già da solo l'evento
+// scroll del browser (e aggiorna una volta per frame). Agganciarlo anche a
+// Lenis lo faceva girare una seconda volta, sincrono dentro ogni evento
+// scroll: tutte le scene ricalcolate due volte, con layout forzato, proprio
+// nel passaggio hero → Il punto. Su touch quindi solo il suo.
+if (!touchUI) lenis.on("scroll", ScrollTrigger.update);
 
 // ---------- Scroll programmati "bloccanti" + valvola di sicurezza ----------
 // Alcuni movimenti li facciamo fare a Lenis bloccando l'input per la loro
@@ -777,6 +817,20 @@ if (
   // schermata vuota). È grande al suo posto e il racconto parte subito.
   const compact = window.matchMedia("(max-width: 700px)").matches;
   const P0 = compact ? 0.3 : 1.55; // quando entra la prima riga del problema
+  // Touch (scroll nativo): il passaggio hero → Il punto deve restare sotto
+  // il dito. Con lo scroll nativo lo scroll lo muove il compositor, mentre
+  // tutto quello che fa JS arriva un frame (o più) dopo; ogni cosa che
+  // insegue lo scroll si vede "andare e poi fermarsi". Quindi su touch:
+  //   - inerzia corta (lo slancio del sistema è già morbido: un secondo
+  //     ritardo sopra lo faceva rincorrere, la scena continuava da sola
+  //     dopo che il dito si era fermato);
+  //   - niente sfocature animate (filter: blur per parola ridipinge ogni
+  //     frame, sul telefono è il costo più alto del passaggio);
+  //   - il palco sta fermo con position: sticky invece del pin di
+  //     ScrollTrigger (vedi sotto).
+  // Desktop invariato.
+  const PASS_SCRUB = touchUI ? 0.25 : SCRUB;
+  const blur = (px: number) => (touchUI ? {} : { filter: `blur(${px}px)` });
 
   const but = point.querySelector<HTMLElement>("[data-point-but]");
   const items = gsap.utils.toArray<HTMLElement>("[data-point-item]", point);
@@ -844,18 +898,18 @@ if (
     {
       autoAlpha: 1,
       ease: "sine.inOut",
-      scrollTrigger: { trigger: point, start: "top 95%", end: "top 15%", scrub: SCRUB },
+      scrollTrigger: { trigger: point, start: "top 95%", end: "top 15%", scrub: PASS_SCRUB },
     }
   );
   gsap.fromTo(
     leadWords,
-    { yPercent: 110, filter: "blur(8px)" },
+    { yPercent: 110, ...blur(8) },
     {
       yPercent: 0,
-      filter: "blur(0px)",
+      ...blur(0),
       ease: "power3.out",
       stagger: 0.12,
-      scrollTrigger: { trigger: point, start: "top 70%", end: "top 12%", scrub: SCRUB },
+      scrollTrigger: { trigger: point, start: "top 70%", end: "top 12%", scrub: PASS_SCRUB },
     }
   );
 
@@ -875,8 +929,8 @@ if (
   if (but) {
     tl.fromTo(
       but,
-      { autoAlpha: 0, x: -16, filter: "blur(6px)" },
-      { autoAlpha: 1, x: 0, filter: "blur(0px)", duration: 0.7, ease: "expo.out" },
+      { autoAlpha: 0, x: -16, ...blur(6) },
+      { autoAlpha: 1, x: 0, ...blur(0), duration: 0.7, ease: "expo.out" },
       P0 - 0.3
     );
   }
@@ -889,8 +943,8 @@ if (
     tl.fromTo(item, { "--rule": 0 }, { "--rule": 1, duration: 0.6, ease: "power2.inOut" }, at);
     tl.fromTo(
       item,
-      { autoAlpha: 0, y: 30, filter: "blur(8px)" },
-      { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "expo.out" },
+      { autoAlpha: 0, y: 30, ...blur(8) },
+      { autoAlpha: 1, y: 0, ...blur(0), duration: 0.8, ease: "expo.out" },
       at + 0.1
     );
     if (i > 0) {
@@ -925,7 +979,7 @@ if (
   const turnAt = P0 + items.length * 1.05 + 0.6;
   tl.to(
     pointPain,
-    { autoAlpha: 0, y: -60, scale: 0.97, filter: "blur(10px)", duration: 0.9, ease: "power2.in" },
+    { autoAlpha: 0, y: -60, scale: 0.97, ...blur(10), duration: 0.9, ease: "power2.in" },
     turnAt
   );
   pings.forEach((ping, i) => {
@@ -951,8 +1005,8 @@ if (
   tl.set(pointTurn, { autoAlpha: 1 }, riseAt - 0.01);
   tl.fromTo(
     turnWords,
-    { yPercent: 110, filter: "blur(8px)" },
-    { yPercent: 0, filter: "blur(0px)", duration: 0.9, stagger: 0.07, ease: "expo.out" },
+    { yPercent: 110, ...blur(8) },
+    { yPercent: 0, ...blur(0), duration: 0.9, stagger: 0.07, ease: "expo.out" },
     riseAt
   );
   // "il sistema" nasce in inchiostro e si accende di blu, parola per parola.
@@ -973,8 +1027,8 @@ if (
   if (ok) {
     tl.fromTo(
       ok,
-      { autoAlpha: 0, y: 20, filter: "blur(6px)" },
-      { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "expo.out" },
+      { autoAlpha: 0, y: 20, ...blur(6) },
+      { autoAlpha: 1, y: 0, ...blur(0), duration: 0.8, ease: "expo.out" },
       riseAt + 1.45
     );
     // La spunta si disegna appena la scheda è posata.
@@ -999,22 +1053,41 @@ if (
           trigger: point,
           start: "top bottom",
           end: () => "+=" + (window.innerHeight * 3.6),
-          scrub: SCRUB,
+          scrub: PASS_SCRUB,
           invalidateOnRefresh: true,
         },
       }
     );
   }
 
+  // ~0.34 schermate per unità di timeline: ogni riga del problema vale
+  // poco più di un terzo di schermata di scroll.
+  const pinRun = () => Math.round(window.innerHeight * (compact ? 0.3 : 0.34) * tl.duration());
+  // Touch: il pin di ScrollTrigger passa il palco a position: fixed da JS
+  // quando lo scroll arriva all'inizio, ma lo scroll nativo (compositor) è
+  // già oltre: il palco saliva di qualche decina di px e poi tornava di
+  // scatto in posizione, e lo stesso all'uscita. Con position: sticky lo
+  // ferma il browser stesso, nello stesso frame dello scroll. Lo spazio di
+  // scroll che il pin-spacer aggiungeva lo dà un padding sotto il palco
+  // (--pin-run, global.css), della stessa lunghezza del pin: le posizioni
+  // di tutte le sezioni dopo restano identiche.
+  const stickyPin = touchUI;
+  const setPinRun = () => {
+    const run = pinRun();
+    if (stickyPin) point.style.setProperty("--pin-run", `${run}px`);
+    return run;
+  };
+  if (stickyPin) {
+    setPinRun();
+    point.classList.add("is-sticky");
+  }
   const pointPin = ScrollTrigger.create({
     trigger: point,
     start: "top top",
-    // ~0.34 schermate per unità di timeline: ogni riga del problema vale
-    // poco più di un terzo di schermata di scroll.
-    end: () => "+=" + Math.round(window.innerHeight * (compact ? 0.3 : 0.34) * tl.duration()),
-    pin: pointStage,
+    end: () => "+=" + setPinRun(),
+    pin: stickyPin ? false : pointStage,
     animation: tl,
-    scrub: SCRUB,
+    scrub: PASS_SCRUB,
     invalidateOnRefresh: true,
     // Primo pin della pagina, prima dei Servizi (3): ogni spacer a valle
     // legge posizioni già spostate.
@@ -1051,7 +1124,7 @@ if (
       scrollTrigger: {
         start: () => pointPin.end,
         end: () => pointPin.end + window.innerHeight * 0.7,
-        scrub: SCRUB,
+        scrub: PASS_SCRUB,
         invalidateOnRefresh: true,
         refreshPriority: 4,
       },

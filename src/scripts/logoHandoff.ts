@@ -213,8 +213,9 @@ function initHandoff(logo: HTMLElement) {
     // La nuvola dietro al logo d'angolo cresce mentre ci vola.
     if (settled) logo.style.setProperty("--logo-cloud", corner.k.toFixed(3));
     // "Digital" bianco nella hero (il grigio non stacca dalla luce), torna
-    // grigio mentre vola nell'angolo, sulla nuvola chiara.
-    logo.style.setProperty("--logo-hero", (home ? intro.k * (1 - corner.k) : 0).toFixed(3));
+    // grigio mentre vola nell'angolo, sulla nuvola chiara. Sul telefono la
+    // hero è bianca: resta grigio.
+    logo.style.setProperty("--logo-hero", (home && !phone ? intro.k * (1 - corner.k) : 0).toFixed(3));
 
     logo.classList.toggle("is-inverted", inverted);
     root.classList.toggle("handoff-inverted", inverted);
@@ -245,11 +246,24 @@ function initHandoff(logo: HTMLElement) {
   // dove resta; risalendo rifà la strada al contrario. Legato allo scroll,
   // non a tempo: va e torna sotto il dito.
   const cornerRun = () => window.innerHeight * 0.32;
+  // Una volta per frame (in rAF), non a ogni evento scroll: render() misura
+  // e scrive, e dentro l'evento scroll forzava un ricalcolo di stile in più
+  // mentre la pagina passava dalla hero a Il punto. Finita la corsa (logo
+  // nell'angolo, hero uscita) non c'è più nulla da muovere: si salta.
+  let scrollRaf = 0;
+  const onScroll = () => {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => {
+      scrollRaf = 0;
+      if (corner.k >= 1 && window.scrollY > cornerRun() && (!st || st.progress >= 1)) return;
+      render();
+    });
+  };
   const settle = () => {
     if (!phone || !slot) return;
     settled = true;
     render();
-    window.addEventListener("scroll", render, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
   };
 
   // ---- Hero: stato iniziale e coreografie ----------------------------------

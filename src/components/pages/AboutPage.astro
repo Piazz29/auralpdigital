@@ -71,6 +71,15 @@ const facts = ta.manifesto.facts.map((f) => ({
   reel: Array.from({ length: 10 }, (_, k) => (f.n + 1 + k) % 10),
 }));
 
+// Icone della linea del tempo del telefono (stesso ordine delle tappe):
+// libro aperto, bottega, la cima del logo, freccia in avanti.
+const APT_ICONS = [
+  "M3 5.5c3-1 6-1 9 1 3-2 6-2 9-1V19c-3-1-6-1-9 1-3-2-6-2-9-1Z M12 6.5V20",
+  "M4 10V20h16V10 M3 10l1.6-5h14.8L21 10Z M3 10c0 1.7 1.3 2.5 3 2.5S9 11.7 9 10c0 1.7 1.3 2.5 3 2.5s3-.8 3-2.5c0 1.7 1.3 2.5 3 2.5s3-.8 3-2.5 M10 20v-5h4v5",
+  "M2.5 19 9.5 6l4.2 7.4 2.6-3.9L21.5 19Z",
+  "M5 19 19 5 M9 5h10v10",
+];
+
 // IL PERCORSO — le 4 tappe tradotte (gli asset 3D li sceglie JourneyPath).
 const steps = ta.journey.steps.map((s) => ({
   year: s.year,
@@ -331,9 +340,33 @@ const steps = ta.journey.steps.map((s) => ({
          finale fermo che se ne va con la pagina. Ogni sosta è una fermata
          di scroll (data-scroll-detent, main.ts). -->
     <section class="ap-journey">
+      <!-- Telefono (≤768px): niente viaggio 3D (4 schermate di scroll). Le
+           stesse tappe in una linea del tempo: un filo che si riempie mentre
+           scorri, pieno fino a Oggi, tratteggiato verso Domani. Regia in
+           scripts/aboutTimeline.ts. Sul desktop non c'è. -->
+      <div class="apt" data-apt>
+        <header class="apt-head">
+          <span class="works-kicker">{ta.journey.kicker}</span>
+          <h2 class="apt-title font-display"><Rich text={ta.journey.title} /></h2>
+          <p class="apt-lead">{ta.journey.lead}</p>
+        </header>
+        <ol class="apt-list" data-apt-list>
+          <span class="apt-rail" aria-hidden="true"><i class="apt-fill"></i></span>
+          {steps.map((s, i) => (
+            <li class={`apt-step${i === steps.length - 2 ? " apt-step--now" : ""}${i === steps.length - 1 ? " apt-step--next" : ""}`} data-apt-step>
+              <span class="apt-node" aria-hidden="true">
+                <svg viewBox="0 0 24 24">{APT_ICONS[i] && <path d={APT_ICONS[i]} />}</svg>
+              </span>
+              <span class="apt-when">{s.year}<small>{s.kicker}</small></span>
+              <h3 class="apt-step-title font-display">{s.title}</h3>
+              <p class="apt-text">{s.text}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
       <div class="works-screen">
         <JourneyPath
-          client:idle
+          client:media="(min-width: 769px)"
           steps={steps}
           copy={{
             kicker: ta.journey.kicker,
@@ -388,3 +421,7 @@ const steps = ta.journey.steps.map((s) => ({
 
   <Footer lang={lang} />
 </BaseLayout>
+
+<script>
+  import "../../scripts/aboutTimeline";
+</script>
