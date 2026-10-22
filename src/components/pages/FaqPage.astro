@@ -1,0 +1,66 @@
+---
+// FaqPage — corpo della pagina FAQ, parametrizzato per lingua. Contenuti dal
+// dizionario (t.faq). Su desktop tutto sta in UNA schermata (FaqExplorer:
+// indice delle categorie a sinistra, domande a destra), poi il footer. Sfondo
+// DotGrid interattivo dietro al contenuto. Raggiungibile dal menu hamburger.
+import type { Lang } from "../../i18n";
+import { defaultLang, getDict, localePath } from "../../i18n";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Navbar from "../Navbar.astro";
+import Footer from "../Footer.astro";
+import FaqExplorer from "../reactbits/FaqExplorer.jsx";
+import FaqBackground from "../reactbits/FaqBackground.jsx";
+import "../../styles/global.css";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = getDict(lang);
+const f = t.faq;
+
+const metaTitle = t.meta.faq.title;
+---
+
+<BaseLayout lang={lang} title={metaTitle} description={t.meta.faq.description}>
+  <Navbar lang={lang} route="/faq" />
+
+  <main class="faqpage">
+    <!-- Sfondo DotGrid: layer fisso dietro al contenuto, non interattivo come
+         box (gli eventi li ascolta su window il componente). -->
+    <div class="faq-bg" aria-hidden="true">
+      <FaqBackground client:idle />
+    </div>
+
+    <section class="faq-screen">
+      <FaqExplorer
+        client:load
+        categories={f.categories}
+        kicker="FAQ"
+        title={f.title}
+        subtitle={f.subtitle}
+        cta={{ text: f.cta.text, button: f.cta.button, href: localePath(lang, "/#contatti") }}
+      />
+      <!-- Tutte le domande in HTML statico. L'esploratore sopra mostra una
+           categoria e una risposta alla volta (le altre arrivano solo al
+           click): così il testo completo resta nella pagina per Google e per
+           i motori AI, che spesso non eseguono JavaScript. È lo schema dei
+           pannelli a schede: contenuto nascosto finché non serve. -->
+      <div class="faq-all" hidden>
+        {f.categories.map((c) => (
+          <section>
+            <h2>{c.name}</h2>
+            {c.items.map((it) => (
+              <div>
+                <h3>{it.q}</h3>
+                <p>{it.a}</p>
+              </div>
+            ))}
+          </section>
+        ))}
+      </div>
+    </section>
+  </main>
+
+  <Footer lang={lang} />
+</BaseLayout>

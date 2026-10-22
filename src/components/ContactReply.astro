@@ -1,0 +1,32 @@
+---
+// Chi risponde al form: i due volti + tempi e rassicurazioni. Vive sotto
+// l'invito della sezione finale (a sinistra della card), così la card resta
+// bassa e la sezione sta in una schermata.
+import type { Lang } from "../i18n";
+import { defaultLang, getDict } from "../i18n";
+import { getImage } from "astro:assets";
+import julianPhoto from "../assets/team/julian.jpg";
+import alicePhoto from "../assets/team/alice.png";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const card = getDict(lang).contactForm.card;
+const faces = await Promise.all(
+  [alicePhoto, julianPhoto].map((src) => getImage({ src, width: 88, format: "webp" }))
+);
+const tick = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10 -10"/></svg>`;
+---
+
+<div class="cflow-foot">
+  <span class="cflow-foot-faces" aria-hidden="true">
+    {faces.map((f) => <img src={f.src} alt="" width="44" height="44" loading="lazy" decoding="async" />)}
+  </span>
+  <span class="cflow-foot-text">
+    <span class="cflow-foot-reply">{card.reply}</span>
+    <span class="cflow-foot-perks">
+      {card.perks.map((pk) => <span><Fragment set:html={tick} />{pk}</span>)}
+    </span>
+  </span>
+</div>

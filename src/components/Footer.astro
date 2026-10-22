@@ -1,0 +1,87 @@
+---
+// FOOTER — condiviso tra homepage e pagine interne, multilingua. `home`
+// mantiene le ancore "#sezione" sulla home; `lang` localizza testi e link.
+// Da solo (chi-siamo, faq) è un blocco navy in cui la carta sfuma dall'alto;
+// in home vive DENTRO .finale, sotto il form, e ne eredita il fondo.
+import type { Lang } from "../i18n";
+import { defaultLang, getDict, localePath } from "../i18n";
+import { EMAIL, INSTAGRAM_URL, mailHref, whatsappHref } from "../config/contact";
+import Rich from "./Rich.astro";
+
+interface Props {
+  home?: boolean;
+  lang?: Lang;
+}
+const { home = false, lang = defaultLang } = Astro.props;
+const t = getDict(lang);
+const homeHref = localePath(lang, "/");
+const anchor = (id: string) => (home ? `#${id}` : `${homeHref}#${id}`);
+const aboutHref = localePath(lang, "/chi-siamo");
+const year = new Date().getFullYear();
+---
+
+<footer id="info" class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="/logo/wordmark-reversed.svg" alt="AuralpDigital" class="footer-logo" width="556" height="119" />
+        <p class="footer-tagline">
+          <Rich text={t.footer.tagline} />
+        </p>
+      </div>
+
+      <nav class="footer-col" aria-label="Footer">
+        <span class="footer-col-label">{t.footer.menuLabel}</span>
+        <a href={anchor("projects")} class="footer-link">{t.footer.links.projects}</a>
+        <a href={anchor("cosa-facciamo")} class="footer-link">{t.footer.links.services}</a>
+        <a href={anchor("come-lavoriamo")} class="footer-link">{t.footer.links.method}</a>
+        <a href={aboutHref} class="footer-link">{t.footer.links.about}</a>
+        <a href={anchor("contatti")} class="footer-link">{t.footer.links.contact}</a>
+      </nav>
+
+      <div class="footer-col">
+        <span class="footer-col-label">{t.footer.contactLabel}</span>
+        <a href={mailHref()} class="footer-mail">{EMAIL}</a>
+        <span class="footer-muted">{t.footer.muted}</span>
+        <div class="footer-social">
+          <a href={whatsappHref()} class="footer-social-link footer-social-link--wa" target="_blank" rel="noopener" aria-label={t.footer.whatsapp}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9" />
+              <path d="M9 10a.5 .5 0 0 0 1 0v-1a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1" />
+            </svg>
+          </a>
+          <a href={mailHref()} class="footer-social-link footer-social-link--mail" aria-label={t.footer.email}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 20h3a1 1 0 0 0 1 -1v-14a1 1 0 0 0 -1 -1h-3v16" />
+              <path d="M5 20h3v-16h-3a1 1 0 0 0 -1 1v14a1 1 0 0 0 1 1" />
+              <path d="M16 4l-4 4l-4 -4" />
+              <path d="M4 6.5l8 7.5l8 -7.5" />
+            </svg>
+          </a>
+          <a href={INSTAGRAM_URL} class="footer-social-link footer-social-link--ig" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="4" width="16" height="16" rx="4.5" />
+              <circle cx="12" cy="12" r="3.6" />
+              <path d="M16.6 7.4v.01" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© {year} AuralpDigital</span>
+      <span>{t.footer.location}</span>
+      <button type="button" class="footer-top-link" data-back-to-top>
+        {t.footer.backToTop}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5l0 14" /><path d="M18 11l-6 -6" /><path d="M6 11l6 -6" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Wordmark gigante — emerge dal fondo in parallasse (main.ts), con i
+       colori originali del logo per fondi scuri. -->
+  <div class="footer-ghost font-display" aria-hidden="true"><span class="footer-ghost-a">Aural</span><span class="footer-ghost-p">p</span><span class="footer-ghost-d">Digital</span></div>
+</footer>

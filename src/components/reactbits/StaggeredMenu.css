@@ -1,0 +1,567 @@
+.staggered-menu-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.staggered-menu-wrapper.fixed-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 60;
+  overflow: hidden;
+}
+
+.staggered-menu-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25em 1.5em;
+  background: transparent;
+  pointer-events: none;
+  z-index: 20;
+}
+
+@media (min-width: 768px) {
+  .staggered-menu-header {
+    padding: 1.25em 2.5em;
+  }
+}
+
+.staggered-menu-header > * {
+  pointer-events: auto;
+}
+
+/* Il layer blur è puramente decorativo: non deve intercettare i click. Selettore
+   più specifico della regola `> *` qui sopra, così vince a prescindere
+   dall'ordine di caricamento dei fogli di stile. */
+.staggered-menu-header > .nav-blur-bg {
+  pointer-events: none;
+}
+
+.sm-logo {
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.sm-logo-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.sm-logo-link:hover {
+  transform: scale(1.04);
+}
+
+.sm-logo-img {
+  display: block;
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Wordmark reversed (chiaro) sovrapposto a quello scuro: si scambiano in
+   cross-fade via opacity quando la nav passa sopra una banda scura. */
+.sm-logo-img--reversed {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+/* Lato destro dell'header: switcher di lingua + bottone menu, raggruppati. */
+.sm-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  pointer-events: auto;
+}
+
+/* Switcher di lingua — segmenti compatti IT · DE · EN nell'header fisso. */
+.sm-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  pointer-events: auto;
+}
+
+.sm-lang-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.9em;
+  padding: 0.32em 0.42em;
+  font-family: var(--font-body, 'Satoshi', sans-serif);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: #171310;
+  /* Era 0.5 → 3.4:1: sotto soglia per un controllo cliccabile. 0.72 li tiene
+     comunque secondari rispetto alla lingua attiva, che resta a piena opacità. */
+  opacity: 0.72;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: opacity 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+
+.sm-lang-link:hover {
+  opacity: 1;
+}
+
+.sm-lang-link.is-active {
+  opacity: 1;
+  color: var(--sm-accent, #2748A5);
+  background: rgba(39, 72, 165, 0.1);
+}
+
+.sm-lang-link:focus-visible {
+  outline: 2px solid var(--sm-accent, #2748A5);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .sm-header-right {
+    gap: 0.7rem;
+  }
+  .sm-lang-link {
+    min-width: 1.7em;
+    padding: 0.3em 0.34em;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+}
+
+.sm-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #171310;
+  font-family: var(--font-body, 'Satoshi', sans-serif);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  overflow: visible;
+}
+
+.sm-toggle:focus-visible {
+  outline: 2px solid var(--sm-accent, #2748A5);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.sm-line:last-of-type {
+  margin-top: 6px;
+}
+
+.sm-toggle-textWrap {
+  position: relative;
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+  white-space: nowrap;
+  width: var(--sm-toggle-width, auto);
+  min-width: var(--sm-toggle-width, auto);
+}
+
+.sm-toggle-textInner {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.sm-toggle-line {
+  display: block;
+  height: 1em;
+  line-height: 1;
+}
+
+.sm-icon {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+
+.sm-panel-itemWrap {
+  position: relative;
+  overflow: hidden;
+  line-height: 1;
+}
+
+.sm-icon-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+
+.sm-line {
+  display: none !important;
+}
+
+/* ---------- Inversione su superfici scure ----------
+   Mentre la nav fissa attraversa una banda scura (il navy di "Cosa facciamo" o
+   la card CTA scura), uno ScrollTrigger aggiunge .is-on-dark al wrapper:
+   wordmark, switcher di lingua e bottone menu passano al chiaro per restare
+   leggibili, poi tornano normali quando lo sfondo ridiventa chiaro. Cross-fade
+   morbido via transition. Sospeso a menu aperto ([data-open]): il pannello
+   chiaro copre lo schermo, quindi l'header resta scuro. */
+.sm-logo-img,
+.sm-toggle,
+.sm-lang-link {
+  transition: color 0.45s ease, opacity 0.45s ease, background 0.25s ease;
+}
+
+/* Sul fondo scuro: svanisce il wordmark scuro, compare quello reversed. */
+.staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-logo-img:not(.sm-logo-img--reversed) {
+  opacity: 0;
+}
+
+.staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-logo-img--reversed {
+  opacity: 1;
+}
+
+.staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-toggle {
+  /* Vince sul color inline impostato da GSAP sul bottone. */
+  color: #FFFFFF !important;
+}
+
+.staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-lang-link {
+  color: #FFFFFF;
+}
+
+.staggered-menu-wrapper.is-on-dark:not([data-open]) .sm-lang-link.is-active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.staggered-menu-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100vw;
+  height: 100%;
+  /* Fondo pieno: un backdrop-filter qui sotto non si vedrebbe (niente
+     traspare) ma costerebbe comunque un blur a tutto schermo. */
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(7em, 14vh, 9em) clamp(1.5em, 7vw, 7em) clamp(2em, 5vh, 3.5em);
+  overflow-y: auto;
+  z-index: 10;
+  pointer-events: auto;
+  opacity: 0;
+}
+
+[data-position='left'] .staggered-menu-panel {
+  right: auto;
+  left: 0;
+}
+
+.sm-prelayers {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+}
+
+[data-position='left'] .sm-prelayers {
+  right: auto;
+  left: 0;
+}
+
+.sm-prelayer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  transform: translateX(0);
+  opacity: 0;
+}
+
+.sm-panel-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Le voci si centrano nello spazio libero, il footer resta in fondo. */
+.sm-panel-list {
+  margin-top: auto;
+}
+
+/* Footer fullscreen: contatti a sinistra, social (icone) a destra. */
+.sm-panel-footer {
+  margin-top: auto;
+  padding-top: clamp(1.5rem, 4vh, 2.5rem);
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem 3rem;
+  border-top: 1px solid #E7E5DF;
+}
+
+.sm-socials {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.sm-socials-title {
+  margin: 0;
+  font-family: var(--font-body, 'Satoshi', sans-serif);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sm-accent, #2748A5);
+}
+
+.sm-socials-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.sm-socials-list .sm-socials-link {
+  opacity: 1;
+}
+
+.sm-socials-list:hover .sm-socials-link {
+  opacity: 0.35;
+}
+
+.sm-socials-list:hover .sm-socials-link:hover {
+  opacity: 1;
+}
+
+.sm-socials-link:focus-visible {
+  outline: 2px solid var(--sm-accent, #2748A5);
+  outline-offset: 3px;
+}
+
+.sm-socials-list:focus-within .sm-socials-link {
+  opacity: 0.35;
+}
+
+.sm-socials-list:focus-within .sm-socials-link:focus-visible {
+  opacity: 1;
+}
+
+.sm-socials-link {
+  font-family: var(--font-body, 'Satoshi', sans-serif);
+  font-size: 1rem;
+  font-weight: 500;
+  color: #171310;
+  text-decoration: none;
+  position: relative;
+  padding: 2px 0;
+  display: inline-block;
+  transition:
+    color 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.sm-socials-link:hover {
+  color: var(--sm-accent, #2748A5);
+}
+
+/* Variante a icona: pulsante circolare con SVG (currentColor). */
+.sm-socials-link--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 9999px;
+  border: 1px solid #E7E5DF;
+  color: #171310;
+  background: rgba(255, 255, 255, 0.5);
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease,
+    transform 0.25s ease;
+}
+
+.sm-socials-link--icon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.sm-socials-link--icon:hover {
+  color: #FFFFFF;
+  background: var(--sm-accent, #2748A5);
+  border-color: var(--sm-accent, #2748A5);
+  transform: translateY(-2px);
+}
+
+/* Blocco extra: email + luogo (mantiene i contatti del menu originale). */
+.sm-panel-extra {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-family: var(--font-body, 'Satoshi', sans-serif);
+  font-size: 15px;
+}
+
+.sm-panel-extra-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sm-accent, #2748A5);
+  margin-bottom: 0.1rem;
+}
+
+.sm-panel-extra a {
+  color: var(--sm-accent, #2748A5);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  width: fit-content;
+  transition: opacity 0.2s ease;
+}
+
+.sm-panel-extra a:hover {
+  opacity: 0.7;
+}
+
+.sm-panel-extra .sm-panel-place {
+  color: #544C40;
+  line-height: 1.7;
+}
+
+.sm-panel-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #171310;
+  text-transform: uppercase;
+}
+
+.sm-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sm-panel-item {
+  position: relative;
+  color: #171310;
+  font-family: var(--font-display, 'Satoshi', sans-serif);
+  font-weight: 600;
+  font-size: clamp(2.8rem, 9vw, 6rem);
+  cursor: pointer;
+  line-height: 1.04;
+  letter-spacing: -2px;
+  text-transform: none;
+  transition:
+    background 0.25s,
+    color 0.25s;
+  display: inline-block;
+  text-decoration: none;
+  padding-right: 1.4em;
+}
+
+.staggered-menu-panel .sm-socials-list .sm-socials-link {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.staggered-menu-panel .sm-socials-list:hover .sm-socials-link:not(:hover) {
+  opacity: 0.35;
+}
+
+.staggered-menu-panel .sm-socials-list:focus-within .sm-socials-link:not(:focus-visible) {
+  opacity: 0.35;
+}
+
+.staggered-menu-panel .sm-socials-list .sm-socials-link:hover,
+.staggered-menu-panel .sm-socials-list .sm-socials-link:focus-visible {
+  opacity: 1;
+}
+
+.sm-panel-itemLabel {
+  display: inline-block;
+  will-change: transform;
+  transform-origin: 50% 100%;
+}
+
+.sm-panel-item:hover {
+  color: var(--sm-accent, #2748A5);
+}
+
+.sm-panel-list[data-numbering] {
+  counter-reset: smItem;
+}
+
+.sm-panel-list[data-numbering] .sm-panel-item::after {
+  counter-increment: smItem;
+  content: counter(smItem, decimal-leading-zero);
+  position: absolute;
+  top: 0.1em;
+  right: 2.2em;
+  font-family: var(--font-body, 'Satoshi', sans-serif);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--sm-accent, #2748A5);
+  letter-spacing: 0;
+  pointer-events: none;
+  user-select: none;
+  opacity: var(--sm-num-opacity, 0);
+}
+
+@media (max-width: 640px) {
+  .sm-panel-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.75rem;
+  }
+  .sm-socials {
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,249 @@
+.steam-container {
+  position: absolute;
+  left: 71%;
+  top: 33%;
+  width: 5vw;
+  max-width: 72px;
+  height: 300px;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 1s ease-out;
+  transform: translateX(-50%);
+}
+
+.steam-container.active {
+  opacity: 1;
+}
+
+.steam-particle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.3) 40%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  filter: blur(20px);
+  will-change: transform, opacity;
+  animation: steamRise var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes steamRise {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0px) scaleX(1);
+  }
+  15% {
+    opacity: 0.35;
+  }
+  35% {
+    opacity: 0.4;
+  }
+  70% {
+    opacity: 0.25;
+  }
+  85% {
+    opacity: 0.1;
+    transform: translateX(calc(-50% + 8px)) translateY(-200px) scaleX(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-50% + 12px)) translateY(-280px) scaleX(1.2);
+  }
+}
+
+/* Variazioni sottili per ogni particella - ondeggiamento laterale */
+.steam-particle:nth-child(1) {
+  animation-name: steamRise1;
+}
+
+.steam-particle:nth-child(2) {
+  animation-name: steamRise2;
+}
+
+.steam-particle:nth-child(3) {
+  animation-name: steamRise3;
+}
+
+.steam-particle:nth-child(4) {
+  animation-name: steamRise4;
+}
+
+.steam-particle:nth-child(5) {
+  animation-name: steamRise5;
+}
+
+.steam-particle:nth-child(6) {
+  animation-name: steamRise6;
+}
+
+@keyframes steamRise1 {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0px);
+  }
+  15% {
+    opacity: 0.35;
+  }
+  35% {
+    opacity: 0.4;
+  }
+  70% {
+    opacity: 0.25;
+  }
+  85% {
+    opacity: 0.1;
+    transform: translateX(calc(-50% + 4px)) translateY(-200px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-50% + 8px)) translateY(-280px);
+  }
+}
+
+@keyframes steamRise2 {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0px);
+  }
+  15% {
+    opacity: 0.35;
+  }
+  35% {
+    opacity: 0.4;
+  }
+  70% {
+    opacity: 0.25;
+  }
+  85% {
+    opacity: 0.1;
+    transform: translateX(calc(-50% - 6px)) translateY(-210px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-50% - 12px)) translateY(-290px);
+  }
+}
+
+@keyframes steamRise3 {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0px);
+  }
+  15% {
+    opacity: 0.38;
+  }
+  35% {
+    opacity: 0.4;
+  }
+  70% {
+    opacity: 0.2;
+  }
+  85% {
+    opacity: 0.08;
+    transform: translateX(calc(-50% + 10px)) translateY(-195px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-50% + 15px)) translateY(-275px);
+  }
+}
+
+@keyframes steamRise4 {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0px);
+  }
+  15% {
+    opacity: 0.36;
+  }
+  35% {
+    opacity: 0.4;
+  }
+  70% {
+    opacity: 0.22;
+  }
+  85% {
+    opacity: 0.09;
+    transform: translateX(calc(-50% - 5px)) translateY(-205px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-50% - 10px)) translateY(-285px);
+  }
+}
+
+@keyframes steamRise5 {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0px);
+  }
+  15% {
+    opacity: 0.34;
+  }
+  35% {
+    opacity: 0.4;
+  }
+  70% {
+    opacity: 0.23;
+  }
+  85% {
+    opacity: 0.1;
+    transform: translateX(calc(-50% + 7px)) translateY(-215px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-50% + 12px)) translateY(-295px);
+  }
+}
+
+@keyframes steamRise6 {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0px);
+  }
+  15% {
+    opacity: 0.37;
+  }
+  35% {
+    opacity: 0.4;
+  }
+  70% {
+    opacity: 0.24;
+  }
+  85% {
+    opacity: 0.09;
+    transform: translateX(calc(-50% - 8px)) translateY(-200px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-50% - 14px)) translateY(-280px);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .steam-container {
+    left: 55%;
+    top: 65%;
+  }
+}
+
+/* Rispetta prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .steam-particle {
+    animation: none;
+  }
+
+  .steam-container {
+    display: none;
+  }
+}

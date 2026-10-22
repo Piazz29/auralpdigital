@@ -1,0 +1,458 @@
+---
+// SERVIZI — una schermata sola, i tre servizi si sfogliano da un menu.
+//
+// A sinistra la card con la clip, a destra il menu dei servizi e la
+// descrizione. Il cambio lo decide chi guarda, non lo scroll: passando sopra
+// un nome del menu (o cliccandolo, o con le frecce, o con uno swipe sulla
+// card) compare quel servizio. La pagina continua a scorrere libera.
+// Finché nessuno tocca niente i servizi si avvicendano da soli, con la barra
+// sotto il nome che si riempie; al primo gesto l'avvicendamento si ferma.
+//
+// Il cambio: le clip sono un mazzo di card. Andando avanti la card in cima
+// vola via di lato e torna in fondo al mazzo mentre la successiva sale al
+// suo posto; tornando indietro l'ultima si sfila dal fondo e si posa sopra.
+// La card si può anche trascinare (mouse o dito) e lanciare. Intanto il
+// titolo si rinnova lettera per lettera, l'alone dietro il mazzo prende il
+// colore del servizio e la notifica di "Il punto" RISOLTA (`fix`) si
+// appoggia sul bordo. Senza JS resta il primo servizio (gli altri sono
+// raggiungibili dal menu solo con JS: il contenuto è comunque nel documento).
+//
+// CONTENUTO: titoli e descrizioni dal dizionario (`home.services`).
+import type { Lang } from "../i18n";
+import { defaultLang, getDict } from "../i18n";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = getDict(lang).home.services;
+
+// Dati strutturali per indice (stesso ordine del dizionario). `tint` colora
+// il fondo mentre la clip carica.
+const media: { video: string; poster: string; tint: string }[] = [
+  {
+    // Clip originale (720×1280, con audio) in .video-originals/: qui senza
+    // audio, ricodificata H.264 CRF 24 (veryslow, faststart). È 9:16: la
+    // card 4:5 la ritaglia in alto e in basso. Poster in webp.
+    video: "/videos/services/siti.mp4?v=3",
+    poster: "/videos/services/siti-poster.webp",
+    tint: "39, 72, 165",
+  },
+  {
+    video: "/videos/services/social.mp4?v=2",
+    poster: "/videos/services/social-poster.webp",
+    tint: "216, 64, 2",
+  },
+  {
+    video: "/videos/services/gestionali.mp4?v=2",
+    poster: "/videos/services/gestionali-poster.webp",
+    tint: "28, 43, 95",
+  },
+];
+
+const services = t.items.map((item, i) => ({ ...item, ...media[i] }));
+const prev = { it: "Servizio precedente", de: "Vorheriger Service", en: "Previous service" }[lang];
+const next = { it: "Servizio successivo", de: "Nächster Service", en: "Next service" }[lang];
+const swipe = { it: "Scorri per gli altri", de: "Wischen für mehr", en: "Swipe for more" }[lang];
+
+// Icona della notifica risolta, nello stesso ordine dei servizi: Google
+// (siti), messaggio (social), telefono (gestionali) — le stesse di "Il punto".
+const fixIcons = [
+  '<circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />',
+  '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" />',
+  '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" />',
+];
+---
+
+<div class="svt" data-svt>
+  <!-- IL MAZZO — una card per servizio; in cima quella del servizio attivo -->
+  <div class="svt-media" data-svt-media>
+    {services.map((s, i) => (
+      <span class:list={["svt-glow", { "is-on": i === 0 }]} data-svt-glow style={`--tint:${s.tint}`} aria-hidden="true"></span>
+    ))}
+    <div class="svt-deck">
+      {services.map((s, i) => (
+        <figure class:list={["svt-shot", { "is-on": i === 0 }]} data-svt-shot data-depth={i} style={`--tint:${s.tint}`}>
+          <video
+            data-svc-video
+            src={s.video}
+            data-poster={s.poster}
+            muted
+            loop
+            playsinline
+            preload="none"
+            aria-hidden="true"
+          />
+          <span class="svt-veil" aria-hidden="true"></span>
+          <span class="svt-shot-n" aria-hidden="true">{String(i + 1).padStart(2, "0")}<i>{s.short}</i></span>
+          <span class="svt-sheen" aria-hidden="true"></span>
+        </figure>
+      ))}
+    </div>
+
+    <!-- Le notifiche risolte, una per servizio, sul bordo verso il testo -->
+    {services.map((s, i) => (
+      <div class:list={["svc-fix svt-fix", { "is-on": i === 0 }]} data-svt-fix aria-hidden="true">
+        <span class="svc-fix-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" set:html={fixIcons[i]} />
+          <span class="svc-fix-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+          </span>
+        </span>
+        <span class="svc-fix-text">
+          <span class="svc-fix-title">{s.fix.title}</span>
+          <span class="svc-fix-body">{s.fix.body}</span>
+        </span>
+      </div>
+    ))}
+  </div>
+
+  <div class="svt-side">
+    <span class="works-kicker svt-kicker">{t.kicker}</span>
+
+    <!-- IL MENU — passandoci sopra compare quel servizio -->
+    <div class="svt-tabs" role="tablist" aria-label={t.kicker}>
+      {services.map((s, i) => (
+        <button
+          type="button"
+          role="tab"
+          class:list={["svt-tab", { "is-on": i === 0 }]}
+          id={`svt-tab-${i}`}
+          aria-controls={`svt-panel-${i}`}
+          aria-selected={i === 0 ? "true" : "false"}
+          tabindex={i === 0 ? 0 : -1}
+          data-svt-tab
+        >
+          <span class="svt-tab-label">{s.short}</span>
+          <span class="svt-tab-bar" aria-hidden="true"><span data-svt-fill></span></span>
+        </button>
+      ))}
+    </div>
+
+    <!-- LE DESCRIZIONI — impilate nello stesso spazio, si danno il cambio -->
+    <div class="svt-copies">
+      {services.map((s, i) => (
+        <article
+          class:list={["svt-copy", { "is-on": i === 0 }]}
+          role="tabpanel"
+          id={`svt-panel-${i}`}
+          aria-labelledby={`svt-tab-${i}`}
+          hidden={i !== 0}
+          data-svt-copy
+        >
+          <h3 class="svc-title" data-type-block data-tb-static><span class="tb-line">{s.name} </span><span class="tb-line"><em>{s.nameEm}</em></span></h3>
+          <p class="svc-desc">{s.desc}</p>
+          <ul class="svc-tags">
+            {s.tags.map((tag) => (
+              <li class="svc-tag">{tag}</li>
+            ))}
+          </ul>
+          <a class="svc-link" href="#contatti">
+            {t.link} <span aria-hidden="true">↗</span>
+          </a>
+        </article>
+      ))}
+    </div>
+
+    <div class="step-arrows">
+      <button type="button" class="step-arrow" data-svt-prev aria-label={prev}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+      </button>
+      <span class="step-count" aria-hidden="true"><b data-step-count>01</b> / {String(services.length).padStart(2, "0")}</span>
+      <span class="step-swipe" aria-hidden="true"><i></i>{swipe}</span>
+      <button type="button" class="step-arrow" data-svt-next aria-label={next}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Il cambio di servizio. Il mazzo si muove con le Web Animations (le pose
+  // delle card sono qui sotto), il resto sono classi e animazioni CSS. Lo
+  // scroll della pagina non viene mai toccato.
+  import { splitChars } from "../scripts/charRoll";
+
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const AUTO_MS = 7000; // durata di un servizio nell'avvicendamento automatico
+
+  // Pose del mazzo per profondità (0 = in cima): spostamento in % della
+  // card, rotazione, scala. Le card sotto spuntano a ventaglio.
+  type Pose = { x: number; y: number; r: number; s: number };
+  // (su telefono la card è larga quasi quanto lo schermo: ventaglio stretto)
+  const narrow = window.matchMedia("(max-width: 899px)").matches;
+  const POSES: Pose[] = [
+    { x: 0, y: 0, r: 0, s: 1 },
+    { x: narrow ? 2.5 : 5.5, y: -3.5, r: narrow ? 2.4 : 3.4, s: 0.93 },
+    { x: narrow ? -2.5 : -5, y: -5.5, r: narrow ? -2.2 : -3.2, s: 0.87 },
+  ];
+  const pose = (p: Pose) => `translate(${p.x}%, ${p.y}%) rotate(${p.r}deg) scale(${p.s})`;
+  // fuori dal mazzo, di lato (side: -1 sinistra, 1 destra; a destra c'è il
+  // testo: la card ci si affaccia appena)
+  const away = (side: number) =>
+    side < 0 ? "translate(-62%, 5%) rotate(-11deg) scale(0.97)" : "translate(34%, -7%) rotate(7deg) scale(0.97)";
+  const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+  function setup(root: HTMLElement) {
+    const shots = Array.from(root.querySelectorAll<HTMLElement>("[data-svt-shot]"));
+    const fixes = Array.from(root.querySelectorAll<HTMLElement>("[data-svt-fix]"));
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-svt-tab]"));
+    const copies = Array.from(root.querySelectorAll<HTMLElement>("[data-svt-copy]"));
+    const media = root.querySelector<HTMLElement>("[data-svt-media]")!;
+    const count = root.querySelector<HTMLElement>("[data-step-count]");
+    const n = shots.length;
+    const videos = shots.map((s) => s.querySelector("video"));
+    const glows = Array.from(root.querySelectorAll<HTMLElement>("[data-svt-glow]"));
+    let current = 0;
+    let visible = false;
+    const outTimers: number[] = [];
+
+    root.classList.add("is-live");
+    root.style.setProperty("--svt-auto", `${AUTO_MS}ms`);
+    // le descrizioni nascoste restano nel layout (impilate): l'altezza del
+    // blocco è quella della più lunga, e il cambio non sposta niente
+    copies.forEach((c) => (c.hidden = false));
+    copies.forEach((c, k) => c.setAttribute("aria-hidden", String(k !== current)));
+    // i titoli si rinnovano lettera per lettera
+    if (!reduced)
+      copies.forEach((c) => {
+        const h = c.querySelector<HTMLElement>(".svc-title");
+        if (!h) return;
+        h.setAttribute("aria-label", (h.textContent ?? "").replace(/\s+/g, " ").trim());
+        h.querySelectorAll<HTMLElement>(".tb-line").forEach((l) => splitChars(l));
+      });
+
+    const depth = (k: number) => (k - current + n) % n;
+    const rest = () =>
+      shots.forEach((s, k) => {
+        const d = depth(k);
+        s.dataset.depth = String(d);
+        s.style.transform = pose(POSES[d]);
+        s.style.zIndex = String(n - d);
+      });
+    rest();
+    const glow = () => glows.forEach((g, k) => g.classList.toggle("is-on", k === current));
+
+    // La clip della card in cima parte a volo finito: avviare un video
+    // mentre il mazzo si muove costa fotogrammi.
+    let playTimer = 0;
+    const playActive = (wait = 0) => {
+      window.clearTimeout(playTimer);
+      videos.forEach((v, k) => {
+        if (v && k !== current && !v.paused) v.pause();
+      });
+      const v = videos[current];
+      if (!v) return;
+      if (!visible) return void (v.paused || v.pause());
+      v.preload = "auto";
+      if (!reduced) playTimer = window.setTimeout(() => void v.play().catch(() => {}), wait);
+    };
+
+    // Il mazzo: ogni card parte da dove si trova adesso (anche a metà di un
+    // altro cambio o di un trascinamento) e va alla sua nuova posa. Nelle
+    // animazioni solo transform (corrono sul compositore); il cambio di
+    // piano (z-index) avviene a metà volo, con un timer.
+    const zTimers: number[] = [];
+    const shuffle = (from: number, dir: number) => {
+      const starts = shots.map((s) => getComputedStyle(s).transform);
+      const olds = shots.map((s) => Number(s.dataset.depth));
+      rest();
+      zTimers.forEach((t) => window.clearTimeout(t));
+      if (reduced) return;
+      const DUR = 1000;
+      shots.forEach((s, k) => {
+        s.getAnimations().forEach((a) => a.cancel());
+        const a = starts[k] === "none" ? pose(POSES[olds[k]]) : starts[k];
+        const b = s.style.transform;
+        const z = s.style.zIndex;
+        const flight = (side: number, zFly: number) => {
+          s.style.zIndex = String(zFly);
+          zTimers.push(window.setTimeout(() => (s.style.zIndex = z), DUR * 0.42));
+          s.animate(
+            [
+              { transform: a, easing: "cubic-bezier(0.3, 0, 0.2, 1)" },
+              { transform: away(side), offset: 0.42, easing: EASE },
+              { transform: b },
+            ],
+            { duration: DUR }
+          );
+        };
+        // avanti: la card in cima vola a sinistra e rientra in fondo
+        if (dir > 0 && k === from) flight(-1, n + 2);
+        // indietro: l'ultima si sfila dal fondo verso destra e si posa sopra
+        else if (dir < 0 && k === current) flight(1, 0);
+        else
+          s.animate([{ transform: a }, { transform: b }], {
+            duration: 850,
+            delay: k === current ? 70 : 140,
+            easing: EASE,
+            fill: "backwards",
+          });
+      });
+    };
+
+    const roll = (dir: number) => {
+      if (!count) return;
+      count.textContent = String(current + 1).padStart(2, "0");
+      if (!reduced)
+        count.animate(
+          [
+            { transform: `translateY(${dir * 70}%)`, opacity: 0, filter: "blur(3px)" },
+            { transform: "none", opacity: 1, filter: "blur(0)" },
+          ],
+          { duration: 520, easing: EASE }
+        );
+    };
+
+    const go = (i: number, dir = i > current ? 1 : -1) => {
+      i = (i + n) % n;
+      if (i === current) return settle();
+      const from = current;
+      current = i;
+      shots.forEach((s, k) => s.classList.toggle("is-on", k === i));
+      shuffle(from, dir);
+      glow();
+
+      fixes.forEach((f, k) => f.classList.toggle("is-on", k === i));
+      // il testo uscente resta un attimo in scena: le sue lettere salgono via
+      // mentre quelle nuove arrivano dal basso
+      copies.forEach((c, k) => {
+        window.clearTimeout(outTimers[k]);
+        c.classList.toggle("is-out", k === from);
+        c.classList.toggle("is-on", k === i);
+        c.setAttribute("aria-hidden", String(k !== i));
+      });
+      outTimers[from] = window.setTimeout(() => copies[from].classList.remove("is-out"), 750);
+      tabs.forEach((tab, k) => {
+        tab.classList.toggle("is-on", k === i);
+        tab.setAttribute("aria-selected", String(k === i));
+        tab.tabIndex = k === i ? 0 : -1;
+      });
+      roll(dir);
+      playActive(reduced ? 0 : 650);
+    };
+
+    // Avvicendamento automatico: la barra del nome attivo si riempie (CSS);
+    // a barra piena si passa al servizio dopo. Solo in vista; si ferma per
+    // sempre al primo gesto di chi guarda.
+    const stopAuto = () => root.classList.remove("is-auto");
+    if (!reduced) {
+      root.classList.add("is-auto");
+      root.addEventListener("animationend", (e) => {
+        if ((e.target as HTMLElement).matches("[data-svt-fill]") && root.classList.contains("is-auto")) go(current + 1, 1);
+      });
+    }
+
+    // Menu: col mouse basta passarci sopra (un attimo, per non cambiare
+    // servizio solo attraversandolo); click e tastiera ovunque.
+    let hoverTimer = 0;
+    tabs.forEach((tab, k) => {
+      if (finePointer) {
+        tab.addEventListener("pointerenter", () => {
+          window.clearTimeout(hoverTimer);
+          hoverTimer = window.setTimeout(() => {
+            stopAuto();
+            go(k);
+          }, 90);
+        });
+        tab.addEventListener("pointerleave", () => window.clearTimeout(hoverTimer));
+      }
+      tab.addEventListener("click", () => {
+        stopAuto();
+        go(k);
+      });
+      tab.addEventListener("keydown", (e) => {
+        const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        stopAuto();
+        go(current + step, step);
+        tabs[current].focus();
+      });
+    });
+    // Dalla hero: un componente cliccato apre il suo servizio.
+    window.addEventListener("apd:service", (e) => {
+      stopAuto();
+      go((e as CustomEvent<number>).detail);
+    });
+    root.querySelector("[data-svt-prev]")?.addEventListener("click", () => {
+      stopAuto();
+      go(current - 1, -1);
+    });
+    root.querySelector("[data-svt-next]")?.addEventListener("click", () => {
+      stopAuto();
+      go(current + 1, 1);
+    });
+
+    // La card in cima si trascina (mouse o dito) e si lancia: a sinistra
+    // il servizio dopo, a destra quello prima. Un lancio corto la rimette
+    // a posto. Lo scroll verticale resta del browser (touch-action: pan-y).
+    let sx = NaN;
+    let sy = 0;
+    let dx = 0;
+    let dragging = false;
+    const top = () => shots[current];
+    const settle = () => {
+      if (reduced) return;
+      const s = top();
+      const a = getComputedStyle(s).transform;
+      s.getAnimations().forEach((x) => x.cancel());
+      s.animate([{ transform: a }, { transform: pose(POSES[0]) }], { duration: 700, easing: EASE });
+    };
+    // Sul telefono si sfoglia da tutta la sezione, non solo dalla card.
+    const pad = narrow ? root : media;
+    pad.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || (e.target as Element).closest("a, button")) return;
+      sx = e.clientX;
+      sy = e.clientY;
+      dx = 0;
+      dragging = false;
+    });
+    pad.addEventListener("pointermove", (e) => {
+      if (isNaN(sx)) return;
+      dx = e.clientX - sx;
+      const dy = e.clientY - sy;
+      if (!dragging) {
+        if (Math.abs(dx) < 8) return;
+        if (Math.abs(dy) > Math.abs(dx)) return void (sx = NaN);
+        dragging = true;
+        stopAuto();
+        pad.setPointerCapture(e.pointerId);
+        media.classList.add("is-drag");
+        top().getAnimations().forEach((x) => x.cancel());
+      }
+      if (reduced) return;
+      top().style.transform = `translateX(${dx}px) translateY(${Math.abs(dx) * -0.04}px) rotate(${dx * 0.03}deg)`;
+    });
+    const release = () => {
+      if (isNaN(sx)) return;
+      sx = NaN;
+      if (!dragging) return;
+      dragging = false;
+      media.classList.remove("is-drag");
+      if (Math.abs(dx) > 60) go(current + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+      else {
+        settle();
+        top().style.transform = pose(POSES[0]);
+      }
+    };
+    pad.addEventListener("pointerup", release);
+    pad.addEventListener("pointercancel", release);
+    media.addEventListener("dragstart", (e) => e.preventDefault());
+
+    // In vista: le clip suonano e l'avvicendamento corre; la prima volta
+    // il mazzo fa la sua entrata (CSS, .is-in).
+    new IntersectionObserver(
+      ([e]) => {
+        visible = e.isIntersecting;
+        root.classList.toggle("is-visible", visible);
+        if (visible && !root.classList.contains("is-in")) root.classList.add("is-in");
+        playActive();
+      },
+      { threshold: 0.2 }
+    ).observe(root);
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-svt]").forEach(setup);
+</script>

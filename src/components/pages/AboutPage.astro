@@ -1,0 +1,427 @@
+---
+// AboutPage — corpo della pagina "Chi siamo", parametrizzato per lingua. I dati
+// strutturali (iniziali, gradienti, chiavi SVG, foto) restano qui; i testi
+// vengono dal dizionario e si fondono per indice.
+import type { Lang } from "../../i18n";
+import { defaultLang, getDict, localePath } from "../../i18n";
+import { EMAIL } from "../../config/contact";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Navbar from "../Navbar.astro";
+import Footer from "../Footer.astro";
+import Rich from "../Rich.astro";
+import JourneyPath from "../reactbits/JourneyPath.jsx";
+import { Picture, getImage } from "astro:assets";
+import julianPhoto from "../../assets/team/julian.jpg";
+import alicePhoto from "../../assets/team/alice.png";
+// Foto di noi due nella hero.
+import duoPhoto from "../../assets/team/insieme.jpg";
+import "../../styles/global.css";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = getDict(lang);
+const ta = t.about;
+const live = ta.hero.live;
+
+// HERO — titolo "Normale *accento*" con "\n" come a-capo esplicito.
+const heroLines = ta.hero.title.split("\n").map((line) =>
+  line
+    .split("*")
+    .map((text, i) => ({ text, accent: i % 2 === 1 }))
+    .filter((p) => p.text.length > 0)
+);
+
+// IL DUO — foto (placeholder fino allo shooting: basta sostituire i file in
+// src/assets/team), tono di colore e testi tradotti fusi per indice. La
+// sorgente del canvas a pixel è una webp leggera generata a build time.
+const peopleMeta = [
+  { name: "Julian", photo: julianPhoto, tone: "ember" },
+  { name: "Alice", photo: alicePhoto, tone: "shadow" },
+] as const;
+// CTA — i due volti dentro al bottone: risponde chi hai appena conosciuto.
+const ctaFaces = await Promise.all(
+  [alicePhoto, julianPhoto].map((src) => getImage({ src, width: 72, format: "webp" }))
+);
+const people = await Promise.all(
+  peopleMeta.map(async (m, i) => ({
+    ...m,
+    ...ta.people[i],
+    pixelSrc: (await getImage({ src: m.photo, width: 640, format: "webp", quality: 82 })).src,
+  }))
+);
+
+// Le card dei fondatori: prima Alice, poi Julian.
+const cardPeople = [people[1], people[0]];
+
+const chain = ta.manifesto.chain;
+// Lo statement come blocco a gradino: le prime due parole fanno da metro
+// (riempiono la colonna), il resto della frase e il corsivo scendono di un
+// gradino sotto. "Pochi progetti / alla volta, / seguiti per intero."
+const [stPlain, stEm = ""] = ta.manifesto.statement.split("*");
+const stWords = stPlain.trim().split(/\s+/);
+const stLines = [stWords.slice(0, 2).join(" "), stWords.slice(2).join(" ")].filter(Boolean);
+
+// Il manifesto: le parole dello statement si accendono una a una con lo
+// scroll; le cifre dei fatti girano come un contachilometri. La striscia di
+// ogni cifra finisce sul valore vero (10 cifre, l'ultima è quella giusta).
+const facts = ta.manifesto.facts.map((f) => ({
+  ...f,
+  reel: Array.from({ length: 10 }, (_, k) => (f.n + 1 + k) % 10),
+}));
+
+// Icone della linea del tempo del telefono (stesso ordine delle tappe):
+// libro aperto, bottega, la cima del logo, freccia in avanti.
+const APT_ICONS = [
+  "M3 5.5c3-1 6-1 9 1 3-2 6-2 9-1V19c-3-1-6-1-9 1-3-2-6-2-9-1Z M12 6.5V20",
+  "M4 10V20h16V10 M3 10l1.6-5h14.8L21 10Z M3 10c0 1.7 1.3 2.5 3 2.5S9 11.7 9 10c0 1.7 1.3 2.5 3 2.5s3-.8 3-2.5c0 1.7 1.3 2.5 3 2.5s3-.8 3-2.5 M10 20v-5h4v5",
+  "M2.5 19 9.5 6l4.2 7.4 2.6-3.9L21.5 19Z",
+  "M5 19 19 5 M9 5h10v10",
+];
+
+// IL PERCORSO — le 4 tappe tradotte (gli asset 3D li sceglie JourneyPath).
+const steps = ta.journey.steps.map((s) => ({
+  year: s.year,
+  kicker: s.kicker,
+  title: s.title,
+  text: s.text,
+}));
+
+---
+
+<BaseLayout lang={lang} title={t.meta.about.title} description={t.meta.about.description}>
+  <Navbar lang={lang} route="/chi-siamo" />
+
+  <main class="aboutpage">
+    <!-- HERO — "Le persone dietro i pixel", alla lettera: i due ritratti sono
+         griglie di tessere nei colori del brand e la lente (il cursore, o un
+         percorso automatico) li rimette a fuoco. Fondo: l'aurora. -->
+    <section class="ap-hero" data-ap-hero>
+      <div class="ap-hero-aurora" aria-hidden="true"></div>
+
+      <div class="ap-hero-inner">
+        <div class="ap-hero-copy" data-ap-hero-copy>
+          <div class="ap-hero-top" data-ap-hero-fade>
+            <span class="works-kicker ap-hero-kicker">{ta.hero.badge}</span>
+          </div>
+
+          <h1 class="ap-hero-title font-display" data-ap-hero-title>
+            {heroLines.map((line, li) => (
+              <>{li > 0 && " "}<span class="ap-hero-line">
+                {line.map((p) =>
+                  p.accent ? (
+                    <em class="ap-hero-accent" data-ap-hero-accent>{p.text}</em>
+                  ) : (
+                    <span>{p.text}</span>
+                  )
+                )}
+              </span></>
+            ))}
+          </h1>
+
+          <p class="ap-hero-sub" data-ap-hero-fade>{ta.hero.sub}</p>
+
+          <div class="ap-hero-cta" data-ap-hero-fade>
+            <a href="#contatti" class="about-cta-btn ap-hero-btn magnetic">
+              {ta.hero.cta} <span aria-hidden="true">↗</span>
+            </a>
+            <a href="#il-duo" class="ap-hero-meet">
+              {ta.hero.meet} <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- La pagina si fa in diretta: la foto di noi due entra nella
+             cornice trascinata da Alice, Julian disegna il bottone, ci si
+             lascia un commento. I cursori vivono nel livello sotto (sopra
+             a tutta la hero); "Tu" è il visitatore (aboutLive.ts). -->
+        <div class="ap-stage" data-ap-stage>
+          <div class="ap-live-bar" data-ap-live-bar>
+            <span class="ap-live-file">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6.5L13 5v9.5H3z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9.5 1.5V5H13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+              {live.file}
+            </span>
+            <span class="ap-live-state" data-ap-live-state>
+              <i aria-hidden="true"></i>
+              <span data-ap-live-editing>{live.editing}</span>
+              <span data-ap-live-published>{live.published}</span>
+            </span>
+            <span class="ap-live-faces" aria-hidden="true">
+              <b class="is-a">A</b><b class="is-j">J</b><b class="is-you" data-ap-live-you>{live.you}</b>
+            </span>
+          </div>
+
+          <figure class="ap-live-frame" data-ap-live-frame>
+            <span class="ap-live-drop" aria-hidden="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="9" cy="10" r="1.8" fill="currentColor"/><path d="M4 18l5.5-5 4 3.5 2.5-2 4 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+              {live.photo}
+            </span>
+            <div class="ap-live-photo" data-ap-live-photo>
+              <Picture
+                src={duoPhoto}
+                formats={["avif", "webp"]}
+                widths={[640, 960, 1320]}
+                sizes="(max-width: 960px) 92vw, 46vw"
+                alt="Alice & Julian"
+                class="ap-live-img"
+                loading="eager"
+              />
+            </div>
+            <span class="ap-live-sel ap-live-sel--a" data-ap-live-photosel aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+              <em>{duoPhoto.width} × {duoPhoto.height}</em>
+            </span>
+            <figcaption class="ap-live-notes" aria-hidden="true">
+              <span class="ap-live-note is-a" data-ap-live-note><b>A</b><span><strong>Alice</strong>{live.note1}</span></span>
+              <span class="ap-live-note is-j" data-ap-live-note><b>J</b><span><strong>Julian</strong>{live.note2}</span></span>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <!-- Livello dei cursori: posizionati in px rispetto alla hero. -->
+      <div class="ap-live-layer" data-ap-live-layer aria-hidden="true">
+        <span class="ap-live-sel ap-live-sel--a ap-live-textsel" data-ap-live-textsel><i></i><i></i><i></i><i></i><em data-ap-live-font></em></span>
+        <span class="ap-live-measure" data-ap-live-measure><em></em></span>
+        <span class="ap-caret is-a" data-ap-caret="a"></span>
+        <span class="ap-caret is-j" data-ap-caret="j"></span>
+        <span class="ap-cur is-a" data-ap-cur="a">
+          <svg viewBox="0 0 20 20"><path d="M2 1.5 18 8l-7 2.2L8.6 18z"/></svg>
+          <span class="ap-cur-tag">Alice</span>
+          <span class="ap-cur-file" data-ap-cur-file>
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 18l5.5-5 4 3.5 2.5-2 4 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            {live.photo}
+          </span>
+        </span>
+        <span class="ap-cur is-j" data-ap-cur="j">
+          <svg viewBox="0 0 20 20"><path d="M2 1.5 18 8l-7 2.2L8.6 18z"/></svg>
+          <span class="ap-cur-tag">Julian</span>
+          <span class="ap-cur-chat" data-ap-cur-chat>{live.hello}</span>
+        </span>
+        <span class="ap-cur-you" data-ap-cur-you><span class="ap-cur-tag">{live.you}</span></span>
+      </div>
+    </section>
+
+    <!-- MANIFESTO — lo statement si accende parola per parola con lo scroll,
+         sotto i tre numeri che lo dimostrano (al passaggio del mouse la
+         cifra rigira). Su desktop sta in una schermata; in cima una fermata
+         di scroll (main.ts). -->
+    <section class="ap-manifesto" data-ap-manifesto>
+      <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
+      <div class="works-screen ap-screen">
+        <div class="ap-manifesto-top">
+          <div class="ap-manifesto-copy">
+            <span class="works-kicker" data-ap-rise>{ta.manifesto.kicker}</span>
+            <p class="ap-statement font-display" data-ap-statement data-type-block data-tb-static data-tb-ratio="0.56">
+              {stLines.map((l) => <span class="tb-line">{l} </span>)}{stEm && <span class="tb-line"><em>{stEm}</em></span>}
+            </p>
+          </div>
+
+          <!-- La catena: tu da una parte, noi dall'altra, in mezzo i soliti
+               passaggi. Con lo scroll i passaggi vengono barrati e cadono, i
+               due capi si avvicinano e il filo diventa pieno (main.ts). -->
+          <div class="ap-chain" data-ap-chain>
+            <span class="ap-chain-sheen" aria-hidden="true"></span>
+            <div class="ap-chain-head">
+              <span class="ap-chain-tag" aria-hidden="true">
+                <span data-ap-chain-before>{chain.before}</span>
+                <span data-ap-chain-after>{chain.after}</span>
+              </span>
+              <span class="ap-chain-note">
+                <span data-ap-chain-before>{chain.beforeNote}</span>
+                <span data-ap-chain-after>{chain.afterNote}</span>
+              </span>
+            </div>
+            <div class="ap-chain-track" aria-hidden="true">
+              <span class="ap-chain-wire" data-ap-chain-wire>
+                <span class="ap-chain-wire-on" data-ap-chain-on></span>
+                <span class="ap-chain-pulse"></span>
+              </span>
+              <span class="ap-chain-end ap-chain-end--you" data-ap-chain-you>{chain.you}</span>
+              <span class="ap-chain-hops">
+                {chain.hops.map((h) => <span class="ap-chain-hop" data-ap-chain-hop>{h}</span>)}
+              </span>
+              <span class="ap-chain-end ap-chain-end--us" data-ap-chain-us>
+                <span class="ap-chain-faces">
+                  {ctaFaces.map((f) => <img src={f.src} alt="" width="26" height="26" loading="lazy" decoding="async" />)}
+                </span>
+                <span class="ap-chain-us-long">{chain.us}</span>
+                <span class="ap-chain-us-short">{chain.usShort}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <ol class="ap-facts">
+          {facts.map((f) => (
+            <li class="ap-fact" data-ap-fact>
+              <span class="ap-fact-rule" aria-hidden="true"></span>
+              <span class="ap-fact-idx" aria-hidden="true">0{facts.indexOf(f) + 1}</span>
+              <span class="ap-fact-n font-display" aria-label={String(f.n)}>
+                <span class="ap-fact-reel" data-ap-reel aria-hidden="true">
+                  {f.reel.map((d) => <span>{d}</span>)}
+                </span>
+              </span>
+              <span class="ap-fact-label font-display">{f.label}</span>
+              <span class="ap-fact-text">{f.text}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <!-- IL DUO — due "pagine di rivista" a specchio, non card: ritratto alto
+         che sale dal tavolo e si mette a fuoco dai pixel (lo stesso gesto
+         della hero), nome gigante che esce da dietro la foto, poi bio, una
+         frase in prima persona e le aree di lavoro. Un filo sottile apre
+         ogni pagina con numero, ruolo e area. -->
+    <section id="il-duo" class="ap-duo" data-ap-duo>
+      <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
+      <div class="ap-duo-glow" aria-hidden="true"></div>
+      <div class="works-screen ap-screen">
+        <div class="ap-duo-head">
+          <div>
+            <span class="works-kicker" data-ap-rise>{ta.duo.kicker}</span>
+            <h2 class="works-title ap-duo-title" data-type-block><Rich text={ta.duo.title} /></h2>
+          </div>
+          <p class="ap-duo-lead" data-ap-rise>{ta.duo.lead}</p>
+        </div>
+
+        <div class="ap-founders">
+          {cardPeople.map((p, i) => (
+            <div class="ap-card-slot" data-ap-card-slot>
+              <article class={`ap-founder ap-founder--${i % 2 ? "flip" : "std"} ap-founder--${p.tone}`} data-ap-card>
+                <p class="ap-founder-rule" data-ap-card-rule>
+                  <span class="ap-founder-idx">0{i + 1}</span>
+                  <span>{p.title}</span>
+                  <span class="ap-founder-area">{p.area}</span>
+                </p>
+
+                <div class="ap-founder-media" data-ap-card-media>
+                  <div class="ap-founder-frame" data-ap-card-frame>
+                    <div class="ap-founder-zoom" data-ap-card-zoom>
+                      <Picture
+                        src={p.photo}
+                        formats={["avif", "webp"]}
+                        widths={[480, 720, 960]}
+                        sizes="(max-width: 559px) 92vw, 42vw"
+                        alt={`${p.name} — ${p.title}, ${p.area}`}
+                        class="ap-founder-img"
+                        loading="lazy"
+                      />
+                    </div>
+                    <canvas class="ap-founder-canvas" data-px-reveal data-src={p.pixelSrc} data-tone={p.tone} aria-hidden="true"></canvas>
+                    <span class="ap-founder-sheen" aria-hidden="true"></span>
+                  </div>
+                </div>
+
+                <div class="ap-founder-body">
+                  <h3 class="ap-founder-name font-display" data-ap-card-name>{p.name}</h3>
+                  <div class="ap-founder-copy">
+                    <p class="ap-founder-bio" data-ap-card-in>{p.bio}</p>
+                    <blockquote class="ap-card-quote font-display" data-ap-card-in>
+                      <span aria-hidden="true">«</span><Rich text={p.quote} /><span aria-hidden="true">»</span>
+                    </blockquote>
+                    <ul class="ap-card-tags" data-ap-card-in>
+                      {p.focus.map((f) => <li>{f}</li>)}
+                    </ul>
+                  </div>
+                </div>
+              </article>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- IL PERCORSO — viaggio 3D scroll-driven in tre atti (JourneyPath):
+         apertura col pulsante di partenza, 4 tappe che il cursore "clicca",
+         finale fermo che se ne va con la pagina. Ogni sosta è una fermata
+         di scroll (data-scroll-detent, main.ts). -->
+    <section class="ap-journey">
+      <!-- Telefono (≤768px): niente viaggio 3D (4 schermate di scroll). Le
+           stesse tappe in una linea del tempo: un filo che si riempie mentre
+           scorri, pieno fino a Oggi, tratteggiato verso Domani. Regia in
+           scripts/aboutTimeline.ts. Sul desktop non c'è. -->
+      <div class="apt" data-apt>
+        <header class="apt-head">
+          <span class="works-kicker">{ta.journey.kicker}</span>
+          <h2 class="apt-title font-display"><Rich text={ta.journey.title} /></h2>
+          <p class="apt-lead">{ta.journey.lead}</p>
+        </header>
+        <ol class="apt-list" data-apt-list>
+          <span class="apt-rail" aria-hidden="true"><i class="apt-fill"></i></span>
+          {steps.map((s, i) => (
+            <li class={`apt-step${i === steps.length - 2 ? " apt-step--now" : ""}${i === steps.length - 1 ? " apt-step--next" : ""}`} data-apt-step>
+              <span class="apt-node" aria-hidden="true">
+                <svg viewBox="0 0 24 24">{APT_ICONS[i] && <path d={APT_ICONS[i]} />}</svg>
+              </span>
+              <span class="apt-when">{s.year}<small>{s.kicker}</small></span>
+              <h3 class="apt-step-title font-display">{s.title}</h3>
+              <p class="apt-text">{s.text}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div class="works-screen">
+        <JourneyPath
+          client:visible={{ rootMargin: "1600px" }}
+          steps={steps}
+          copy={{
+            kicker: ta.journey.kicker,
+            title: ta.journey.title,
+            lead: ta.journey.lead,
+            start: ta.journey.start,
+            stops: ta.journey.stops,
+            outro: ta.journey.outro,
+            ctaHref: "#contatti",
+          }}
+        />
+      </div>
+    </section>
+
+    <!-- CTA FINALE -->
+    <section id="contatti" class="about-cta" data-anim="contact">
+      <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
+      <span class="about-cta-glow" aria-hidden="true"></span>
+
+      <span class="works-kicker about-cta-kicker">{ta.cta.kicker}</span>
+
+      <h2 class="about-cta-title font-display" data-type-block>
+        <Rich text={ta.cta.title} />
+      </h2>
+
+      <p class="about-cta-sub">
+        {ta.cta.sub}
+      </p>
+
+      <div class="about-cta-actions">
+        <a href={`${localePath(lang, "/")}#contatti`} class="about-cta-btn magnetic">
+          <span class="about-cta-faces" aria-hidden="true">
+            {ctaFaces.map((f) => <img src={f.src} alt="" width="30" height="30" loading="lazy" decoding="async" />)}
+          </span>
+          {ta.cta.btn} <span aria-hidden="true">↗</span>
+        </a>
+        <a href={`mailto:${EMAIL}`} class="about-cta-mail">
+          {ta.cta.mail}
+        </a>
+      </div>
+
+      <div class="about-cta-foot">
+        {ta.cta.foot.map((f, i) => (
+          <Fragment>
+            {i > 0 && <span class="cta-foot-dot" aria-hidden="true"></span>}
+            <span>{f}</span>
+          </Fragment>
+        ))}
+      </div>
+    </section>
+  </main>
+
+  <Footer lang={lang} />
+</BaseLayout>
+
+<script>
+  import "../../scripts/aboutTimeline";
+</script>

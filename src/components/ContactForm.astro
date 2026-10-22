@@ -1,0 +1,286 @@
+---
+// ContactForm — form "a passi" della sezione finale. Una scheda ad ALTEZZA
+// FISSA: i passi (servizio → profilo → canale → call o scrivici) sono
+// pannelli impilati nella stessa cella e scorrono di lato, uno alla volta —
+// la sezione non si allunga mai e sta tutta in una schermata. L'ultimo passo
+// porta a una call da prenotare sul calendario oppure a WhatsApp/email con il
+// messaggio già scritto. Il markup è tutto qui; la logica (calendario,
+// aperture, link precompilati, invio) vive in scripts/contactFlow.ts e legge
+// le stringhe localizzate da data-i18n.
+import type { Lang } from "../i18n";
+import { defaultLang, getDict } from "../i18n";
+import { EMAIL, whatsappHref } from "../config/contact";
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const cf = getDict(lang).contactForm;
+
+// Orari proposti per la call (ora italiana, slot da 30 min).
+const SLOTS = ["09:00", "10:00", "11:00", "12:00", "14:30", "15:30", "16:30", "17:30"];
+
+// Icone Tabler (outline), disegnate in currentColor.
+const ICONS: Record<string, string[]> = {
+  web: ["M4 8h16", "M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12", "M8 4v4"],
+  social: ["M18 8a3 3 0 0 1 0 6", "M10 8v11a1 1 0 0 1 -1 1h-1a1 1 0 0 1 -1 -1v-5", "M12 8l4.524 -3.77a.9 .9 0 0 1 1.476 .692v12.156a.9 .9 0 0 1 -1.476 .692l-4.524 -3.77h-8a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h8"],
+  gestionale: ["M5 4h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1", "M5 16h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1", "M15 12h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1", "M15 4h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1"],
+  unsure: ["M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"],
+  solo: ["M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0", "M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"],
+  team: ["M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0", "M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2", "M16 3.13a4 4 0 0 1 0 7.75", "M21 21v-2a4 4 0 0 0 -3 -3.85"],
+  company: ["M3 21l18 0", "M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1h-18l2 -4h14l2 4", "M5 21l0 -10.15", "M19 21l0 -10.15", "M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"],
+  startup: ["M4 13a8 8 0 0 1 7 7a6 6 0 0 0 3 -5a9 9 0 0 0 6 -8a3 3 0 0 0 -3 -3a9 9 0 0 0 -8 6a6 6 0 0 0 -5 3", "M7 14a6 6 0 0 0 -3 6a6 6 0 0 0 6 -3", "M14 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"],
+  call: ["M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12", "M16 3l0 4", "M8 3l0 4", "M4 11l16 0", "M8 15h2v2h-2l0 -2"],
+  write: ["M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1"],
+  whatsapp: ["M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9", "M9 10a.5 .5 0 0 0 1 0v-1a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1"],
+  gmail: ["M16 20h3a1 1 0 0 0 1 -1v-14a1 1 0 0 0 -1 -1h-3v16", "M5 20h3v-16h-3a1 1 0 0 0 -1 1v14a1 1 0 0 0 1 1", "M16 4l-4 4l-4 -4", "M4 6.5l8 7.5l8 -7.5"],
+  check: ["M5 12l5 5l10 -10"],
+  plus: ["M12 5l0 14", "M5 12l14 0"],
+  prev: ["M15 6l-6 6l6 6"],
+  next: ["M9 6l6 6l-6 6"],
+  arrow: ["M17 7l-10 10", "M8 7l9 0l0 9"],
+};
+const card = cf.card;
+const nn = (i: number) => String(i + 1).padStart(2, "0");
+
+const svg = (name: string, size = 22) =>
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]
+    .map((d) => `<path d="${d}"/>`)
+    .join("")}</svg>`;
+
+// Stringhe che servono al JS (messaggi, errori, etichette dinamiche).
+const i18n = {
+  lang,
+  pickDay: cf.calendar.pickDay,
+  book: cf.book,
+  errors: cf.errors,
+  msg: cf.msg,
+};
+---
+
+<form class="cflow" data-cflow novalidate data-i18n={JSON.stringify(i18n)} data-prog="0" data-pane="service">
+  <!-- Riflesso: passa una volta quando la card si è posata (main.ts). -->
+  <span class="cflow-sheen" aria-hidden="true"></span>
+  <!-- Testata della card: cos'è + avanzamento a 3 segmenti (riempiti da
+       contactFlow.ts via --f; un segmento già raggiunto riporta al suo passo). -->
+  <div class="cflow-top">
+    <div class="cflow-top-row">
+      <span class="cflow-top-title"><i class="cflow-pulse" aria-hidden="true"></i>{card.title}</span>
+      <span class="cflow-top-meta">{card.meta}</span>
+    </div>
+    <div class="cflow-progress">
+      {card.steps.map((s, i) => (
+        <button type="button" class:list={["cflow-seg", { "is-here": i === 0 }]} data-seg={i} disabled>
+          <span class="cflow-seg-bar" aria-hidden="true"><i></i></span>
+          <span class="cflow-seg-label"><b>{nn(i)}</b> {s}</span>
+        </button>
+      ))}
+      <span class="cflow-prog-n" aria-hidden="true"><span data-prog-n>0</span>%</span>
+    </div>
+  </div>
+
+  <!-- I pannelli stanno tutti nella stessa cella: l'altezza è quella del più
+       alto (la call), quindi cambiare passo non sposta nulla nella pagina. -->
+  <div class="cflow-body">
+    <!-- 01 — SERVIZIO (scelta multipla; "Non lo so ancora" esclude gli altri) -->
+    <div class="cflow-pane is-current" data-pane="service">
+      <div class="cflow-step" data-step="service" role="group" aria-labelledby="cflow-t1">
+        <div class="cflow-step-head">
+          <span class="cflow-step-num" aria-hidden="true"><span>01</span><Fragment set:html={svg("check", 14)} /></span>
+          <h3 id="cflow-t1" class="cflow-step-title">{cf.steps.service.title}</h3>
+          <span class="cflow-step-hint">{cf.steps.service.hint}</span>
+        </div>
+        <div class="cflow-options">
+          {cf.services.map((s, k) => (
+            <label class="cflow-opt" style={`--k:${k}`}>
+              <input type="checkbox" name="service" value={s.value} data-label={s.label} />
+              <span class="cflow-opt-box">
+                <span class="cflow-opt-icon" set:html={svg(s.value)} />
+                <span class="cflow-opt-text">
+                  <span class="cflow-opt-label">{s.label}</span>
+                  <span class="cflow-opt-desc">{s.desc}</span>
+                </span>
+                <span class="cflow-opt-tick" set:html={svg("check", 13)} />
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div class="cflow-nav">
+        <span></span>
+        <button type="button" class="cflow-next" data-next="profile" disabled>
+          {cf.nav.next}<Fragment set:html={svg("next", 16)} />
+        </button>
+      </div>
+    </div>
+
+    <!-- 02 — PROFILO (scelto, si passa da soli al 03) -->
+    <div class="cflow-pane" data-pane="profile" inert>
+      <div class="cflow-step" data-step="profile" role="radiogroup" aria-labelledby="cflow-t2">
+        <div class="cflow-step-head">
+          <span class="cflow-step-num" aria-hidden="true"><span>02</span><Fragment set:html={svg("check", 14)} /></span>
+          <h3 id="cflow-t2" class="cflow-step-title">{cf.steps.profile.title}</h3>
+          <span class="cflow-step-hint">{cf.steps.profile.hint}</span>
+        </div>
+        <div class="cflow-options">
+          {cf.profiles.map((p, k) => (
+            <label class="cflow-opt" style={`--k:${k}`}>
+              <input type="radio" name="profile" value={p.value} data-label={p.label} />
+              <span class="cflow-opt-box">
+                <span class="cflow-opt-icon" set:html={svg(p.value)} />
+                <span class="cflow-opt-text">
+                  <span class="cflow-opt-label">{p.label}</span>
+                  <span class="cflow-opt-desc">{p.desc}</span>
+                </span>
+                <span class="cflow-opt-tick" set:html={svg("check", 13)} />
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div class="cflow-nav">
+        <button type="button" class="cflow-back" data-back="service"><Fragment set:html={svg("prev", 16)} />{cf.nav.back}</button>
+        <button type="button" class="cflow-next" data-next="channel" disabled>
+          {cf.nav.next}<Fragment set:html={svg("next", 16)} />
+        </button>
+      </div>
+    </div>
+
+    <!-- 03 — CANALE -->
+    <div class="cflow-pane" data-pane="channel" inert>
+      <div class="cflow-step" data-step="channel" role="radiogroup" aria-labelledby="cflow-t3">
+        <div class="cflow-step-head">
+          <span class="cflow-step-num" aria-hidden="true"><span>03</span><Fragment set:html={svg("check", 14)} /></span>
+          <h3 id="cflow-t3" class="cflow-step-title">{cf.steps.channel.title}</h3>
+          <span class="cflow-step-hint">{cf.steps.channel.hint}</span>
+        </div>
+        <div class="cflow-options cflow-options--channel">
+          {(["call", "write"] as const).map((c, k) => (
+            <label class="cflow-opt cflow-opt--channel" style={`--k:${k}`}>
+              <input type="radio" name="channel" value={c} />
+              <span class="cflow-opt-box">
+                <span class="cflow-opt-icon" set:html={svg(c, 26)} />
+                <span class="cflow-opt-text">
+                  <span class="cflow-opt-label">{cf.channels[c].label}</span>
+                  <span class="cflow-opt-desc">{cf.channels[c].desc}</span>
+                </span>
+                <span class="cflow-opt-tick" set:html={svg("check", 13)} />
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div class="cflow-nav">
+        <button type="button" class="cflow-back" data-back="profile"><Fragment set:html={svg("prev", 16)} />{cf.nav.back}</button>
+        <button type="button" class="cflow-next" data-next="" disabled>
+          {cf.nav.next}<Fragment set:html={svg("next", 16)} />
+        </button>
+      </div>
+    </div>
+
+    <!-- 03a — CALL: calendario + orari + recapiti -->
+    <div class="cflow-pane" data-pane="call" inert>
+      <div class="cflow-panel" data-call-form>
+        <div class="cflow-book">
+          <div class="cflow-cal" data-cal>
+            <div class="cflow-cal-head">
+              <button type="button" class="cflow-cal-nav" data-cal-prev aria-label={cf.calendar.prev} set:html={svg("prev", 18)} />
+              <span class="cflow-cal-month" data-cal-month aria-live="polite"></span>
+              <button type="button" class="cflow-cal-nav" data-cal-next aria-label={cf.calendar.next} set:html={svg("next", 18)} />
+            </div>
+            <div class="cflow-cal-week" data-cal-week aria-hidden="true"></div>
+            <div class="cflow-cal-grid" data-cal-grid></div>
+          </div>
+
+          <div class="cflow-slots" data-slots>
+            <div class="cflow-slots-head">
+              <span class="cflow-slots-date" data-slots-date></span>
+              <span class="cflow-slots-tz">{cf.calendar.timezone}</span>
+            </div>
+            <p class="cflow-slots-empty" data-slots-empty>{cf.calendar.pickDay}</p>
+            <div class="cflow-slots-grid" data-slots-grid hidden>
+              {SLOTS.map((t) => (
+                <label class="cflow-slot">
+                  <input type="radio" name="time" value={t} />
+                  <span>{t}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div class="cflow-fields">
+          <label class="cflow-field">
+            <span class="cflow-label">{cf.fields.name}</span>
+            <input class="cflow-input" type="text" name="name" autocomplete="name" maxlength="100" placeholder={cf.fields.namePh} />
+          </label>
+          <label class="cflow-field">
+            <span class="cflow-label">{cf.fields.email}</span>
+            <input class="cflow-input" type="email" name="email" autocomplete="email" maxlength="254" placeholder={cf.fields.emailPh} />
+          </label>
+          <label class="cflow-field">
+            <span class="cflow-label">{cf.fields.addMessage}</span>
+            <input class="cflow-input" type="text" name="message" maxlength="600" placeholder={cf.fields.messagePh} />
+          </label>
+        </div>
+
+        <div class="cflow-actions">
+          <button type="button" class="cflow-back" data-back="channel"><Fragment set:html={svg("prev", 16)} />{cf.nav.back}</button>
+          <p class="cflow-error" data-error aria-live="polite"></p>
+          <button type="submit" class="cflow-submit">
+            <span data-submit-label>{cf.book}</span>
+            <span class="cflow-submit-arrow" set:html={svg("arrow", 16)} />
+          </button>
+        </div>
+      </div>
+
+      <!-- Conferma (sostituisce il pannello dopo l'invio) -->
+      <div class="cflow-done" data-done hidden>
+        <span class="cflow-done-icon" set:html={svg("check", 22)} />
+        <div class="cflow-done-text">
+          <p class="cflow-done-title">{cf.done.title}</p>
+          <p class="cflow-done-sub">{cf.done.text}</p>
+          <p class="cflow-done-when" data-done-when></p>
+          <div class="cflow-done-actions">
+            <a class="cflow-done-link" data-gcal href="#" target="_blank" rel="noopener">
+              {cf.done.addToCal} <Fragment set:html={svg("arrow", 14)} />
+            </a>
+            <button type="button" class="cflow-done-edit" data-done-edit>{cf.done.edit}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03b — SCRIVICI: WhatsApp / email con il messaggio già composto -->
+    <div class="cflow-pane" data-pane="write" inert>
+      <div class="cflow-step-head">
+        <span class="cflow-step-num is-on" aria-hidden="true"><Fragment set:html={svg("write", 14)} /></span>
+        <h3 class="cflow-step-title">{cf.channels.write.label}</h3>
+        <span class="cflow-step-hint">{cf.direct.note}</span>
+      </div>
+      <div class="cflow-direct">
+        <a class="cflow-direct-btn cflow-direct-btn--wa" data-wa href={whatsappHref()} target="_blank" rel="noopener" style="--k:0">
+          <span class="cflow-direct-icon" set:html={svg("whatsapp", 28)} />
+          <span class="cflow-direct-text">
+            <span class="cflow-direct-label">{cf.direct.whatsapp}</span>
+            <span class="cflow-direct-sub">{cf.direct.whatsappNote}</span>
+          </span>
+          <span class="cflow-direct-arrow" set:html={svg("arrow", 18)} />
+        </a>
+        <a class="cflow-direct-btn cflow-direct-btn--mail" data-mail href={`mailto:${EMAIL}`} style="--k:1">
+          <span class="cflow-direct-icon" set:html={svg("gmail", 28)} />
+          <span class="cflow-direct-text">
+            <span class="cflow-direct-label">{cf.direct.email}</span>
+            <span class="cflow-direct-sub">{EMAIL}</span>
+          </span>
+          <span class="cflow-direct-arrow" set:html={svg("arrow", 18)} />
+        </a>
+      </div>
+      <div class="cflow-nav">
+        <button type="button" class="cflow-back" data-back="channel"><Fragment set:html={svg("prev", 16)} />{cf.nav.back}</button>
+        <span></span>
+      </div>
+    </div>
+  </div>
+
+</form>
