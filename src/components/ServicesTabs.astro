@@ -53,6 +53,7 @@ const media: { video: string; poster: string; tint: string }[] = [
 const services = t.items.map((item, i) => ({ ...item, ...media[i] }));
 const prev = { it: "Servizio precedente", de: "Vorheriger Service", en: "Previous service" }[lang];
 const next = { it: "Servizio successivo", de: "Nächster Service", en: "Next service" }[lang];
+const swipe = { it: "Scorri per gli altri", de: "Wischen für mehr", en: "Swipe for more" }[lang];
 
 // Icona della notifica risolta, nello stesso ordine dei servizi: Google
 // (siti), messaggio (social), telefono (gestionali) — le stesse di "Il punto".
@@ -158,6 +159,7 @@ const fixIcons = [
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
       </button>
       <span class="step-count" aria-hidden="true"><b data-step-count>01</b> / {String(services.length).padStart(2, "0")}</span>
+      <span class="step-swipe" aria-hidden="true"><i></i>{swipe}</span>
       <button type="button" class="step-arrow" data-svt-next aria-label={next}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </button>
@@ -398,14 +400,16 @@ const fixIcons = [
       s.getAnimations().forEach((x) => x.cancel());
       s.animate([{ transform: a }, { transform: pose(POSES[0]) }], { duration: 700, easing: EASE });
     };
-    media.addEventListener("pointerdown", (e) => {
-      if (e.button !== 0) return;
+    // Sul telefono si sfoglia da tutta la sezione, non solo dalla card.
+    const pad = narrow ? root : media;
+    pad.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || (e.target as Element).closest("a, button")) return;
       sx = e.clientX;
       sy = e.clientY;
       dx = 0;
       dragging = false;
     });
-    media.addEventListener("pointermove", (e) => {
+    pad.addEventListener("pointermove", (e) => {
       if (isNaN(sx)) return;
       dx = e.clientX - sx;
       const dy = e.clientY - sy;
@@ -414,7 +418,7 @@ const fixIcons = [
         if (Math.abs(dy) > Math.abs(dx)) return void (sx = NaN);
         dragging = true;
         stopAuto();
-        media.setPointerCapture(e.pointerId);
+        pad.setPointerCapture(e.pointerId);
         media.classList.add("is-drag");
         top().getAnimations().forEach((x) => x.cancel());
       }
@@ -433,8 +437,8 @@ const fixIcons = [
         top().style.transform = pose(POSES[0]);
       }
     };
-    media.addEventListener("pointerup", release);
-    media.addEventListener("pointercancel", release);
+    pad.addEventListener("pointerup", release);
+    pad.addEventListener("pointercancel", release);
     media.addEventListener("dragstart", (e) => e.preventDefault());
 
     // In vista: le clip suonano e l'avvicendamento corre; la prima volta

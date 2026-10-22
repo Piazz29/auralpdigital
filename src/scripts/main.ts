@@ -378,12 +378,13 @@ window.addEventListener("pillnav:toggle", (e) => {
 });
 
 // ---------- Navbar a scomparsa (schermi stretti) ----------
-// Su telefono e tablet la pillola copre titoli e form mentre si legge: si
-// ritira scorrendo verso il basso e torna appena si risale (o vicino al
-// top). Solo una classe sul dock (transform in PillNav.css); mai a menu
-// aperto né con il focus da tastiera dentro la navbar.
+// Sui tablet la pillola copre titoli e form mentre si legge: si ritira
+// scorrendo verso il basso e torna appena si risale (o vicino al top). Solo
+// una classe sul dock (transform in PillNav.css); mai a menu aperto né con il
+// focus da tastiera dentro la navbar. Sul telefono resta solo il burger,
+// piccolo e sempre lì: non si ritira.
 {
-  const narrow = window.matchMedia("(max-width: 960px)");
+  const narrow = window.matchMedia("(min-width: 900px) and (max-width: 960px)");
   let dock: HTMLElement | null = null;
   let menuOpen = false;
   let lastY = 0;
@@ -395,13 +396,6 @@ window.addEventListener("pillnav:toggle", (e) => {
   window.addEventListener("pillnav:toggle", (e) => {
     menuOpen = (e as CustomEvent<{ open: boolean }>).detail.open;
     if (menuOpen) setTucked(false);
-  });
-  // Una scena a schermo pieno (le card del duo) chiede la scena libera: la
-  // pillola resta ritirata finché la sosta dura.
-  let hushed = false;
-  window.addEventListener("pillnav:hush", (e) => {
-    hushed = (e as CustomEvent<{ on: boolean }>).detail.on;
-    if (hushed && !menuOpen) setTucked(true);
   });
   document.addEventListener("focusin", (e) => {
     if ((e.target as Element | null)?.closest?.(".pnav-dock")) setTucked(false);
@@ -415,7 +409,6 @@ window.addEventListener("pillnav:toggle", (e) => {
       run = 0;
       return setTucked(false);
     }
-    if (hushed) return setTucked(true);
     run = Math.sign(dy) === Math.sign(run) ? run + dy : dy;
     if (run > 36) setTucked(true);
     else if (run < -16) setTucked(false);
@@ -793,6 +786,7 @@ if (
   const turnKey = pointTurnTitle.querySelector<HTMLElement>("strong");
   const glow = point.querySelector<HTMLElement>("[data-point-glow]");
   const check = point.querySelector<SVGPathElement>("[data-point-check]");
+  const cue = point.querySelector<HTMLElement>("[data-point-cue]");
 
   // Posizione di un elemento nel palco dal layout (offset* ignora i
   // transform): corretta anche a scena già mossa.
@@ -1026,7 +1020,11 @@ if (
     // legge posizioni già spostate.
     refreshPriority: 4,
     // Promessa chiusa: sulla notifica "ok" passa il riflesso (CSS, una volta).
-    onUpdate: () => ok?.classList.toggle("is-done", tl.time() >= riseAt + 2),
+    // L'invito a scorrere resta solo finché la storia non parte.
+    onUpdate: (self) => {
+      ok?.classList.toggle("is-done", tl.time() >= riseAt + 2);
+      cue?.classList.toggle("is-off", self.progress > 0.02);
+    },
   });
 
   // Fermate dentro al pin (vedi "Fermate di scroll"): il lead al centro,
@@ -1636,7 +1634,7 @@ if (aboutPage) {
         0
       );
   }
-  const wide = window.matchMedia("(min-width: 560px)").matches;
+  const wide = window.matchMedia("(min-width: 900px)").matches;
   aboutPage.querySelectorAll<HTMLElement>("[data-ap-card]").forEach((card) => {
     const canvas = card.querySelector<HTMLCanvasElement>("[data-px-reveal]");
     if (reduceMotion) {
@@ -1677,6 +1675,17 @@ if (aboutPage) {
           xPercent: 0,
           ease: "none",
           scrollTrigger: { trigger: card, start: "top 90%", end: "top 20%", scrub: SCRUB },
+        }
+      );
+    } else if (name) {
+      // Telefono: il nome sta sotto il ritratto e ne scivola fuori in giù.
+      gsap.fromTo(
+        name,
+        { yPercent: -70 },
+        {
+          yPercent: 0,
+          ease: "none",
+          scrollTrigger: { trigger: card, start: "top 85%", end: "top 15%", scrub: SCRUB },
         }
       );
     }
@@ -1727,24 +1736,12 @@ if (aboutPage) {
     }
   });
 
-  // Il duo su telefono: ogni fondatore è una fermata, posata al centro del
-  // viewport (o in cima, se è più alto): lo si legge intero prima di
-  // passare all'altro. Finché occupa la scena la pillola resta ritirata.
-  if (!staticScenes && window.matchMedia("(max-width: 559px)").matches) {
+  // Il duo su telefono: le card una sotto l'altra, ognuna alta una
+  // schermata e ognuna una fermata: la si legge intera prima di passare
+  // all'altra.
+  if (!staticScenes && !wide) {
     aboutPage.querySelectorAll<HTMLElement>("[data-ap-card-slot]").forEach((slot) => {
-      extraDetents.push(
-        () =>
-          slot.getBoundingClientRect().top +
-          lenis.scroll -
-          Math.max(0, Math.round((window.innerHeight - slot.offsetHeight) / 2))
-      );
-      ScrollTrigger.create({
-        trigger: slot,
-        start: "top 40%",
-        end: "bottom 60%",
-        onToggle: (self) =>
-          window.dispatchEvent(new CustomEvent("pillnav:hush", { detail: { on: self.isActive } })),
-      });
+      extraDetents.push(() => slot.getBoundingClientRect().top + lenis.scroll);
     });
     readDetents();
   }

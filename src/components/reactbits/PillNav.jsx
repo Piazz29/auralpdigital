@@ -54,9 +54,11 @@ export default function PillNav({ home = false, lang = defaultLang, route = '/' 
   const t = getDict(lang);
   const homeHref = localePath(lang, '/');
   const anchor = (id) => (home ? `#${id}` : `${homeHref}#${id}`);
+  // In home logo e voce "Home" riportano in cima senza ricaricare.
+  const topHref = home ? '#top' : homeHref;
 
-  // Le sezioni della pillola chiusa; nel menu aperto si aggiunge la FAQ,
-  // che altrimenti non sarebbe raggiungibile da nessun'altra parte.
+  // Le sezioni della pillola chiusa; nel menu aperto si aggiungono la Home
+  // in testa e la FAQ, che altrimenti non sarebbe raggiungibile.
   const sections = [
     { key: 'projects', label: t.nav.items.projects, aria: t.nav.aria.projects, href: anchor('projects') },
     { key: 'services', label: t.nav.items.services, aria: t.nav.aria.services, href: anchor('cosa-facciamo') },
@@ -64,6 +66,7 @@ export default function PillNav({ home = false, lang = defaultLang, route = '/' 
     { key: 'about', label: t.nav.items.about, aria: t.nav.aria.about, href: localePath(lang, '/chi-siamo') }
   ];
   const bigItems = [
+    { key: 'home', label: t.nav.items.home, aria: t.nav.aria.home, href: topHref },
     ...sections,
     { key: 'faq', label: t.nav.items.faq, aria: t.nav.aria.faq, href: localePath(lang, '/faq') }
   ];
@@ -237,9 +240,14 @@ export default function PillNav({ home = false, lang = defaultLang, route = '/' 
       <div ref={scrimRef} className="pnav-scrim" aria-hidden="true" onClick={close} />
 
       <div className="pnav-dock">
+        {/* Telefono: il logo piccolo nell'angolo, fuori dalla pillola (che
+            resta solo il burger). Sul desktop non c'è. */}
+        <a href={topHref} className="pnav-corner" aria-label="AuralpDigital — Home" {...linkProps}>
+          <img src="/logo/wordmark.svg" alt="" width={110} height={24} draggable={false} data-logo-corner />
+        </a>
         <nav ref={shellRef} className="pnav-shell" aria-label={t.nav.mainLabel}>
           <div ref={barRef} className="pnav-bar">
-            <a href={homeHref} className="pnav-logo" aria-label="AuralpDigital — Home" {...linkProps}>
+            <a href={topHref} className="pnav-logo" aria-label="AuralpDigital — Home" {...linkProps}>
               <img src="/logo/wordmark.svg" alt="AuralpDigital" width={110} height={24} draggable={false} data-logo-target />
             </a>
 

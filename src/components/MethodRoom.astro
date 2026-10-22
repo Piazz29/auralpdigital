@@ -69,6 +69,7 @@ const arrows = {
   de: { prev: "Vorherige Phase", next: "Nächste Phase" },
   en: { prev: "Previous phase", next: "Next phase" },
 }[lang as "it" | "de" | "en"] ?? { prev: "‹", next: "›" };
+const swipe = { it: "Scorri le fasi", de: "Phasen wischen", en: "Swipe the phases" }[lang as "it" | "de" | "en"] ?? "";
 
 // Palette provabile nella fase Design (il primo è quello di partenza).
 const SWATCHES = ["#D84002", "#2F7D5B", "#2748A5", "#A8326E"];
@@ -162,6 +163,32 @@ const MOUNTAINS = `
           <button type="button" class="step-arrow" data-apm-next aria-label={arrows.next}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
           </button>
+        </div>
+
+        <!-- Sul telefono, al posto di menu e dettaglio: un nastro di schede
+             (una per fase) che scorre di lato. La scheda al centro è la
+             fase del cantiere; sotto, quattro tratti fanno da avanzamento.
+             Sul desktop non c'è (duplica i testi qui sopra). -->
+        <div class="apm-cards" data-apm-cards aria-hidden="true">
+          {flow.items.map((it, i) => (
+            <div class:list={["apm-card", { "is-active": i === 0 }]} data-apm-card>
+              <span class="apm-card-n">{pad(i)} <i>/ {pad(n - 1)}</i></span>
+              <span class="apm-card-title">{it.title} <em>{it.titleEm}</em></span>
+              <span class="apm-card-text">{it.text}</span>
+              <span class="apm-get apm-card-get">
+                <span class="apm-get-icon"><svg viewBox="0 0 24 24"><path d="M5 12l5 5l10 -10" /></svg></span>
+                <span class="apm-get-txt"><small>{c.get}</small> {it.deliverable}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+        <div class="apm-rail" aria-hidden="true">
+          <span class="apm-rail-segs">
+            {flow.items.map((_, i) => (
+              <span class:list={["apm-rail-seg", { "is-active": i === 0 }]} data-apm-seg><span></span></span>
+            ))}
+          </span>
+          <span class="step-swipe"><i></i>{swipe}</span>
         </div>
       </div>
 
@@ -315,6 +342,9 @@ const MOUNTAINS = `
     const pill = root.querySelector<HTMLElement>(".apm-pill");
     const fx = Array.from(root.querySelectorAll<HTMLElement>(".apm-fx"));
     const count = root.querySelector<HTMLElement>("[data-apm-count]");
+    const cardRow = root.querySelector<HTMLElement>("[data-apm-cards]");
+    const cards = Array.from(root.querySelectorAll<HTMLElement>("[data-apm-card]"));
+    const segs = Array.from(root.querySelectorAll<HTMLElement>("[data-apm-seg]"));
     const n = heads.length;
     let current = -1;
     const scan = root.querySelector<HTMLElement>("[data-apm-scan]");
@@ -358,6 +388,12 @@ const MOUNTAINS = `
         d.setAttribute("aria-hidden", String(k !== i));
       });
       placePill();
+      cards.forEach((el, k) => el.classList.toggle("is-active", k === i));
+      segs.forEach((el, k) => {
+        el.classList.toggle("is-active", k === i);
+        el.classList.toggle("is-past", k < i);
+      });
+      toCard(i);
       if (count) count.textContent = String(i + 1).padStart(2, "0");
       if (!reduced && from >= 0) {
         const dir = i > from ? 1 : -1;
@@ -398,6 +434,37 @@ const MOUNTAINS = `
     };
     build.dataset.phase = "-1";
 
+    // Il nastro del telefono: la scheda che si ferma al centro diventa la
+    // fase; quando la fase cambia da sé (o dal cantiere) il nastro la porta
+    // al centro. Gli scroll fatti dallo script non contano come gesto.
+    let ownScroll = 0;
+    function toCard(i: number) {
+      if (!cardRow || !cardRow.offsetParent) return;
+      const c = cards[i];
+      const left = c.offsetLeft - (cardRow.clientWidth - c.offsetWidth) / 2;
+      if (Math.abs(cardRow.scrollLeft - left) < 2) return;
+      ownScroll = performance.now();
+      cardRow.scrollTo({ left, behavior: reduced ? "auto" : "smooth" });
+    }
+    if (cardRow) {
+      let settleTimer = 0;
+      const settled = () => {
+        if (performance.now() - ownScroll < 900) return;
+        const mid = cardRow.scrollLeft + cardRow.clientWidth / 2;
+        let best = 0;
+        cards.forEach((c, k) => {
+          if (Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid) < Math.abs(cards[best].offsetLeft + cards[best].offsetWidth / 2 - mid)) best = k;
+        });
+        if (best !== current) pick(best);
+      };
+      cardRow.addEventListener("scroll", () => {
+        window.clearTimeout(settleTimer);
+        settleTimer = window.setTimeout(settled, 140);
+      }, { passive: true });
+      // un tocco su una scheda di lato la porta al centro
+      cards.forEach((c, k) => c.addEventListener("click", () => pick(k)));
+    }
+
     // Avvicendamento automatico: la barra della fase attiva si riempie (CSS);
     // a barra piena si passa alla fase dopo. Solo in vista; si ferma per
     // sempre al primo gesto di chi guarda.
@@ -405,7 +472,8 @@ const MOUNTAINS = `
     if (!reduced) {
       root.classList.add("is-auto");
       root.addEventListener("animationend", (e) => {
-        if ((e.target as HTMLElement).matches(".apm-step-bar > span") && root.classList.contains("is-auto")) activate(current + 1);
+        const full = (e.target as HTMLElement).matches(cardRow?.offsetParent ? ".apm-rail-seg > span" : ".apm-step-bar > span");
+        if (full && root.classList.contains("is-auto")) activate(current + 1);
       });
     }
     const pick = (i: number) => {

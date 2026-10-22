@@ -239,9 +239,12 @@ export function initAboutLive(hero: HTMLElement, { reduce, afterLoader, scrub }:
 
   // --- a riposo ----------------------------------------------------------
   // Ognuno vicino al suo pezzo, con un piccolo vagare.
+  // (Sul telefono il testo sta sotto la foto e il bottone in fondo allo
+  // schermo: Julian si mette su sé stesso, a sinistra nella foto.)
+  const narrow = window.matchMedia("(max-width: 899px)");
   const rest = {
     a: () => at(frame, 0.86, 0.9),
-    j: () => at(btn, 0.72, 1.3),
+    j: () => (narrow.matches ? at(frame, 0.2, 0.16) : at(btn, 0.72, 1.3)),
   };
   let resting = false;
   let busy = false;

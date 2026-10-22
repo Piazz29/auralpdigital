@@ -12,10 +12,14 @@
 // stanno in piano, davanti alla scena 3D: a ogni frame si misura dove sono
 // finiti gli spigoli degli strati (quattro punti invisibili per strato) e
 // le si disegna lì. Solo transform sugli strati; niente layout.
+// Sul telefono (sotto i 900px) le etichette sono una riga di chip sotto la
+// scena: niente richiami, un tocco sul chip (o sullo strato) apre quello
+// strato e la riga scorre da sola fino al chip acceso.
 // Con reduced motion: già aperto e fermo.
 
 const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const root = document.querySelector<HTMLElement>("[data-hx]");
+const chipsMq = window.matchMedia("(max-width: 899px)");
 
 const HOLD = 150; // il sito montato, nitido, prima del taglio
 const CUT = 700; // il taglio che lo attraversa
@@ -32,7 +36,9 @@ const spring = (t: number) => (t >= 1 ? 1 : 1 - Math.exp(-6 * t) * Math.cos(7 * 
 function setup(root: HTMLElement) {
   const iso = root.querySelector<HTMLElement>("[data-hx-iso]")!;
   const layers = Array.from(root.querySelectorAll<HTMLElement>("[data-hx-ly]"));
-  const labs = Array.from(root.querySelectorAll<HTMLElement>("[data-hx-lab]"));
+  const stage = root.parentElement!; // .hero-stage: scena + etichette
+  const labs = Array.from(stage.querySelectorAll<HTMLElement>("[data-hx-lab]"));
+  const chipRow = labs[0]?.parentElement;
   const svg = root.querySelector<SVGSVGElement>("[data-hx-leads]")!;
   const scan = root.querySelector<HTMLElement>("[data-hx-scan]");
   const N = layers.length;
@@ -85,6 +91,11 @@ function setup(root: HTMLElement) {
     labs.forEach((l, i) => l.classList.toggle("is-on", i === k));
     leads.forEach((l, i) => l.classList.toggle("is-on", i === k));
     dots.forEach((d, i) => d.classList.toggle("is-on", i === k));
+    // Telefono: la riga dei chip porta in vista quello acceso.
+    if (chipsMq.matches && chipRow && k >= 0) {
+      const c = labs[k];
+      chipRow.scrollTo({ left: c.offsetLeft - (chipRow.clientWidth - c.offsetWidth) / 2, behavior: reduce ? "auto" : "smooth" });
+    }
     for (let i = 0; i < N; i++) liftTo[i] = k < 0 ? 0 : i > k ? (wide ? 1.1 : 0.36) : i === k ? (wide ? 0 : 0.12) : 0;
   };
 
@@ -124,14 +135,16 @@ function setup(root: HTMLElement) {
     });
 
     // Etichette: in colonna a destra dello spigolo più a destra, alla quota
-    // del loro strato, mai una sopra l'altra.
+    // del loro strato, mai una sopra l'altra. Sul telefono stanno in riga
+    // (CSS): si accendono e basta.
+    const chips = chipsMq.matches;
     const colX = Math.min(Math.max(...P.map((row) => row[2][0])) + 32, root.offsetWidth - 188);
     let prevY = -Infinity;
     for (let k = N - 1; k >= 0; k--) {
       const [ax, ay] = P[k][2];
       const y = Math.max(ay, prevY + 40);
       prevY = y;
-      labs[k].style.transform = `translate3d(${colX.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+      labs[k].style.transform = chips ? "" : `translate3d(${colX.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
       leads[k].setAttribute("points", `${ax.toFixed(1)},${ay.toFixed(1)} ${(colX - 18).toFixed(1)},${y.toFixed(1)} ${(colX - 8).toFixed(1)},${y.toFixed(1)}`);
       dots[k].setAttribute("cx", ax.toFixed(1));
       dots[k].setAttribute("cy", ay.toFixed(1));
@@ -175,13 +188,30 @@ function setup(root: HTMLElement) {
       }
     }, k < 0 ? 220 : 90);
   };
-  root.addEventListener("pointerover", (ev) => {
+  const target = (ev: Event) => {
     const t = ev.target as Element;
     const lab = t.closest<HTMLElement>("[data-hx-lab]");
     const ly = t.closest<HTMLElement>("[data-hx-ly]");
-    point(lab ? Number(lab.dataset.hxLab) : ly ? Number(ly.dataset.hxLy) : -1);
+    return lab ? Number(lab.dataset.hxLab) : ly ? Number(ly.dataset.hxLy) : -1;
+  };
+  stage.addEventListener("pointerover", (ev) => {
+    if ((ev as PointerEvent).pointerType === "mouse") point(target(ev));
   });
-  root.addEventListener("pointerleave", () => point(-1));
+  stage.addEventListener("pointerleave", (ev) => {
+    if (ev.pointerType === "mouse") point(-1);
+  });
+  // Al tocco (telefono, tablet): lo strato toccato resta aperto finché non
+  // se ne tocca un altro; dopo un po' il giro riprende da lì.
+  let touchy = false;
+  stage.addEventListener("pointerdown", (ev) => (touchy = ev.pointerType !== "mouse"));
+  stage.addEventListener("click", (ev) => {
+    const k = target(ev);
+    if (!touchy) return;
+    if (k < 0 || open[k] < 0.9) return;
+    hovering = false;
+    idleAt = performance.now() + 4000;
+    setActive(k, true);
+  });
 
   if (reduce) {
     const draw = () => requestAnimationFrame(frame);

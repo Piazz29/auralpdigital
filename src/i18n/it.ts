@@ -22,6 +22,7 @@ const it = {
 
   nav: {
     items: {
+      home: "Home",
       projects: "Progetti",
       services: "Cosa Facciamo",
       method: "Come Lavoriamo",
@@ -29,6 +30,7 @@ const it = {
       faq: "FAQ",
     },
     aria: {
+      home: "Torna alla home",
       projects: "Vai ai progetti",
       services: "Scopri cosa facciamo",
       method: "Scopri come lavoriamo",

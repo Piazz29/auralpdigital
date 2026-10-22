@@ -97,8 +97,12 @@ if (!logo) {
 function initHandoff(logo: HTMLElement) {
   const START = performance.now();
   const hero = document.querySelector<HTMLElement>("[data-handoff-hero]");
-  const slot = hero?.querySelector<HTMLElement>("[data-logo-slot]") ?? null;
-  const target = document.querySelector<HTMLElement>("[data-logo-target]");
+  // Telefono: la navbar è solo il burger, il logo piccolo sta nell'angolo in
+  // alto a sinistra. In home il logo si posa grande in cima alla hero e va
+  // nell'angolo solo scorrendo oltre (e torna su risalendo).
+  const phone = window.matchMedia("(max-width: 899px)").matches;
+  const slot = phone ? (hero?.querySelector<HTMLElement>("[data-logo-slot]") ?? null) : null;
+  const target = document.querySelector<HTMLElement>(phone ? "[data-logo-corner]" : "[data-logo-target]");
   // La sezione dopo la hero.
   const next = (hero?.nextElementSibling as HTMLElement | null) ?? null;
   const home = !!(hero && slot);
@@ -156,15 +160,22 @@ function initHandoff(logo: HTMLElement) {
   let docked = false;
   let inverted = false;
   let menuUntil = 0;
+  // Telefono, home: 0 = nella hero, 1 = nell'angolo (lo decide lo scroll).
+  const corner = { k: 0 };
+  let settled = false;
 
   function render() {
     // Letture (tutte prima delle scritture).
     const base = baseBox();
     const tRect = target?.getBoundingClientRect();
     const tBox = tRect && tRect.width ? fromRect(tRect) : base;
-    // Il posto nella hero scorre con la pagina: il logo lo segue.
+    // Il posto nella hero scorre con la pagina: il logo lo segue. Sul
+    // telefono, posato, parte invece dal posto com'è a pagina in cima: il
+    // logo resta in vista mentre scivola nell'angolo.
     const slotBox = slot ? fromRect(slot.getBoundingClientRect()) : null;
+    if (slotBox && settled) slotBox.y += window.scrollY;
     const heroRect = hero && intro.r < 1 ? hero.getBoundingClientRect() : null;
+    if (settled) corner.k = gsap.parseEase("power2.inOut")(gsap.utils.clamp(0, 1, window.scrollY / cornerRun()));
     const p = st ? st.progress : 0;
     const nextRect = next && !reduce && p < 1 ? next.getBoundingClientRect() : null;
 
@@ -172,9 +183,9 @@ function initHandoff(logo: HTMLElement) {
     let arrived: boolean;
     if (home && slotBox) {
       // Home: dal preloader al posto nella hero, e lì resta (scorre con la
-      // hero). La navbar ha già il suo logo piccolo: niente viaggio.
-      box = mix(base, slotBox, intro.k);
-      arrived = false;
+      // hero). Sul telefono, scorrendo oltre, vola nell'angolo.
+      box = mix(mix(base, slotBox, intro.k), tBox, corner.k);
+      arrived = corner.k >= 1;
     } else {
       box = mix(base, tBox, intro.k);
       arrived = intro.k >= 1;
@@ -196,8 +207,14 @@ function initHandoff(logo: HTMLElement) {
     }
 
     // Spessore 3D: si accende col reveal.
-    const depth = home && !reduce ? intro.k : 0;
+    // Sul telefono niente spessore: il vettoriale pieno, come nell'angolo.
+    const depth = home && !phone && !reduce ? intro.k : 0;
     logo.style.setProperty("--logo-depth", depth.toFixed(3));
+    // La nuvola dietro al logo d'angolo cresce mentre ci vola.
+    if (settled) logo.style.setProperty("--logo-cloud", corner.k.toFixed(3));
+    // "Digital" bianco nella hero (il grigio non stacca dalla luce), torna
+    // grigio mentre vola nell'angolo, sulla nuvola chiara.
+    logo.style.setProperty("--logo-hero", (home ? intro.k * (1 - corner.k) : 0).toFixed(3));
 
     logo.classList.toggle("is-inverted", inverted);
     root.classList.toggle("handoff-inverted", inverted);
@@ -222,6 +239,18 @@ function initHandoff(logo: HTMLElement) {
   });
   window.addEventListener("resize", render);
   document.fonts?.ready.then(render).catch(() => undefined);
+
+  // Telefono, home: posato nella hero, il logo segue lo scroll — nel primo
+  // tratto (--corner-run) vola dal suo posto all'angolo in alto a sinistra,
+  // dove resta; risalendo rifà la strada al contrario. Legato allo scroll,
+  // non a tempo: va e torna sotto il dito.
+  const cornerRun = () => window.innerHeight * 0.32;
+  const settle = () => {
+    if (!phone || !slot) return;
+    settled = true;
+    render();
+    window.addEventListener("scroll", render, { passive: true });
+  };
 
   // ---- Hero: stato iniziale e coreografie ----------------------------------
   let reveal: gsap.core.Timeline | null = null;
@@ -249,6 +278,7 @@ function initHandoff(logo: HTMLElement) {
       logo.style.visibility = "hidden";
     }
     reveal?.play();
+    settle();
     return;
   }
 
@@ -280,6 +310,7 @@ function initHandoff(logo: HTMLElement) {
         introActive = false;
         root.classList.add("handoff-settled");
         render();
+        settle();
       },
     });
     if (cover) tl.to(cover, { autoAlpha: 0, duration: s(R.coverFade), ease: "none" }, 0);

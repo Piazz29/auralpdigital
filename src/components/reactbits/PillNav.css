@@ -372,6 +372,83 @@
   }
 }
 
+/* Il logo d'angolo esiste solo sul telefono (vedi sotto). */
+.pnav-corner {
+  display: none;
+}
+
+/* ---------- Telefono: chiusa resta solo il burger ----------
+   Un tondo di vetro in alto a destra, sempre lì (non si ritira). Il logo
+   della pillola compare solo a menu aperto: è fuori dal flusso, così la
+   pillola chiusa è larga quanto il burger e aprendosi si allarga verso
+   sinistra. */
+@media (max-width: 899px) {
+  .pnav {
+    --pnav-bar-h: 52px;
+  }
+  .pnav-dock {
+    justify-content: flex-end;
+  }
+  /* A sinistra il logo piccolo, alla stessa altezza del burger. Fuori dal
+     flusso: la pillola aperta si allarga sopra di lui (e lui si nasconde). */
+  .pnav-corner {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    height: var(--pnav-bar-h);
+    pointer-events: auto;
+    transition: opacity 0.25s ease;
+  }
+  .pnav-corner img {
+    position: relative;
+    display: block;
+    height: 22px;
+    width: auto;
+  }
+  /* Una nuvola di carta sfocata dietro al logo: lo stacca da quello che
+     scorre sotto senza fare da barra. Bordi sciolti nella maschera. */
+  .pnav-corner::before {
+    content: "";
+    position: absolute;
+    inset: -2px -26px -2px -24px;
+    background: rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    -webkit-mask-image: radial-gradient(closest-side, #000 45%, transparent);
+    mask-image: radial-gradient(closest-side, #000 45%, transparent);
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .pnav[data-open] .pnav-corner {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .pnav-links {
+    display: none;
+  }
+  .pnav-bar {
+    justify-content: flex-end;
+    gap: 0;
+    padding: 0 6px;
+  }
+  .pnav-bar .pnav-logo {
+    position: absolute;
+    top: calc(var(--pnav-bar-h) / 2);
+    left: 20px;
+    translate: 0 -50%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+  }
+  .pnav[data-open] .pnav-bar .pnav-logo {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.4s ease 0.45s, visibility 0s;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pnav-burger-line,
   .pnav-big-roll > span {

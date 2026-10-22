@@ -37,7 +37,7 @@ const CODE: Tok[][] = [
 ];
 ---
 
-<section class="hero-section hero-fluid relative w-full overflow-hidden" data-anim="hero" data-handoff-hero>
+<section id="top" class="hero-section hero-fluid relative w-full overflow-hidden" data-anim="hero" data-handoff-hero>
   <!-- La luce: canvas WebGL. Il fondo CSS sotto è la stessa scena, ferma:
        si vede senza WebGL e prima del primo frame. Il contenitore esterno
        sfuma il bordo basso e sta fermo; quello interno si muove in
@@ -141,21 +141,26 @@ const CODE: Tok[][] = [
         </div>
       </div>
 
-      <!-- Davanti: linee di montaggio sugli spigoli, richiami ed etichette
-           (disegnati in piano da heroExplode.ts, seguono gli strati). -->
+      <!-- Davanti: linee di montaggio sugli spigoli e richiami (disegnati
+           in piano da heroExplode.ts, seguono gli strati). -->
       <svg class="hx-leads" data-hx-leads></svg>
-      <ol class="hx-labels">
-        {x.layers.map((l, i) => (
-          <li class="hx-lab" data-hx-lab={i}>
-            <span class="hx-lab-n">{String(i + 1).padStart(2, "0")}</span>
-            <span class="hx-lab-t"><b>{l.n}</b><small>{l.d}</small></span>
-          </li>
-        ))}
-      </ol>
     </div>
+    <!-- Le etichette degli strati: sul desktop in colonna accanto alla scena
+         (le posa heroExplode.ts), sul telefono una riga di chip sotto. -->
+    <ol class="hx-labels" aria-hidden="true">
+      {x.layers.map((l, i) => (
+        <li class="hx-lab" data-hx-lab={i}>
+          <span class="hx-lab-n">{String(i + 1).padStart(2, "0")}</span>
+          <span class="hx-lab-t"><b>{l.n}</b><small>{l.d}</small></span>
+        </li>
+      ))}
+    </ol>
   </div>
 
   <div data-anim="hero-content" class="hero-copy">
+    <!-- Telefono: il posto del logo grande in cima (ci si posa il logo del
+         preloader, logoHandoff.ts). Sul desktop non c'è. -->
+    <span class="hero-logo-slot" data-logo-slot aria-hidden="true"></span>
     <span
       data-anim="hero-label"
       class="hero-badge text-[11px] font-medium tracking-[0.15em] uppercase"

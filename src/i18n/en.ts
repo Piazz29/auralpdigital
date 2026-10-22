@@ -21,6 +21,7 @@ const en = {
 
   nav: {
     items: {
+      home: "Home",
       projects: "Projects",
       services: "What We Do",
       method: "How We Work",
@@ -28,6 +29,7 @@ const en = {
       faq: "FAQ",
     },
     aria: {
+      home: "Back to the home page",
       projects: "Go to projects",
       services: "Discover what we do",
       method: "See how we work",

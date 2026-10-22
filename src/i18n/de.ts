@@ -21,6 +21,7 @@ const de = {
 
   nav: {
     items: {
+      home: "Startseite",
       projects: "Projekte",
       services: "Was wir tun",
       method: "So arbeiten wir",
@@ -28,6 +29,7 @@ const de = {
       faq: "FAQ",
     },
     aria: {
+      home: "Zur Startseite",
       projects: "Zu den Projekten",
       services: "Entdecke, was wir tun",
       method: "Entdecke, wie wir arbeiten",

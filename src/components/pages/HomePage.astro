@@ -100,6 +100,13 @@ const t = getDict(lang);
         ))}
       </div>
 
+      <!-- Invito a scorrere: il racconto avanza con lo scroll. Un filo con
+           una goccia che scende; sparisce appena la storia parte (main.ts). -->
+      <div class="point-cue" data-point-cue aria-hidden="true">
+        <span class="point-cue-track"><i></i></span>
+        <span class="point-cue-label">{t.home.hero.scroll}</span>
+      </div>
+
       <div class="point-copy">
         <!-- Atto 1 + 2: lead (poi testata) e problema -->
         <div class="point-pain" data-point-pain>
