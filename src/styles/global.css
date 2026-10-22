@@ -10902,46 +10902,33 @@ div[aria-hidden="true"][style*="overflow: clip"] {
     transition: opacity 0.8s ease;
   }
   .htopo.is-live .htopo-canvas { opacity: 1; }
-  /* L'etichetta della cima: la posa heroTopo.ts sul punto proiettato. */
-  .htopo-pin {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 7px;
-    margin: -5px 0 0 -5px;
-    white-space: nowrap;
-    font-size: 11px;
-    font-weight: 650;
-    letter-spacing: 0.02em;
-    color: var(--color-navy);
-    text-shadow: 0 0 3px var(--color-bg), 0 0 8px var(--color-bg), 0 0 14px var(--color-bg);
-    opacity: 0;
-    will-change: transform;
-  }
-  .htopo-pin i {
-    flex: none;
-    margin-top: 1px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--color-bg);
-    border: 2.5px solid var(--color-accent);
-  }
+  /* Didascalia ferma sotto la montagna, a destra; arriva a disegno finito. */
   .htopo-tag {
-    display: block;
-    margin-top: 3px;
-    font-size: 9.5px;
+    position: absolute;
+    right: 20px;
+    bottom: 26px;
+    font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--color-text-muted);
+    text-shadow: 0 0 4px var(--color-bg), 0 0 10px var(--color-bg);
+    opacity: 0;
+    transition: opacity 0.8s ease 2.4s;
   }
+  .htopo.is-live .htopo-tag { opacity: 1; }
 }
 @media (max-width: 899px) and (max-height: 700px) {
   .hero-section[data-handoff-hero] { padding-top: calc(72px + env(safe-area-inset-top, 0px)); }
 }
 @media (max-width: 899px) and (prefers-reduced-motion: reduce) {
   .hero-section[data-handoff-hero] .hero-logo-bar { animation: none; transform: none; }
+}
+
+/* Telefono, home: sul blu del finale il logo d'angolo è bianco e senza la
+   nuvola di carta (main.ts mette .corner-on-dark). Bianco pieno anche la
+   "p": la versione reversed la lascia blu, invisibile sul blu. */
+@media (max-width: 899px) {
+  html.corner-on-dark .pnav-corner::before { opacity: 0; }
+  html.corner-on-dark .pnav-corner img { filter: brightness(0) invert(1); }
 }

@@ -15,9 +15,8 @@
 
 const DEM_URL = "/pics/sciliar-dem.png";
 // Il ritaglio: 700×560 pixel a zoom 13 (13,15 m l'uno a 46,5° N), ridotti a
-// metà. Monte Pez, la cima, sta qui dentro (coordinate del ritaglio ridotto).
+// metà.
 const M_PER_PX = 26.3;
-const PEZ = { x: 167, y: 160, q: 2563 };
 const MASSIF = { x: 152, y: 136 }; // centro del pianoro
 const STEP = 50; // equidistanza delle isoipse, in metri
 const EXAG = 1.35; // esagerazione verticale, come nei plastici
@@ -119,7 +118,6 @@ const css = (v: string) => {
 
 export function mountTopo(root: HTMLElement) {
   const canvas = root.querySelector<HTMLCanvasElement>("[data-topo-canvas]");
-  const pin = root.querySelector<HTMLElement>("[data-topo-pin]");
   if (!canvas) return;
   const gl = canvas.getContext("webgl", { antialias: true, alpha: false, premultipliedAlpha: false });
   if (!gl || !gl.getExtension("OES_standard_derivatives")) return;
@@ -196,9 +194,6 @@ export function mountTopo(root: HTMLElement) {
     gl.uniform2f(U("uRad"), 3600, 5600);
     gl.uniform2f(U("uHaze"), 1000, 1500);
 
-    // Monte Pez nello spazio della scena (per l'etichetta che lo segue).
-    const pez = [(PEZ.x - W / 2) * M_PER_PX, PEZ.q * EXAG, (PEZ.y - H / 2) * M_PER_PX];
-
     // Il massiccio visibile (dentro il raggio della sfumatura e sopra la
     // foschia di fondovalle): punti campione per inquadrarlo.
     const pts: number[][] = [];
@@ -240,7 +235,7 @@ export function mountTopo(root: HTMLElement) {
           }
         }
         const k = Math.max((x1 - x0) / 2 / 0.84, (y1 - y0) / 2 / 0.78);
-        fit = { f: fit.f * k, ox: -(x0 + x1) / 2 / k, oy: -(y0 + y1) / 2 / k - 0.06 };
+        fit = { f: fit.f * k, ox: -(x0 + x1) / 2 / k, oy: -(y0 + y1) / 2 / k + 0.04 };
       }
     };
 
@@ -271,13 +266,6 @@ export function mountTopo(root: HTMLElement) {
       gl.uniform2f(uFog, dist * 0.9, dist * 1.45);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.drawElements(gl.TRIANGLES, idx.length, uint ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
-      if (pin) {
-        const x = mvp[0] * pez[0] + mvp[4] * pez[1] + mvp[8] * pez[2] + mvp[12];
-        const y = mvp[1] * pez[0] + mvp[5] * pez[1] + mvp[9] * pez[2] + mvp[13];
-        const w = mvp[3] * pez[0] + mvp[7] * pez[1] + mvp[11] * pez[2] + mvp[15];
-        pin.style.transform = `translate(${((x / w + 1) / 2 * cw).toFixed(1)}px, ${((1 - y / w) / 2 * ch).toFixed(1)}px)`;
-        pin.style.opacity = String(Math.max(0, (k - 0.75) * 4).toFixed(2));
-      }
     };
 
     let raf = 0, visible = true;

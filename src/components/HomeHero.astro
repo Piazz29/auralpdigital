@@ -22,8 +22,7 @@ interface Props {
 const { lang } = Astro.props;
 const t = getDict(lang);
 const x = t.home.hero.explode;
-// Telefono: la cima dello Sciliar (Monte Pez / Petz) e dove siamo.
-const PEAK = { it: "Monte Pez · 2.563 m", de: "Petz · 2.563 m", en: "Monte Pez · 2,563 m" }[lang];
+// Telefono: la didascalia sotto lo Sciliar.
 const TAG = { it: "Sciliar · Alto Adige", de: "Schlern · Südtirol", en: "Sciliar · South Tyrol" }[lang];
 // Il codice dello strato più basso: la stessa pagina che si vede in cima.
 type Tok = [string, string];
@@ -203,10 +202,10 @@ const CODE: Tok[][] = [
 
   <!-- Telefono: LO SCILIAR A CURVE DI LIVELLO, in basso sotto il testo.
        Rilievo vero (quote reali, isoipse ogni 50 m) disegnato in WebGL da
-       scripts/heroTopo.ts; l'etichetta segue la cima. Sul desktop non c'è. -->
+       scripts/heroTopo.ts; sotto, la didascalia. Sul desktop non c'è. -->
   <div class="htopo" data-topo aria-hidden="true">
     <canvas class="htopo-canvas" data-topo-canvas></canvas>
-    <span class="htopo-pin" data-topo-pin><i></i><span>{PEAK}<small class="htopo-tag">{TAG}</small></span></span>
+    <span class="htopo-tag">{TAG}</span>
   </div>
 
   <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->

@@ -1919,6 +1919,21 @@ if (!reduceMotion) {
 // si incastrano con lo scroll (typeBlock.ts): il tratto del sito.
 initTypeBlocks({ gsap, ScrollTrigger, SplitText, animate: !reduceMotion, scrub: SCRUB });
 
+// ---------- Telefono, home — il logo d'angolo sul blu del finale ----------
+// La nuvola di carta dietro al logo d'angolo serve sul chiaro; sul blu del
+// finale (e del footer che lo segue) farebbe una macchia bianca: lì sparisce
+// e il logo diventa bianco (CSS, .corner-on-dark). Il blu copre l'angolo a
+// metà della lunga sfumatura che porta alla fermata del finale.
+const finaleDark = document.querySelector<HTMLElement>(".finale .finale-detent");
+if (finaleDark && window.matchMedia("(max-width: 899px)").matches) {
+  ScrollTrigger.create({
+    trigger: finaleDark,
+    start: () => `top-=${Math.round(finaleDark.offsetTop * 0.45)} 26px`,
+    end: "+=100000", // fino in fondo, footer compreso
+    toggleClass: { targets: document.documentElement, className: "corner-on-dark" },
+  });
+}
+
 await yieldToMain();
 
 // ---------- Footer — il wordmark gigante emerge lettera per lettera ----------
