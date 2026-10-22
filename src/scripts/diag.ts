@@ -26,12 +26,12 @@ if (location.hash === "#diag") {
       `html: ${document.documentElement.className}`,
       `fonts: ${document.fonts?.status} satoshi=${document.fonts?.check?.("16px Satoshi")}`,
       R(".hero-section"),
-      R(".hero-copy"),
-      R(".hero-logo-slot"),
-      R(".hero-logo-bar"),
+      R(".mhero"),
+      R(".mhero-slot"),
+      R(".mhero-bar"),
       R(".handoff-logo"),
-      R(".hero-title"),
-      R(".hero-foot"),
+      R(".mhero-title"),
+      R(".mhero-cta"),
       `errors: ${errs.join(" | ") || "none"}`,
     ].join("\n");
   };

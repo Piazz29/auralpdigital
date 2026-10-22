@@ -24,6 +24,20 @@ const t = getDict(lang);
 const x = t.home.hero.explode;
 // Telefono: la didascalia sotto lo Sciliar.
 const TAG = { it: "Sciliar · Alto Adige", de: "Schlern · Südtirol", en: "Sciliar · South Tyrol" }[lang];
+// Telefono: il titolo a righe fisse (non va mai a capo da solo). Stessa
+// sintassi del dizionario: **arancio**, *blu*. Ogni parola nasce già nella
+// sua maschera, niente SplitText: l'entrata la anima logoHandoff.ts.
+const M_LINES = {
+  it: ["Costruiamo", "prodotti digitali", "di **prossima**", "**generazione**", "per realtà *esigenti.*"],
+  en: ["We build", "**next-generation**", "digital products", "for *demanding*", "brands."],
+  de: ["Wir entwickeln", "digitale Produkte", "der **nächsten**", "**Generation**", "für *anspruchsvolle*", "Unternehmen."],
+}[lang];
+type MWord = { w: string; k: "" | "mw-or" | "mw-em" };
+const mLines: MWord[][] = M_LINES.map((line) =>
+  line.split(" ").map((w) =>
+    w.startsWith("**") ? { w: w.replace(/\*/g, ""), k: "mw-or" } : w.startsWith("*") ? { w: w.replace(/\*/g, ""), k: "mw-em" } : { w, k: "" },
+  ),
+);
 // Il codice dello strato più basso: la stessa pagina che si vede in cima.
 type Tok = [string, string];
 const CODE: Tok[][] = [
@@ -160,10 +174,6 @@ const CODE: Tok[][] = [
   </div>
 
   <div data-anim="hero-content" class="hero-copy">
-    <!-- Telefono: il posto del logo grande in cima (ci si posa il logo del
-         preloader, logoHandoff.ts). Sul desktop non c'è. -->
-    <span class="hero-logo-slot" data-logo-slot aria-hidden="true"></span>
-    <span class="hero-logo-bar" aria-hidden="true"></span>
     <span
       data-anim="hero-label"
       class="hero-badge text-[11px] font-medium tracking-[0.15em] uppercase"
@@ -200,12 +210,36 @@ const CODE: Tok[][] = [
     </div>
   </div>
 
-  <!-- Telefono: LO SCILIAR A CURVE DI LIVELLO, in basso sotto il testo.
-       Rilievo vero (quote reali, isoipse ogni 50 m) disegnato in WebGL da
-       scripts/heroTopo.ts; sotto, la didascalia. Sul desktop non c'è. -->
-  <div class="htopo" data-topo aria-hidden="true">
-    <canvas class="htopo-canvas" data-topo-canvas></canvas>
-    <span class="htopo-tag">{TAG}</span>
+  <!-- TELEFONO (< 900px): la hero ha un blocco suo, in colonna e a misure
+       fisse; tutto il resto della sezione lì è spento. Dall'alto: il posto
+       del logo grande (ci si posa il logo del preloader, logoHandoff.ts),
+       il filo blu, il titolo a righe fisse, il sottotitolo (solo schermi
+       alti), la CTA e, fino in fondo alla prima schermata, lo Sciliar a
+       curve di livello (scripts/heroTopo.ts). Sul desktop non c'è. -->
+  <div class="mhero">
+    <span class="mhero-slot" data-logo-slot aria-hidden="true"></span>
+    <span class="mhero-bar" aria-hidden="true"></span>
+    <p class="mhero-title" data-anim="hero-line-m" role="heading" aria-level="1" style="opacity: 0;">
+      {mLines.map((line) => (
+        <span class="mhero-line">
+          {line.map((m, i) => (
+            <>{i > 0 && " "}<span class="mw"><span class:list={["mw-i", m.k]}>{m.w}</span></span></>
+          ))}
+        </span>
+      ))}
+    </p>
+    <p data-anim="hero-subline" class="mhero-sub" style="opacity: 0;">
+      <Rich text={t.home.hero.sub} />
+    </p>
+    <div data-anim="hero-cta" class="mhero-cta" style="opacity: 0;">
+      <a href="#projects" class="pill text-[14px] px-8 py-[15px]">
+        {t.home.hero.cta} <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+    <div class="htopo" data-topo aria-hidden="true">
+      <canvas class="htopo-canvas" data-topo-canvas></canvas>
+      <span class="htopo-tag">{TAG}</span>
+    </div>
   </div>
 
   <!-- Hint di scroll — hairline con tratto accent che scorre in loop. -->
