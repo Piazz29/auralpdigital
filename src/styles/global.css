@@ -1368,31 +1368,6 @@ button {
 }
 .svt-shot[data-depth="1"] .svt-veil { opacity: 0.16; }
 .svt-shot[data-depth="2"] .svt-veil { opacity: 0.3; }
-/* numero e nome del servizio sulla card, in vetro */
-.svt-shot-n {
-  position: absolute;
-  top: clamp(12px, 1.4vw, 20px);
-  left: clamp(12px, 1.4vw, 20px);
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 13px 7px 11px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 999px;
-  background: rgba(23, 19, 16, 0.42);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-}
-.svt-shot-n i {
-  font-style: normal;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  opacity: 0.8;
-}
 /* riflesso di luce: una passata diagonale quando la card arriva in cima */
 .svt-sheen {
   position: absolute;
