@@ -58,9 +58,9 @@ const t = getDict(lang);
         <Picture
           src={sciliarBw}
           formats={["avif", "webp"]}
-          widths={[1280, 1920, 2560]}
-          sizes="max(100vw, 178vh)"
-          quality={82}
+          widths={[960, 1280, 1920, 2560]}
+          sizes="(max-width: 899px) 40vh, max(100vw, 178vh)"
+          quality={70}
           fallbackFormat="jpg"
           alt=""
           loading="eager"

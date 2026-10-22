@@ -259,8 +259,9 @@ const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, tit
     <slot />
 
     <script>
-      import "../scripts/main.ts";
+      // Prima il logo: main.ts si monta a pezzi (await) e non deve farlo aspettare.
       import "../scripts/logoHandoff.ts";
+      import "../scripts/main.ts";
     </script>
   </body>
 </html>

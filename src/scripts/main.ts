@@ -43,6 +43,19 @@ const staticScenes = reduceMotion || shortViewport;
 // fermate né prese in carico: le scene seguono lo scroll e basta (scrub).
 const touchUI = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
+// ---------- Avvio a pezzi ----------
+// Montare tutte le scene in un colpo solo era un unico compito lungo (sul
+// telefono quasi un secondo con la CPU rallentata): la pagina era dipinta ma
+// non rispondeva. Le scene sotto la prima schermata si montano a pezzi,
+// ridando la mano al browser fra un pezzo e l'altro; l'ordine resta quello
+// della pagina, quindi i pin si impilano come prima.
+const yieldToMain = () =>
+  new Promise<void>((resolve) => {
+    const s = (window as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
+    if (s?.yield) s.yield().then(resolve);
+    else setTimeout(resolve, 0);
+  });
+
 // ---------- Ritardo unico dello scroll ----------
 // Ogni animazione agganciata allo scroll (uscita della hero, zoom del suo
 // video, passaggio di Chi Siamo, virata di colore del canvas) insegue lo
@@ -570,6 +583,8 @@ if (document.querySelector("[data-anim='nav']")) {
 // Entrata e parallasse della hero (cerchio d'apertura, logo che passa alla
 // navbar, finestra / tavolo / testo a velocità diverse) vivono in logoHandoff.ts.
 
+await yieldToMain();
+
 // ---------- Titoli di sezione — reveal parola per parola ----------
 // Ogni titolo viene diviso in parole; ognuna sale dentro una maschera
 // (overflow hidden) con una rotazione minima che si raddrizza: il classico
@@ -744,6 +759,8 @@ if (!reduceMotion && isHome) {
   });
 }
 
+await yieldToMain();
+
 // ---------- Cosa Facciamo ----------
 // Il cambio di servizio (menu, frecce, swipe) e le clip sono nello script di
 // ServicesTabs.astro: la sezione non ha regia di scroll.
@@ -773,6 +790,8 @@ if (!reduceMotion && isHome) {
     new Set([...lazyPosters].map((v) => v.closest("section") ?? v)).forEach((el) => io.observe(el));
   } else lazyPosters.forEach(setPoster);
 }
+
+await yieldToMain();
 
 // ---------- Il punto — racconto in tre tempi dentro un pin ----------------
 // Il palco (una schermata) si ferma e lo scroll, in scrub, fa avanzare la
@@ -1132,6 +1151,8 @@ if (
   );
 }
 
+await yieldToMain();
+
 // ---------- Chi Siamo — capitoli del metodo ----------
 // Ogni capitolo entra come scena propria (numero+titolo, poi il corpo);
 // i chip degli strumenti seguono in cascata fine.
@@ -1160,6 +1181,8 @@ document.querySelectorAll<HTMLElement>(".about-chapter").forEach((ch) => {
     );
   }
 });
+
+await yieldToMain();
 
 // ---------- Progetti — il mazzo che si sparpaglia ----------
 // Le carte partono impilate al centro come un mazzo buttato sul tavolo e si
@@ -1312,6 +1335,8 @@ if (deck) {
 // alla sezione — [data-scroll-detent] in HomePage.astro — li ferma come ogni
 // altra sezione, senza scroll a vuoto dopo.)
 
+await yieldToMain();
+
 // ---------- Chi Siamo — i nomi del duo ----------
 // I nomi entrano dalla maschera parola per parola — stesso linguaggio dei
 // titoli di sezione, ma in scala monumentale — poi la riga CTA segue.
@@ -1378,6 +1403,8 @@ if (!reduceMotion && window.matchMedia("(min-width: 1024px)").matches) {
     });
   });
 }
+
+await yieldToMain();
 
 // ---------- CTA finale — reveal del pannello + contenuti in cascata ----------
 // Salita translate-only (niente scale: il pannello scuro ha grana/spotlight,
@@ -1530,6 +1557,8 @@ if (
     ctaSpot.style.setProperty("--my", `${e.clientY - r.top}px`);
   });
 }
+
+await yieldToMain();
 
 // ---------- Pagina /chi-siamo ----------
 // Hero "dietro i pixel" (ritratti a tessere + lente), manifesto che si
@@ -1722,9 +1751,25 @@ if (aboutPage) {
     const rule = card.querySelectorAll<HTMLElement>("[data-ap-card-rule] > span");
     const ins = card.querySelectorAll<HTMLElement>("[data-ap-card-in]");
     const chars = name ? SplitText.create(name, { type: "chars", mask: "chars" }).chars : [];
-    const px = canvas
-      ? new PixelPortrait(canvas, { src: canvas.dataset.src!, ramp: rampOf(canvas), block: 22, mode: "reveal" })
-      : null;
+    // Il ritratto a pixel nasce quando la card si avvicina e legge la stessa
+    // foto scelta dalla <picture> (una sola richiesta); il file dedicato
+    // resta il ripiego se il browser non l'ha ancora scelta.
+    const img = card.querySelector<HTMLImageElement>(".ap-founder-img");
+    let px: PixelPortrait | null = null;
+    if (canvas)
+      ScrollTrigger.create({
+        trigger: card,
+        start: "top bottom+=900",
+        once: true,
+        onEnter: () => {
+          px = new PixelPortrait(canvas, {
+            src: img?.currentSrc || canvas.dataset.src!,
+            ramp: rampOf(canvas),
+            block: 22,
+            mode: "reveal",
+          });
+        },
+      });
     const wave = { v: 0 };
 
     // Scrub: il ritratto sale inclinato e si posa, la foto dentro scende di
@@ -1820,6 +1865,8 @@ if (aboutPage) {
   }
 }
 
+await yieldToMain();
+
 // ---------- Animazioni CSS infinite — in pausa fuori scena ----------
 // Aurora, segni fluttuanti, hint di scroll, carte che respirano: sono loop
 // CSS infiniti che il browser continua a far avanzare (style + composite, e
@@ -1871,6 +1918,8 @@ if (!reduceMotion) {
 // I titoli [data-type-block] si compongono a righe della stessa larghezza e
 // si incastrano con lo scroll (typeBlock.ts): il tratto del sito.
 initTypeBlocks({ gsap, ScrollTrigger, SplitText, animate: !reduceMotion, scrub: SCRUB });
+
+await yieldToMain();
 
 // ---------- Footer — il wordmark gigante emerge lettera per lettera ----------
 // Il wordmark parte più in basso e risale a posto mentre il footer entra; le
@@ -1945,6 +1994,11 @@ initContactFlow({
   },
   onResize: () => ghostTrigger?.refresh(),
 });
+
+// Se il "load" (e con lui il refresh automatico di ScrollTrigger) è arrivato
+// mentre si montavano i pezzi, le misure dei primi trigger non vedono gli
+// spacer dei pin montati dopo: un refresh solo, alla fine.
+if (document.readyState === "complete") ScrollTrigger.refresh();
 
 // ---------- Ancora all'arrivo da un'altra pagina ----------
 // Un link tipo /#come-lavoriamo: il browser salta all'ancora prima

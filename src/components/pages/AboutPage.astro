@@ -366,7 +366,7 @@ const steps = ta.journey.steps.map((s) => ({
       </div>
       <div class="works-screen">
         <JourneyPath
-          client:media="(min-width: 769px)"
+          client:visible={{ rootMargin: "1600px" }}
           steps={steps}
           copy={{
             kicker: ta.journey.kicker,
