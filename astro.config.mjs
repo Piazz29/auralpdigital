@@ -8,7 +8,7 @@ export default defineConfig({
   // sitemap, robots e llms.txt (src/lib/seo.ts). Quando si collega il dominio
   // definitivo basta cambiare QUESTA riga (e il valore di
   // Access-Control-Allow-Origin in vercel.json).
-  site: 'https://auralpdigital.vercel.app',
+  site: 'https://www.auralpdigital.com',
 
   // i18n: l'italiano è la lingua base e resta alla root (nessun prefisso /it).
   // Tedesco e inglese vivono sotto /de e /en. prefixDefaultLocale=false mantiene
