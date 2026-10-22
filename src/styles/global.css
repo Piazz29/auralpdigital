@@ -10875,16 +10875,17 @@ div[aria-hidden="true"][style*="overflow: clip"] {
     width: auto;
   }
 
-  /* La montagna: occupa il basso della prima schermata, dietro al testo.
+  /* La montagna: prende lo spazio che resta sotto la CTA, da bordo a bordo,
+     fino in fondo alla prima schermata; heroTopo.ts la inquadra intera.
      Il terreno sfuma da solo nel bianco (bordi, fondovalle, lontananza). */
   .htopo {
-    position: absolute;
+    position: relative;
     z-index: 1;
-    left: 0;
-    right: 0;
-    bottom: var(--tail);
     display: block;
-    height: clamp(260px, 46svh, 460px);
+    order: 99;
+    flex: 1 1 0;
+    min-height: 200px;
+    margin: clamp(4px, 1.5svh, 16px) -20px -18px;
     pointer-events: none;
   }
   /* Il canvas è bianco pieno: i bordi si sciolgono nel trasparente, così
@@ -10940,7 +10941,6 @@ div[aria-hidden="true"][style*="overflow: clip"] {
 }
 @media (max-width: 899px) and (max-height: 700px) {
   .hero-section[data-handoff-hero] { padding-top: calc(72px + env(safe-area-inset-top, 0px)); }
-  .htopo { height: 40svh; }
 }
 @media (max-width: 899px) and (prefers-reduced-motion: reduce) {
   .hero-section[data-handoff-hero] .hero-logo-bar { animation: none; transform: none; }

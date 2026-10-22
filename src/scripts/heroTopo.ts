@@ -103,10 +103,18 @@ const mul = (a: Mat, b: Mat): Mat => {
   return o;
 };
 
+// Il colore di una variabile CSS in RGB 0..1, in qualunque forma sia scritto
+// (#fff, #fcfaf6, rgb(), oklch()…: il minificatore lo riscrive come vuole):
+// lo dipinge in un pixel e lo rilegge.
+const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!;
 const css = (v: string) => {
   const m = getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-  const h = /^#([0-9a-f]{6})$/i.exec(m)?.[1] ?? "000000";
-  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+  probe.clearRect(0, 0, 1, 1);
+  probe.fillStyle = "#fff";
+  probe.fillStyle = m || "#fff";
+  probe.fillRect(0, 0, 1, 1);
+  const d = probe.getImageData(0, 0, 1, 1).data;
+  return [d[0] / 255, d[1] / 255, d[2] / 255];
 };
 
 export function mountTopo(root: HTMLElement) {
@@ -191,6 +199,51 @@ export function mountTopo(root: HTMLElement) {
     // Monte Pez nello spazio della scena (per l'etichetta che lo segue).
     const pez = [(PEZ.x - W / 2) * M_PER_PX, PEZ.q * EXAG, (PEZ.y - H / 2) * M_PER_PX];
 
+    // Il massiccio visibile (dentro il raggio della sfumatura e sopra la
+    // foschia di fondovalle): punti campione per inquadrarlo.
+    const pts: number[][] = [];
+    for (let j = 0; j < gh; j += 4) for (let i = 0; i < gw; i += 4) {
+      const v = j * gw + i, x = pos[v * 3], z = pos[v * 3 + 2], q = pos[v * 3 + 1];
+      const dx = x - (MASSIF.x - W / 2) * M_PER_PX, dz = z - (MASSIF.y - H / 2) * M_PER_PX;
+      if (q > 1350 && Math.hypot(dx, dz) < 4200) pts.push([x, q * EXAG, z]);
+    }
+    const tgt = [(MASSIF.x - W / 2) * M_PER_PX, 2700, (MASSIF.y - H / 2) * M_PER_PX];
+    const DIST = 15500, ALT = 10500;
+    // Camera: f allontana (stesso angolo), ox/oy spostano l'immagine in NDC.
+    let fit = { f: 1, ox: 0, oy: 0 };
+    const camera = (yawDeg: number, rise: number, aspect: number, c = fit) => {
+      const yaw = yawDeg * Math.PI / 180, dist = DIST * c.f;
+      const alt = tgt[1] + (ALT + rise - tgt[1]) * c.f;
+      const eye = [tgt[0] + Math.sin(yaw) * dist, alt, tgt[2] - Math.cos(yaw) * dist];
+      const m = mul(persp(22 * Math.PI / 180, aspect, 1000, 60000), lookAt(eye, tgt));
+      for (let r = 0; r < 4; r++) {
+        m[r * 4] += c.ox * m[r * 4 + 3];
+        m[r * 4 + 1] += c.oy * m[r * 4 + 3];
+      }
+      return { m, dist };
+    };
+    const ndc = (m: Float32Array | number[], p: number[]) => {
+      const w = m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15];
+      return [(m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12]) / w, (m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13]) / w];
+    };
+    // Inquadratura che contiene il massiccio per tutta l'oscillazione (±7°),
+    // su qualunque proporzione del riquadro: due passate bastano.
+    const frame = (aspect: number) => {
+      fit = { f: 1, ox: 0, oy: 0 };
+      for (let pass = 0; pass < 2; pass++) {
+        let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
+        for (const yaw of [18, 25, 32]) {
+          const { m } = camera(yaw, 0, aspect, { f: fit.f, ox: 0, oy: 0 });
+          for (const p of pts) {
+            const [x, y] = ndc(m, p);
+            x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+          }
+        }
+        const k = Math.max((x1 - x0) / 2 / 0.84, (y1 - y0) / 2 / 0.78);
+        fit = { f: fit.f * k, ox: -(x0 + x1) / 2 / k, oy: -(y0 + y1) / 2 / k - 0.06 };
+      }
+    };
+
     let cw = 0, ch = 0;
     const size = () => {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -198,6 +251,7 @@ export function mountTopo(root: HTMLElement) {
       canvas.width = Math.round(cw * dpr);
       canvas.height = Math.round(ch * dpr);
       gl.viewport(0, 0, canvas.width, canvas.height);
+      if (cw && ch) frame(cw / ch);
     };
     size();
 
@@ -210,11 +264,8 @@ export function mountTopo(root: HTMLElement) {
       const ease = 1 - Math.pow(1 - k, 3);
       // La camera: da nord-nord-est, come dall'Alpe di Siusi, alta quanto
       // basta per leggere il pianoro; gira di ±7° in 24 s.
-      const yaw = (25 + (reduce ? 0 : Math.sin(t * 0.26) * 7) + (1 - ease) * -10) * Math.PI / 180;
-      const dist = 15500, alt = 10500 + (1 - ease) * 1400;
-      const tgt = [(MASSIF.x - W / 2) * M_PER_PX, 2700, (MASSIF.y - H / 2) * M_PER_PX];
-      const eye = [tgt[0] + Math.sin(yaw) * dist, alt, tgt[2] - Math.cos(yaw) * dist];
-      const mvp = mul(persp(22 * Math.PI / 180, cw / ch, 1000, 40000), lookAt(eye, tgt));
+      const yaw = 25 + (reduce ? 0 : Math.sin(t * 0.26) * 7) + (1 - ease) * -10;
+      const { m: mvp, dist } = camera(yaw, (1 - ease) * 1400, cw / ch);
       gl.uniformMatrix4fv(uMvp, false, mvp);
       gl.uniform1f(uReveal, top + (peak + 60 - top) * ease);
       gl.uniform2f(uFog, dist * 0.9, dist * 1.45);
