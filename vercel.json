@@ -31,7 +31,7 @@
         },
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://auralpdigital.vercel.app"
+          "value": "https://www.auralpdigital.com"
         }
       ]
     }

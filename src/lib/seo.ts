@@ -6,7 +6,7 @@ import { defaultLang, getDict, languages, localePath } from "../i18n";
 import { AREAS, BUSINESS } from "../config/business";
 
 // Origine del sito (astro.config.mjs → `site`).
-export const siteOrigin = (site: URL | undefined) => (site ?? new URL("https://auralpdigital.vercel.app")).origin;
+export const siteOrigin = (site: URL | undefined) => (site ?? new URL("https://www.auralpdigital.com")).origin;
 
 // Path canonico: niente slash finale (vercel.json → trailingSlash: false),
 // tranne la root.
