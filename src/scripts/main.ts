@@ -17,6 +17,37 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 // scroll → scatto. Ignorando quel resize lo scroll resta fluido.
 ScrollTrigger.config({ ignoreMobileResize: true });
 
+// ---------- Misure solo a pagina ferma ----------
+// Nel cambio pagina (BaseLayout, .pt-arrive / .pt-go) il body entra
+// scorrendo di lato con un transform. Ogni misura presa in quel momento
+// (pin creati al caricamento, refresh del load, ResizeObserver) legge la
+// sezione spostata in orizzontale: GSAP fissava il palco di Il punto con
+// `left: -1720px` (o a metà strada), e tornando alla Home la sezione era
+// fuori schermo o tagliata a metà con il resto bianco. Finché il body è
+// mosso nessuna misura è buona: si aspetta che torni fermo e si rimisura
+// tutto. Vale per ogni pin del sito, non solo per Il punto.
+// Controllo a tempo, non a fotogrammi: in una scheda in background i
+// fotogrammi si fermano e l'attesa non finirebbe mai.
+const bodyMoved = () => getComputedStyle(document.body).transform !== "none";
+let remeasuring = false;
+const remeasureWhenStill = () => {
+  if (remeasuring || !bodyMoved()) return;
+  remeasuring = true;
+  const t0 = performance.now();
+  const check = () => {
+    // rete di sicurezza: l'attesa della pagina nuova dura al massimo ~5s
+    if (bodyMoved() && performance.now() - t0 < 10000) {
+      window.setTimeout(check, 80);
+      return;
+    }
+    remeasuring = false;
+    ScrollTrigger.refresh();
+  };
+  window.setTimeout(check, 80);
+};
+remeasureWhenStill();
+ScrollTrigger.addEventListener("refresh", remeasureWhenStill);
+
 const reduceMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 ).matches;
