@@ -3,6 +3,8 @@ import type { Lang } from "../i18n";
 import { defaultLang, getDict, languages } from "../i18n";
 import { baseRoute, jsonLd, localeUrl, ogLocale, siteOrigin } from "../lib/seo";
 import LogoHandoff from "../components/LogoHandoff.astro";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 interface Props {
   lang?: Lang;
@@ -28,6 +30,13 @@ const route = baseRoute(Astro.url.pathname);
 const canonical = localeUrl(origin, lang, route);
 const ogImage = `${origin}/og/og-${lang}.png`;
 // `<` escapato: il JSON non può mai chiudere il tag <script> per errore.
+// Logo in negativo della transizione tra pagine, come SVG nel codice (non
+// un'immagine da caricare): si disegna insieme alla navy dal primo
+// fotogramma, senza il "flash" di un'immagine ancora da decodificare.
+const ptLogo = readFileSync(join(process.cwd(), "public/logo/wordmark-reversed.svg"), "utf8")
+  .trim()
+  .replace(/\s*\n\s*/g, " ")
+  .replace("<svg ", '<svg aria-hidden="true" focusable="false" ');
 const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, title, description })).replace(/</g, "\\u003c");
 ---
 
@@ -115,7 +124,7 @@ const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, tit
         }
         // Scene in regia (stessa condizione di `staticScenes` in main.ts):
         // decisa qui, prima del primo render, così il layout delle sezioni
-        // pinnate (es. .point, che sale di 30vh sulla hero) è già quello
+        // pinnate (es. .point, palco alto una schermata) è già quello
         // finale e non salta quando parte il modulo (era CLS visibile).
         if (
           !matchMedia("(prefers-reduced-motion: reduce)").matches &&
@@ -125,30 +134,94 @@ const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, tit
         }
       })();
     </script>
-    <!-- Page wipe (vedi scripts/pageWipe.ts): la View Transition tra pagine
-         parte SOLO se il cambio pagina è nato da un click su un link del sito
-         (navbar, footer, CTA, lingua…) — non da indietro/avanti o da un URL
-         digitato. Dev'essere uno script classico in <head>:
-         - il click si marca in CATTURA sul document, attivo dal primo istante:
-           non dipende dall'idratazione della navbar (cliccare prima che React
-           partisse faceva saltare le fasce);
-         - `pagereveal` scatta prima del primo render della pagina nuova, prima
-           che un modulo differito possa ascoltarlo.
-         Il flag si consuma subito, così non resta appeso nei browser senza
-         supporto. Passando sopra un link interno la pagina viene prefetchata:
-         la vecchia resta ferma il meno possibile prima della transizione. -->
-    <script is:inline>
+    <!-- Page wipe (vedi scripts/pageWipe.ts e global.css): transizione tra
+         pagine fatta a mano con animazioni CSS, uguale su ogni browser.
+         - Click su un link del sito verso un'ALTRA pagina: le fasce coprono
+           lo schermo, sulla navy c'è il logo (.pt-leave), poi si naviga.
+         - La pagina nuova trova il segno in sessionStorage e nasce identica,
+           navy col logo (.pt-arrive, messa qui prima del primo disegno);
+           quando è pronta (DOMContentLoaded) si sposta lei sullo schermo
+           (.pt-go). Verso la Home tutto al contrario (.pt-rev).
+         Indietro/avanti o un URL digitato: nessuna transizione. Passando
+         sopra un link interno la pagina viene prefetchata. -->
+    <script is:inline define:vars={{ ptLogo }}>
       (function () {
         var KEY = "apd:wipe";
-        var wipe = false;
+        // Fasce posate (0.12s + 0.65s): si naviga.
+        var GO = 780;
+        var root = document.documentElement;
+        var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var leaving = false;
+        var arriving = false;
+
+        // ---------- Arrivo ----------
         try {
-          // Vale solo se il click è recente: un click annullato non deve far
-          // partire le fasce su una navigazione successiva (indietro, URL…).
-          var at = Number(sessionStorage.getItem(KEY));
-          wipe = at > 0 && Date.now() - at < 15000;
+          var mark = (sessionStorage.getItem(KEY) || "").split("|");
           sessionStorage.removeItem(KEY);
+          var since = Date.now() - Number(mark[0]);
+          if (!reduce && since >= 0 && since < 10000) {
+            arriving = true;
+            root.classList.add("pt-arrive");
+            if (mark[1] === "rev") root.classList.add("pt-rev");
+            // Il logo dell'attesa sta FUORI dal body (figlio di <html>, prima
+            // del body): resta fermo mentre la pagina gli scorre sopra.
+            var logo = document.createElement("div");
+            logo.className = "pt-logo pt-logo-arrive";
+            logo.setAttribute("aria-hidden", "true");
+            logo.innerHTML = ptLogo;
+            root.appendChild(logo);
+          }
         } catch (e) {}
 
+        // Fine arrivo: il body torna senza transform (altrimenti gli elementi
+        // fissi seguirebbero la pagina). Se si sta già uscendo, .pt-rev ora è
+        // il verso dell'uscita e resta.
+        function endArrive() {
+          arriving = false;
+          root.classList.remove("pt-arrive", "pt-go");
+          var l = document.querySelector(".pt-logo-arrive");
+          if (l) l.remove();
+          if (!leaving) root.classList.remove("pt-rev");
+        }
+        if (arriving) {
+          var started = false;
+          var slide = function () {
+            if (started || !arriving) return;
+            started = true;
+            root.classList.add("pt-go");
+            setTimeout(endArrive, 1500); // rete di sicurezza
+          };
+          // La pagina scorre solo quando il browser è libero: dopo
+          // DOMContentLoaded le pagine avviano la loro parte pesante (3D,
+          // GSAP…) e uno scorrimento partito lì si inchiodava a metà. Si
+          // aspettano 4 fotogrammi regolari di fila (al massimo 1.2s): intanto
+          // resta la navy col logo.
+          var settle = function () {
+            var t0 = performance.now();
+            var last = t0;
+            var calm = 0;
+            var tick = function (t) {
+              calm = t - last < 34 ? calm + 1 : 0;
+              last = t;
+              if (calm >= 4 || t - t0 > 1200) slide();
+              else requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          };
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", settle);
+          } else settle();
+          setTimeout(slide, 4000);
+          document.addEventListener("animationend", function (e) {
+            if (/^pt-page-in/.test(e.animationName)) endArrive();
+          });
+        }
+
+        // ---------- Uscita ----------
+        // Home di ogni lingua: "/", "/de", "/en".
+        function isHome(path) {
+          return /^\/?(de|en)?\/?$/.test(path);
+        }
         // Link verso un'ALTRA pagina dello stesso sito (non ancore di questa).
         function crossPage(a) {
           if (!a || !a.href || a.hasAttribute("download")) return null;
@@ -158,22 +231,39 @@ const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, tit
           if (url.pathname.replace(/\/$/, "") === location.pathname.replace(/\/$/, "")) return null;
           return url;
         }
-        document.addEventListener(
-          "click",
-          function (e) {
-            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-            var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
-            if (!crossPage(a)) return;
-            try {
-              sessionStorage.setItem(KEY, String(Date.now()));
-            } catch (err) {}
-          },
-          true
-        );
-        var fetched = {};
-        function hint(e) {
+
+        document.addEventListener("click", function (e) {
+          if (leaving || e.defaultPrevented || reduce) return;
+          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
           var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
           var url = crossPage(a);
+          if (!url) return;
+          e.preventDefault();
+          leaving = true;
+          var rev = isHome(url.pathname);
+          try {
+            sessionStorage.setItem(KEY, Date.now() + (rev ? "|rev" : "|fwd"));
+          } catch (err) {}
+          endArrive();
+          root.classList.toggle("pt-rev", rev);
+          root.classList.add("pt-leave");
+          prefetch(url);
+          setTimeout(function () {
+            location.assign(url.href);
+          }, GO);
+        });
+
+        // Tornando con indietro/avanti dalla cache la pagina dev'essere pulita.
+        window.addEventListener("pageshow", function (e) {
+          if (!e.persisted) return;
+          leaving = false;
+          endArrive();
+          root.classList.remove("pt-leave", "pt-rev");
+        });
+
+        // ---------- Prefetch ----------
+        var fetched = {};
+        function prefetch(url) {
           if (!url || fetched[url.pathname]) return;
           fetched[url.pathname] = true;
           var l = document.createElement("link");
@@ -181,49 +271,13 @@ const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, tit
           l.href = url.pathname;
           document.head.appendChild(l);
         }
+        function hint(e) {
+          var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+          prefetch(crossPage(a));
+        }
         document.addEventListener("pointerover", hint, { passive: true });
         document.addEventListener("focusin", hint);
-
-        // .vt-arrive mette in vista le fasce e dà i nomi alla transizione:
-        // non deve MAI restare addosso alla pagina fuori da una transizione,
-        // o le fasce coprirebbero tutto. Si toglie da più strade (la prima
-        // che arriva vince, le altre non fanno nulla).
-        var root = document.documentElement;
-        var safety = 0;
-        function endArrive() {
-          clearTimeout(safety);
-          root.classList.remove("vt-arrive");
-        }
-
-        window.addEventListener("pagereveal", function (e) {
-          var vt = e.viewTransition;
-          endArrive();
-          if (!vt) return;
-          if (!wipe || matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            vt.skipTransition();
-            return;
-          }
-          wipe = false;
-          root.classList.add("vt-arrive");
-          // 1) fine normale (o transizione saltata/annullata dal browser);
-          vt.finished.then(endArrive, endArrive);
-          // 2) rete di sicurezza: se per qualunque motivo `finished` non
-          //    arrivasse, a animazioni finite (~1.4s dopo `ready`) si pulisce
-          //    comunque. Se `ready` fallisce la transizione non c'è: via subito.
-          vt.ready.then(function () {
-            safety = setTimeout(endArrive, 2400);
-          }, endArrive);
-        });
-        // 3) Si lascia la pagina mentre arriva ancora (indietro, un altro
-        //    link): la pagina vecchia deve farsi fotografare SENZA i nomi
-        //    della transizione d'arrivo, o la nuova li erediterebbe.
-        window.addEventListener("pageswap", endArrive);
-        // 4) Pagina messa in / ripresa dalla cache avanti-indietro: torna
-        //    sempre pulita.
-        window.addEventListener("pagehide", endArrive);
-        window.addEventListener("pageshow", function (e) {
-          if (e.persisted) endArrive();
-        });
+        document.addEventListener("touchstart", hint, { passive: true });
       })();
     </script>
   </head>
@@ -235,12 +289,13 @@ const schema = noindex ? null : JSON.stringify(jsonLd({ origin, lang, route, tit
 {loader && <LogoHandoff />}
 
 
-    <!-- Transizione tra pagine: le due fasce blu del vecchio menu. Restano
-         fuori schermo a destra; solo durante la View Transition (.vt-arrive)
-         si mettono in vista per farsi fotografare intere (global.css). -->
+    <!-- Transizione tra pagine: le due fasce blu (Shadow, poi navy). Nascoste
+         fuori transizione; le muovono .pt-leave / .pt-arrive (global.css). -->
     <div class="page-wipe" aria-hidden="true">
       <div class="page-wipe-layer" style="background:#2748A5"></div>
-      <div class="page-wipe-layer" style="background:#1C2B5F"></div>
+      <div class="page-wipe-layer" style="background:#1C2B5F">
+        <div class="pt-logo" set:html={ptLogo} />
+      </div>
     </div>
 
     <!-- Barra di avanzamento scroll — lato destro -->

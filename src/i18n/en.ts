@@ -212,7 +212,7 @@ const en = {
     },
     services: {
       // Three services (vedi it.ts).
-      kicker: "Services",
+      kicker: "What we do",
       link: "Let's talk",
       items: [
         {
@@ -319,12 +319,20 @@ const en = {
       ],
       turn: "We build **the system** that brings them to you.",
       turnSub: "Even when you're busy with your own work.",
+      // Invito a scorrere durante il racconto (desktop).
+      cue: "Scroll to continue",
       pings: [
         { title: "Direct message", body: "Hi! Any slots on Saturday?" },
         { title: "Missed call", body: "Today, 10:47 PM" },
         { title: "Google", body: "The top result isn't you" },
       ],
       ok: { title: "New booking", body: "Confirmed automatically" },
+    },
+    faq: {
+      kicker: "Frequently asked questions",
+      title: "*FAQ*",
+      all: "All questions",
+      pick: [[3, 0], [2, 1], [2, 0], [4, 0]],
     },
     contact: {
       kicker: "Let's start",
@@ -436,16 +444,6 @@ const en = {
       sub: "An independent digital studio in South Tyrol, founded by two people. We handle strategy, design and development ourselves.",
       cta: "Contact us",
       meet: "Meet us",
-      live: {
-        file: "about-us",
-        editing: "Editing",
-        published: "Live",
-        you: "You",
-        hello: "Hi 👋",
-        photo: "together.jpg",
-        note1: "This one stays.",
-        note2: "Done. It's live.",
-      },
     },
     manifesto: {
       kicker: "The difference",
@@ -466,25 +464,18 @@ const en = {
         { n: 2, label: "founders", text: "We both work on every project and check it before it goes live." },
       ],
     },
-    duo: {
-      kicker: "The founders",
-      title: "Who looks after *your project.*",
-      lead: "We are two co-founders with complementary skills: strategy and development on one side, design and content on the other. We work on every project together and never pass it on.",
-    },
     people: [
       {
-        title: "Co-founder",
-        area: "Strategy & Development",
-        bio: "Julian looks after strategy and development. He defines the structure of every project, from positioning to launch, and builds websites and software with modern technology and AI tools.",
-        quote: "A website is worth the clients *it brings you.*",
-        focus: ["Digital strategy", "Web development", "SEO + GEO", "AI & automation"],
+        name: "Julian",
+        role: "Strategy & Development",
+        line: "Sets the strategy and writes the code: from positioning to launch, with modern tech and AI.",
+        tags: ["Strategy", "Web development", "SEO + GEO", "AI"],
       },
       {
-        title: "Co-founder",
-        area: "Design & Content",
-        bio: "Alice looks after design and content. She shapes each brand's visual identity, interfaces, photography and copy, so every project speaks clearly to the right audience.",
-        quote: "A business's image *is built in the details.*",
-        focus: ["Art direction", "UI & visual design", "Content & social", "Photography"],
+        name: "Alice",
+        role: "Design & Content",
+        line: "Shapes the brand's image: identity, interfaces, photos and copy that speak to the right audience.",
+        tags: ["Art direction", "UI design", "Content", "Photo"],
       },
     ],
     journey: {

@@ -5,7 +5,6 @@ import { SplitText } from "gsap/SplitText";
 import { initContactFlow } from "./contactFlow";
 import { initTypeBlocks } from "./typeBlock";
 import { initAboutLive } from "./aboutLive";
-import { PixelPortrait, RAMPS } from "./pixelPortrait";
 
 // Draggable non serve (nessun trascinabile nel sito): registrato metteva su
 // window un listener touchmove NON passivo (vuoto), che obbliga il telefono
@@ -70,6 +69,9 @@ const SCRUB = 0.6;
 const SCRUB_LERP = 1 - Math.exp(-1 / (60 * (SCRUB / 2)));
 
 // ---------- Lenis smooth scroll ----------
+// Smorzamento dello scroll: ogni frame la pagina recupera questa frazione
+// della strada che le manca. Più basso = planata più lunga e morbida.
+const SMOOTH_LERP = 0.06;
 const lenis = new Lenis({
   // Fermate di scroll: vicino a una fermata la rotella fa resistenza e una
   // scrollata non la scavalca; su touch lo swipe lanciato si posa sulla
@@ -108,7 +110,8 @@ const lenis = new Lenis({
   // sempre dolcemente fino a fermarsi, anche dentro le sezioni pinnate.
   // (Gli scroll programmati — ancore, cambi scena dei Servizi — passano una
   // `duration` esplicita a scrollTo e restano a tempo.)
-  lerp: 0.075,
+  // 0.06 (era 0.075): planata un filo più lunga e morbida, scroll "burroso".
+  lerp: SMOOTH_LERP,
   smoothWheel: true,
   // Anche il touch passa da Lenis: con lo scroll nativo lo slancio di uno
   // swipe non si può fermare e le fermate su telefono venivano scavalcate
@@ -118,7 +121,7 @@ const lenis = new Lenis({
   // Solo dove c'è anche un mouse (portatili touch): sui telefoni il dito
   // scorre la pagina in modo nativo (vedi touchUI).
   syncTouch: !touchUI,
-  syncTouchLerp: 0.075,
+  syncTouchLerp: SMOOTH_LERP,
 });
 
 // Touch: via i listener touch di Lenis. Lenis li mette su tutta la pagina e
@@ -357,7 +360,7 @@ const touchLanding = (dir: number) => {
   const t = lenis.targetScroll;
   const d = crossedStop(t, t + sign * Math.abs(v) ** 1.7);
   if (isNaN(d)) return true;
-  lenis.scrollTo(d, { programmatic: false, lerp: 0.075 });
+  lenis.scrollTo(d, { programmatic: false, lerp: SMOOTH_LERP });
   return false;
 };
 
@@ -793,29 +796,29 @@ await yieldToMain();
 
 await yieldToMain();
 
-// ---------- Il punto — racconto in tre tempi dentro un pin ----------------
-// Il palco (una schermata) si ferma e lo scroll, in scrub, fa avanzare la
-// storia (markup e tempi in HomePage.astro, impaginazione in global.css):
-//   0. ARRIVO — mentre il palco sale dalla hero il fondale compare e
-//      "Fai un lavoro eccellente." si alza parola per parola, GRANDE e al
-//      centro della schermata (il lead parte trasformato verso il centro).
-//   1. LAVORO → CAOS — il lead si rimpicciolisce al suo posto di testata e
-//      sotto la frase si completa riga per riga: hairline che si disegna,
-//      riga che sale, evidenziatore sulla parola chiave e, insieme, la
-//      notifica di quella riga che "arriva" ai margini.
-//   2. SVOLTA — il problema si ritira verso l'alto, le notifiche vengono
-//      risucchiate al centro e lì sale la promessa: parole che emergono,
-//      evidenziatore blu su "il sistema", poi il corsivo e la notifica "ok".
-//   3. USCITA — a pin finito la svolta sale e si spegne mentre arrivano i
-//      Servizi; i bordi del fondale sono già sciolti nella carta.
-// Solo transform, opacità e due variabili CSS (tratti): niente layout per
-// frame. Le misure (centro del lead, rotte delle notifiche) si rileggono a
-// ogni refresh. Con reduced motion non parte nulla: colonna statica.
+// ---------- Il punto — lavoro → caos → svolta ----------------------------
+// Markup in HomePage.astro, impaginazione in global.css. Due regie:
+// DESKTOP (pinned) — il palco si ferma per poco meno di due schermate e lo
+// scroll, in scrub, fa avanzare la storia:
+//   0. ARRIVO — mentre il palco sale dalla hero il fondale compare e la
+//      testata si alza parola per parola, già al suo posto (prima partiva
+//      enorme al centro e poi volava in alto: confondeva);
+//   1. CAOS — "Ma i clienti…" e le tre righe, una dopo l'altra: hairline,
+//      riga che sale, parola chiave che si colora e, accanto, la SUA
+//      notifica;
+//   2. SVOLTA — il problema esce verso l'alto, le notifiche confluiscono
+//      nella notifica "ok" e sale la promessa.
+//   Niente fermate dentro al pin: lo scroll resta continuo e ogni passo
+//   vale la stessa porzione di scroll, così il ritmo si capisce subito.
+// TOUCH / colonna stretta (flow) — niente pin: la sezione scorre nativa e
+// ogni pezzo entra una volta quando arriva sullo schermo (non in scrub:
+// sullo scroll nativo inseguire il dito dà scatti).
+// Solo transform e opacità; le misure si rileggono a ogni refresh. Con
+// reduced motion non parte nulla: colonna statica.
 const point = document.querySelector<HTMLElement>("[data-point]");
 const pointStage = point?.querySelector<HTMLElement>("[data-point-stage]");
 const pointBg = point?.querySelector<HTMLElement>("[data-point-bg]");
 const pointLead = point?.querySelector<HTMLElement>("[data-point-lead]");
-const pointPain = point?.querySelector<HTMLElement>("[data-point-pain]");
 const pointTurn = point?.querySelector<HTMLElement>("[data-point-turn]");
 const pointTurnTitle = point?.querySelector<HTMLElement>("[data-point-turn-title]");
 const pointTurnSub = point?.querySelector<HTMLElement>("[data-point-turn-sub]");
@@ -824,331 +827,273 @@ if (
   pointStage &&
   pointBg &&
   pointLead &&
-  pointPain &&
   pointTurn &&
   pointTurnTitle &&
   pointTurnSub &&
   !staticScenes
 ) {
-  point.classList.add("is-live");
-  // Telefono: il lead ci sta già quasi a tutta riga, quindi non fa il giro
-  // "grande al centro → testata" (lì era solo una riga piccola in una
-  // schermata vuota). È grande al suo posto e il racconto parte subito.
-  const compact = window.matchMedia("(max-width: 700px)").matches;
-  const P0 = compact ? 0.3 : 1.55; // quando entra la prima riga del problema
-  // Touch (scroll nativo): il passaggio hero → Il punto deve restare sotto
-  // il dito. Con lo scroll nativo lo scroll lo muove il compositor, mentre
-  // tutto quello che fa JS arriva un frame (o più) dopo; ogni cosa che
-  // insegue lo scroll si vede "andare e poi fermarsi". Quindi su touch:
-  //   - inerzia corta (lo slancio del sistema è già morbido: un secondo
-  //     ritardo sopra lo faceva rincorrere, la scena continuava da sola
-  //     dopo che il dito si era fermato);
-  //   - niente sfocature animate (filter: blur per parola ridipinge ogni
-  //     frame, sul telefono è il costo più alto del passaggio);
-  //   - il palco sta fermo con position: sticky invece del pin di
-  //     ScrollTrigger (vedi sotto).
-  // Desktop invariato.
-  const PASS_SCRUB = touchUI ? 0.25 : SCRUB;
-  const blur = (px: number) => (touchUI ? {} : { filter: `blur(${px}px)` });
+  // Stessa condizione del modo desktop in global.css. Se cambia a pagina
+  // aperta (finestra stretta/allargata oltre i 900px, emulazione mobile)
+  // CSS e regia finirebbero in due modi diversi: si ricarica.
+  const pinnedMq = window.matchMedia(
+    "(min-width: 900px) and (hover: hover), (min-width: 900px) and (pointer: fine)"
+  );
+  const pinned = pinnedMq.matches;
+  pinnedMq.addEventListener("change", () => location.reload());
+  point.classList.add("is-live", pinned ? "is-pinned" : "is-flow");
 
   const but = point.querySelector<HTMLElement>("[data-point-but]");
-  const items = gsap.utils.toArray<HTMLElement>("[data-point-item]", point);
-  const pings = gsap.utils.toArray<HTMLElement>("[data-point-ping]", point);
+  const rows = gsap.utils.toArray<HTMLElement>("[data-point-item]", point).map((item) => ({
+    item,
+    rule: item.querySelector<HTMLElement>(".point-rule"),
+    num: item.querySelector<HTMLElement>(".point-num"),
+    text: item.querySelector<HTMLElement>(".point-item-text"),
+    mark: item.querySelector<HTMLElement>("strong"),
+    ping: item.querySelector<HTMLElement>("[data-point-ping]"),
+  }));
   const ok = point.querySelector<HTMLElement>("[data-point-ok]");
+  const check = point.querySelector<SVGPathElement>("[data-point-check]");
   const bgImg = pointBg.querySelector<HTMLElement>("img");
   const turnKey = pointTurnTitle.querySelector<HTMLElement>("strong");
   const glow = point.querySelector<HTMLElement>("[data-point-glow]");
-  const check = point.querySelector<SVGPathElement>("[data-point-check]");
   const cue = point.querySelector<HTMLElement>("[data-point-cue]");
-
-  // Posizione di un elemento nel palco dal layout (offset* ignora i
-  // transform): corretta anche a scena già mossa.
-  const offsetIn = (el: HTMLElement) => {
-    let x = 0;
-    let y = 0;
-    let n: HTMLElement | null = el;
-    while (n && n !== pointStage) {
-      x += n.offsetLeft;
-      y += n.offsetTop;
-      n = n.offsetParent as HTMLElement | null;
-    }
-    return { x, y };
-  };
-  // Il lead parte al centro della schermata, ingrandito fin quasi a bordo
-  // (misura del testo, non del blocco): in apertura è il protagonista, in
-  // scala MEGA come i nomi dei fondatori, poi si ritira a testata.
-  const leadScale = () => {
-    const range = document.createRange();
-    range.selectNodeContents(pointLead);
-    const w = range.getBoundingClientRect().width / (gsap.getProperty(pointLead, "scale") as number || 1);
-    return Math.min(3.2, (pointStage.clientWidth * 0.9) / Math.max(w, 1));
-  };
-  const leadShift = (axis: "x" | "y") => {
-    const o = offsetIn(pointLead);
-    return axis === "x"
-      ? pointStage.clientWidth / 2 - (o.x + pointLead.offsetWidth / 2)
-      : pointStage.clientHeight / 2 - (o.y + pointLead.offsetHeight / 2);
-  };
-  // Rotta di una notifica verso il centro del palco (il risucchio).
-  const toCenter = (el: HTMLElement, axis: "x" | "y") => {
-    const o = offsetIn(el);
-    return axis === "x"
-      ? pointStage.clientWidth / 2 - (o.x + el.offsetWidth / 2)
-      : pointStage.clientHeight / 2 - (o.y + el.offsetHeight / 2);
-  };
 
   // Parole con maschera: salgono dal basso come da una fessura.
   const leadWords = SplitText.create(pointLead, { type: "words", mask: "words" }).words;
   const turnWords = SplitText.create(pointTurnTitle, { type: "words", mask: "words" }).words;
   const subWords = SplitText.create(pointTurnSub, { type: "words", mask: "words" }).words;
-  const marks = items.map((el) => el.querySelector<HTMLElement>("strong"));
+  const keyWords = turnKey ? turnKey.querySelectorAll<HTMLElement>("div div") : [];
+  const keyColor = turnKey ? getComputedStyle(turnKey).color : "";
 
-  // ---- 0. Arrivo dalla hero (prima del pin) ----
-  if (!compact) {
-    gsap.set(pointLead, {
-      x: () => leadShift("x"),
-      y: () => leadShift("y"),
-      scale: leadScale,
-    });
-  }
-  gsap.fromTo(
-    pointBg,
-    { autoAlpha: 0 },
-    {
-      autoAlpha: 1,
-      ease: "sine.inOut",
-      scrollTrigger: { trigger: point, start: "top 95%", end: "top 15%", scrub: PASS_SCRUB },
-    }
-  );
-  gsap.fromTo(
-    leadWords,
-    { yPercent: 110, ...blur(8) },
-    {
-      yPercent: 0,
-      ...blur(0),
-      ease: "power3.out",
-      stagger: 0.12,
-      scrollTrigger: { trigger: point, start: "top 70%", end: "top 12%", scrub: PASS_SCRUB },
-    }
-  );
-
-  // ---- 1-2. Il racconto, dentro al pin ----
-  const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-  if (!compact) {
-    // Respiro: il lead resta solo per un attimo.
-    tl.to({}, { duration: 0.5 });
-    // Il lead va al suo posto di testata.
-    tl.fromTo(
-      pointLead,
-      { x: () => leadShift("x"), y: () => leadShift("y"), scale: leadScale },
-      { x: 0, y: 0, scale: 1, duration: 1.1, ease: "power3.inOut" },
-      0.5
-    );
-  }
-  if (but) {
-    tl.fromTo(
-      but,
-      { autoAlpha: 0, x: -16, ...blur(6) },
-      { autoAlpha: 1, x: 0, ...blur(0), duration: 0.7, ease: "expo.out" },
-      P0 - 0.3
-    );
-  }
-
-  // Ogni riga entra dalla sfocatura e prende la scena: quelle prima
-  // restano leggibili ma fanno un passo indietro, così l'occhio legge una
-  // riga alla volta. La parola chiave si colora da sinistra (--mark).
-  items.forEach((item, i) => {
-    const at = P0 + i * 1.05;
-    tl.fromTo(item, { "--rule": 0 }, { "--rule": 1, duration: 0.6, ease: "power2.inOut" }, at);
-    tl.fromTo(
-      item,
-      { autoAlpha: 0, y: 30, ...blur(8) },
-      { autoAlpha: 1, y: 0, ...blur(0), duration: 0.8, ease: "expo.out" },
-      at + 0.1
-    );
-    if (i > 0) {
-      tl.to(
-        items[i - 1].querySelectorAll(".point-item-text, .point-num"),
-        { opacity: 0.32, duration: 0.6, ease: "power2.out" },
-        at + 0.15
-      );
-      // Il gradino passa di mano: la riga nuova cresce, la vecchia rientra
-      // (vedi "IL GRADINO NEL PROBLEMA" in global.css).
-      tl.fromTo(items[i - 1], { "--big": 1 }, { "--big": 0, duration: 0.8, ease: "power3.inOut", immediateRender: false }, at);
-    }
-    tl.fromTo(item, { "--big": 0 }, { "--big": 1, duration: 0.9, ease: "power3.inOut" }, at + 0.05);
-    const mark = marks[i];
-    if (mark) tl.fromTo(mark, { "--mark": 0 }, { "--mark": 1, duration: 0.6, ease: "power2.inOut" }, at + 0.45);
-    // La notifica scivola dentro un filo storta e si posa dritta, senza
-    // rimbalzi. Niente scala in entrata e force3D off: Chrome rasterizzerebbe
-    // la scheda alla taglia piccola d'inizio e la terrebbe sgranata; così a
-    // riposo è un 2D pulito.
-    const ping = pings[i];
-    if (ping) {
-      tl.fromTo(
-        ping,
-        { autoAlpha: 0, y: 36, rotation: i % 2 ? 3 : -3 },
-        { autoAlpha: 1, y: 0, rotation: 0, duration: 0.9, ease: "expo.out", force3D: false },
-        at + 0.3
-      );
-    }
-  });
-
-  // SVOLTA — il caos si ritira e viene risucchiato al centro.
-  const turnAt = P0 + items.length * 1.05 + 0.6;
-  tl.to(
-    pointPain,
-    { autoAlpha: 0, y: -60, scale: 0.97, ...blur(10), duration: 0.9, ease: "power2.in" },
-    turnAt
-  );
-  pings.forEach((ping, i) => {
-    tl.to(
-      ping,
-      {
-        x: () => toCenter(ping, "x"),
-        y: () => toCenter(ping, "y"),
-        scale: 0.25,
-        autoAlpha: 0,
-        duration: 0.85,
-        ease: "power2.in",
-        force3D: false,
-      },
-      turnAt + 0.05 + i * 0.08
-    );
-  });
-  // Il fondale si schiarisce di un filo: dopo il caos, aria.
-  if (bgImg) tl.to(bgImg, { opacity: 0.36, duration: 1.4, ease: "sine.inOut" }, turnAt);
-  if (glow) tl.fromTo(glow, { autoAlpha: 0, scale: 0.7 }, { autoAlpha: 1, scale: 1, duration: 1.6, ease: "sine.out" }, turnAt + 0.5);
-
-  const riseAt = turnAt + 0.85;
-  tl.set(pointTurn, { autoAlpha: 1 }, riseAt - 0.01);
-  tl.fromTo(
-    turnWords,
-    { yPercent: 110, ...blur(8) },
-    { yPercent: 0, ...blur(0), duration: 0.9, stagger: 0.07, ease: "expo.out" },
-    riseAt
-  );
-  // "il sistema" nasce in inchiostro e si accende di blu, parola per parola.
-  if (turnKey) {
-    tl.fromTo(
-      turnKey.querySelectorAll<HTMLElement>("div div"),
-      { color: "#171310" },
-      { color: getComputedStyle(turnKey).color, duration: 0.5, stagger: 0.12, ease: "sine.inOut" },
-      riseAt + 0.7
-    );
-  }
-  tl.fromTo(
-    subWords,
-    { yPercent: 110 },
-    { yPercent: 0, duration: 0.8, stagger: 0.05, ease: "expo.out" },
-    riseAt + 0.95
-  );
-  if (ok) {
-    tl.fromTo(
-      ok,
-      { autoAlpha: 0, y: 20, ...blur(6) },
-      { autoAlpha: 1, y: 0, ...blur(0), duration: 0.8, ease: "expo.out" },
-      riseAt + 1.45
-    );
-    // La spunta si disegna appena la scheda è posata.
-    if (check) {
-      tl.fromTo(check, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.45, ease: "power2.out" }, riseAt + 1.75);
-    }
-  }
-  // Coda: la promessa resta in scena da sola prima di lasciare il pin.
-  tl.to({}, { duration: 0.8 });
-
-  gsap.set(pointTurn, { autoAlpha: 0 });
-
-  // Il fondale si distende lungo tutto il racconto (da 1.1 a 1).
-  if (bgImg) {
+  if (pinned) {
+    // ---- 0. Arrivo dalla hero (prima del pin) ----
     gsap.fromTo(
-      bgImg,
-      { scale: 1.1 },
+      pointBg,
+      { autoAlpha: 0 },
       {
-        scale: 1,
+        autoAlpha: 1,
+        ease: "sine.inOut",
+        scrollTrigger: { trigger: point, start: "top 95%", end: "top 15%", scrub: SCRUB },
+      }
+    );
+    gsap.fromTo(
+      leadWords,
+      { yPercent: 110 },
+      {
+        yPercent: 0,
+        ease: "power3.out",
+        stagger: 0.12,
+        scrollTrigger: { trigger: point, start: "top 70%", end: "top 12%", scrub: SCRUB },
+      }
+    );
+    // "Ma i clienti…" arriva subito dopo la testata, così quando il palco si
+    // ferma la frase è già aperta e le righe sotto aspettano di accendersi.
+    // Si animano le sue parole: l'uscita della svolta muove il paragrafo,
+    // e due tween sulla stessa opacità si pestavano (restava in scena).
+    if (but) {
+      gsap.fromTo(
+        SplitText.create(but, { type: "words", mask: "words" }).words,
+        { yPercent: 110 },
+        {
+          yPercent: 0,
+          ease: "power3.out",
+          stagger: 0.1,
+          scrollTrigger: { trigger: point, start: "top 40%", end: "top 8%", scrub: SCRUB },
+        }
+      );
+    }
+
+    // Centro di un elemento nel palco, dal layout (offset* ignora i
+    // transform): corretto anche a scena già mossa.
+    const centerIn = (el: HTMLElement) => {
+      let x = el.offsetWidth / 2;
+      let y = el.offsetHeight / 2;
+      for (let n: HTMLElement | null = el; n && n !== pointStage; n = n.offsetParent as HTMLElement | null) {
+        x += n.offsetLeft;
+        y += n.offsetTop;
+      }
+      return { x, y };
+    };
+
+    // ---- 1. Il caos, una riga per passo ----
+    // Le tre righe si vedono già tutte, in anteprima sbiadita: si capisce
+    // subito che c'è altro e che lo scroll le accende una alla volta.
+    const STEP = 0.9; // ogni riga = lo stesso tratto di scroll
+    const P0 = 0.15;
+    const GHOST = 0.16;
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    rows.forEach((r, i) => {
+      const at = P0 + i * STEP;
+      tl.fromTo([r.num, r.text], { opacity: GHOST }, { opacity: 1, duration: 0.45, ease: "power2.out" }, at);
+      tl.fromTo(r.text, { x: -10 }, { x: 0, duration: 0.6, ease: "expo.out" }, at);
+      if (r.mark) tl.fromTo(r.mark, { "--mark": 0 }, { "--mark": 1, duration: 0.45, ease: "power2.inOut" }, at + 0.35);
+      // La notifica entra da destra un filo storta e si posa dritta. Niente
+      // scala e force3D off: a riposo resta un 2D nitido.
+      if (r.ping) {
+        tl.fromTo(
+          r.ping,
+          { autoAlpha: 0, x: 48, rotation: i % 2 ? 2 : -2 },
+          { autoAlpha: 1, x: 0, rotation: 0, duration: 0.6, ease: "expo.out", force3D: false },
+          at + 0.2
+        );
+      }
+      // La riga prima fa un passo indietro: l'occhio legge quella nuova.
+      if (i > 0) {
+        const prev = rows[i - 1];
+        tl.to([prev.num, prev.text], { opacity: 0.45, duration: 0.5, ease: "power2.out" }, at + 0.1);
+      }
+    });
+
+    // ---- 2. La svolta ----
+    const turnAt = P0 + rows.length * STEP + 0.35;
+    const painParts = [pointLead, but, ...rows.flatMap((r) => [r.rule, r.num, r.text])].filter(
+      (el): el is HTMLElement => !!el
+    );
+    tl.to(painParts, { autoAlpha: 0, y: -50, duration: 0.7, ease: "power2.in", stagger: 0.015 }, turnAt);
+    // Le notifiche confluiscono dove comparirà la notifica "ok".
+    rows.forEach((r, i) => {
+      const ping = r.ping;
+      if (!ping) return;
+      tl.to(
+        ping,
+        {
+          x: () => (ok ? centerIn(ok).x - centerIn(ping).x : 0),
+          y: () => (ok ? centerIn(ok).y - centerIn(ping).y : -60),
+          scale: 0.5,
+          autoAlpha: 0,
+          duration: 0.75,
+          ease: "power2.in",
+          force3D: false,
+        },
+        turnAt + i * 0.06
+      );
+    });
+    // Il fondale si schiarisce di un filo: dopo il caos, aria.
+    if (bgImg) tl.to(bgImg, { opacity: 0.36, duration: 1.2, ease: "sine.inOut" }, turnAt);
+    if (glow) tl.fromTo(glow, { autoAlpha: 0, scale: 0.7 }, { autoAlpha: 1, scale: 1, duration: 1.4, ease: "sine.out" }, turnAt + 0.3);
+
+    const riseAt = turnAt + 0.6;
+    tl.set(pointTurn, { autoAlpha: 1 }, riseAt - 0.01);
+    tl.fromTo(turnWords, { yPercent: 110 }, { yPercent: 0, duration: 0.8, stagger: 0.06, ease: "expo.out" }, riseAt);
+    // "il sistema" nasce in inchiostro e si accende di blu.
+    if (keyWords.length) {
+      tl.fromTo(keyWords, { color: "#171310" }, { color: keyColor, duration: 0.5, stagger: 0.1, ease: "sine.inOut" }, riseAt + 0.5);
+    }
+    tl.fromTo(subWords, { yPercent: 110 }, { yPercent: 0, duration: 0.7, stagger: 0.04, ease: "expo.out" }, riseAt + 0.6);
+    if (ok) {
+      tl.fromTo(ok, { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: "expo.out" }, riseAt + 1.0);
+      if (check) tl.fromTo(check, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" }, riseAt + 1.3);
+    }
+    // Coda breve: la promessa resta un attimo da sola prima di ripartire.
+    tl.to({}, { duration: 0.5 });
+    gsap.set(pointTurn, { autoAlpha: 0 });
+
+    // Tratti dell'invito: uno per riga, l'ultimo per la svolta.
+    const steps = gsap.utils.toArray<HTMLElement>("[data-point-step]", point);
+    const stepSpans = [
+      ...rows.map((_, i) => [P0 + i * STEP, P0 + (i + 1) * STEP] as const),
+      [turnAt, riseAt + 1.2] as const,
+    ];
+
+    // ~0.3 schermate per unità: il pin dura poco meno di due schermate.
+    const pinRun = () => Math.round(window.innerHeight * 0.3 * tl.duration());
+
+    // Il fondale si distende lungo arrivo + racconto (da 1.1 a 1).
+    if (bgImg) {
+      gsap.fromTo(
+        bgImg,
+        { scale: 1.1 },
+        {
+          scale: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: point,
+            start: "top bottom",
+            end: () => "+=" + (window.innerHeight + pinRun()),
+            scrub: SCRUB,
+            invalidateOnRefresh: true,
+          },
+        }
+      );
+    }
+
+    const pointPin = ScrollTrigger.create({
+      trigger: point,
+      start: "top top",
+      end: () => "+=" + pinRun(),
+      pin: pointStage,
+      animation: tl,
+      scrub: SCRUB,
+      invalidateOnRefresh: true,
+      // Primo pin della pagina, prima dei Servizi: ogni spacer a valle legge
+      // posizioni già spostate.
+      refreshPriority: 4,
+      onUpdate: (self) => {
+        ok?.classList.toggle("is-done", tl.time() >= riseAt + 1.4);
+        // Invito e tratti seguono lo scroll vero (non lo scrub smorzato):
+        // rispondono subito alla mano.
+        const now = self.progress * tl.duration();
+        steps.forEach((el, i) => {
+          const [a, b] = stepSpans[i];
+          el.style.transform = `scaleX(${gsap.utils.clamp(0, 1, (now - a) / (b - a))})`;
+        });
+        cue?.classList.toggle("is-off", now > riseAt + 1.2);
+      },
+    });
+
+    // ---- 3. Uscita, a pin finito: la promessa sale coi Servizi ----
+    gsap.fromTo(
+      pointTurn,
+      { y: 0 },
+      {
+        y: () => -window.innerHeight * 0.12,
         ease: "none",
+        immediateRender: false,
         scrollTrigger: {
-          trigger: point,
-          start: "top bottom",
-          end: () => "+=" + (window.innerHeight * 3.6),
-          scrub: PASS_SCRUB,
+          start: () => pointPin.end,
+          end: () => pointPin.end + window.innerHeight * 0.7,
+          scrub: SCRUB,
           invalidateOnRefresh: true,
+          refreshPriority: 4,
         },
       }
     );
-  }
-
-  // ~0.34 schermate per unità di timeline: ogni riga del problema vale
-  // poco più di un terzo di schermata di scroll.
-  const pinRun = () => Math.round(window.innerHeight * (compact ? 0.3 : 0.34) * tl.duration());
-  // Touch: il pin di ScrollTrigger passa il palco a position: fixed da JS
-  // quando lo scroll arriva all'inizio, ma lo scroll nativo (compositor) è
-  // già oltre: il palco saliva di qualche decina di px e poi tornava di
-  // scatto in posizione, e lo stesso all'uscita. Con position: sticky lo
-  // ferma il browser stesso, nello stesso frame dello scroll. Lo spazio di
-  // scroll che il pin-spacer aggiungeva lo dà un padding sotto il palco
-  // (--pin-run, global.css), della stessa lunghezza del pin: le posizioni
-  // di tutte le sezioni dopo restano identiche.
-  const stickyPin = touchUI;
-  const setPinRun = () => {
-    const run = pinRun();
-    if (stickyPin) point.style.setProperty("--pin-run", `${run}px`);
-    return run;
-  };
-  if (stickyPin) {
-    setPinRun();
-    point.classList.add("is-sticky");
-  }
-  const pointPin = ScrollTrigger.create({
-    trigger: point,
-    start: "top top",
-    end: () => "+=" + setPinRun(),
-    pin: stickyPin ? false : pointStage,
-    animation: tl,
-    scrub: PASS_SCRUB,
-    invalidateOnRefresh: true,
-    // Primo pin della pagina, prima dei Servizi (3): ogni spacer a valle
-    // legge posizioni già spostate.
-    refreshPriority: 4,
-    // Promessa chiusa: sulla notifica "ok" passa il riflesso (CSS, una volta).
-    // L'invito a scorrere resta solo finché la storia non parte.
-    onUpdate: (self) => {
-      ok?.classList.toggle("is-done", tl.time() >= riseAt + 2);
-      cue?.classList.toggle("is-off", self.progress > 0.02);
-    },
-  });
-
-  // Fermate dentro al pin (vedi "Fermate di scroll"): il lead al centro,
-  // ogni riga del problema completa (riga, evidenziatore e notifica), la
-  // svolta chiusa dalla notifica "ok".
-  const pointStops = [
-    0,
-    ...items.map((_, i) => P0 + i * 1.05 + 1),
-    riseAt + (ok ? 2.15 : 1.65),
-  ];
-  pointStops.forEach((t) =>
-    extraDetents.push(() => pointPin.start + (pointPin.end - pointPin.start) * (t / tl.duration()))
-  );
-  readDetents();
-
-  // ---- 3. Uscita, a pin finito ----
-  gsap.fromTo(
-    pointTurn,
-    { y: 0 },
-    {
-      y: () => -window.innerHeight * 0.12,
-      ease: "none",
-      immediateRender: false,
-      scrollTrigger: {
-        start: () => pointPin.end,
-        end: () => pointPin.end + window.innerHeight * 0.7,
-        scrub: PASS_SCRUB,
-        invalidateOnRefresh: true,
-        refreshPriority: 4,
-      },
+  } else {
+    // ---- Flow: ogni pezzo entra una volta, quando arriva ----
+    const once = (trigger: HTMLElement, start = "top 85%") => ({ trigger, start, once: true });
+    gsap.fromTo(
+      leadWords,
+      { yPercent: 110 },
+      { yPercent: 0, duration: 0.9, stagger: 0.08, ease: "expo.out", scrollTrigger: once(pointLead, "top 88%") }
+    );
+    if (but) {
+      gsap.fromTo(
+        but,
+        { autoAlpha: 0, y: 12 },
+        { autoAlpha: 1, y: 0, duration: 0.7, ease: "expo.out", scrollTrigger: once(but, "top 88%") }
+      );
     }
-  );
+    rows.forEach((r) => {
+      const t = gsap.timeline({ defaults: { ease: "expo.out" }, scrollTrigger: once(r.item, "top 82%") });
+      if (r.rule) t.fromTo(r.rule, { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power2.inOut" }, 0);
+      t.fromTo([r.num, r.text], { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.05 }, 0.05);
+      if (r.mark) t.fromTo(r.mark, { "--mark": 0 }, { "--mark": 1, duration: 0.6, ease: "power2.inOut" }, 0.35);
+      if (r.ping) {
+        t.fromTo(r.ping, { autoAlpha: 0, x: 28 }, { autoAlpha: 1, x: 0, duration: 0.8, force3D: false }, 0.3);
+      }
+    });
+    const turnTl = gsap.timeline({ defaults: { ease: "expo.out" }, scrollTrigger: once(pointTurn, "top 80%") });
+    turnTl.fromTo(turnWords, { yPercent: 110 }, { yPercent: 0, duration: 0.9, stagger: 0.06 }, 0);
+    if (keyWords.length) {
+      turnTl.fromTo(keyWords, { color: "#171310" }, { color: keyColor, duration: 0.5, stagger: 0.1, ease: "sine.inOut" }, 0.5);
+    }
+    turnTl.fromTo(subWords, { yPercent: 110 }, { yPercent: 0, duration: 0.8, stagger: 0.04 }, 0.5);
+    if (ok) {
+      turnTl.fromTo(ok, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.7 }, 0.85);
+      if (check) turnTl.fromTo(check, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" }, 1.15);
+      turnTl.call(() => ok.classList.add("is-done"), [], 1.4);
+    }
+  }
 }
 
 await yieldToMain();
@@ -1193,8 +1138,8 @@ await yieldToMain();
 //
 // Lo sparpagliamento è LEGATO ALLO SCROLL (scrub), non a tempo: le carte
 // seguono la rotella, già ammorbidita da Lenis, in avanti e all'indietro.
-// Ease simmetrica (sine.inOut) → scendendo e risalendo il movimento è identico:
-// le carte si staccano piano e si posano piano, in entrambi i sensi. Niente
+// Ease simmetrica (power2.inOut) → scendendo e risalendo il movimento è
+// identico: le carte si staccano piano e si posano piano, in entrambi i sensi. Niente
 // soglie, niente tween che ripartono: se ti fermi a metà, il mazzo resta a
 // metà; se inverti, inverte da dove è.
 //
@@ -1261,19 +1206,21 @@ if (deck) {
     // sfalda, non si apre a ventaglio ordinato. Ogni carta parte un filo dopo
     // l'altra e le corse si sovrappongono quasi del tutto: un'onda unica.
     const order = [1, 3, 0, 2];
-    const STEP = 0.07;
+    const STEP = 0.06;
     const tl = gsap.timeline({
-      defaults: { ease: "sine.inOut", duration: 1 },
+      defaults: { ease: "power2.inOut", duration: 1 },
       scrollTrigger: {
         trigger: deck,
-        // Parte quando la pila (centro dello stage) affaccia dal fondo dello
-        // schermo e finisce col mazzo centrato: corsa lunga (~mezzo schermo)
-        // e sine.inOut, così ogni tacca di rotella sposta le carte di poco.
-        start: "center 100%",
-        end: "center 50%",
-        // Catch-up morbido sopra al lerp di Lenis: assorbe gli scatti della
-        // rotella senza far sembrare le carte in ritardo.
-        scrub: 0.9,
+        // Corsa LUNGA: parte appena il mazzo affaccia dal fondo e finisce col
+        // mazzo centrato (~una schermata di scroll). Più strada = ogni tacca
+        // di rotella sposta le carte di poco = movimento continuo.
+        start: "top bottom",
+        end: "center center",
+        // Stesso respiro di tutte le altre scene (SCRUB): prima qui c'era
+        // un'inerzia più lunga sopra a quella di Lenis e le carte
+        // sembravano rincorrere lo scroll. Col dito (scroll nativo) inerzia
+        // corta: le carte restano sotto il dito.
+        scrub: touchUI ? 0.25 : SCRUB,
         invalidateOnRefresh: true,
         onRefreshInit: () => {
           // Al refresh (resize) la pila va rimisurata sulla nuova scena.
@@ -1285,55 +1232,47 @@ if (deck) {
         },
       },
     });
-    // In pila le carte sono coricate sul tavolo (inclinate all'indietro, più
-    // piccole) e voltate verso il centro: aprendosi si alzano e si
-    // raddrizzano, e si posano piatte nel loro angolo.
+    // In pila le carte sono un filo più piccole e scompigliate; aprendosi
+    // crescono, si raddrizzano e si posano nel loro angolo. Solo x, y,
+    // rotazione e scala, niente 3D: la carta resta un layer piatto e nitido
+    // per tutta la corsa (le inclinazioni in prospettiva la sgranavano e
+    // facevano lavorare il compositor).
     deckCards.forEach((card, i) => {
-      const side = Math.sign(parseFloat(getComputedStyle(card).getPropertyValue("--x"))) || 1;
       tl.fromTo(
         card,
         {
           x: () => pile[i].x,
           y: () => pile[i].y,
           rotation: num(card.dataset.dr),
-          rotationX: 26,
-          rotationY: -side * 12,
-          scale: 0.84,
-          transformPerspective: 1200,
+          scale: 0.86,
         },
         {
           x: 0,
           y: 0,
           rotation: () => finalRotation(card),
-          rotationX: 0,
-          rotationY: 0,
           scale: 1,
+          force3D: true,
         },
         order.indexOf(i) * STEP
       );
     });
-    // Il titolo sotto il mazzo esce da una sfocatura mentre le carte se ne
-    // vanno: si "mette a fuoco" quando la scena è aperta.
-    // Il titolo è un blocco tipografico (typeBlock.ts) e si compone da
-    // solo; qui il sottotitolo si mette a fuoco a mazzo quasi aperto.
-    const deckCopy = deck.querySelector<HTMLElement>("[data-deck-copy]");
-    if (deckCopy) {
-      const deckSub = deckCopy.querySelector<HTMLElement>(".deck-sub");
-      if (deckSub) {
-        tl.fromTo(
-          deckSub,
-          { autoAlpha: 0, filter: "blur(8px)" },
-          { autoAlpha: 1, filter: "blur(0px)", ease: "power2.out", duration: 0.4 },
-          0.7
-        );
-      }
+    // Il titolo si scopre mentre le carte se ne vanno: le due parole salgono
+    // dalla maschera, poi il sottotitolo. Solo transform e opacità (prima
+    // c'era una sfocatura animata, la cosa più costosa da ridisegnare).
+    const deckTitle = deck.querySelector<HTMLElement>("[data-deck-title]");
+    if (deckTitle) {
+      const words = SplitText.create(deckTitle, { type: "words", mask: "words" }).words;
+      tl.fromTo(words, { yPercent: 105 }, { yPercent: 0, ease: "power3.out", duration: 0.45, stagger: 0.1 }, 0.4);
+    }
+    const deckSub = deck.querySelector<HTMLElement>(".deck-sub");
+    if (deckSub) {
+      tl.fromTo(deckSub, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.35 }, 0.7);
     }
   }
 }
 
-// (Progetti e Contatti non hanno più un pin di "sosta": la fermata in cima
-// alla sezione — [data-scroll-detent] in HomePage.astro — li ferma come ogni
-// altra sezione, senza scroll a vuoto dopo.)
+// (Progetti non ha più fermate: lo scroll attraversa la sezione libero, le
+// carte seguono la rotella.)
 
 await yieldToMain();
 
@@ -1578,9 +1517,6 @@ if (aboutPage) {
     });
     mo.observe(root, { attributes: true, attributeFilter: ["class"] });
   };
-  const rampOf = (el: HTMLElement) =>
-    RAMPS[(el.dataset.tone as keyof typeof RAMPS) || "shadow"] ?? RAMPS.shadow;
-  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   // --- HERO --- la pagina si fa in diretta (aboutLive.ts).
   const apHero = aboutPage.querySelector<HTMLElement>("[data-ap-hero]");
@@ -1645,10 +1581,11 @@ if (aboutPage) {
     });
   });
 
-  // La catena: con lo scroll i passaggi in mezzo vengono barrati e cadono,
-  // "tu" e "noi" si vengono incontro, il filo tratteggiato diventa pieno e
-  // l'etichetta passa da "Di solito" a "Con noi". Scrub: si riavvolge
-  // tornando su. Con reduced motion resta lo stato finale.
+  // La catena: quando la card è ben dentro lo schermo, da sola, i passaggi
+  // in mezzo vengono barrati e cadono, "tu" e "noi" si vengono incontro, il
+  // filo tratteggiato diventa pieno e l'etichetta passa da "Di solito" a
+  // "Con noi". Parte una volta sola e non dipende dalla velocità dello
+  // scroll. Con reduced motion resta lo stato finale.
   const chain = aboutPage.querySelector<HTMLElement>("[data-ap-chain]");
   if (chain) {
     const track = chain.querySelector<HTMLElement>(".ap-chain-track")!;
@@ -1707,161 +1644,22 @@ if (aboutPage) {
           scrollTrigger: { trigger: chain, start: "top 100%", end: "top 64%", scrub: SCRUB },
         }
       );
+      // Parte quando la card si è posata (fine della salita, "top 64%"):
+      // un attimo per leggere "Di solito", poi la catena si chiude in ~2 s.
+      tl.timeScale(0.75);
       ScrollTrigger.create({
         trigger: chain,
-        // si legge prima "Di solito" (catena intera), poi la si vede chiudersi
-        // mentre sale verso la parte alta dello schermo
-        start: "top 62%",
-        end: "top 18%",
-        scrub: SCRUB,
-        animation: tl,
-        invalidateOnRefresh: true,
-      });
-    }
-  }
-
-  // --- IL DUO ---
-  // Stessa grammatica della home: il testo esce dalla sfocatura (expo, niente
-  // rimbalzi), il ritratto sale dal tavolo in prospettiva e si posa piatto,
-  // un riflesso di luce una volta sola a scena posata. Il titolo lo anima il
-  // reveal comune dei .works-title.
-  const duoHead = aboutPage.querySelector<HTMLElement>("[data-ap-duo] .ap-duo-head");
-  if (duoHead && !reduceMotion) {
-    gsap
-      .timeline({ scrollTrigger: { trigger: duoHead, start: "top 80%", once: true } })
-      .fromTo(
-        duoHead.querySelectorAll("[data-ap-rise]"),
-        { autoAlpha: 0, y: 18, filter: "blur(8px)" },
-        { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1.1, ease: "expo.out", stagger: 0.18 },
-        0
-      );
-  }
-  const wide = window.matchMedia("(min-width: 900px)").matches;
-  aboutPage.querySelectorAll<HTMLElement>("[data-ap-card]").forEach((card) => {
-    const canvas = card.querySelector<HTMLCanvasElement>("[data-px-reveal]");
-    if (reduceMotion) {
-      if (canvas) canvas.hidden = true;
-      return;
-    }
-    const flip = card.classList.contains("ap-founder--flip");
-    const media = card.querySelector<HTMLElement>("[data-ap-card-media]");
-    const frame = card.querySelector<HTMLElement>("[data-ap-card-frame]");
-    const zoom = card.querySelector<HTMLElement>("[data-ap-card-zoom]");
-    const name = card.querySelector<HTMLElement>("[data-ap-card-name]");
-    const rule = card.querySelectorAll<HTMLElement>("[data-ap-card-rule] > span");
-    const ins = card.querySelectorAll<HTMLElement>("[data-ap-card-in]");
-    const chars = name ? SplitText.create(name, { type: "chars", mask: "chars" }).chars : [];
-    // Il ritratto a pixel nasce quando la card si avvicina e legge la stessa
-    // foto scelta dalla <picture> (una sola richiesta); il file dedicato
-    // resta il ripiego se il browser non l'ha ancora scelta.
-    const img = card.querySelector<HTMLImageElement>(".ap-founder-img");
-    let px: PixelPortrait | null = null;
-    if (canvas)
-      ScrollTrigger.create({
-        trigger: card,
-        start: "top bottom+=900",
+        start: "top 66%",
         once: true,
-        onEnter: () => {
-          px = new PixelPortrait(canvas, {
-            src: img?.currentSrc || canvas.dataset.src!,
-            ramp: rampOf(canvas),
-            block: 22,
-            mode: "reveal",
-          });
-        },
+        onEnter: () => gsap.delayedCall(0.45, () => tl.play()),
       });
-    const wave = { v: 0 };
-
-    // Scrub: il ritratto sale inclinato e si posa, la foto dentro scende di
-    // scala (parallasse), il nome scivola fuori da dietro il ritratto.
-    gsap
-      .timeline({
-        scrollTrigger: { trigger: card, start: "top 96%", end: "top 30%", scrub: SCRUB },
-      })
-      .fromTo(
-        media,
-        { y: 110, rotationX: 16, scale: 0.93, transformPerspective: 1600, transformOrigin: "50% 100%" },
-        { y: 0, rotationX: 0, scale: 1, ease: "power1.out", duration: 1 },
-        0
-      )
-      .fromTo(zoom, { scale: 1.22 }, { scale: 1, ease: "none", duration: 1 }, 0);
-    if (wide && name) {
-      gsap.fromTo(
-        name,
-        { xPercent: flip ? 34 : -34 },
-        {
-          xPercent: 0,
-          ease: "none",
-          scrollTrigger: { trigger: card, start: "top 90%", end: "top 20%", scrub: SCRUB },
-        }
-      );
-    } else if (name) {
-      // Telefono: il nome sta sotto il ritratto e ne scivola fuori in giù.
-      gsap.fromTo(
-        name,
-        { yPercent: -70 },
-        {
-          yPercent: 0,
-          ease: "none",
-          scrollTrigger: { trigger: card, start: "top 85%", end: "top 15%", scrub: SCRUB },
-        }
-      );
-    }
-
-    // Una volta: filo che si disegna, pixel che si mettono a fuoco, nome e
-    // testi che escono dalla sfocatura, poi il riflesso.
-    gsap.set(card, { "--rule": 0 });
-    gsap
-      .timeline({ scrollTrigger: { trigger: card, start: "top 72%", once: true } })
-      .to(card, { "--rule": 1, duration: 1.4, ease: "expo.out" }, 0)
-      .fromTo(
-        rule,
-        { autoAlpha: 0, filter: "blur(6px)" },
-        { autoAlpha: 1, filter: "blur(0px)", duration: 0.9, ease: "expo.out", stagger: 0.1 },
-        0.1
-      )
-      // La foto si mette a fuoco a ondata dall'alto, poi resta la <img> vera.
-      .to(wave, { v: 1.1, duration: 1.6, ease: "power1.inOut", onUpdate: () => px?.setWave(wave.v) }, 0.15)
-      .to(canvas, { autoAlpha: 0, duration: 0.35, onComplete: () => px?.destroy() }, ">-0.1")
-      .call(() => card.classList.add("is-landed"), [], ">-0.1")
-      .fromTo(
-        chars,
-        { yPercent: 100, filter: "blur(10px)" },
-        { yPercent: 0, filter: "blur(0px)", duration: 1.3, ease: "expo.out", stagger: 0.05 },
-        0.35
-      )
-      .fromTo(
-        ins,
-        { autoAlpha: 0, y: 16, filter: "blur(8px)" },
-        { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1.1, ease: "expo.out", stagger: 0.14 },
-        0.7
-      );
-
-    // Inclinazione leggera del ritratto verso il cursore (solo mouse).
-    if (finePointer && frame) {
-      gsap.set(frame, { transformPerspective: 1400 });
-      const rx = gsap.quickTo(frame, "rotationX", { duration: 0.9, ease: "power3.out" });
-      const ry = gsap.quickTo(frame, "rotationY", { duration: 0.9, ease: "power3.out" });
-      frame.addEventListener("pointermove", (e) => {
-        const r = frame.getBoundingClientRect();
-        rx(((e.clientY - r.top) / r.height - 0.5) * -5);
-        ry(((e.clientX - r.left) / r.width - 0.5) * 6);
-      });
-      frame.addEventListener("pointerleave", () => {
-        rx(0);
-        ry(0);
+      // Se lo schermo cambia misura a catena già chiusa, i capi si
+      // rimettono al posto giusto (le distanze dipendono dalla larghezza).
+      ScrollTrigger.addEventListener("refresh", () => {
+        if (tl.progress() < 1) return;
+        tl.progress(0).invalidate().progress(1);
       });
     }
-  });
-
-  // Il duo su telefono: le card una sotto l'altra, ognuna alta una
-  // schermata e ognuna una fermata: la si legge intera prima di passare
-  // all'altra.
-  if (!staticScenes && !wide) {
-    aboutPage.querySelectorAll<HTMLElement>("[data-ap-card-slot]").forEach((slot) => {
-      extraDetents.push(() => slot.getBoundingClientRect().top + lenis.scroll);
-    });
-    readDetents();
   }
 }
 
@@ -1875,8 +1673,11 @@ await yieldToMain();
 // in pausa tutti i loro loop (animation-play-state). Riprendono dal punto in
 // cui erano, quindi rientrando non si vede nessuno stacco.
 if ("IntersectionObserver" in window) {
+  // Ogni sezione con un loop infinito: Il punto (notifiche, rotellina),
+  // Come lavoriamo (onda del suggerimento, cursore), la card del form
+  // (bordo che gira, impulso), la catena e il Percorso di Chi siamo, i CTA.
   const loopHosts = document.querySelectorAll<HTMLElement>(
-    ".hero-section, .ap-hero, [data-deck]"
+    ".hero-section, .ap-hero, [data-deck], [data-point], [data-apm], .cflow, [data-ap-chain], .ap-journey, .about-cta, .cta-panel"
   );
   if (loopHosts.length) {
     const io = new IntersectionObserver(
@@ -1933,7 +1734,10 @@ if (!reduceMotion && ghost) {
     scrollTrigger: {
       trigger: ".site-footer",
       start: "top 95%",
-      end: "bottom bottom",
+      // Finisce un po' PRIMA della fine pagina (12% di schermo): con lo
+      // scroll morbido ci si ferma spesso a pochi px dal fondo, e con
+      // "bottom bottom" le lettere restavano sfocate o tagliate dal bordo.
+      end: "bottom 112%",
       scrub: 0.6,
     },
   });
@@ -1994,6 +1798,40 @@ initContactFlow({
   },
   onResize: () => ghostTrigger?.refresh(),
 });
+
+// ---------- Pin sempre al posto giusto ----------
+// ScrollTrigger misura dove partono le sezioni bloccate (Il punto, il
+// Percorso…) solo al load e al resize della finestra. Se dopo la pagina
+// cambia altezza SOPRA una di loro (font arrivati tardi, un'isola React che
+// si monta, il CSS ricaricato dal server di sviluppo) le misure restano
+// quelle vecchie: il palco si fermava centinaia di px prima o dopo, saltava
+// sopra la hero e a fine corsa ricadeva giù ("sezione fuori posto").
+// Un osservatore sull'altezza della pagina confronta, a misure ferme, la
+// posizione di layout di ogni sezione bloccata con quella dell'ultimo
+// refresh: se è cambiata, rimisura tutto. Le altre variazioni (il form a
+// passi in fondo che si allunga) non spostano nessun pin e non lo toccano.
+if ("ResizeObserver" in window) {
+  const pinTops = new Map<Element, number>();
+  const pinTriggers = () =>
+    ScrollTrigger.getAll().filter((st) => st.pin && st.trigger instanceof HTMLElement);
+  const readPinTops = () => {
+    pinTops.clear();
+    pinTriggers().forEach((st) => pinTops.set(st.trigger!, layoutTop(st.trigger as HTMLElement)));
+  };
+  ScrollTrigger.addEventListener("refresh", readPinTops);
+  readPinTops();
+  let checkTimer = 0;
+  new ResizeObserver(() => {
+    window.clearTimeout(checkTimer);
+    checkTimer = window.setTimeout(() => {
+      const moved = pinTriggers().some((st) => {
+        const before = pinTops.get(st.trigger!);
+        return before === undefined || Math.abs(layoutTop(st.trigger as HTMLElement) - before) > 1;
+      });
+      if (moved) ScrollTrigger.refresh();
+    }, 150);
+  }).observe(document.body);
+}
 
 // Se il "load" (e con lui il refresh automatico di ScrollTrigger) è arrivato
 // mentre si montavano i pezzi, le misure dei primi trigger non vedono gli

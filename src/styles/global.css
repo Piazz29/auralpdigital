@@ -1545,17 +1545,10 @@ button {
   transition: transform 0.5s var(--svt-ease);
 }
 .svt-tab.is-on .svt-tab-bar > span { transform: scaleX(1); }
-.svt.is-auto .svt-tab.is-on .svt-tab-bar > span {
-  transform: scaleX(0);
-  transition: none;
-  animation: svt-fill var(--svt-auto, 7s) linear forwards;
-  animation-play-state: paused;
-}
-.svt.is-auto.is-visible .svt-tab.is-on .svt-tab-bar > span { animation-play-state: running; }
-/* col mouse sopra la sezione l'avvicendamento aspetta */
-@media (hover: hover) {
-  .svt.is-auto.is-visible:hover .svt-tab.is-on .svt-tab-bar > span { animation-play-state: paused; }
-}
+/* Avvicendamento automatico: la barra la scrive lo script, frame per frame,
+   dal tempo della clip (ServicesTabs.astro). Niente transizione: segue il
+   video e basta. */
+.svt.is-auto .svt-tab-bar > span { transition: none; }
 @keyframes svt-fill { to { transform: scaleX(1); } }
 
 /* Le descrizioni stanno tutte nella stessa cella: il blocco è alto quanto
@@ -1762,26 +1755,28 @@ button {
   .svt-fix { transition-duration: 0.01s !important; transition-delay: 0s !important; }
 }
 /* ----------------------------------------------------------------------
-   IL PUNTO — racconto in tre tempi su un palco alto una schermata.
-   Con la regia attiva (main.ts aggiunge .is-live) il palco si ferma (pin)
-   e lo scroll fa avanzare la storia: LAVORO → CAOS → SVOLTA (vedi
-   HomePage.astro). Lead e problema da una parte, svolta dall'altra, stanno
-   nella STESSA cella di griglia: si danno il cambio sul posto.
-   Fondale: lo Sciliar resta, ma velato nella carta — un'atmosfera, non
-   un'immagine da leggere, così il testo non ci litiga. Un solo colore per
-   tempo: evidenziatore caldo nel problema, blu Shadow nella svolta.
-   Senza JS / reduced motion: tutto in colonna, statico, notifiche nascoste.
+   IL PUNTO — racconto in tre tempi: LAVORO → CAOS → SVOLTA (markup in
+   HomePage.astro, regia in main.ts). Tutte le regole della sezione stanno
+   qui; le taglie di testata e promessa vengono dalla scala tipografica
+   (--t-head / --t-display, più in basso nel file).
+   Tre modi:
+     - di base (senza JS, reduced motion, telefono e tablet touch): una
+       colonna che scorre libera, ogni notifica sotto la sua riga;
+     - desktop (.is-pinned, o .apd-scenes prima che parta il modulo): il
+       palco alto una schermata si ferma e lo scroll fa avanzare la storia;
+       problema e svolta stanno nella stessa cella e si danno il cambio.
+   Solo transform e opacità animati: nessuna misura cambia durante lo
+   scroll (prima le righe cambiavano font-size e il testo andava a capo
+   in modo diverso a ogni frame).
 -------------------------------------------------------------------------- */
 .point {
   position: relative;
 }
 .point-stage {
   position: relative;
-  min-height: 100vh;
-  min-height: 100svh;
   display: grid;
   place-items: center;
-  padding: clamp(110px, 15vh, 160px) clamp(20px, 5vw, 48px);
+  padding: clamp(88px, 13vh, 140px) clamp(20px, 5vw, 48px);
   overflow: hidden;
 }
 
@@ -1818,15 +1813,14 @@ button {
   mix-blend-mode: multiply;
   transform-origin: 50% 45%;
 }
-/* Velo — alone di carta dietro al testo: la montagna si legge ai margini,
-   al centro restano solo le parole. */
+/* Velo — alone di carta dietro al testo: la montagna si legge ai margini. */
 .point-veil {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background: radial-gradient(
-    ellipse 52% 48% at 50% 50%,
+    ellipse 56% 50% at 50% 50%,
     rgba(255, 255, 255, 0.86) 0%,
     rgba(255, 255, 255, 0.6) 45%,
     rgba(255, 255, 255, 0) 100%
@@ -1838,104 +1832,31 @@ button {
   z-index: 2;
   display: grid;
   width: 100%;
-  max-width: 1180px;
-  gap: clamp(72px, 14vh, 160px);
+  max-width: 1280px;
+  gap: clamp(88px, 14vh, 150px);
 }
-.point-pain,
-.point-turn {
-  position: relative;
+
+/* ATTO 1 + 2 — testata, "Ma i clienti…" e tre righe numerate. Ogni riga
+   ha la sua notifica sulla destra: si legge la frase e, accanto, cosa
+   succede davvero sul telefono. */
+.point-pain {
+  --point-num-col: clamp(40px, 4.4vw, 64px);
+  width: min(1080px, 100%);
   margin-inline: auto;
 }
-
-/* Invito a scorrere — in basso al centro: un filo sottile con una goccia
-   che scende e la parola sotto. Entra quando il lead è al suo posto ed esce
-   appena la storia parte (.is-off, main.ts). Solo con la regia attiva. */
-.point-cue {
-  position: absolute;
-  left: 50%;
-  bottom: max(22px, 4svh);
-  z-index: 3;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  translate: -50% 0;
-  pointer-events: none;
-  color: var(--color-text-secondary);
-  animation: point-cue-in 0.9s ease 1.1s backwards;
-  transition: opacity 0.45s ease, translate 0.45s ease;
-}
-.point.is-live .point-cue { display: flex; }
-.point-cue.is-off {
-  opacity: 0;
-  translate: -50% 8px;
-}
-.point-cue-track {
-  position: relative;
-  width: 1px;
-  height: 34px;
-  overflow: hidden;
-  background: rgba(23, 19, 16, 0.14);
-}
-.point-cue-track i {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: 3px;
-  height: 12px;
-  margin-left: -1.5px;
-  border-radius: 2px;
-  background: var(--color-ink);
-  animation: point-cue-drop 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-.point-cue-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-@keyframes point-cue-in {
-  from { opacity: 0; }
-}
-@keyframes point-cue-drop {
-  0% { transform: translateY(-14px); opacity: 0; }
-  25% { opacity: 1; }
-  75% { opacity: 1; }
-  100% { transform: translateY(36px); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .point-cue-track i { animation: none; top: 11px; }
-}
-
-/* ATTO 1 + 2 — il lead fa da testata, sotto la frase si completa in tre
-   righe numerate separate da hairline: una tabella editoriale, letta riga
-   per riga, invece di un paragrafo unico. */
-.point-pain {
-  width: min(740px, 100%);
-}
 .point-lead {
-  position: relative;
-  width: fit-content;
   margin: 0;
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(30px, 3.6vw, 56px);
-  line-height: 1.04;
-  letter-spacing: -0.03em;
   color: var(--color-ink);
-  transform-origin: 50% 50%;
 }
-/* "Ma i clienti" — l'attacco della frase che le tre righe completano. Non
-   un'etichetta: un mezzo verso in corsivo, nel calore del problema, allineato
-   alla colonna del testo delle righe così si legge di seguito
-   ("Ma i clienti / ti scrivono in DM, / ti chiamano…"). */
 .point-but {
-  margin: clamp(26px, 5vh, 52px) 0 clamp(4px, 1vh, 10px);
+  margin: clamp(22px, 4vh, 40px) 0 clamp(6px, 1.2vh, 12px);
   padding-left: var(--point-num-col);
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 500;
-  font-size: clamp(20px, 1.9vw, 30px);
+  font-size: clamp(20px, 1.8vw, 28px);
   line-height: 1.1;
   letter-spacing: -0.015em;
   color: var(--color-orange-deep);
@@ -1945,131 +1866,60 @@ button {
   padding: 0;
   list-style: none;
 }
-.point-pain { --point-num-col: clamp(34px, 4.4vw, 64px); }
 .point-item {
   position: relative;
   display: grid;
-  grid-template-columns: var(--point-num-col) 1fr;
-  align-items: baseline;
-  padding-block: clamp(12px, 2.2vh, 22px);
+  grid-template-columns: var(--point-num-col) minmax(0, 1fr) auto;
+  align-items: center;
+  padding-block: clamp(14px, 2.4vh, 24px);
 }
 /* Hairline sopra ogni riga: si disegna da sinistra quando la riga entra. */
-.point-item::before {
-  content: "";
+.point-rule {
   position: absolute;
   inset: 0 0 auto;
   height: 1px;
   background: var(--color-border-strong);
-  transform: scaleX(var(--rule, 1));
   transform-origin: 0 50%;
 }
 .point-num {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.1em;
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-muted);
-  transform: translateY(-0.35em);
+  color: var(--color-accent);
 }
 .point-item-text {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(26px, 2.9vw, 46px);
-  line-height: 1.14;
-  letter-spacing: -0.02em;
+  font-size: clamp(24px, 2.5vw, 40px);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
   color: var(--color-ink);
   text-wrap: pretty;
-  hyphens: manual;
 }
-/* Parole chiave del problema: stesso inchiostro, con un tratto di
-   evidenziatore caldo che si stende sotto (--mark, animato da main.ts). */
+/* Parole chiave: si colorano d'arancio da sinistra (--mark 0→1, main.ts).
+   Il padding allarga l'area dipinta (background-clip: text taglierebbe
+   code e corsivi), il margine negativo restituisce lo spazio. */
 .point-item-text strong {
   font-weight: inherit;
-  padding-inline: 0.06em;
-  margin-inline: -0.06em;
-  background: linear-gradient(rgba(242, 145, 63, 0.38), rgba(242, 145, 63, 0.38))
-    no-repeat 0 86% / calc(var(--mark, 1) * 100%) 0.38em;
+  padding: 0 0.1em 0.18em 0.06em;
+  margin-right: -0.1em;
+  background: linear-gradient(90deg, var(--color-orange-deep) 50%, var(--color-ink) 50%)
+    no-repeat calc((1 - var(--mark, 1)) * 100%) 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
 
-/* ATTO 3 — la svolta, centrata e grande. "Il sistema" in blu con lo stesso
-   evidenziatore del problema, ma freddo (--line): stesso gesto, segno
-   opposto. Il corsivo chiude in blu. */
-.point-turn {
-  max-width: 17ch;
-  text-align: center;
-  font-size: clamp(40px, 5.6vw, 92px);
-}
-.point-turn-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 1em;
-  line-height: 1.04;
-  letter-spacing: -0.035em;
-  color: var(--color-ink);
-  text-wrap: balance;
-}
-.point-turn-title strong {
-  font-weight: inherit;
-  white-space: nowrap;
-  color: var(--color-accent);
-  padding-inline: 0.06em;
-  margin-inline: -0.06em;
-  background: linear-gradient(rgba(132, 162, 245, 0.3), rgba(132, 162, 245, 0.3))
-    no-repeat 0 88% / calc(var(--line, 1) * 100%) 0.34em;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-.point-turn-sub {
-  margin: clamp(14px, 2.6vh, 28px) 0 0;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: max(22px, 0.46em);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  color: var(--color-accent);
-}
-.point-turn-sub em {
-  font-style: italic;
-}
-/* Le maschere delle parole (SplitText) sono alte e larghe quanto la parola:
-   tagliavano i discendenti (g, p, y) e il corsivo che sporge a destra (la t
-   di "that"). La maschera si allunga sopra e sotto (line-height più ampio,
-   ereditato anche dalla parola → lo yPercent nascosto resta fuori) e di lato;
-   i margini negativi la riportano all'ingombro originale: stessa interlinea,
-   stessa spaziatura, glifi interi. */
-:is(.point-lead, .point-turn-title, .svc-title) div[style*="overflow"] {
-  line-height: 1.44;
-  margin-block: -0.2em;
-}
-:is(.point-lead, .point-turn-title, .svc-title, .ap-hero-title) div[style*="overflow"] {
-  padding-inline: 0.12em;
-  margin-inline: -0.12em;
-}
-/* hero di Chi siamo: interlinea 0.95, il margine compensa di più */
-.ap-hero-title div[style*="overflow"] {
-  line-height: 1.44;
-  margin-block: -0.245em;
-}
-
-/* NOTIFICHE — schede di carta: tre per il caos (ai margini, arrivano un
-   filo storte e si posano dritte, poi galleggiano) e una per la svolta,
-   sotto la promessa. A riposo niente scala né rotazione: testo nitido. */
-.point-pings {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
+/* NOTIFICHE — schede di carta. Il galleggiare è CSS sull'interno, la regia
+   GSAP sul contenitore: i due transform non si pestano. A riposo niente
+   scala né rotazione: testo nitido. */
 .point-ping {
-  position: absolute;
-  width: 268px;
+  width: 264px;
+  margin-left: clamp(20px, 3vw, 48px);
 }
-.point-ping--1 { left: 3%; top: 15%; }
-.point-ping--2 { right: 2.5%; top: 41%; }
-.point-ping--3 { left: 6%; bottom: 14%; }
 .point-ping-in,
 .point-ok {
   position: relative;
@@ -2091,11 +1941,11 @@ button {
 .point-ping-in {
   animation: point-float 6s ease-in-out infinite;
 }
-.point-ping--2 .point-ping-in { animation-duration: 7s; animation-delay: -2s; }
-.point-ping--3 .point-ping-in { animation-duration: 5.4s; animation-delay: -4s; }
+.point-item:nth-child(2) .point-ping-in { animation-duration: 7s; animation-delay: -2s; }
+.point-item:nth-child(3) .point-ping-in { animation-duration: 5.4s; animation-delay: -4s; }
 @keyframes point-float {
-  0%, 100% { transform: translateY(-5px); }
-  50% { transform: translateY(6px); }
+  0%, 100% { transform: translateY(-4px); }
+  50% { transform: translateY(4px); }
 }
 .point-ping-icon,
 .point-ok-icon {
@@ -2133,45 +1983,57 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* "Non letto" — il puntino che pulsa è il caos che chiede attenzione. */
-.point-ping-dot {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 12px;
-  height: 12px;
-  border: 2px solid var(--color-bg);
-  border-radius: 50%;
-  background: var(--color-orange);
+
+/* ATTO 3 — la svolta, centrata e grande; "il sistema" in blu. Taglia da
+   --t-display (scala tipografica). */
+.point-turn {
+  margin-inline: auto;
+  text-align: center;
 }
-.point-ping-dot::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  border: 2px solid var(--color-orange);
-  animation: point-pulse 1.8s ease-out infinite;
+.point-turn-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1em;
+  color: var(--color-ink);
+  text-wrap: balance;
 }
-@keyframes point-pulse {
-  from { transform: scale(1); opacity: 0.7; }
-  to { transform: scale(2.4); opacity: 0; }
+.point-turn-title strong {
+  font-weight: inherit;
+  white-space: nowrap;
+  color: var(--color-accent);
 }
+.point-turn-sub {
+  margin: clamp(14px, 2.6vh, 28px) 0 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(20px, 2.1vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--color-accent);
+}
+.point-turn-sub em {
+  font-style: italic;
+}
+/* Notifica "ok": chiude la promessa. Sta dentro .point-turn (crenatura
+   stretta della taglia display): torna al suo testo. */
 .point-ok {
   display: inline-flex;
-  margin-top: clamp(28px, 5.5vh, 56px);
-  font-size: 16px;
-}
-.point-ok-icon {
-  background: var(--color-accent);
-}
-.point-ok {
   overflow: hidden;
+  margin-top: clamp(28px, 5vh, 52px);
   padding-right: 20px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.3;
+  letter-spacing: normal;
   border-color: rgba(43, 76, 180, 0.16);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.8) inset,
     0 26px 50px -24px rgba(43, 76, 180, 0.35),
     0 4px 12px -6px rgba(23, 19, 16, 0.12);
+}
+.point-ok-icon {
+  background: var(--color-accent);
 }
 .point-ok-icon svg path {
   stroke-dasharray: 1;
@@ -2183,18 +2045,19 @@ button {
   pointer-events: none;
   background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.85) 50%, transparent 70%);
   transform: translateX(-110%);
-  will-change: transform;
 }
 .point-ok.is-done .point-ok-sheen {
   transform: translateX(110%);
   transition: transform 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
 }
-/* Alone della svolta — luce fredda e larghissima dietro la promessa. */
+
+/* Alone della svolta e invito a scorrere: solo nel modo desktop. */
 .point-glow {
   position: absolute;
   left: 50%;
   top: 50%;
   z-index: 0;
+  display: none;
   width: min(1100px, 120vw);
   aspect-ratio: 1.6;
   margin: calc(min(1100px, 120vw) / -3.2) 0 0 calc(min(1100px, 120vw) / -2);
@@ -2204,109 +2067,163 @@ button {
   opacity: 0;
   visibility: hidden;
 }
-.point:not(.is-live) .point-glow { display: none; }
-@media (prefers-reduced-motion: reduce) {
-  .point-ok-sheen { display: none; }
-}
-
-/* Statico (niente regia): le notifiche del caos non hanno senso senza il
-   racconto; restano lead, problema e svolta in colonna. */
-.point:not(.is-live) .point-pings {
+.point-cue {
+  position: absolute;
+  left: 50%;
+  bottom: max(26px, 4.5svh);
+  z-index: 3;
   display: none;
-}
-
-/* Regia attiva: palco di una schermata esatta, i due blocchi sovrapposti
-   nella stessa cella (si danno il cambio sul posto). */
-/* Il palco si posa sopra la sfumatura bassa della hero (i suoi bordi sono
-   trasparenti): senza, tra scrivania e montagna resterebbe una fascia di
-   carta vuota. Spostamento solo visivo (top relativo: un margine negativo
-   trascinerebbe su anche il fondo pieno di .post-reveal, tagliando la hero);
-   il margine in fondo restituisce lo spazio.
-   `.apd-scenes .point` (classe messa dallo script inline in <head>) applica
-   lo stesso layout già al primo render: aspettando `.is-live` dal modulo la
-   sezione saliva di 30vh sotto gli occhi (layout shift). */
-:is(.point.is-live, .apd-scenes .point) {
-  top: -30vh;
-  margin-bottom: -30vh;
-}
-:is(.point.is-live, .apd-scenes .point) .point-stage {
-  height: 100vh;
-  height: 100svh;
-  min-height: 0;
-}
-:is(.point.is-live, .apd-scenes .point) .point-copy {
-  height: 100%;
+  flex-direction: column;
   align-items: center;
+  gap: 12px;
+  translate: -50% 0;
+  pointer-events: none;
+  color: var(--color-ink);
+  transition: opacity 0.5s ease, translate 0.5s ease;
 }
-/* Touch (classe messa da main.ts solo con touchUI): il palco si ferma da
-   solo con sticky invece del pin di ScrollTrigger, così lo ferma il browser
-   nello stesso frame dello scroll nativo (niente scatto all'aggancio). Lo
-   spazio di scroll del pin (--pin-run, misurato da main.ts) lo dà un blocco
-   vuoto dopo il palco: un padding no, sticky non entra nel padding del
-   genitore. */
-.point.is-live.is-sticky::after {
-  content: "";
-  display: block;
-  height: var(--pin-run, 0px);
+.point-cue.is-off {
+  opacity: 0;
+  translate: -50% 10px;
 }
-.point.is-live.is-sticky .point-stage {
-  position: sticky;
-  top: 0;
+.point-cue-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-:is(.point.is-live, .apd-scenes .point) .point-pain,
-:is(.point.is-live, .apd-scenes .point) .point-turn {
-  grid-area: 1 / 1;
+/* Mouse: il segno che tutti leggono come "scorri". La rotellina scende. */
+.point-cue-mouse {
+  position: relative;
+  width: 18px;
+  height: 27px;
+  border: 1.5px solid currentColor;
+  border-radius: 10px;
+  opacity: 0.75;
+}
+.point-cue-mouse i {
+  position: absolute;
+  left: 50%;
+  top: 5px;
+  width: 2px;
+  height: 6px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: currentColor;
+  animation: point-cue-wheel 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.point-cue-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+/* Quanto manca: un tratto per passo, si riempie d'arancio con lo scroll
+   (scaleX da main.ts). */
+.point-cue-steps {
+  display: flex;
+  gap: 6px;
+}
+.point-cue-step {
+  position: relative;
+  width: 28px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(23, 19, 16, 0.14);
+}
+.point-cue-step i {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-orange);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+@keyframes point-cue-wheel {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(8px); opacity: 0; }
 }
 
-/* Viewport medi: le notifiche lasciano i fianchi (lì ora c'è il testo) e
-   si spostano nelle fasce alta e bassa. */
-@media (max-width: 1180px) {
-  .point-ping { width: 236px; }
-  .point-ping--1 { left: 4%; top: 12%; }
-  .point-ping--2 { right: 4%; top: 17%; }
-  .point-ping--3 { left: auto; right: 9%; bottom: 7%; }
-}
-@media (max-width: 700px) {
-  .point-stage {
-    padding-inline: 20px;
+/* ---- Modo desktop: palco fermo, alto una schermata ----
+   Stessa condizione di `pinned` in main.ts. `.apd-scenes` (script inline
+   in <head>) dà il layout finale già al primo render, prima del modulo.
+   Il palco parte DOVE FINISCE la hero, senza sovrapporsi: la hero sta su un
+   livello più alto, e quando il palco si fermava ne copriva ancora la parte
+   alta (il racconto si vedeva da metà schermo in giù). Il fondale nasce
+   trasparente in alto, quindi l'attacco resta morbido. */
+@media (min-width: 900px) and (hover: hover), (min-width: 900px) and (pointer: fine) {
+  :is(.point.is-pinned, .apd-scenes .point) .point-stage {
+    height: 100vh;
+    height: 100svh;
+    padding-block: clamp(84px, 12vh, 128px) clamp(56px, 9vh, 96px);
   }
-  .point-ping { width: 214px; }
+  :is(.point.is-pinned, .apd-scenes .point) .point-copy {
+    height: 100%;
+    align-items: center;
+  }
+  :is(.point.is-pinned, .apd-scenes .point) :is(.point-pain, .point-turn) {
+    grid-area: 1 / 1;
+  }
+  .point.is-pinned .point-cue { display: flex; }
+  .point.is-pinned .point-glow { display: block; }
+}
+
+/* ---- Colonna stretta (telefono, tablet verticale) ----
+   La notifica scende sotto la sua riga, allineata al testo. */
+@media (max-width: 899px) {
+  .point-stage {
+    padding-block: clamp(72px, 12svh, 112px) clamp(80px, 14svh, 128px);
+  }
+  .point-copy { gap: clamp(72px, 12svh, 112px); }
+  .point-pain { --point-num-col: 36px; max-width: 640px; }
+  /* testata più grande della scala --t-head: qui è l'attacco della scena */
+  .point .point-lead {
+    font-size: clamp(38px, 11vw, 56px);
+    line-height: 0.96;
+  }
+  .point-item {
+    grid-template-columns: var(--point-num-col) minmax(0, 1fr);
+    align-items: baseline;
+    padding-block: 18px 20px;
+  }
+  .point-num { transform: translateY(-0.2em); }
+  .point-item-text { font-size: clamp(24px, 6.6vw, 34px); }
+  .point-ping {
+    grid-column: 2;
+    width: min(100%, 290px);
+    margin: 14px 0 0;
+  }
+  .point-but { font-size: clamp(19px, 5vw, 24px); }
+}
+@media (max-width: 420px) {
   .point-ping-in { padding: 9px 13px 9px 9px; gap: 10px; }
   .point-ping-icon { width: 32px; height: 32px; border-radius: 10px; }
   .point-ping-title,
   .point-ping-body { font-size: 12px; }
-  .point-ping--1 { left: 4%; top: 11%; }
-  .point-ping--2 { right: 3%; top: 17.5%; }
-  .point-ping--3 { right: 6%; bottom: 6%; }
-  .point-pain { --point-num-col: 30px; }
-  .point-but { font-size: clamp(18px, 5vw, 22px); }
-  .point-item-text { font-size: clamp(22px, 6.4vw, 30px); }
-  .point-turn { font-size: clamp(36px, 10.6vw, 56px); }
-}
-/* Telefoni bassi (iPhone SE, ~570px visibili): centrato, il blocco di testo
-   lascia sopra solo 50px e le due notifiche alte ci cadevano sopra. Qui il
-   palco scende (padding alto maggiore), testo e notifiche si compattano e le
-   notifiche alte si fissano in px sotto la navbar: fascia alta per le
-   notifiche, testo al centro, terza notifica nella fascia bassa. */
-@media (max-width: 700px) and (max-height: 640px) {
-  .point-stage { padding-block: 150px 64px; }
-  .point-lead { font-size: 27px; }
-  .point-but { margin-top: 18px; }
-  .point-item-text { font-size: 19px; }
-  .point-ping { width: 200px; }
-  .point-ping-in { padding: 7px 11px 7px 7px; gap: 9px; }
-  .point-ping-icon { width: 28px; height: 28px; border-radius: 9px; }
-  .point-ping-title,
-  .point-ping-body { font-size: 11.5px; }
-  .point-ping--1 { top: 76px; }
-  .point-ping--2 { top: 110px; }
-  .point-ping--3 { bottom: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .point-ping-in,
-  .point-ping-dot::after {
-    animation: none;
-  }
+  .point-cue-mouse i { animation: none; }
+  .point-ok-sheen { display: none; }
+}
+
+/* Le maschere delle parole (SplitText) sono alte e larghe quanto la parola:
+   tagliavano i discendenti (g, p, y) e il corsivo che sporge a destra. La
+   maschera si allunga sopra e sotto e di lato; i margini negativi la
+   riportano all'ingombro originale: stessa interlinea, glifi interi. */
+:is(.point-lead, .point-turn-title, .svc-title) div[style*="overflow"] {
+  line-height: 1.44;
+  margin-block: -0.2em;
+}
+:is(.point-lead, .point-turn-title, .svc-title, .ap-hero-title) div[style*="overflow"] {
+  padding-inline: 0.12em;
+  margin-inline: -0.12em;
+}
+/* hero di Chi siamo: interlinea 0.95, il margine compensa di più */
+.ap-hero-title div[style*="overflow"] {
+  line-height: 1.44;
+  margin-block: -0.245em;
 }
 
 /* FIRMA — chiusura di scena, ponte verso /chi-siamo. La velatura radiale
@@ -4296,7 +4213,15 @@ nav:has(#burger-menu.is-open) .pill {
    manifesto, ritratti, percorso, workflow (riusa i capitoli della home),
    marquee strumenti e CTA finale.
 -------------------------------------------------------------------------- */
-/* HERO — vedi "CHI SIAMO — HERO PIXEL" più sotto; qui resta l'aurora. */
+/* HERO — l'aurora dietro la hero di Chi siamo: fasci di luce del brand
+   (blu, periwinkle, un filo d'ambra) che scorrono lenti, raccolti in alto a
+   destra da una vignetta fissa.
+   Ogni strato è un gradiente a righe verticali in px che si ripete ogni
+   --p; scorre di lato di ESATTAMENTE --p e ricomincia: l'ultimo fotogramma
+   è identico al primo, quindi nessuna cucitura. (La versione prima animava
+   background-size/mask-position in %: i bordi di ripetizione non
+   combaciavano e passava una sbarra netta.) Si muove solo transform; due
+   strati in versi opposti danno lo scintillio. */
 .ap-hero-aurora {
   position: absolute;
   inset: 0;
@@ -4305,52 +4230,77 @@ nav:has(#burger-menu.is-open) .pill {
   overflow: hidden;
   background-color: var(--color-bg);
 }
-/* Aurora "boreale" — linguaggio dell'Aceternity Aurora Background adattato al
-   brand: nastri diagonali di blu/periwinkle tagliati da una maschera a righe e
-   sfocati in bagliore, che scorrono lenti e si concentrano in alto a destra.
-   Due maschere in AND (righe ∩ vignette radiale) creano i "raggi"; l'animazione
-   sfasa sfondo e maschera → lo scintillio dell'aurora vera. */
-.ap-hero-aurora::before {
-  content: "";
+.ap-aurora-beams {
   position: absolute;
-  inset: -20%;
-  /* I nastri portano anche l'ambra: l'aurora "boreale" del brand ha una coda
-     calda, così l'hero non è una tinta sola. */
-  background-image: repeating-linear-gradient(
-    100deg,
-    #2748A5 10%,
-    #84A2F5 14%,
-    #F2913F 18%,
-    #D84002 21%,
-    #CEDAF3 26%,
-    #3D65C2 28%,
-    /* Chiude sul colore d'apertura: il gradiente si ripete senza cucitura.
-       Prima finiva su #3D65C2 e ricominciava su #2748A5 → uno stacco netto
-       che solo il blur(30px) nascondeva (a costo di ri-sfocare tutto lo
-       schermo a ogni frame dell'animazione). */
-    #2748A5 30%
-  );
-  background-size: 200% 200%;
-  background-position: 0% 50%;
-  -webkit-mask-image:
-    repeating-linear-gradient(100deg, #000 0%, #000 7%, transparent 10%, transparent 12%, #000 16%),
-    radial-gradient(ellipse 95% 75% at 76% 6%, #000 8%, transparent 74%);
-  mask-image:
-    repeating-linear-gradient(100deg, #000 0%, #000 7%, transparent 10%, transparent 12%, #000 16%),
-    radial-gradient(ellipse 95% 75% at 76% 6%, #000 8%, transparent 74%);
-  -webkit-mask-size: 220% 130%, 100% 100%;
-  mask-size: 220% 130%, 100% 100%;
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-  /* Niente più blur(30px): il gradiente dei nastri è già morbidissimo (ogni
-     passaggio di colore copre centinaia di px) e la sfocatura non si vedeva,
-     ma costringeva a ri-rasterizzare un blur a tutto schermo a ogni frame
-     dell'animazione. Resta solo la saturazione, che è un filtro di colore. */
-  filter: saturate(1.2);
-  opacity: 0.82;
-  animation: aurora-flow 55s linear infinite;
+  inset: 0;
+  opacity: 0.95;
+  -webkit-mask-image: radial-gradient(ellipse 100% 88% at 74% 0%, #000 12%, rgba(0, 0, 0, 0.55) 48%, transparent 80%);
+  mask-image: radial-gradient(ellipse 100% 88% at 74% 0%, #000 12%, rgba(0, 0, 0, 0.55) 48%, transparent 80%);
 }
-/* L'aurora sfuma nel warm white prima della sezione successiva. */
+.ap-aurora-beams i {
+  --a: 10deg; /* inclinazione dei fasci */
+  position: absolute;
+  top: -50%;
+  left: -30%;
+  width: calc(160% + var(--p));
+  height: 200%;
+  will-change: transform;
+  animation: aurora-beam var(--d) linear infinite;
+}
+/* Nastri larghi di colore. */
+.ap-aurora-beams i:nth-child(1) {
+  --p: 900px;
+  --d: 70s;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(39, 72, 165, 0) 0px,
+    rgba(39, 72, 165, 0.5) 110px,
+    rgba(132, 162, 245, 0.75) 175px,
+    rgba(132, 162, 245, 0) 300px,
+    rgba(242, 145, 63, 0) 380px,
+    rgba(242, 145, 63, 0.45) 450px,
+    rgba(216, 64, 2, 0) 540px,
+    rgba(206, 218, 243, 0) 590px,
+    rgba(206, 218, 243, 0.85) 680px,
+    rgba(61, 101, 194, 0.5) 745px,
+    rgba(39, 72, 165, 0) 900px
+  );
+}
+/* Raggi sottili di luce, nel verso opposto. */
+.ap-aurora-beams i:nth-child(2) {
+  --p: 560px;
+  --d: 40s;
+  animation-direction: reverse;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0px,
+    rgba(255, 255, 255, 0) 50px,
+    rgba(255, 255, 255, 0.75) 80px,
+    rgba(255, 255, 255, 0) 112px,
+    rgba(132, 162, 245, 0) 210px,
+    rgba(132, 162, 245, 0.65) 232px,
+    rgba(132, 162, 245, 0) 258px,
+    rgba(255, 255, 255, 0) 390px,
+    rgba(255, 255, 255, 0.6) 418px,
+    rgba(255, 255, 255, 0) 452px,
+    rgba(255, 255, 255, 0) 560px
+  );
+}
+/* Velo blu profondo, lentissimo. */
+.ap-aurora-beams i:nth-child(3) {
+  --p: 1400px;
+  --d: 110s;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(39, 72, 165, 0) 0px,
+    rgba(39, 72, 165, 0.32) 260px,
+    rgba(39, 72, 165, 0) 560px,
+    rgba(132, 162, 245, 0) 820px,
+    rgba(132, 162, 245, 0.3) 1060px,
+    rgba(39, 72, 165, 0) 1400px
+  );
+}
+/* L'aurora sfuma nel fondo prima della sezione successiva. */
 .ap-hero-aurora::after {
   content: "";
   position: absolute;
@@ -4359,20 +4309,12 @@ nav:has(#burger-menu.is-open) .pill {
   height: 34%;
   background: linear-gradient(to bottom, transparent, var(--color-bg));
 }
-@keyframes aurora-flow {
-  from {
-    background-position: 0% 50%;
-    -webkit-mask-position: 0% 0%, 50% 50%;
-    mask-position: 0% 0%, 50% 50%;
-  }
-  to {
-    background-position: 200% 50%;
-    -webkit-mask-position: 220% 0%, 50% 50%;
-    mask-position: 220% 0%, 50% 50%;
-  }
+@keyframes aurora-beam {
+  from { transform: rotate(var(--a)) translate3d(0, 0, 0); }
+  to { transform: rotate(var(--a)) translate3d(calc(-1 * var(--p)), 0, 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ap-hero-aurora::before { animation: none; }
+  .ap-aurora-beams i { animation: none; transform: rotate(var(--a)); }
 }
 /* Sezioni interne — stesso ritmo verticale della home. */
 .ap-section {
@@ -4389,7 +4331,7 @@ nav:has(#burger-menu.is-open) .pill {
    Stato dal JS sul root: data-stage (−1…3), data-on (sezione in corso),
    .is-active / .is-past sugli elementi con data-i.
 -------------------------------------------------------------------------- */
-/* Stesso fondo del "Duo" (warm-deeper) → transizione continua. Niente
+/* Fondo sabbia (warm-deeper): il Manifesto ci sfuma dentro. Niente
    overflow-x qui: lo gestisce html{overflow-x:clip}. */
 .ap-journey {
   background: var(--color-warm-deeper);
@@ -6279,20 +6221,17 @@ html[lang="de"] .hero-section[data-handoff-hero] .hero-title {
     radial-gradient(circle, #FFFFFF 0 2px, rgba(23, 19, 16, 0.5) 2.3px 3.2px, transparent 3.6px) right center / 7px 7px no-repeat,
     linear-gradient(90deg, rgba(23, 19, 16, 0.32), rgba(23, 19, 16, 0.14)) left center / calc(100% - 7px) 1px no-repeat;
 }
-/* Piede: sotto un filo, il sottotitolo a sinistra e le CTA impilate a
-   destra, della stessa larghezza. */
+/* Piede: il sottotitolo e sotto le due CTA in riga, a sinistra. */
 .hero-foot {
   align-self: stretch;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 18px clamp(24px, 3vw, 48px);
-  margin-top: clamp(24px, 4svh, 44px);
-  padding-top: clamp(18px, 2.8svh, 28px);
-  border-top: 1px solid rgba(23, 19, 16, 0.14);
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  gap: clamp(20px, 3svh, 30px);
+  margin-top: clamp(22px, 3.6svh, 40px);
 }
 .hero-section[data-handoff-hero] .hero-sub {
-  max-width: 19em;
+  max-width: 26em;
   font-size: clamp(15px, 1.1vw, 17px);
   line-height: 1.5;
   letter-spacing: 0.005em;
@@ -6301,13 +6240,20 @@ html[lang="de"] .hero-section[data-handoff-hero] .hero-title {
   font-weight: 500;
   color: var(--color-ink);
 }
+/* Le due CTA affiancate; se la colonna è troppo stretta vanno a capo
+   invece di uscire. */
 .hero-section[data-handoff-hero] .hero-cta {
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
 }
 .hero-section[data-handoff-hero] .hero-cta > a {
   justify-content: center;
+  white-space: nowrap;
+}
+.hero-section[data-handoff-hero] .hero-cta > .pill {
+  padding-inline: 26px;
 }
 /* CTA secondaria "Parliamo del tuo progetto": stessa altezza della pill
    scura, ma in vetro chiaro (come browser e navbar) con un puntino blu che
@@ -6559,87 +6505,114 @@ html.apd-scenes .hero-section[data-handoff-hero] {
 
 /* Visite successive nella stessa sessione: il loader non esiste visivamente
    (niente flash). */
-/* Transizione tra pagine (scripts/pageWipe.ts) — View Transition tra
-   documenti. Il browser tiene ferma la pagina vecchia; sopra, in cascata da
-   destra come nel vecchio menu: fascia blu → fascia navy → pagina nuova, che
-   si posa sopra le fasce. Attiva solo con .vt-arrive, messa dallo script in
-   <head> quando il cambio pagina nasce da un click su un link del sito. */
-@view-transition {
-  navigation: auto;
-}
-
-/* Le fasce vivono fuori schermo a destra: nel DOM non si vedono mai, ma
-   danno alla transizione le loro istantanee (posizionate dalle keyframe). */
+/* Transizione tra pagine (scripts/pageWipe.ts) — solo animazioni CSS di
+   transform/opacity, niente View Transition del browser. Tre tempi:
+   1) USCITA (.pt-leave): la fascia blu e subito dietro la navy (col logo
+      al centro) entrano e coprono la pagina vecchia. Poi si naviga.
+   2) ATTESA: la pagina nuova nasce identica — fondo navy (html) e logo al
+      centro — finché non è pronta. Nessuno stacco: è lo stesso fotogramma.
+   3) ARRIVO (.pt-arrive → .pt-go): la pagina nuova SI SPOSTA sullo schermo
+      (transform sul body) e copre navy e logo.
+   Verso la Home tutto va al contrario (.pt-rev): da sinistra a destra.
+   Tempi legati a GO nello script di BaseLayout. */
 .page-wipe {
   position: fixed;
-  inset: 0;
-  z-index: 120;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
+  z-index: 2147483000;
   overflow: hidden;
   pointer-events: none;
+  visibility: hidden;
 }
 .page-wipe-layer {
   position: absolute;
   inset: 0;
   transform: translateX(100%);
 }
+/* Logo in negativo (quello del footer) al centro della fascia navy: entra
+   con lei, già lì, senza dissolvenze. È SVG nel codice (BaseLayout), non
+   un'immagine: niente flash. Sulla fascia (uscita) e fuori dal body
+   (.pt-logo-arrive, attesa) ha la stessa scatola e la stessa misura, così nel
+   cambio pagina non si sposta di un pixel. */
+.pt-logo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.pt-logo svg {
+  display: block;
+  width: min(360px, 72vw);
+  height: auto;
+}
+.pt-logo-arrive {
+  position: fixed;
+  inset: auto;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
+  z-index: -1; /* sotto al body: la pagina gli scorre sopra */
+}
 
-/* Pagina nuova con un nome suo: così la vecchia (root) e la nuova sono due
-   strati separati e le fasce possono stare IN MEZZO. */
-html.vt-arrive {
-  view-transition-name: page-in;
+/* 1) Uscita */
+html.pt-leave .page-wipe {
+  visibility: visible;
+  pointer-events: auto; /* schermo coperto: niente doppi click */
 }
-/* Durante la transizione le fasce si mettono IN VISTA: il browser fotografa
-   ogni elemento nominato dove si trova, e una fascia tutta fuori schermo
-   rischiava di finire nell'istantanea vuota (o tagliata) → "a volte le fasce
-   non si vedono". Nella pagina viva non si notano: finché la transizione è in
-   corso si vedono solo le istantanee, e a fine corsa .vt-arrive se ne va e le
-   fasce tornano fuori schermo. */
-html.vt-arrive .page-wipe-layer {
-  transform: none;
+html.pt-leave .page-wipe-layer {
+  will-change: transform;
+  animation: pt-in-r 0.65s cubic-bezier(0.65, 0, 0.25, 1) both;
 }
-html.vt-arrive .page-wipe-layer:nth-child(1) {
-  view-transition-name: wipe-a;
+html.pt-leave .page-wipe-layer:nth-child(2) {
+  animation-delay: 0.12s;
 }
-html.vt-arrive .page-wipe-layer:nth-child(2) {
-  view-transition-name: wipe-b;
+html.pt-leave.pt-rev .page-wipe-layer {
+  animation-name: pt-in-l;
 }
 
-/* Pagina vecchia: ferma, sotto a tutto, finché la nuova non l'ha coperta. */
-html.vt-arrive::view-transition-group(root),
-html.vt-arrive::view-transition-old(root),
-html.vt-arrive::view-transition-new(wipe-a),
-html.vt-arrive::view-transition-new(wipe-b),
-html.vt-arrive::view-transition-new(page-in) {
-  animation: none;
+/* 2) Attesa: il fondo della pagina nuova è navy e il logo (.pt-logo-arrive)
+   sta sotto al body; il body (bianco pieno) aspetta fuori schermo. */
+html.pt-arrive {
+  background-color: #1c2b5f;
 }
-html.vt-arrive::view-transition-group(root) {
-  z-index: 1;
+html.pt-arrive body {
+  transform: translateX(100%);
+  will-change: transform; /* strato pronto prima di muoversi */
 }
-/* Tempi distesi: ogni strato scorre in ~1s con una curva in-out morbida
-   (parte piano, attraversa, si posa piano) e i tre strati sono sfalsati
-   abbastanza da leggersi uno per uno: blu, navy, poi la pagina. */
-html.vt-arrive {
-  --vt-ease: cubic-bezier(0.65, 0, 0.2, 1);
+html.pt-arrive.pt-rev body {
+  transform: translateX(-100%);
 }
-html.vt-arrive::view-transition-group(wipe-a) {
-  z-index: 2;
-  animation: vt-slide-in 0.95s var(--vt-ease) both;
+
+/* 3) Arrivo: la pagina entra scorrendo e si posa morbida. */
+html.pt-arrive.pt-go body {
+  animation: pt-page-in-r 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-html.vt-arrive::view-transition-group(wipe-b) {
-  z-index: 3;
-  animation: vt-slide-in 0.95s var(--vt-ease) 0.14s both;
+html.pt-arrive.pt-go.pt-rev body {
+  animation-name: pt-page-in-l;
 }
-html.vt-arrive::view-transition-group(page-in) {
-  z-index: 4;
-  animation: vt-slide-in 1.1s var(--vt-ease) 0.3s both;
+
+@keyframes pt-in-r {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
-@keyframes vt-slide-in {
-  from {
-    transform: translateX(100vw);
-  }
-  to {
-    transform: translateX(0);
-  }
+@keyframes pt-in-l {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes pt-page-in-r {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes pt-page-in-l {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 /* =========================================================================
@@ -6979,17 +6952,19 @@ html.vt-arrive::view-transition-group(page-in) {
 }
 
 /* ======================================================================
-   CHI SIAMO — HERO IN DIRETTA, MANIFESTO, DUO
+   CHI SIAMO — HERO IN DIRETTA, MANIFESTO
    In hero la pagina si finisce davanti a chi guarda: i nostri due cursori
    colorano il titolo, disegnano il bottone e posano la foto (aboutLive.ts).
-   Nelle card la foto entra pixelata e si risolve (scripts/pixelPortrait.ts).
    ====================================================================== */
+/* Una schermata: titolo e foto al centro. In alto l'aria per la navbar;
+   lo spazio per il riquadro di Julian che sporge sopra la foto lo tiene
+   il palco (margin-top), così la centratura ne tiene conto. */
 .ap-hero {
   position: relative;
   min-height: 100svh;
   display: flex;
   align-items: center;
-  padding-block: clamp(108px, 14vh, 150px) clamp(64px, 9vh, 104px);
+  padding-block: clamp(96px, 12vh, 140px) clamp(40px, 5vh, 64px);
   overflow: clip;
 }
 .ap-hero > .ap-hero-aurora {
@@ -7153,161 +7128,129 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   transform: translateY(3px);
 }
 
-/* LA PAGINA SI FA IN DIRETTA (scripts/aboutLive.ts). A destra la cornice
-   con la foto di noi due e la barra del file condiviso; sopra tutta la hero
-   il livello dei cursori: Alice (brace), Julian (ombra) e "Tu". Lo stato di
-   partenza (accento nero, bottone non disegnato, cornice vuota) lo mette lo
+/* LA FOTO E IL CURSORE (scripts/aboutLive.ts). A destra la foto di noi
+   due; sopra tutta la hero il livello del cursore che finisce la pagina.
+   Lo stato di partenza (bottone non disegnato, cornice vuota) lo mette lo
    script con .is-live: senza JS la pagina è già finita. */
+/* --frame-w: la larghezza del vetro. I riquadri sulla foto la usano per
+   misure e caratteri, così restano in proporzione su ogni schermo. */
 .ap-stage {
-  justify-self: center;
-  display: grid;
-  gap: 14px;
-}
-.ap-live-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 8px 8px 14px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.74);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 10px 30px -18px rgba(17, 27, 59, 0.35);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  font-size: 0.8125rem;
-  color: var(--color-ink);
-}
-.ap-live-file {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-weight: 600;
-}
-.ap-live-file svg {
-  width: 14px;
-  height: 14px;
-  color: var(--color-text-secondary);
-}
-.ap-live-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 4px 10px 4px 9px;
-  border-radius: 999px;
-  background: rgba(242, 145, 63, 0.14);
-  color: var(--color-orange-deep, #b43500);
-  font-weight: 500;
-  transition: background-color 0.5s, color 0.5s;
-}
-.ap-live-state i {
+  /* alto 1.2 volte la larghezza, + 0.12 per il riquadro che sporge sopra:
+     tutto deve stare nello schermo tolte navbar e margini */
+  --frame-w: min(38vw, calc((100svh - 220px) / 1.32), 640px);
   position: relative;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentColor;
-}
-.ap-live-state i::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: currentColor;
-  animation: ap-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-.ap-live-bar.is-published .ap-live-state {
-  background: rgba(47, 158, 91, 0.12);
-  color: #23794a;
-}
-[data-ap-live-published],
-.ap-live-bar.is-published [data-ap-live-editing] {
-  display: none;
-}
-.ap-live-bar.is-published [data-ap-live-published] {
-  display: inline;
-}
-.ap-live-faces {
-  display: flex;
-  margin-left: auto;
-}
-.ap-live-faces b {
+  justify-self: start;
+  width: var(--frame-w);
+  margin-top: calc(var(--frame-w) * 0.12);
   display: grid;
-  place-items: center;
-  min-width: 28px;
-  height: 28px;
-  padding-inline: 0;
-  border-radius: 999px;
-  border: 2px solid #fff;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #fff;
 }
-.ap-live-faces b + b {
-  margin-left: -7px;
-}
-.ap-live-faces .is-a { background: var(--color-orange); }
-.ap-live-faces .is-j { background: var(--color-accent); }
-.ap-live-faces .is-you {
-  padding-inline: 9px;
-  background: #fff;
-  border: 1.5px dashed var(--color-border-strong);
-  color: var(--color-text-secondary);
-  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-}
-.ap-hero.has-you .ap-live-faces .is-you {
-  background: var(--color-ink);
-  border: 2px solid #fff;
-  color: #fff;
-}
-
-/* La foto è orizzontale: cornice 5:4, larga quanto la colonna permette
-   senza superare l'altezza dello schermo. */
+/* LIQUID GLASS — un riquadro di vetro più alto che largo: lascia vedere
+   l'aurora sfocata e satura dietro di sé, con il bordo che prende luce
+   (più forte in alto a sinistra) e un riflesso morbido. Dentro, noi due
+   scontornati, appoggiati sul fondo. Il vetro c'è da subito: è lì che il
+   cursore clicca per far comparire la foto. */
 .ap-live-frame {
   position: relative;
   margin: 0;
-  width: min(clamp(420px, 40vw, 660px), calc(64svh * 1.25));
-  aspect-ratio: 5 / 4;
+  width: 100%;
+  aspect-ratio: 5 / 6;
+  border-radius: 36px;
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.04) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  -webkit-backdrop-filter: blur(14px) saturate(1.9);
+  backdrop-filter: blur(14px) saturate(1.9);
+  box-shadow:
+    inset 0 1.5px 0.5px rgba(255, 255, 255, 0.85),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.35),
+    inset 1px 0 1px rgba(255, 255, 255, 0.3),
+    inset -1px 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 0 22px 2px rgba(255, 255, 255, 0.32),
+    /* Ombra in navy del brand (#1C2B5F), mai nera: a strati, dal contatto
+       stretto e definito fino all'alone largo che sfuma nell'aurora. */
+    0 1px 2px rgba(28, 43, 95, 0.06),
+    0 6px 14px -6px rgba(28, 43, 95, 0.14),
+    0 22px 40px -20px rgba(28, 43, 95, 0.24),
+    0 52px 90px -44px rgba(39, 72, 165, 0.3);
 }
-/* Cornice vuota: tratteggio e nome del file che sta per arrivare. */
+/* Alone sotto il vetro: un'ellisse morbida che esce un filo dai lati e in
+   basso. La parte alta sta DIETRO il fondo del vetro, che la sfoca: così
+   l'ombra entra nel vetro da sola, come luce che lo attraversa. */
+.ap-live-shadow {
+  position: absolute;
+  left: -7%;
+  right: -7%;
+  bottom: -7%;
+  height: 20%;
+  border-radius: 50%;
+  /* cuore blu del brand (il vetro lo satura e resta pulito), bordi navy */
+  background: radial-gradient(
+    closest-side,
+    rgba(39, 72, 165, 0.32) 0%,
+    rgba(34, 58, 135, 0.2) 36%,
+    rgba(28, 43, 95, 0.08) 64%,
+    rgba(28, 43, 95, 0) 100%
+  );
+  pointer-events: none;
+}
+.ap-live-frame {
+  /* sopra l'alone (la sua parte alta va sfocata dal vetro) */
+  z-index: 1;
+}
+/* Bordo di luce: un anello di 1.5px con la luce che gira sul perimetro. */
 .ap-live-frame::before {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 24px;
-  border: 1.5px dashed rgba(23, 19, 16, 0.24);
-  background: rgba(255, 255, 255, 0.42);
-  opacity: 0;
-  transition: opacity 0.4s;
+  z-index: 2;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.2) 32%,
+    rgba(255, 255, 255, 0.05) 58%,
+    rgba(255, 255, 255, 0.6) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
 }
-.ap-live-drop {
+/* Ombra dentro il vetro, in basso e sopra la foto: il fondo si incupisce
+   appena in navy e il taglio dei jeans sfuma nel vetro invece di finire
+   netto. */
+.ap-live-shade {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: 0.8125rem;
-  color: var(--color-text-secondary);
-  opacity: 0;
-  transition: opacity 0.4s;
+  z-index: 1;
+  border-radius: inherit;
+  background: linear-gradient(
+    to top,
+    rgba(39, 72, 165, 0.16) 0%,
+    rgba(39, 72, 165, 0.07) 10%,
+    rgba(39, 72, 165, 0) 26%
+  );
+  pointer-events: none;
 }
-.ap-live-drop svg {
-  width: 30px;
-  height: 30px;
-}
-.ap-live-frame.is-empty::before,
-.ap-live-frame.is-empty .ap-live-drop {
-  opacity: 1;
+/* Riflesso morbido in alto, dietro la foto. */
+.ap-live-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(110% 50% at 15% -10%, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0) 60%);
+  pointer-events: none;
 }
 .ap-live-photo {
   position: absolute;
   inset: 0;
-  border-radius: 24px;
+  z-index: 1;
+  border-radius: inherit;
   overflow: hidden;
-  background: #e9e7e3;
-  box-shadow:
-    0 40px 80px -40px rgba(17, 27, 59, 0.45),
-    0 12px 28px -16px rgba(17, 27, 59, 0.3);
 }
 .ap-live-photo picture,
 .ap-live-img {
@@ -7316,192 +7259,171 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   height: 100%;
 }
 .ap-live-img {
-  object-fit: cover;
-  object-position: 55% 40%;
+  object-fit: contain;
+  object-position: 50% 100%;
+  transform-origin: 50% 100%;
 }
 
-/* Selezione con le maniglie agli angoli, nel colore di chi seleziona. */
-.ap-live-sel {
-  --sel: var(--color-orange);
+/* CHI SIAMO, SULLA FOTO — due riquadri appoggiati sul vetro, uno per
+   ciascuno, sopra le teste e ad altezze diverse: Julian in alto a sinistra
+   (sporge oltre l'angolo) in arancio Ember, Alice più in basso a destra
+   (oltre il bordo, sopra i capelli) in blu Shadow. Tutto in frazioni di
+   --frame-w: la foto ha i visi sempre allo stesso punto del vetro.
+   Il guscio esterno li posiziona, la card dentro la anima lo script
+   (entrata) e il CSS (respiro lento con `translate`, che non tocca il
+   transform di GSAP). */
+.ap-whos {
+  display: contents;
+}
+.ap-who {
+  --u: calc(var(--frame-w) / 100); /* 1% del vetro */
   position: absolute;
-  border: 1.5px solid var(--sel);
-  pointer-events: none;
+  z-index: 2;
+  width: calc(var(--u) * 58);
 }
-.ap-live-sel i {
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  background: #fff;
-  border: 1.5px solid var(--sel);
+.ap-who--ember {
+  left: calc(var(--u) * -15);
+  top: calc(var(--u) * -12);
 }
-.ap-live-sel i:nth-child(1) { left: -5px; top: -5px; }
-.ap-live-sel i:nth-child(2) { right: -5px; top: -5px; }
-.ap-live-sel i:nth-child(3) { left: -5px; bottom: -5px; }
-.ap-live-sel i:nth-child(4) { right: -5px; bottom: -5px; }
-.ap-live-sel em {
-  position: absolute;
-  left: 50%;
-  bottom: -32px;
-  transform: translateX(-50%);
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: var(--sel);
-  color: #fff;
-  font-style: normal;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+.ap-who--shadow {
+  right: calc(var(--u) * -13);
+  top: calc(var(--u) * 2);
 }
-[data-ap-live-photosel] {
-  inset: -1px;
-  border-radius: 24px;
+.ap-who-card {
+  --who-glow: rgba(194, 58, 2, 0.42);
+  position: relative;
+  overflow: hidden;
+  padding: calc(var(--u) * 3.4) calc(var(--u) * 3.8) calc(var(--u) * 3.6);
+  border-radius: calc(var(--u) * 4.2);
+  color: #FFFFFF;
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(150deg, var(--color-amber) -20%, var(--color-orange) 42%, var(--color-orange-deep) 100%);
+  /* luce sul bordo alto, filo chiaro tutto intorno, poi l'ombra a strati
+     nel colore della card: contatto stretto, mezza distanza, alone largo */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 1px 2px rgba(28, 43, 95, 0.1),
+    0 10px 20px -12px var(--who-glow),
+    0 30px 56px -26px var(--who-glow);
+  animation: ap-who-float 7s ease-in-out infinite;
 }
-.ap-live-textsel {
-  left: 0;
-  top: 0;
-  border-radius: 4px;
+.ap-who--shadow .ap-who-card {
+  --who-glow: rgba(29, 58, 142, 0.5);
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(150deg, var(--color-accent-soft) -25%, var(--color-accent) 45%, #1D3A8E 100%);
+  animation-delay: -3.5s;
 }
-
-/* Commenti: bolle col volto, ancorate in basso a sinistra della foto. */
-.ap-live-notes {
-  position: absolute;
-  left: -14%;
-  bottom: 9%;
-  display: grid;
-  justify-items: start;
-  gap: 10px;
+@keyframes ap-who-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -6px; }
 }
-.ap-live-note {
+.ap-who-role {
+  margin: 0;
+  font-size: max(10px, calc(var(--u) * 1.95));
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+.ap-who-name {
+  margin: calc(var(--u) * 1.1) 0 0;
+  font-size: calc(var(--u) * 6);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.ap-who-line {
+  margin: calc(var(--u) * 1.6) 0 0;
+  font-size: max(12.5px, calc(var(--u) * 2.55));
+  line-height: 1.48;
+  color: rgba(255, 255, 255, 0.94);
+  text-wrap: pretty;
+}
+.ap-who-tags {
+  list-style: none;
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 16px 10px 10px;
-  border-radius: 18px 18px 18px 5px;
-  background: #fff;
-  box-shadow: 0 18px 40px -18px rgba(17, 27, 59, 0.45), 0 0 0 1px rgba(17, 27, 59, 0.05);
-  font-size: 0.875rem;
-  line-height: 1.35;
-  color: var(--color-ink);
-  transform-origin: 0 100%;
+  flex-wrap: wrap;
+  gap: calc(var(--u) * 0.8);
+  margin: calc(var(--u) * 2.4) 0 0;
+  padding: 0;
 }
-.ap-live-note + .ap-live-note {
-  margin-left: 28px;
+.ap-who-tags li {
+  padding: 0.38em 0.7em;
+  border-radius: 999px;
+  font-size: max(10.5px, calc(var(--u) * 1.95));
+  font-weight: 500;
+  line-height: 1.2;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
 }
-.ap-live-note b {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  font-size: 0.6875rem;
-  color: #fff;
+@media (prefers-reduced-motion: reduce) {
+  .ap-who-card { animation: none; }
 }
-.ap-live-note.is-a b { background: var(--color-orange); }
-.ap-live-note.is-j b { background: var(--color-accent); }
-.ap-live-note strong {
-  display: block;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
+/* Schermo stretto: la foto è larga e bassa, i visi occupano tutto il
+   vetro. I riquadri escono dalla foto e le stanno sotto, affiancati. */
+@media (max-width: 960px) {
+  .ap-stage { --frame-w: 520px; width: auto; margin-top: 0; }
+  .ap-whos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  /* l'alone starebbe sotto i riquadri, non sotto la foto */
+  .ap-live-shadow { display: none; }
+  .ap-who,
+  .ap-who--ember,
+  .ap-who--shadow {
+    position: relative;
+    inset: auto;
+    width: auto;
+  }
+  .ap-who-card { height: 100%; animation: none; }
+}
+/* Telefono: la foto prende l'altezza che resta, i riquadri restano
+   bassi: nome e ruolo, il resto lo racconta la pagina. */
+@media (max-width: 899px) {
+  .ap-whos { flex: none; margin-top: 0; gap: 8px; }
+  .ap-who-card { padding: 11px 13px 12px; border-radius: 18px; }
+  .ap-who-role { font-size: 9.5px; letter-spacing: 0.08em; }
+  .ap-who-name { margin-top: 4px; font-size: 22px; }
+  .ap-who-line,
+  .ap-who-tags { display: none; }
 }
 
-/* Livello dei cursori. */
+/* Livello del cursore. */
 .ap-live-layer {
   position: absolute;
   inset: 0;
   z-index: 3;
   pointer-events: none;
 }
-.ap-cur,
-.ap-cur-you {
+.ap-cur {
   position: absolute;
   left: 0;
   top: 0;
   will-change: transform;
 }
-.ap-hero:not(.is-live) .ap-cur,
-.ap-hero:not(.is-live) .ap-cur-you {
+.ap-hero:not(.is-live) .ap-cur {
   display: none;
 }
 .ap-cur > svg {
   display: block;
   width: 22px;
   height: 22px;
-  fill: var(--cur);
+  fill: var(--color-orange);
   stroke: #fff;
   stroke-width: 1.5;
   stroke-linejoin: round;
   filter: drop-shadow(0 3px 6px rgba(17, 27, 59, 0.3));
   transform-origin: 2px 2px;
 }
-.ap-cur.is-a { --cur: var(--color-orange); }
-.ap-cur.is-j { --cur: var(--color-accent); }
-.ap-cur-tag {
-  position: absolute;
-  left: 17px;
-  top: 19px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--cur, var(--color-ink));
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-  box-shadow: 0 6px 16px -6px rgba(17, 27, 59, 0.45);
-}
-.ap-cur-file {
-  position: absolute;
-  left: 20px;
-  top: 50px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 12px 7px 9px;
-  border-radius: 12px;
-  background: #fff;
-  color: var(--color-ink);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  white-space: nowrap;
-  box-shadow: 0 16px 34px -14px rgba(17, 27, 59, 0.5), 0 0 0 1px rgba(17, 27, 59, 0.06);
-  transform-origin: 0 0;
-}
-.ap-cur-file svg {
-  width: 18px;
-  height: 18px;
-  color: var(--color-orange);
-}
-.ap-cur-chat {
-  position: absolute;
-  left: 17px;
-  top: 50px;
-  padding: 9px 14px;
-  border-radius: 16px 16px 16px 5px;
-  background: var(--color-accent);
-  color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  white-space: nowrap;
-  box-shadow: 0 16px 34px -14px rgba(39, 72, 165, 0.6);
-  transform-origin: 0 0;
-}
-/* "Tu" accanto al cursore vero del visitatore. */
-.ap-cur-you .ap-cur-tag {
-  left: 14px;
-  top: 22px;
-  opacity: 0;
-  transform: scale(0.8);
-  transform-origin: 0 0;
-  transition: opacity 0.25s, transform 0.3s cubic-bezier(0.2, 1.4, 0.4, 1);
-}
-.ap-hero.has-you .ap-cur-you .ap-cur-tag {
-  opacity: 1;
-  transform: none;
-}
 
-/* Riquadri dei livelli: tratteggio e nome, finché il blocco non è fatto. */
+/* Riquadri dei blocchi: tratteggio e nome del livello, finché il blocco
+   non è scritto. */
 .ap-wire {
   position: absolute;
   left: 0;
@@ -7523,80 +7445,33 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   white-space: nowrap;
 }
 
-/* I due caret di testo, uno per chi scrive. */
-.ap-caret {
+/* Click: onde arancioni che si allargano dalla punta del cursore. */
+/* Il riquadro è centrato sul punto del click (lo posiziona lo script),
+   onde e bagliore sono centrati nel riquadro. */
+.ap-click {
   position: absolute;
   left: 0;
   top: 0;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--cur);
-  animation: ap-caret 1s steps(1) infinite;
+  pointer-events: none;
 }
-.ap-caret.is-a { --cur: var(--color-orange); }
-.ap-caret.is-j { --cur: var(--color-accent); }
-@keyframes ap-caret {
-  50% { opacity: 0.15; }
+.ap-click i,
+.ap-click b {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 50%;
+}
+.ap-click i {
+  border: 2.5px solid var(--color-orange);
+  background: radial-gradient(circle, rgba(242, 145, 63, 0) 55%, rgba(242, 145, 63, 0.16) 100%);
+  box-shadow: 0 0 22px rgba(216, 64, 2, 0.3);
+}
+.ap-click b {
+  width: 34%;
+  height: 34%;
+  background: radial-gradient(circle, rgba(242, 145, 63, 0.75), rgba(242, 145, 63, 0) 70%);
 }
 
-/* Font e misura sopra la selezione del titolo. */
-.ap-live-textsel em {
-  top: -30px;
-  bottom: auto;
-  left: 0;
-  transform: none;
-}
-/* Quota: distanza tra il titolo e il testo sotto, come in un tool. */
-.ap-live-measure {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 1px;
-  background: var(--color-orange);
-}
-.ap-live-measure::before,
-.ap-live-measure::after {
-  content: "";
-  position: absolute;
-  left: -5px;
-  width: 11px;
-  height: 1px;
-  background: var(--color-orange);
-}
-.ap-live-measure::before { top: 0; }
-.ap-live-measure::after { bottom: 0; }
-.ap-live-measure em {
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  margin-top: -10px;
-  padding: 2px 6px;
-  border-radius: 5px;
-  background: var(--color-orange);
-  color: #fff;
-  font: 600 0.6875rem/1.4 var(--font-body);
-  font-style: normal;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Il testo appena incollato resta evidenziato un attimo. */
-.ap-hero-sub {
-  border-radius: 4px;
-  transition: background-color 0.9s ease, box-shadow 0.9s ease;
-}
-.ap-hero-sub.is-pasted {
-  background-color: rgba(132, 162, 245, 0.26);
-  box-shadow: 0 0 0 6px rgba(132, 162, 245, 0.26);
-  transition: none;
-}
-
-/* "lo studio." nasce nero e Alice lo colora. */
-.ap-hero-accent {
-  transition: color 0.7s ease;
-}
-.ap-hero.is-live:not(.is-colored) .ap-hero-accent {
-  color: var(--color-ink);
-}
 /* Onda al passaggio del mouse (aboutLive.ts): vicino al cursore il nero
    va verso il blu e "lo studio." verso l'arancio. Solo a pagina finita. */
 @property --f {
@@ -7632,22 +7507,11 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   }
   .ap-live-frame {
     width: 100%;
+    aspect-ratio: 4 / 3;
   }
   /* Su schermo stretto i blocchi sono vicini: solo tratteggio, niente nomi. */
   .ap-wire em {
     display: none;
-  }
-  /* Su schermo stretto i commenti scendono sotto la foto, sul bordo. */
-  .ap-stage {
-    padding-bottom: 104px;
-  }
-  .ap-live-notes {
-    left: 12px;
-    top: calc(100% - 22px);
-    bottom: auto;
-  }
-  .ap-live-note {
-    font-size: 0.8125rem;
   }
 }
 
@@ -7655,14 +7519,10 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 @media (prefers-reduced-motion: no-preference) {
   .ap-hero [data-ap-hero-fade],
   .ap-hero-title,
-  .ap-live-bar,
-  .ap-live-frame {
+  .ap-live-frame,
+  .ap-live-shadow,
+  .ap-who-card {
     opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ap-live-state i::after {
-    animation: none;
   }
 }
 
@@ -7763,240 +7623,8 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   }
 }
 
-/* IL DUO */
-.ap-duo {
-  position: relative;
-  padding-block: clamp(70px, 11vh, 130px) clamp(110px, 17vh, 200px);
-  /* sfuma verso la sabbia del Percorso: nessuna riga fra le due sezioni */
-  background: linear-gradient(to bottom, var(--color-bg) 0%, var(--color-bg) 50%, var(--color-warm-deeper) 100%);
-  overflow: clip;
-}
-/* Eco dell'aurora dietro le card: due aloni morbidi, brace e ombra. */
-.ap-duo-glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(38% 34% at 22% 52%, rgba(242, 145, 63, 0.16), transparent 70%),
-    radial-gradient(40% 36% at 80% 64%, rgba(132, 162, 245, 0.22), transparent 70%);
-}
-.ap-duo-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
-  gap: 24px clamp(32px, 5vw, 96px);
-  align-items: end;
-}
-.ap-duo-title {
-  margin: 0;
-  font-size: clamp(40px, 5.4vw, 88px);
-  letter-spacing: -0.03em;
-}
-.ap-duo-lead {
-  margin: 0;
-  max-width: 44ch;
-  font-size: clamp(15px, 1.15vw, 18px);
-  line-height: 1.65;
-  color: var(--color-text-secondary);
-}
-/* I fondatori — due pagine di rivista a specchio: ritratto alto da un lato,
-   nome gigante dall'altro che esce da dietro la foto (main.ts lo fa
-   scorrere), sotto bio, frase e aree. Un filo apre ogni pagina. */
-.ap-founders {
-  margin-top: clamp(56px, 10vh, 120px);
-}
-.ap-card-slot + .ap-card-slot {
-  margin-top: clamp(96px, 16vh, 200px);
-}
-.ap-founder {
-  --fgap: clamp(32px, 5vw, 96px);
-  --tone-bg: #f6d3a6;
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 4.4fr) minmax(0, 6.6fr);
-  grid-template-areas:
-    "rule rule"
-    "media body";
-  column-gap: var(--fgap);
-}
-.ap-founder--shadow { --tone-bg: #cedaf3; }
-.ap-founder--flip {
-  grid-template-columns: minmax(0, 6.6fr) minmax(0, 4.4fr);
-  grid-template-areas:
-    "rule rule"
-    "body media";
-}
-.ap-founder-rule {
-  grid-area: rule;
-  position: relative;
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  margin: 0 0 clamp(22px, 3.6vh, 40px);
-  padding-bottom: 16px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-}
-.ap-founder-rule::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  height: 1px;
-  background: var(--color-border-strong);
-  transform-origin: left;
-  transform: scaleX(var(--rule, 1));
-}
-.ap-founder--flip .ap-founder-rule::after { transform-origin: right; }
-.ap-founder-idx,
-.ap-founder-area { color: var(--color-accent); }
-.ap-founder-area { margin-left: auto; }
-
-.ap-founder-media {
-  grid-area: media;
-  position: relative;
-  z-index: 1;
-}
-.ap-founder-frame {
-  position: relative;
-  aspect-ratio: 4 / 5;
-  max-height: min(80svh, 780px);
-  width: 100%;
-  border-radius: 28px;
-  overflow: hidden;
-  background: var(--tone-bg);
-  box-shadow: 0 60px 110px -64px rgba(23, 19, 16, 0.5);
-  isolation: isolate;
-}
-.ap-founder-zoom {
-  position: absolute;
-  inset: 0;
-  transform-origin: 50% 40%;
-}
-.ap-founder-zoom picture,
-.ap-founder-img {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-.ap-founder-img {
-  object-fit: cover;
-  object-position: 50% 28%;
-}
-.ap-founder-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-/* Riflesso di luce: passa una volta sola, a ritratto messo a fuoco. */
-.ap-founder-sheen {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.ap-founder-sheen::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 32%, rgba(255, 255, 255, 0.26) 50%, transparent 68%);
-  transform: translateX(-110%);
-}
-.ap-founder.is-landed .ap-founder-sheen::before {
-  transform: translateX(110%);
-  transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.ap-founder-body {
-  grid-area: body;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: clamp(28px, 5vh, 56px);
-  min-width: 0;
-}
-/* Il nome sta a filo del ritratto, sotto di lui (z-index più basso): con lo
-   scroll esce da dietro la foto (main.ts) e si ferma intero. */
-.ap-founder-name {
-  position: relative;
-  z-index: 0;
-  margin: -0.06em 0 0 calc(-1 * var(--fgap) + 0.06em);
-  font-weight: 500;
-  font-size: var(--t-mega);
-  line-height: 0.9;
-  letter-spacing: var(--t-track-mega);
-  color: var(--color-ink);
-  white-space: nowrap;
-}
-.ap-founder--flip .ap-founder-name {
-  margin: -0.06em calc(-1 * var(--fgap) + 0.06em) 0 0;
-  text-align: right;
-}
-.ap-founder-name div[style*="overflow"] {
-  line-height: 1.44;
-  margin-block: -0.27em;
-  padding-inline: 0.08em;
-  margin-inline: -0.08em;
-}
-.ap-founder-copy {
-  max-width: 46ch;
-}
-.ap-founder--flip .ap-founder-copy { margin-left: auto; }
-.ap-founder-bio {
-  margin: 0;
-  font-size: clamp(15px, 1.1vw, 17px);
-  line-height: 1.7;
-  color: var(--color-text-secondary);
-}
-.ap-card-quote {
-  margin: clamp(22px, 3.4vh, 34px) 0 0;
-  padding-top: clamp(18px, 2.8vh, 26px);
-  border-top: 1px solid var(--color-border);
-  font-size: clamp(22px, 2.1vw, 34px);
-  line-height: 1.18;
-  letter-spacing: -0.02em;
-  color: var(--color-ink);
-}
-.ap-card-quote em { font-style: italic; }
-.ap-card-tags {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  margin: clamp(18px, 3vh, 28px) 0 0;
-  padding: 0;
-}
-
-@media (max-width: 860px) {
-  .ap-duo-head { grid-template-columns: 1fr; }
-}
-/* Telefono: la pagina diventa una colonna, il nome sotto il ritratto. */
-@media (max-width: 559px) {
-  .ap-founders { margin-top: 44px; }
-  .ap-card-slot + .ap-card-slot { margin-top: 72px; }
-  .ap-founder,
-  .ap-founder--flip {
-    display: flex;
-    flex-direction: column;
-  }
-  .ap-founder-rule { margin-bottom: 16px; padding-bottom: 12px; font-size: 0.6875rem; gap: 10px; }
-  .ap-founder-frame { aspect-ratio: 4 / 4.4; border-radius: 22px; }
-  .ap-founder-img { object-position: 50% 24%; }
-  .ap-founder-body { gap: 0; }
-  .ap-founder-name,
-  .ap-founder--flip .ap-founder-name {
-    margin: 14px 0 0;
-    text-align: left;
-    font-size: clamp(56px, 19vw, 84px);
-  }
-  .ap-founder--flip .ap-founder-copy { margin-left: 0; }
-  .ap-founder-bio { margin-top: 10px; font-size: 14.5px; line-height: 1.6; }
-  .ap-card-quote { margin-top: 16px; padding-top: 14px; font-size: clamp(19px, 5.4vw, 22px); }
-  .ap-card-tags { margin-top: 14px; }
-}
-
 /* ============================================================
-   CHI SIAMO — sezioni "da una schermata" (manifesto, duo, CTA)
+   CHI SIAMO — sezioni "da una schermata" (manifesto, CTA)
    Su desktop ognuna sta esattamente in 100svh, con aria in alto per la
    navbar: in cima c'è una fermata di scroll (vedi main.ts).
    ============================================================ */
@@ -8011,7 +7639,24 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 }
 
 /* --- MANIFESTO: statement + prova, numeri sotto --- */
-.ap-manifesto { overflow: clip; }
+/* In fondo la carta sfuma nella sabbia del Percorso che segue (curva
+   morbida, niente banda): nessuna riga fra le due sezioni. */
+.ap-manifesto {
+  overflow: clip;
+  --mf-fade: clamp(260px, 38svh, 420px);
+  background: linear-gradient(
+    to top,
+    var(--color-warm-deeper) 0,
+    rgb(240.6 239.7 234.9) calc(var(--mf-fade) * 0.125),
+    rgb(242.3 241.5 237.3) calc(var(--mf-fade) * 0.25),
+    rgb(244.7 244.1 240.6) calc(var(--mf-fade) * 0.375),
+    rgb(247.5 247 244.5) calc(var(--mf-fade) * 0.5),
+    rgb(250.3 249.9 248.4) calc(var(--mf-fade) * 0.625),
+    rgb(252.7 252.5 251.7) calc(var(--mf-fade) * 0.75),
+    rgb(254.4 254.3 254.1) calc(var(--mf-fade) * 0.875),
+    var(--color-bg) var(--mf-fade)
+  );
+}
 /* Carta millimetrata appena accennata, sfumata verso i bordi. */
 .ap-manifesto-grid {
   position: absolute;
@@ -8027,7 +7672,9 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 .ap-manifesto::after {
   content: "";
   position: absolute;
-  inset: auto -10% -30% 40%;
+  /* resta dentro la sezione: sul bordo è già trasparente, niente taglio
+     netto sulla sabbia del Percorso */
+  inset: auto -10% 0 40%;
   height: 70%;
   pointer-events: none;
   background: radial-gradient(50% 50% at 50% 50%, rgba(132, 162, 245, 0.2), transparent 70%);
@@ -8154,24 +7801,36 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   background: var(--color-orange);
   opacity: 0;
 }
-/* il messaggio che viaggia sul filo */
+/* il messaggio che viaggia sul filo. Il contenitore è largo quanto il filo
+   e scorre in translateX (0 → 100% = da un capo all'altro); il quadratino è
+   il suo ::before, sul bordo sinistro. Prima si animava `left`: layout di
+   tutta la pagina a ogni frame, per sempre. */
 .ap-chain-pulse {
   position: absolute;
   top: 50%;
   left: 0;
+  right: 0;
+  height: 8px;
+  margin-top: -4px;
+  pointer-events: none;
+  animation: ap-chain-pulse 2.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.ap-chain-pulse::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -4px;
   width: 8px;
   height: 8px;
-  margin: -4px 0 0 -4px;
   border-radius: 2px;
   background: var(--color-orange);
   box-shadow: 0 0 0 4px rgba(216, 64, 2, 0.14);
-  animation: ap-chain-pulse 2.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 @keyframes ap-chain-pulse {
-  0% { left: 0%; opacity: 0; }
+  0% { transform: translateX(0); opacity: 0; }
   12% { opacity: 1; }
   88% { opacity: 1; }
-  100% { left: 100%; opacity: 0; }
+  100% { transform: translateX(100%); opacity: 0; }
 }
 .ap-chain-end,
 .ap-chain-hop {
@@ -8289,12 +7948,15 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 }
 
 @media (min-width: 961px) {
+  /* Una schermata, contenuto al centro (senza fermata di scroll): in
+     alto l'aria per la navbar, in fondo quella per la sfumatura nella
+     sabbia del Percorso. */
   .ap-manifesto {
     min-height: 100svh;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding-block: clamp(92px, 11.5vh, 116px) clamp(28px, 4.5vh, 56px);
+    padding-block: clamp(92px, 11vh, 132px) clamp(64px, 9vh, 120px);
   }
   .ap-screen { width: 100%; }
   .ap-manifesto .ap-screen { gap: clamp(40px, 8vh, 96px); }
@@ -8303,8 +7965,15 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
     font-size: clamp(44px, min(4.9vw, 9vh), 92px);
   }
 
-  /* --- CTA finale: una schermata piena, contenuto al centro --- */
-  .about-cta { min-height: 100svh; justify-content: center; padding-block: clamp(92px, 11.5vh, 116px) clamp(40px, 6vh, 72px); }
+  /* --- CTA finale: alta quanto serve, con il footer subito sotto. Alla
+     fermata in cima si legge l'invito e in fondo allo schermo già si
+     apre la sfumatura nel navy del footer. --- */
+  .about-cta { justify-content: center; padding-block: clamp(150px, 19vh, 230px) clamp(170px, 23vh, 300px); }
+  .site-footer:not(.finale .site-footer) { --fin-fade: clamp(240px, 30vh, 340px); }
+
+  /* Home: lo schermo dei contatti un po' più basso di una schermata, così
+     il footer arriva subito dopo il form e non dopo un vuoto. */
+  .finale-screen { min-height: 92svh; }
 }
 @media (max-width: 960px) {
   .ap-manifesto-grid { display: none; }
@@ -9074,10 +8743,14 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   border: 1.5px solid var(--color-orange);
   box-shadow: 0 0 0 0 rgba(216, 64, 2, 0.4);
   animation: apm-hint-ping 2s ease-out infinite;
+  /* l'onda (box-shadow: si ridisegna a ogni frame) gira solo quando il
+     suggerimento si vede */
+  animation-play-state: paused;
 }
 @keyframes apm-hint-ping { 70%, 100% { box-shadow: 0 0 0 8px rgba(216, 64, 2, 0); } }
 @media (hover: hover) and (pointer: fine) {
   .apm-scene.is-p1:not(.was-lens) .apm-hint { opacity: 1; transition-delay: 0.8s; }
+  .apm-scene.is-p1:not(.was-lens) .apm-hint i { animation-play-state: running; }
 }
 
 /* --- Pezzi attorno al browser ---------------------------------------------
@@ -9427,17 +9100,6 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   .hero-scroll-hint { display: none; }
 }
 
-/* Tablet verticale (iPad e simili, 701–1023px): usa l'impaginazione mobile,
-   ma con i caratteri del telefono il palco sembrava vuoto. Scala intermedia
-   per Il punto. */
-@media (min-width: 701px) and (max-width: 1023px) and (min-height: 700px) {
-  .point-lead { font-size: clamp(38px, 5.4vw, 54px); }
-  .point-pain { width: min(660px, 100%); }
-  .point-item-text { font-size: clamp(28px, 3.9vw, 38px); }
-  .point-but { font-size: clamp(22px, 2.8vw, 27px); }
-  .point-ping { width: 260px; }
-}
-
 /* ======================================================================
    POLISH — livello premium (ott 2026).
    Stessa palette, meno rumore, più sicurezza. Regole:
@@ -9462,7 +9124,6 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 .svc-title em,
 .ap-hero-accent,
 .ap-statement em,
-.ap-card-quote em,
 .apm-title em,
 .about-cta-title em,
 .ajx-intro-title em,
@@ -9472,25 +9133,10 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 }
 .finale-title em,
 .cta-title em { color: var(--color-accent-soft); }
-/* Il punto — le parole chiave si colorano da sinistra (--mark) invece
-   dell'evidenziatore: arancio nel problema, blu nella svolta. */
-.point-item-text strong {
-  background: linear-gradient(90deg, var(--color-orange-deep) 50%, var(--color-ink) 50%)
-    no-repeat calc((1 - var(--mark, 1)) * 100%) 0 / 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.point-turn-title strong { background: none; }
-.point-num { color: var(--color-accent); font-weight: 600; }
-.point-item::before { background: var(--color-border); }
 
 /* --- Etichette: elenco in riga con un puntino blu davanti, niente pill --- */
-.svc-tags,
-.ap-card-tags { column-gap: 20px; row-gap: 8px; }
-.svc-tag,
-.ap-card-tags li,
-.ap-card-tags li:hover {
+.svc-tags { column-gap: 20px; row-gap: 8px; }
+.svc-tag {
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -9499,10 +9145,8 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   font-weight: 500;
   color: var(--color-ink);
 }
-.svc-tag,
-.ap-card-tags li { display: inline-flex; align-items: center; gap: 9px; }
-.svc-tag::before,
-.ap-card-tags li::before {
+.svc-tag { display: inline-flex; align-items: center; gap: 9px; }
+.svc-tag::before {
   content: "";
   width: 5px;
   height: 5px;
@@ -9699,8 +9343,7 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 .about-cta.is-drawn .about-cta-btn:not(:hover) { animation: none; }
 .about-cta-btn::before { animation-iteration-count: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .ap-chain-sheen,
-  .ap-founder-sheen { display: none; }
+  .ap-chain-sheen { display: none; }
 }
 
 /* ======================================================================
@@ -9724,16 +9367,33 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 }
 
 /* --- MEGA --- */
-.deck-title,
 .ajx-outro-title {
   max-width: none;
   font-size: var(--t-mega);
   line-height: 0.9;
   letter-spacing: var(--t-track-mega);
 }
-/* Una parola per riga: "Progetti / online" sta nel varco fra le carte,
-   come i nomi accanto ai ritratti. */
+/* Titolo dei Progetti: una parola per riga nel varco fra le carte, tutte e
+   due della STESSA taglia e dello stesso peso (prima "online" veniva
+   ingrandito per pareggiare la larghezza e toccava la g di "Progetti").
+   Taglia legata anche all'altezza, così il varco basta sempre; interlinea
+   1 = la coda della g e le aste di l e i non si toccano. */
+.deck-title {
+  max-width: none;
+  font-size: clamp(52px, min(7.4vw, 13.5vh), 148px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
 .deck-line { display: block; }
+.deck-sub {
+  margin-top: clamp(14px, 2vh, 24px);
+  font-size: clamp(14px, 1.1vw, 17px);
+  letter-spacing: 0.01em;
+}
+@media (max-width: 767px) {
+  .deck-title { font-size: clamp(48px, 14vw, 88px); }
+}
 .ajx-outro-title em { display: block; }
 
 /* --- DISPLAY --- */
@@ -9741,7 +9401,6 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 .svc-title,
 .finale-title,
 .ap-statement,
-.ap-duo-title,
 .about-cta-title,
 .faqx-title {
   font-size: var(--t-display);
@@ -9780,7 +9439,7 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 
 /* Le maschere delle parole divise seguono l'interlinea stretta: più aria
    sopra e sotto, glifi interi (vedi la nota su .point-lead più sopra). */
-:is(.svc-title, .ap-duo-title, .ap-statement, .faqx-title) div[style*="overflow"],
+:is(.svc-title, .ap-statement, .faqx-title) div[style*="overflow"],
 .deck-title div[style*="overflow"] {
   line-height: 1.44;
   margin-block: -0.25em;
@@ -9832,12 +9491,7 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
    taglie grandi le lettere si toccherebbero. */
 [data-type-block].is-blocked:has(em) .tb-line:not(:first-child),
 [data-type-block].is-blocked .tb-line:not(:first-child) em { letter-spacing: -0.02em; }
-.deck-title[data-type-block] { width: min(38vw, 560px); }
 .about-cta-title[data-type-block] { width: min(100%, 760px); max-width: none; }
-.ap-duo-title[data-type-block] { width: min(100%, 640px); }
-@media (max-width: 767px) {
-  .deck-title[data-type-block] { width: min(78vw, 320px); }
-}
 /* Servizi: il blocco prende tutta la colonna del testo, non la sua misura */
 .svc-title[data-type-block] { align-self: stretch; width: 100%; max-width: 620px; }
 /* Finale: il titolo prende tutta la colonna; le due colonne si dividono lo
@@ -9850,37 +9504,6 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
 /* Lente di grassetto (data-tb-hover): il titolo riceve il cursore anche se
    sta in un livello che di solito lo lascia passare. */
 [data-tb-hover] { pointer-events: auto; cursor: default; }
-
-/* ======================================================================
-   IL GRADINO NEL PROBLEMA — Il punto ("Ma i clienti… 01 02 03")
-   Ogni riga è in due tempi: la frase e, sotto, la parola chiave. La riga
-   che entra cresce (--big 0→1, da main.ts): frase un gradino sotto, parola
-   chiave grande; quando arriva la successiva rientra piccola e si spegne.
-   Una sola riga grande alla volta: l'altezza del blocco non cambia.
-   ====================================================================== */
-.point.is-live .point-pain {
-  --ps: clamp(17px, 1.4vw, 22px);
-  --pp: clamp(24px, min(3vw, 5vh), 50px);
-}
-.point.is-live .point-item-text {
-  font-size: calc(var(--ps) + (var(--pp) - var(--ps)) * var(--big, 0));
-  line-height: 1.08;
-}
-.point.is-live .point-item-text strong {
-  display: block;
-  width: fit-content;
-  margin-top: 0.04em;
-  font-size: calc(1em + 0.72em * var(--big, 0));
-  line-height: 1;
-  letter-spacing: calc(-0.02em - 0.025em * var(--big, 0));
-}
-.point.is-live .point-item { padding-block: clamp(10px, 1.8vh, 18px); }
-@media (max-width: 700px) {
-  .point.is-live .point-pain { --ps: 16px; --pp: clamp(20px, 5.6vw, 24px); }
-}
-@media (max-width: 700px) and (max-height: 640px) {
-  .point.is-live .point-pain { --ps: 14px; --pp: 18px; }
-}
 
 /* La differenza: lo statement è un blocco a gradino e prende la colonna. */
 .ap-statement[data-type-block] { width: 100%; max-width: 640px; line-height: 0.98; }
@@ -9926,16 +9549,6 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
   .ajx-step-sub { opacity: 1; filter: none; transform: none; transition: none; }
 }
 
-/* La notifica "ok" sta dentro .point-turn, che ha la crenatura stretta della
-   taglia display: in em si eredita già calcolata in px (a ~130px ≈ -6px) e
-   schiacciava le lettere della scheda. La scheda torna al suo testo. */
-.point-ok {
-  letter-spacing: normal;
-  line-height: 1.3;
-  font-family: var(--font-body);
-  text-align: left;
-}
-
 /* ======================================================================
    LETTERE INTERE — niente taglio di discendenti e corsivi.
    Il testo colorato con background-clip:text si dipinge solo dentro il suo
@@ -9945,11 +9558,6 @@ html:is([lang="en"], [lang="de"]) .ap-hero-accent {
    l'area dipinta con il padding e si restituisce lo spazio con un margine
    negativo: l'impaginazione non si muove.
    ====================================================================== */
-.point.is-live .point-item-text strong {
-  padding: 0 0.1em 0.18em 0.06em;
-  margin-bottom: -0.18em;
-  margin-right: -0.1em;
-}
 /* maschere delle parole (SplitText mask): allargate solo ai lati, così
    la parola che sale da sotto resta nascosta fino al suo momento */
 div[aria-hidden="true"][style*="overflow: clip"] {
@@ -9977,27 +9585,6 @@ div[aria-hidden="true"][style*="overflow: clip"] {
   .site-footer { --fin-fade: clamp(240px, 36svh, 320px); }
 
   .deck-soon-status { font-size: clamp(11px, 2.6cqw, 12px); }
-}
-
-/* Il punto su telefono: il lead è grande al suo posto (non fa più il giro
-   dal centro, vedi main.ts) e va a capo da solo su due righe. */
-@media (max-width: 700px) {
-  .point.is-live .point-lead,
-  .apd-scenes .point .point-lead {
-    font-size: clamp(40px, 12.2vw, 58px);
-    line-height: 0.94;
-    letter-spacing: var(--t-track-display);
-  }
-  .point.is-live .point-but { margin-top: clamp(18px, 3vh, 28px); }
-}
-/* il blocco scende un filo: in tedesco il lead va su tre righe e toccava
-   le notifiche in alto (in basso c'è spazio) */
-@media (max-width: 700px) and (min-height: 641px) {
-  .point.is-live .point-copy { padding-top: 64px; }
-}
-@media (max-width: 700px) and (max-height: 640px) {
-  .point.is-live .point-lead,
-  .apd-scenes .point .point-lead { font-size: clamp(32px, 10vw, 40px); }
 }
 
 /* Testo piccolo sul navy: 0.46 di bianco non arrivava al contrasto minimo
@@ -10401,10 +9988,9 @@ div[aria-hidden="true"][style*="overflow: clip"] {
   .finale-screen:has(.cflow:is([data-pane="call"], [data-pane="write"], [data-pane="done"])) :is(.finale-title, .finale-sub, .cflow-foot) { display: none; }
 }
 
-/* ---- Chi siamo, hero: la pagina in diretta, in colonna. In alto la barra
-   del file e la cornice della foto (prende l'altezza che resta), sotto il
-   testo. I commenti stanno dentro la foto, in basso: mai sopra il testo.
-   I cursori misurano tutto al momento: seguono il nuovo ordine da soli. */
+/* ---- Chi siamo, hero in colonna: in alto la foto (prende l'altezza che
+   resta), sotto il testo. Il cursore misura tutto al momento: segue il
+   nuovo ordine da solo. */
 @media (max-width: 899px) {
   .ap-hero {
     height: 100svh;
@@ -10430,28 +10016,13 @@ div[aria-hidden="true"][style*="overflow: clip"] {
     justify-self: stretch;
     container-type: normal;
   }
-  .ap-live-bar { flex: none; padding: 6px 6px 6px 12px; border-radius: 14px; }
   .ap-live-frame {
     flex: 1 1 0;
     min-height: 0;
     width: 100%;
     aspect-ratio: auto;
   }
-  .ap-live-photo,
-  .ap-live-frame::before,
-  [data-ap-live-photosel] { border-radius: 20px; }
-  .ap-live-img { object-position: 50% 30%; }
-  .ap-live-sel em { bottom: 10px; }
-  .ap-live-notes {
-    left: 10px;
-    right: 10px;
-    top: auto;
-    bottom: 10px;
-    gap: 6px;
-  }
-  .ap-live-note { padding: 7px 12px 7px 7px; font-size: 12.5px; gap: 8px; border-radius: 14px 14px 14px 4px; }
-  .ap-live-note + .ap-live-note { margin-left: 22px; }
-  .ap-live-note b { width: 22px; height: 22px; font-size: 10px; }
+  .ap-live-frame { border-radius: 26px; }
   .ap-hero-copy { flex: none; }
   .ap-hero-copy::before { inset: -40px -20px; }
   .ap-hero-top { margin-bottom: 10px; }
@@ -10489,57 +10060,6 @@ div[aria-hidden="true"][style*="overflow: clip"] {
   .ap-manifesto .ap-fact-text { display: none; }
   .ap-manifesto .ap-fact-n { grid-row: 1; font-size: 40px; }
   .ap-manifesto .ap-fact-label { align-self: center; }
-}
-
-/* ---- Chi siamo, il duo: le due card una sotto l'altra, ognuna alta una
-   schermata (e ognuna una fermata, main.ts). Il ritratto prende lo spazio
-   che resta; sotto, il nome grande che ne scivola fuori con lo scroll
-   (main.ts), poi bio, frase e aree. In alto a destra lascia il posto al
-   burger. */
-@media (max-width: 899px) {
-  .ap-duo .ap-screen { padding-inline: 20px; }
-  .ap-founders { margin-top: clamp(28px, 5svh, 48px); }
-  .ap-card-slot {
-    height: 100svh;
-    padding: calc(20px + env(safe-area-inset-top, 0px)) 0 clamp(16px, 3svh, 28px);
-  }
-  .ap-card-slot + .ap-card-slot { margin-top: 0; }
-  .ap-founder,
-  .ap-founder--flip {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    max-width: 560px;
-    margin-inline: auto;
-  }
-  .ap-founder-rule {
-    flex: none;
-    margin: 0 64px 20px 0;
-    padding-bottom: 12px;
-    font-size: 0.6875rem;
-    gap: 10px;
-    white-space: nowrap;
-  }
-  /* "Co-founder" lo dice già la sezione: in riga restano numero e area. */
-  .ap-founder-rule > span:nth-child(2) { display: none; }
-  .ap-founder-media { flex: 1 1 0; min-height: 0; }
-  .ap-founder-frame { aspect-ratio: auto; height: 100%; max-height: none; border-radius: 22px; }
-  .ap-founder-img { object-position: 50% 24%; }
-  .ap-founder-body { flex: none; gap: 0; }
-  .ap-founder-name,
-  .ap-founder--flip .ap-founder-name {
-    margin: 10px 0 0;
-    text-align: left;
-    font-size: clamp(56px, min(18vw, 9.5svh), 84px);
-  }
-  .ap-founder--flip .ap-founder-copy { margin-left: 0; }
-  .ap-founder-copy { max-width: none; }
-  .ap-founder-bio { margin-top: 8px; font-size: 14px; line-height: 1.55; }
-  .ap-card-quote { margin-top: 12px; padding-top: 12px; font-size: clamp(18px, 5vw, 22px); }
-  .ap-card-tags { margin-top: 12px; font-size: 13px; row-gap: 6px; }
-}
-@media (max-width: 899px) and (max-height: 700px) {
-  .ap-card-tags { display: none; }
 }
 
 /* ---- Percorso → finale: quando arriva "Costruiamolo insieme" la tappa 4
@@ -10587,34 +10107,8 @@ div[aria-hidden="true"][style*="overflow: clip"] {
      col margine negativo: l'impaginato non si muove. */
   .apm-cards { padding-bottom: 40px; margin-bottom: -26px; }
 
-  /* Manifesto: l'alone azzurro in basso a destra sporgeva sotto la sezione
-     (bottom −30%) e l'overflow:clip lo tagliava a filo: una riga azzurra
-     sul confine col Duo. Resta dentro, e sul bordo è già trasparente. */
-  .ap-manifesto::after { bottom: 0; }
-
-  /* Duo: la carta → sabbia correva per tutta la seconda metà della sezione,
-     così sul telefono il cambio di tono cadeva sotto la scheda di Julian
-     (Alice su bianco, lui su sabbia). Ora il passaggio sta tutto nella
-     testata, prima delle schede: le due persone stanno sullo stesso fondo,
-     lo stesso sabbia del Percorso che segue. */
-  .ap-duo {
-    --duo-fade: 400px;
-    background: linear-gradient(
-      to bottom,
-      var(--color-bg) 0,
-      rgb(254.4 254.3 254.1) calc(var(--duo-fade) * 0.125),
-      rgb(252.7 252.5 251.7) calc(var(--duo-fade) * 0.25),
-      rgb(250.3 249.9 248.4) calc(var(--duo-fade) * 0.375),
-      rgb(247.5 247 244.5) calc(var(--duo-fade) * 0.5),
-      rgb(244.7 244.1 240.6) calc(var(--duo-fade) * 0.625),
-      rgb(242.3 241.5 237.3) calc(var(--duo-fade) * 0.75),
-      rgb(240.6 239.7 234.9) calc(var(--duo-fade) * 0.875),
-      var(--color-warm-deeper) var(--duo-fade)
-    );
-  }
-
   /* CTA: sabbia → carta in ~300px lineari si vedeva come una banda. Stessa
-     curva del Duo, al contrario, e più lunga. */
+     curva del Manifesto, al contrario, e più lunga. */
   .about-cta {
     --cta-fade: clamp(380px, 60svh, 520px);
     background: linear-gradient(
@@ -10630,23 +10124,6 @@ div[aria-hidden="true"][style*="overflow: clip"] {
       var(--color-bg) var(--cta-fade)
     );
   }
-
-  /* Schede fondatori: una sotto l'altra sembravano una scheda sola. Ognuna
-     ha ora la sua superficie (carta bianca, filo caldo, ombra appena
-     accennata) che stacca dal sabbia del Duo, e fra le due c'è aria.
-     Raggio = raggio del ritratto + padding: gli angoli restano concentrici. */
-  .ap-card-slot + .ap-card-slot { margin-top: 16px; }
-  .ap-founder,
-  .ap-founder--flip {
-    padding: 12px 12px 16px;
-    border: 1px solid var(--color-border);
-    border-radius: 34px;
-    background: var(--color-bg);
-    box-shadow:
-      0 1px 2px rgba(23, 19, 16, 0.04),
-      0 24px 48px -28px rgba(28, 43, 95, 0.22);
-  }
-  .ap-founder-rule { margin: 4px 64px 16px 4px; }
 }
 
 /* ======================================================================
@@ -10944,4 +10421,155 @@ div[aria-hidden="true"][style*="overflow: clip"] {
 }
 @media (max-width: 899px) and (prefers-reduced-motion: reduce) {
   .hero-section[data-handoff-hero] .hero-logo-bar { animation: none; transform: none; }
+}
+
+/* ==========================================================================
+   DOMANDE FREQUENTI IN HOME (HomePage.astro, #domande) — prima del form.
+   Quattro domande già aperte in due colonne, stessa grammatica delle righe
+   di Il punto: filetto sopra, numero blu, domanda in display, risposta in
+   testo secondario. Statiche: nessuna animazione, nessun cambio d'altezza.
+   ========================================================================== */
+.hfaq {
+  position: relative;
+  padding: clamp(96px, 13vh, 160px) 0 clamp(48px, 8vh, 112px);
+}
+.hfaq-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px 48px;
+}
+.hfaq-title {
+  margin: 0;
+  font-weight: 500;
+  font-size: var(--t-head);
+  line-height: 0.98;
+  letter-spacing: var(--t-track-head);
+  color: var(--color-ink);
+}
+.hfaq-title em { font-style: italic; color: var(--color-accent); }
+.hfaq-all {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  gap: 8px;
+  padding-block: 4px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.hfaq-all::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: currentColor;
+  transform-origin: right;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hfaq-all:hover::after {
+  transform: scaleX(0);
+}
+.hfaq-all:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.hfaq-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(32px, 5vw, 96px);
+}
+.hfaq-item {
+  display: grid;
+  grid-template-columns: clamp(40px, 4.4vw, 64px) minmax(0, 1fr);
+  /* righe in alto: accanto a una risposta più lunga non si allarga il vuoto */
+  align-content: start;
+  row-gap: 12px;
+  padding: clamp(24px, 3.4vh, 36px) 0 clamp(28px, 4vh, 44px);
+  border-top: 1px solid var(--color-border-strong);
+}
+.hfaq-num {
+  grid-row: 1 / span 2;
+  padding-top: 0.7em;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+}
+.hfaq-q {
+  margin: 0;
+  font-weight: 500;
+  font-size: clamp(22px, 1.9vw, 32px);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+.hfaq-a {
+  grid-column: 2;
+  margin: 0;
+  max-width: 52ch;
+  font-size: clamp(15px, 1.05vw, 17px);
+  line-height: 1.6;
+  color: var(--color-secondary);
+}
+@media (max-width: 767px) {
+  .hfaq { padding-block: clamp(72px, 11svh, 104px) clamp(40px, 7svh, 72px); }
+  .hfaq-head { flex-direction: column; align-items: flex-start; }
+  .hfaq-list { grid-template-columns: minmax(0, 1fr); }
+  .hfaq-item { grid-template-columns: 36px minmax(0, 1fr); }
+}
+
+/* ==========================================================================
+   STACCO NETTO CARTA → NAVY (home, chi siamo, faq). Al posto della lunga
+   dissolvenza (velo di carta che si ritirava passando per il periwinkle) il
+   blu parte con un bordo dritto. --fin-fade a 0 azzera anche gli spazi che
+   ne dipendevano (attacco del form, fermata, testa del footer da solo); gli
+   spazi giusti sono qui sotto. Sta in fondo al file: vince sulle regole
+   storiche e si toglie da un punto solo.
+   ========================================================================== */
+.finale,
+.site-footer,
+.site-footer:not(.finale .site-footer) {
+  --fin-fade: 0px;
+  background: var(--fin-bg);
+}
+.finale .site-footer { background: none; }
+/* via gli aloni blu dietro al form: navy pieno */
+.finale::before { display: none; }
+/* telefono: niente maschera sfumata in cima al footer da solo */
+.site-footer:not(.finale .site-footer) {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+/* Footer da solo (chi siamo, faq): testa con il suo respiro. */
+.site-footer:not(.finale .site-footer) .footer-inner {
+  padding-top: clamp(72px, 11vh, 128px);
+}
+/* Invito finale di Chi siamo: prima sotto c'era più aria che sopra (serviva
+   a far partire la dissolvenza nel blu). Col bordo dritto, stesso respiro
+   sopra e sotto. */
+.about-cta { padding-block: clamp(96px, 14vh, 180px); }
+@media (min-width: 961px) {
+  .about-cta { padding-block: clamp(130px, 17vh, 210px); }
+}
+/* Wordmark del footer: le code di p e g toccavano il fondo della pagina a
+   filo (0px). Un filo d'aria sotto, così il logo si posa intero. */
+.footer-ghost { padding-bottom: 0.3em; }
+/* Home, schermo dei contatti: alto quanto la finestra e centrato lasciava
+   ~280px di blu vuoto sopra "Iniziamo" sugli schermi alti. Ora prende
+   l'altezza del contenuto, con lo stesso respiro sopra e sotto. */
+@media (min-width: 961px) {
+  .finale-screen {
+    min-height: 0;
+    padding-block: clamp(96px, 11vh, 136px) clamp(88px, 11vh, 136px);
+  }
 }

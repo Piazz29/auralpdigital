@@ -224,7 +224,7 @@ const it = {
       // `short` = etichetta nella barra di navigazione; `tags` = tre
       // etichette sotto la descrizione; `fix` = la notifica di "Il punto"
       // RISOLTA, che compare sull'angolo della card (decorativa).
-      kicker: "Servizi",
+      kicker: "Cosa facciamo",
       link: "Parliamone",
       items: [
         {
@@ -335,6 +335,8 @@ const it = {
       ],
       turn: "Costruiamo **il sistema** che li porta da te.",
       turnSub: "Anche quando sei impegnato con il tuo lavoro.",
+      // Invito a scorrere durante il racconto (desktop).
+      cue: "Scorri per continuare",
       // Notifiche decorative (aria-hidden): una per ogni riga del problema,
       // più quella della svolta.
       pings: [
@@ -343,6 +345,14 @@ const it = {
         { title: "Google", body: "Il primo risultato non sei tu" },
       ],
       ok: { title: "Nuova prenotazione", body: "Confermata in automatico" },
+    },
+    // Domande in homepage, prima del form: quattro prese da `faq` (stesso
+    // testo della pagina /faq). `pick` = [categoria, domanda].
+    faq: {
+      kicker: "Domande frequenti",
+      title: "*FAQ*",
+      all: "Tutte le domande",
+      pick: [[3, 0], [2, 1], [2, 0], [4, 0]],
     },
     contact: {
       kicker: "Iniziamo",
@@ -457,17 +467,6 @@ const it = {
       sub: "Uno studio digitale indipendente in Alto Adige, fondato da due persone. Strategia, design e sviluppo li seguiamo direttamente noi.",
       cta: "Contattaci",
       meet: "Conoscici",
-      // La pagina si fa in diretta: cursori, commenti e barra presenze.
-      live: {
-        file: "chi-siamo",
-        editing: "In modifica",
-        published: "Online",
-        you: "Tu",
-        hello: "Ciao 👋",
-        photo: "insieme.jpg",
-        note1: "Questa la teniamo.",
-        note2: "Fatto. È online.",
-      },
     },
     manifesto: {
       kicker: "La differenza",
@@ -488,25 +487,18 @@ const it = {
         { n: 2, label: "fondatori", text: "Lavoriamo entrambi su ogni progetto e lo controlliamo prima che vada online." },
       ],
     },
-    duo: {
-      kicker: "I fondatori",
-      title: "Chi segue *il tuo progetto.*",
-      lead: "Siamo due co-founder con competenze complementari: strategia e sviluppo da una parte, design e contenuti dall'altra. Seguiamo ogni progetto insieme, senza affidarlo ad altri.",
-    },
     people: [
       {
-        title: "Co-founder",
-        area: "Strategia & Sviluppo",
-        bio: "Julian si occupa di strategia e sviluppo. Definisce la struttura di ogni progetto, dal posizionamento al lancio, e realizza siti e gestionali con tecnologie moderne e strumenti di AI.",
-        quote: "Un sito vale quanto i clienti *che ti porta.*",
-        focus: ["Strategia digitale", "Sviluppo web", "SEO + GEO", "AI & automazioni"],
+        name: "Julian",
+        role: "Strategia & Sviluppo",
+        line: "Imposta la strategia e scrive il codice: dal posizionamento al lancio, con tecnologie moderne e AI.",
+        tags: ["Strategia", "Sviluppo web", "SEO + GEO", "AI"],
       },
       {
-        title: "Co-founder",
-        area: "Design & Contenuti",
-        bio: "Alice si occupa di design e contenuti. Cura identità visiva, interfacce, fotografia e testi, perché ogni progetto parli in modo chiaro al pubblico giusto.",
-        quote: "L'immagine di un brand *nasce dai dettagli.*",
-        focus: ["Art direction", "UI & visual design", "Contenuti & social", "Fotografia"],
+        name: "Alice",
+        role: "Design & Contenuti",
+        line: "Dà forma all'immagine del brand: identità, interfacce, foto e testi che parlano al pubblico giusto.",
+        tags: ["Art direction", "UI design", "Contenuti", "Foto"],
       },
     ],
     journey: {

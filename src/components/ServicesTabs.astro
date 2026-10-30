@@ -5,8 +5,10 @@
 // descrizione. Il cambio lo decide chi guarda, non lo scroll: passando sopra
 // un nome del menu (o cliccandolo, o con le frecce, o con uno swipe sulla
 // card) compare quel servizio. La pagina continua a scorrere libera.
-// Finché nessuno tocca niente i servizi si avvicendano da soli, con la barra
-// sotto il nome che si riempie; al primo gesto l'avvicendamento si ferma.
+// Finché nessuno tocca niente i servizi si avvicendano da soli: la barra
+// sotto il nome segue la clip (si riempie mentre il video scorre) e quando
+// il video finisce si passa al servizio dopo. Al primo gesto
+// l'avvicendamento si ferma e le clip tornano a girare in loop.
 //
 // Il cambio: le clip sono un mazzo di card. Andando avanti la card in cima
 // vola via di lato e torna in fondo al mazzo mentre la successiva sale al
@@ -175,7 +177,9 @@ const fixIcons = [
 
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-  const AUTO_MS = 7000; // durata di un servizio nell'avvicendamento automatico
+  // Ripiego se una clip non parte (errore di rete, autoplay negato): il
+  // servizio dura questo tempo e la barra si riempie a tempo.
+  const FALLBACK_MS = 8000;
 
   // Pose del mazzo per profondità (0 = in cima): spostamento in % della
   // card, rotazione, scala. Le card sotto spuntano a ventaglio.
@@ -206,10 +210,12 @@ const fixIcons = [
     const glows = Array.from(root.querySelectorAll<HTMLElement>("[data-svt-glow]"));
     let current = 0;
     let visible = false;
+    // clip che non partono (errore, autoplay negato): lì la barra va a tempo
+    const failed = new Set<number>();
+    let shownAt = performance.now();
     const outTimers: number[] = [];
 
     root.classList.add("is-live");
-    root.style.setProperty("--svt-auto", `${AUTO_MS}ms`);
     // le descrizioni nascoste restano nel layout (impilate): l'altezza del
     // blocco è quella della più lunga, e il cambio non sposta niente
     copies.forEach((c) => (c.hidden = false));
@@ -246,7 +252,17 @@ const fixIcons = [
       if (!v) return;
       if (!visible) return void (v.paused || v.pause());
       v.preload = "auto";
-      if (!reduced) playTimer = window.setTimeout(() => void v.play().catch(() => {}), wait);
+      const k = current;
+      if (!reduced)
+        playTimer = window.setTimeout(
+          () =>
+            void v.play().catch(() => {
+              if (failed.has(k)) return;
+              failed.add(k);
+              if (k === current) shownAt = performance.now();
+            }),
+          wait
+        );
     };
 
     // Il mazzo: ogni card parte da dove si trova adesso (anche a metà di un
@@ -330,17 +346,63 @@ const fixIcons = [
         tab.tabIndex = k === i ? 0 : -1;
       });
       roll(dir);
+      if (auto) {
+        shownAt = performance.now();
+        const v = videos[i];
+        if (v && v.readyState > 0) v.currentTime = 0;
+      }
       playActive(reduced ? 0 : 650);
+      tick();
     };
 
-    // Avvicendamento automatico: la barra del nome attivo si riempie (CSS);
-    // a barra piena si passa al servizio dopo. Solo in vista; si ferma per
-    // sempre al primo gesto di chi guarda.
-    const stopAuto = () => root.classList.remove("is-auto");
-    if (!reduced) {
+    // Avvicendamento automatico, guidato dalla CLIP: la barra del nome
+    // attivo è il tempo del video (currentTime / duration) e alla fine del
+    // video si passa al servizio dopo. Così barra e clip non si slegano mai,
+    // nemmeno se il video bufferizza o parte in ritardo. Mentre corre, le
+    // clip non sono in loop e ogni servizio riparte da capo. Solo in vista;
+    // si ferma per sempre al primo gesto di chi guarda (barra piena, loop).
+    const fills = tabs.map((tab) => tab.querySelector<HTMLElement>("[data-svt-fill]"));
+    let auto = !reduced;
+    let raf = 0;
+    const paint = () => {
+      raf = 0;
+      if (!auto) return;
+      const v = videos[current];
+      let p = 0;
+      if (!v || v.error || failed.has(current)) {
+        // ripiego: a tempo, da quando il servizio è in scena
+        p = (performance.now() - shownAt) / FALLBACK_MS;
+        if (p >= 1) return go(current + 1, 1);
+      } else if (v.duration && isFinite(v.duration)) {
+        p = v.currentTime / v.duration; // clip ancora in caricamento: resta a 0
+      }
+      fills.forEach((f, k) => f && (f.style.transform = `scaleX(${k === current ? Math.min(1, p) : 0})`));
+      if (visible) raf = requestAnimationFrame(paint);
+    };
+    const tick = () => {
+      if (auto && visible && !raf) raf = requestAnimationFrame(paint);
+    };
+    const stopAuto = () => {
+      if (!auto) return;
+      auto = false;
+      root.classList.remove("is-auto");
+      cancelAnimationFrame(raf);
+      raf = 0;
+      // la barra torna in mano al CSS (attivo = piena) e le clip in loop
+      fills.forEach((f) => f && (f.style.transform = ""));
+      videos.forEach((v) => v && (v.loop = true));
+    };
+    if (auto) {
       root.classList.add("is-auto");
-      root.addEventListener("animationend", (e) => {
-        if ((e.target as HTMLElement).matches("[data-svt-fill]") && root.classList.contains("is-auto")) go(current + 1, 1);
+      videos.forEach((v, k) => {
+        if (!v) return;
+        v.loop = false;
+        v.addEventListener("ended", () => {
+          if (auto && k === current) go(current + 1, 1);
+        });
+        v.addEventListener("error", () => {
+          if (k === current) shownAt = performance.now();
+        });
       });
     }
 
@@ -448,7 +510,9 @@ const fixIcons = [
         visible = e.isIntersecting;
         root.classList.toggle("is-visible", visible);
         if (visible && !root.classList.contains("is-in")) root.classList.add("is-in");
+        if (visible) shownAt = performance.now();
         playActive();
+        tick();
       },
       { threshold: 0.2 }
     ).observe(root);

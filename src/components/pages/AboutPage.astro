@@ -14,7 +14,8 @@ import { Picture, getImage } from "astro:assets";
 import julianPhoto from "../../assets/team/julian.jpg";
 import alicePhoto from "../../assets/team/alice.png";
 // Foto di noi due nella hero.
-import duoPhoto from "../../assets/team/insieme.jpg";
+// Scontornata (fondo trasparente): dietro si vede il vetro e l'aurora.
+import duoPhoto from "../../assets/team/studio-auralp.png";
 import "../../styles/global.css";
 
 interface Props {
@@ -23,7 +24,6 @@ interface Props {
 const { lang = defaultLang } = Astro.props;
 const t = getDict(lang);
 const ta = t.about;
-const live = ta.hero.live;
 
 // HERO — titolo "Normale *accento*" con "\n" come a-capo esplicito.
 const heroLines = ta.hero.title.split("\n").map((line) =>
@@ -33,27 +33,17 @@ const heroLines = ta.hero.title.split("\n").map((line) =>
     .filter((p) => p.text.length > 0)
 );
 
-// IL DUO — foto (placeholder fino allo shooting: basta sostituire i file in
-// src/assets/team), tono di colore e testi tradotti fusi per indice. La
-// sorgente del canvas a pixel è una webp leggera generata a build time.
-const peopleMeta = [
-  { name: "Julian", photo: julianPhoto, tone: "ember" },
-  { name: "Alice", photo: alicePhoto, tone: "shadow" },
-] as const;
 // CTA — i due volti dentro al bottone: risponde chi hai appena conosciuto.
 const ctaFaces = await Promise.all(
   [alicePhoto, julianPhoto].map((src) => getImage({ src, width: 72, format: "webp" }))
 );
-const people = await Promise.all(
-  peopleMeta.map(async (m, i) => ({
-    ...m,
-    ...ta.people[i],
-    pixelSrc: (await getImage({ src: m.photo, width: 640, format: "webp", quality: 82 })).src,
-  }))
-);
 
-// Le card dei fondatori: prima Alice, poi Julian.
-const cardPeople = [people[1], people[0]];
+// I due riquadri sulla foto della hero: Julian (a sinistra, arancio) e
+// Alice (a destra, blu).
+const founders = [
+  { ...ta.people[0], tone: "ember" },
+  { ...ta.people[1], tone: "shadow" },
+] as const;
 
 const chain = ta.manifesto.chain;
 // Lo statement come blocco a gradino: le prime due parole fanno da metro
@@ -94,11 +84,10 @@ const steps = ta.journey.steps.map((s) => ({
   <Navbar lang={lang} route="/chi-siamo" />
 
   <main class="aboutpage">
-    <!-- HERO — "Le persone dietro i pixel", alla lettera: i due ritratti sono
-         griglie di tessere nei colori del brand e la lente (il cursore, o un
-         percorso automatico) li rimette a fuoco. Fondo: l'aurora. -->
+    <!-- HERO — un cursore scrive titolo e testo, disegna il bottone e con
+         un click rivela la foto di noi due (aboutLive.ts). Fondo: l'aurora. -->
     <section class="ap-hero" data-ap-hero>
-      <div class="ap-hero-aurora" aria-hidden="true"></div>
+      <div class="ap-hero-aurora" aria-hidden="true"><div class="ap-aurora-beams"><i></i><i></i><i></i></div></div>
 
       <div class="ap-hero-inner">
         <div class="ap-hero-copy" data-ap-hero-copy>
@@ -126,80 +115,52 @@ const steps = ta.journey.steps.map((s) => ({
             <a href="#contatti" class="about-cta-btn ap-hero-btn magnetic">
               {ta.hero.cta} <span aria-hidden="true">↗</span>
             </a>
-            <a href="#il-duo" class="ap-hero-meet">
+            <a href="#manifesto" class="ap-hero-meet">
               {ta.hero.meet} <span aria-hidden="true">↓</span>
             </a>
           </div>
         </div>
 
-        <!-- La pagina si fa in diretta: la foto di noi due entra nella
-             cornice trascinata da Alice, Julian disegna il bottone, ci si
-             lascia un commento. I cursori vivono nel livello sotto (sopra
-             a tutta la hero); "Tu" è il visitatore (aboutLive.ts). -->
         <div class="ap-stage" data-ap-stage>
-          <div class="ap-live-bar" data-ap-live-bar>
-            <span class="ap-live-file">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6.5L13 5v9.5H3z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9.5 1.5V5H13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-              {live.file}
-            </span>
-            <span class="ap-live-state" data-ap-live-state>
-              <i aria-hidden="true"></i>
-              <span data-ap-live-editing>{live.editing}</span>
-              <span data-ap-live-published>{live.published}</span>
-            </span>
-            <span class="ap-live-faces" aria-hidden="true">
-              <b class="is-a">A</b><b class="is-j">J</b><b class="is-you" data-ap-live-you>{live.you}</b>
-            </span>
-          </div>
-
+          <span class="ap-live-shadow" data-ap-live-shadow aria-hidden="true"></span>
           <figure class="ap-live-frame" data-ap-live-frame>
-            <span class="ap-live-drop" aria-hidden="true">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="9" cy="10" r="1.8" fill="currentColor"/><path d="M4 18l5.5-5 4 3.5 2.5-2 4 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-              {live.photo}
-            </span>
             <div class="ap-live-photo" data-ap-live-photo>
               <Picture
                 src={duoPhoto}
                 formats={["avif", "webp"]}
                 widths={[640, 960, 1320]}
-                sizes="(max-width: 960px) 92vw, 46vw"
+                sizes="(max-width: 960px) 92vw, 40vw"
                 alt="Alice & Julian"
                 class="ap-live-img"
                 loading="eager"
               />
             </div>
-            <span class="ap-live-sel ap-live-sel--a" data-ap-live-photosel aria-hidden="true">
-              <i></i><i></i><i></i><i></i>
-              <em>{duoPhoto.width} × {duoPhoto.height}</em>
-            </span>
-            <figcaption class="ap-live-notes" aria-hidden="true">
-              <span class="ap-live-note is-a" data-ap-live-note><b>A</b><span><strong>Alice</strong>{live.note1}</span></span>
-              <span class="ap-live-note is-j" data-ap-live-note><b>J</b><span><strong>Julian</strong>{live.note2}</span></span>
-            </figcaption>
+            <span class="ap-live-shade" aria-hidden="true"></span>
           </figure>
+          <!-- Chi siamo, in due riquadri appoggiati sulla foto: Julian in
+               alto a sinistra, Alice in basso a destra. -->
+          <div class="ap-whos">
+            {founders.map((f) => (
+              <div class={`ap-who ap-who--${f.tone}`}>
+                <div class="ap-who-card" data-ap-who>
+                  <p class="ap-who-role">{f.role}</p>
+                  <p class="ap-who-name font-display">{f.name}</p>
+                  <p class="ap-who-line">{f.line}</p>
+                  <ul class="ap-who-tags">
+                    {f.tags.map((tag) => <li>{tag}</li>)}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <!-- Livello dei cursori: posizionati in px rispetto alla hero. -->
+      <!-- Il cursore: vive sopra tutta la hero, posizionato in px. -->
       <div class="ap-live-layer" data-ap-live-layer aria-hidden="true">
-        <span class="ap-live-sel ap-live-sel--a ap-live-textsel" data-ap-live-textsel><i></i><i></i><i></i><i></i><em data-ap-live-font></em></span>
-        <span class="ap-live-measure" data-ap-live-measure><em></em></span>
-        <span class="ap-caret is-a" data-ap-caret="a"></span>
-        <span class="ap-caret is-j" data-ap-caret="j"></span>
-        <span class="ap-cur is-a" data-ap-cur="a">
+        <span class="ap-cur" data-ap-cur>
           <svg viewBox="0 0 20 20"><path d="M2 1.5 18 8l-7 2.2L8.6 18z"/></svg>
-          <span class="ap-cur-tag">Alice</span>
-          <span class="ap-cur-file" data-ap-cur-file>
-            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 18l5.5-5 4 3.5 2.5-2 4 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-            {live.photo}
-          </span>
         </span>
-        <span class="ap-cur is-j" data-ap-cur="j">
-          <svg viewBox="0 0 20 20"><path d="M2 1.5 18 8l-7 2.2L8.6 18z"/></svg>
-          <span class="ap-cur-tag">Julian</span>
-          <span class="ap-cur-chat" data-ap-cur-chat>{live.hello}</span>
-        </span>
-        <span class="ap-cur-you" data-ap-cur-you><span class="ap-cur-tag">{live.you}</span></span>
       </div>
     </section>
 
@@ -207,8 +168,7 @@ const steps = ta.journey.steps.map((s) => ({
          sotto i tre numeri che lo dimostrano (al passaggio del mouse la
          cifra rigira). Su desktop sta in una schermata; in cima una fermata
          di scroll (main.ts). -->
-    <section class="ap-manifesto" data-ap-manifesto>
-      <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
+    <section id="manifesto" class="ap-manifesto" data-ap-manifesto>
       <div class="works-screen ap-screen">
         <div class="ap-manifesto-top">
           <div class="ap-manifesto-copy">
@@ -268,70 +228,6 @@ const steps = ta.journey.steps.map((s) => ({
             </li>
           ))}
         </ol>
-      </div>
-    </section>
-
-    <!-- IL DUO — due "pagine di rivista" a specchio, non card: ritratto alto
-         che sale dal tavolo e si mette a fuoco dai pixel (lo stesso gesto
-         della hero), nome gigante che esce da dietro la foto, poi bio, una
-         frase in prima persona e le aree di lavoro. Un filo sottile apre
-         ogni pagina con numero, ruolo e area. -->
-    <section id="il-duo" class="ap-duo" data-ap-duo>
-      <span class="ap-hold-detent" data-scroll-detent aria-hidden="true"></span>
-      <div class="ap-duo-glow" aria-hidden="true"></div>
-      <div class="works-screen ap-screen">
-        <div class="ap-duo-head">
-          <div>
-            <span class="works-kicker" data-ap-rise>{ta.duo.kicker}</span>
-            <h2 class="works-title ap-duo-title" data-type-block><Rich text={ta.duo.title} /></h2>
-          </div>
-          <p class="ap-duo-lead" data-ap-rise>{ta.duo.lead}</p>
-        </div>
-
-        <div class="ap-founders">
-          {cardPeople.map((p, i) => (
-            <div class="ap-card-slot" data-ap-card-slot>
-              <article class={`ap-founder ap-founder--${i % 2 ? "flip" : "std"} ap-founder--${p.tone}`} data-ap-card>
-                <p class="ap-founder-rule" data-ap-card-rule>
-                  <span class="ap-founder-idx">0{i + 1}</span>
-                  <span>{p.title}</span>
-                  <span class="ap-founder-area">{p.area}</span>
-                </p>
-
-                <div class="ap-founder-media" data-ap-card-media>
-                  <div class="ap-founder-frame" data-ap-card-frame>
-                    <div class="ap-founder-zoom" data-ap-card-zoom>
-                      <Picture
-                        src={p.photo}
-                        formats={["avif", "webp"]}
-                        widths={[480, 720, 960]}
-                        sizes="(max-width: 559px) 92vw, 42vw"
-                        alt={`${p.name} — ${p.title}, ${p.area}`}
-                        class="ap-founder-img"
-                        loading="lazy"
-                      />
-                    </div>
-                    <canvas class="ap-founder-canvas" data-px-reveal data-src={p.pixelSrc} data-tone={p.tone} aria-hidden="true"></canvas>
-                    <span class="ap-founder-sheen" aria-hidden="true"></span>
-                  </div>
-                </div>
-
-                <div class="ap-founder-body">
-                  <h3 class="ap-founder-name font-display" data-ap-card-name>{p.name}</h3>
-                  <div class="ap-founder-copy">
-                    <p class="ap-founder-bio" data-ap-card-in>{p.bio}</p>
-                    <blockquote class="ap-card-quote font-display" data-ap-card-in>
-                      <span aria-hidden="true">«</span><Rich text={p.quote} /><span aria-hidden="true">»</span>
-                    </blockquote>
-                    <ul class="ap-card-tags" data-ap-card-in>
-                      {p.focus.map((f) => <li>{f}</li>)}
-                    </ul>
-                  </div>
-                </div>
-              </article>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
 

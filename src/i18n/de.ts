@@ -212,7 +212,7 @@ const de = {
     },
     services: {
       // Drei Leistungen (vedi it.ts).
-      kicker: "Leistungen",
+      kicker: "Was wir tun",
       link: "Sprechen wir darüber",
       items: [
         {
@@ -321,6 +321,8 @@ const de = {
       // che può andare a capo da sola (", das sie…").
       turn: "Wir bauen **das System,** das sie zu dir bringt.",
       turnSub: "Auch dann, wenn du mit deiner Arbeit beschäftigt bist.",
+      // Invito a scorrere durante il racconto (desktop).
+      cue: "Weiterscrollen",
       // Corti: su telefono la riga sotto il titolo è a una riga sola (ellissi).
       pings: [
         { title: "Direktnachricht", body: "Hallo! Samstag noch frei?" },
@@ -328,6 +330,12 @@ const de = {
         { title: "Google", body: "Erstes Ergebnis: nicht du" },
       ],
       ok: { title: "Neue Buchung", body: "Automatisch bestätigt" },
+    },
+    faq: {
+      kicker: "Häufige Fragen",
+      title: "*FAQ*",
+      all: "Alle Fragen",
+      pick: [[3, 0], [2, 1], [2, 0], [4, 0]],
     },
     contact: {
       kicker: "Los geht's",
@@ -439,16 +447,6 @@ const de = {
       sub: "Ein unabhängiges Digitalstudio in Südtirol, gegründet von zwei Personen. Strategie, Design und Entwicklung betreuen wir selbst.",
       cta: "Kontakt aufnehmen",
       meet: "Lern uns kennen",
-      live: {
-        file: "ueber-uns",
-        editing: "Wird bearbeitet",
-        published: "Online",
-        you: "Du",
-        hello: "Hallo 👋",
-        photo: "zusammen.jpg",
-        note1: "Das Foto bleibt.",
-        note2: "Erledigt. Ist online.",
-      },
     },
     manifesto: {
       kicker: "Der Unterschied",
@@ -469,25 +467,18 @@ const de = {
         { n: 2, label: "Gründer", text: "Wir arbeiten beide an jedem Projekt und prüfen es, bevor es online geht." },
       ],
     },
-    duo: {
-      kicker: "Die Gründer",
-      title: "Wer dein Projekt *betreut.*",
-      lead: "Wir sind zwei Co-Founder mit sich ergänzenden Kompetenzen: Strategie und Entwicklung auf der einen Seite, Design und Inhalte auf der anderen. Jedes Projekt betreuen wir gemeinsam, ohne es weiterzugeben.",
-    },
     people: [
       {
-        title: "Co-Founder",
-        area: "Strategie & Entwicklung",
-        bio: "Julian ist für Strategie und Entwicklung zuständig. Er plant jedes Projekt von der Positionierung bis zum Launch und entwickelt Websites und Software mit modernen Technologien und KI.",
-        quote: "Eine Website misst sich *an ihren Kunden.*",
-        focus: ["Digitale Strategie", "Webentwicklung", "SEO + GEO", "KI & Automatisierung"],
+        name: "Julian",
+        role: "Strategie & Entwicklung",
+        line: "Plant die Strategie und schreibt den Code: von der Positionierung bis zum Launch, mit modernen Technologien und KI.",
+        tags: ["Strategie", "Webentwicklung", "SEO + GEO", "KI"],
       },
       {
-        title: "Co-Founder",
-        area: "Design & Inhalte",
-        bio: "Alice ist für Design und Inhalte zuständig. Sie betreut visuelle Identität, Interfaces, Fotografie und Texte, damit jedes Projekt die richtige Zielgruppe klar anspricht.",
-        quote: "Ein Markenbild *entsteht im Detail.*",
-        focus: ["Art Direction", "UI & Visual Design", "Inhalte & Social", "Fotografie"],
+        name: "Alice",
+        role: "Design & Inhalte",
+        line: "Formt das Bild der Marke: Identität, Interfaces, Fotos und Texte, die die richtige Zielgruppe ansprechen.",
+        tags: ["Art Direction", "UI Design", "Inhalte", "Fotos"],
       },
     ],
     journey: {

@@ -5,7 +5,7 @@
 // animazione) restano qui, indipendenti dalla lingua, e si fondono per indice
 // con le stringhe tradotte.
 import type { Lang } from "../../i18n";
-import { defaultLang, getDict } from "../../i18n";
+import { defaultLang, getDict, localePath } from "../../i18n";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Navbar from "../Navbar.astro";
 import Footer from "../Footer.astro";
@@ -26,6 +26,10 @@ interface Props {
 const { lang = defaultLang } = Astro.props;
 const t = getDict(lang);
 
+// DOMANDE — quattro dalla pagina FAQ (stessi testi), scelte in
+// `t.home.faq.pick` come [categoria, domanda].
+const faqItems = t.home.faq.pick.map(([c, i]) => t.faq.categories[c].items[i]);
+
 // SERVIZI — una schermata, i servizi si sfogliano da menu e frecce
 // (ServicesTabs): niente pin, lo scroll resta libero. Testi dal dizionario
 // (`t.home.services`).
@@ -41,19 +45,20 @@ const t = getDict(lang);
   <div class="post-reveal relative z-10" data-home>
 
   <!-- SECTION — IL PUNTO: racconto in tre tempi subito dopo la hero.
-       Con la regia attiva (main.ts aggiunge .is-live) la schermata si ferma
-       (pin) e lo scroll fa avanzare la storia:
-         1. il LAVORO — "Fai un lavoro eccellente." da solo, grande;
-         2. il CAOS — sale in testata e sotto arrivano le tre righe del
-            problema, ognuna con la sua notifica che si accumula ai lati;
-         3. la SVOLTA — il caos si ritira, le notifiche vengono risucchiate
-            al centro e resta la promessa, chiusa da una notifica "ok".
-       Il fondale Sciliar resta, ma velato nella carta: è un'atmosfera, non
-       un'immagine da leggere. Senza JS / reduced motion: tutto in colonna. -->
+         1. il LAVORO — "Fai un lavoro eccellente." in testata;
+         2. il CAOS — "Ma i clienti…" e le tre righe del problema, ognuna
+            con la SUA notifica accanto (la causa e il suo effetto);
+         3. la SVOLTA — il caos si ritira, le notifiche confluiscono nella
+            notifica "ok" e resta la promessa.
+       Desktop (main.ts aggiunge .is-pinned): la schermata si ferma per poco
+       meno di due schermate e lo scroll fa avanzare la storia, senza fermate.
+       Telefono / tablet touch: niente pin, la sezione scorre libera e ogni
+       riga entra quando arriva sullo schermo. Senza JS / reduced motion:
+       tutto in colonna, statico. -->
   <section id="il-punto" class="point" data-point>
     <div class="point-stage" data-point-stage>
       <!-- Fondale: foto statica dello Sciliar in B/N (src/assets/point),
-           AVIF/WebP a più larghezze. Il palco è alto una schermata. -->
+           AVIF/WebP a più larghezze, velata nella carta. -->
       <div class="point-bg" aria-hidden="true" data-point-bg>
         <Picture
           src={sciliarBw}
@@ -69,56 +74,63 @@ const t = getDict(lang);
         />
       </div>
       <div class="point-veil" aria-hidden="true"></div>
-      <!-- Alone della svolta: dopo il caos la scena si apre in una luce
-           fredda appena percettibile dietro la promessa. -->
+      <!-- Alone della svolta: luce fredda appena percettibile dietro la
+           promessa (solo desktop). -->
       <div class="point-glow" aria-hidden="true" data-point-glow></div>
 
-      <!-- Notifiche: decorazione del caos (una per riga del problema) e la
-           notifica della svolta. Il galleggiare è CSS sull'interno, la regia
-           GSAP sul contenitore: i due transform non si pestano. -->
-      <div class="point-pings" aria-hidden="true">
-        {t.home.point.pings.map((ping, i) => (
-          <div class={`point-ping point-ping--${i + 1}`} data-point-ping>
-            <div class="point-ping-in">
-              <span class={`point-ping-icon point-ping-icon--${i + 1}`}>
-                {i === 0 && (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg>
-                )}
-                {i === 1 && (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" /><path d="m16 3 5 5M21 3l-5 5" /></svg>
-                )}
-                {i === 2 && (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-                )}
-              </span>
-              <span class="point-ping-text">
-                <span class="point-ping-title">{ping.title}</span>
-                <span class="point-ping-body">{ping.body}</span>
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <!-- Invito a scorrere: il racconto avanza con lo scroll. Un filo con
-           una goccia che scende; sparisce appena la storia parte (main.ts). -->
+      <!-- Invito a scorrere (solo desktop): resta per tutto il racconto e
+           dice anche quanto manca. Mouse con la rotellina che scende, la
+           parola, e un tratto per passo (le tre righe + la svolta) che si
+           riempie con lo scroll. Sparisce a storia finita. -->
       <div class="point-cue" data-point-cue aria-hidden="true">
-        <span class="point-cue-track"><i></i></span>
-        <span class="point-cue-label">{t.home.hero.scroll}</span>
+        <span class="point-cue-row">
+          <span class="point-cue-mouse"><i></i></span>
+          <span class="point-cue-label">{t.home.point.cue}</span>
+        </span>
+        <span class="point-cue-steps">
+          {[...t.home.point.pains, t.home.point.turn].map(() => (
+            <span class="point-cue-step"><i data-point-step></i></span>
+          ))}
+        </span>
       </div>
 
       <div class="point-copy">
-        <!-- Atto 1 + 2: lead (poi testata) e problema -->
+        <!-- Atto 1 + 2: testata e problema -->
         <div class="point-pain" data-point-pain>
           <h2 class="point-lead" data-point-lead>{t.home.point.lead}</h2>
           <p class="point-but" data-point-but>{t.home.point.but}</p>
           <ol class="point-list">
-            {t.home.point.pains.map((line, i) => (
-              <li class="point-item" data-point-item>
-                <span class="point-num">0{i + 1}</span>
-                <span class="point-item-text"><Rich text={line} /></span>
-              </li>
-            ))}
+            {t.home.point.pains.map((line, i) => {
+              const ping = t.home.point.pings[i];
+              return (
+                <li class="point-item" data-point-item>
+                  <span class="point-rule" aria-hidden="true"></span>
+                  <span class="point-num">0{i + 1}</span>
+                  <span class="point-item-text"><Rich text={line} /></span>
+                  {ping && (
+                    <span class="point-ping" data-point-ping aria-hidden="true">
+                      <span class="point-ping-in">
+                        <span class={`point-ping-icon point-ping-icon--${i + 1}`}>
+                          {i === 0 && (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg>
+                          )}
+                          {i === 1 && (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" /><path d="m16 3 5 5M21 3l-5 5" /></svg>
+                          )}
+                          {i === 2 && (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                          )}
+                        </span>
+                        <span class="point-ping-text">
+                          <span class="point-ping-title">{ping.title}</span>
+                          <span class="point-ping-body">{ping.body}</span>
+                        </span>
+                      </span>
+                    </span>
+                  )}
+                </li>
+              );
+            })}
           </ol>
         </div>
 
@@ -157,9 +169,6 @@ const t = getDict(lang);
        Mazzo di 4 carte impilate al centro che si sparpagliano sullo schermo
        scoprendo il titolo: due siti online, un "coming soon" e lo slot
        "+ crea il tuo progetto". -->
-  <!-- Fermata di scroll (main.ts): la pagina si ferma qui, col mazzo appena
-       aperto. -->
-  <span class="projects-detent" data-scroll-detent aria-hidden="true"></span>
   <section id="projects" class="projects-section">
     <ProjectsShowcase copy={t.home.projects} />
   </section>
@@ -169,6 +178,34 @@ const t = getDict(lang);
        progetti risponde a "e adesso cosa succede?" prima del form. Le fasi
        scorrono nel flusso, senza fermate (MethodRoom.astro). -->
   <MethodRoom lang={lang} flow={t.home.flow} />
+
+  <!-- SECTION — DOMANDE FREQUENTI
+       Le quattro domande che si fanno prima di scriverci (prezzi, tempi,
+       come si parte, dove lavoriamo), già aperte: si leggono senza click e
+       la pagina non cambia altezza. Il resto sta in /faq, che è l'unica
+       pagina con lo schema FAQPage (niente risposte doppie per Google). -->
+  <section id="domande" class="hfaq" aria-labelledby="hfaq-title">
+    <div class="works-screen">
+      <header class="hfaq-head">
+        <div>
+          <span class="works-kicker">{t.home.faq.kicker}</span>
+          <h2 id="hfaq-title" class="hfaq-title font-display"><Rich text={t.home.faq.title} /></h2>
+        </div>
+        <a href={localePath(lang, "/faq")} class="hfaq-all">
+          {t.home.faq.all} <span aria-hidden="true">→</span>
+        </a>
+      </header>
+      <ol class="hfaq-list">
+        {faqItems.map((item, i) => (
+          <li class="hfaq-item">
+            <span class="hfaq-num" aria-hidden="true">0{i + 1}</span>
+            <h3 class="hfaq-q font-display">{item.q}</h3>
+            <p class="hfaq-a">{item.a}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
 
   <!-- FINALE — contatti e footer sono un blocco solo: un foglio navy che
        sale sulla carta. In alto l'invito + il form a passi, sotto il footer

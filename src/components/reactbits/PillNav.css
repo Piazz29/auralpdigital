@@ -455,3 +455,113 @@
     transition: none;
   }
 }
+
+/* ======================================================================
+   LIQUID GLASS — la pillola come una lastra di vetro (stile Apple).
+   Tre strati, tutti statici (niente che si ridisegni scorrendo, a parte
+   il backdrop che il vetro richiede comunque):
+     1. il vetro: velo bianco più leggero in basso che in alto, sfocatura
+        ampia e saturazione alta (i colori dietro si fanno vivi, non grigi);
+     2. la luce: un filo di luce sul bordo che si accende in alto a sinistra
+        e in basso a destra e sparisce sui fianchi (gradiente mascherato a
+        cornice), più un riflesso interno in alto e un bagliore in basso,
+        come lo spessore del vetro che piega la luce;
+     3. l'ombra: morbida e larga, il vetro galleggia sulla pagina.
+   Aperto, la lastra si fa più piena per leggere le voci grandi.
+   ====================================================================== */
+.pnav-shell {
+  border: 1px solid rgba(17, 27, 59, 0.07);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.34) 52%, rgba(255, 255, 255, 0.44) 100%);
+  -webkit-backdrop-filter: blur(22px) saturate(190%) brightness(1.04);
+  backdrop-filter: blur(22px) saturate(190%) brightness(1.04);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.85),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.35),
+    inset 0 -12px 22px -16px rgba(255, 255, 255, 0.9),
+    0 14px 36px -16px rgba(17, 27, 59, 0.3),
+    0 3px 8px -3px rgba(17, 27, 59, 0.1);
+  transition: background 0.5s ease, box-shadow 0.5s ease;
+}
+/* Il filo di luce sul bordo. */
+.pnav-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.3) 22%,
+    rgba(255, 255, 255, 0) 45%,
+    rgba(255, 255, 255, 0) 62%,
+    rgba(255, 255, 255, 0.55) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.pnav[data-open] .pnav-shell {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.66) 100%);
+  -webkit-backdrop-filter: blur(36px) saturate(200%);
+  backdrop-filter: blur(36px) saturate(200%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.4),
+    0 30px 70px -28px rgba(17, 27, 59, 0.4),
+    0 6px 16px -8px rgba(17, 27, 59, 0.14);
+}
+
+/* Voci: in hover una piccola lente di vetro chiaro sotto la parola. */
+.pnav-link:hover {
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.5),
+    0 4px 12px -6px rgba(17, 27, 59, 0.22);
+}
+html.handoff-inverted .pnav-link:hover {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Burger: una goccia d'inchiostro lucida (riflesso in alto, bordo di luce),
+   non un tondo piatto. */
+.pnav-burger {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%),
+    var(--pnav-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 6px 14px -6px rgba(17, 27, 59, 0.45);
+}
+.pnav-burger:hover {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 55%),
+    var(--pnav-ember);
+}
+
+/* Bottoni del pannello: vetro anche loro (il primario resta pieno). */
+.pnav-cta:not(.pnav-cta--primary) {
+  border-color: rgba(17, 27, 59, 0.1);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.pnav-cta:not(.pnav-cta--primary):hover {
+  border-color: rgba(17, 27, 59, 0.25);
+  background: rgba(255, 255, 255, 0.85);
+}
+.pnav-foot {
+  border-top-color: rgba(17, 27, 59, 0.08);
+}
+
+/* Velo sulla pagina a menu aperto: più leggero, il vetro fa già da stacco. */
+.pnav-scrim {
+  background: rgba(17, 27, 59, 0.2);
+}

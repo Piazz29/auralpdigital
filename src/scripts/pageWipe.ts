@@ -1,16 +1,12 @@
-// PAGE WIPE — transizione tra pagine nello stile del vecchio menu
-// (StaggeredMenu): la fascia Shadow #2748A5, poi la navy #1C2B5F e subito
-// dietro la NUOVA PAGINA entrano da destra in cascata e si posano una sopra
-// l'altra sopra la pagina vecchia, che resta ferma sotto. Nessuno stacco blu:
-// la pagina nuova arriva insieme alle fasce.
+// PAGE WIPE — transizione tra pagine: la fascia Shadow #2748A5 e la navy
+// #1C2B5F (col logo in negativo al centro) coprono la pagina vecchia; la pagina
+// nuova nasce identica (navy + logo) e, appena pronta, si sposta lei sullo
+// schermo. Verso la Home tutto al contrario.
 //
-// È una View Transition tra documenti (`@view-transition` in global.css):
-// il browser tiene a schermo la pagina vecchia finché la nuova è pronta, poi
-// anima le istantanee. Le keyframe vivono in global.css; lo script inline in
-// <head> (BaseLayout) marca OGNI click su un link interno verso un'altra
-// pagina (sessionStorage['apd:wipe']), prefetcha al passaggio del mouse e
-// attiva la transizione solo se il flag c'è. Browser senza supporto:
-// navigazione normale, istantanea.
+// Solo animazioni CSS (global.css, .pt-leave / .pt-arrive / .pt-go / .pt-rev),
+// niente View Transition del browser. La regia sta nello script inline in
+// <head> di BaseLayout (click sui link interni, sessionStorage['apd:wipe'],
+// prefetch).
 
 /** true se `href` porta a un'ALTRA pagina del sito (non un'ancora di questa). */
 export function isCrossPage(href: string) {
