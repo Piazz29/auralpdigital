@@ -7,8 +7,9 @@
 // card) compare quel servizio. La pagina continua a scorrere libera.
 // Finché nessuno tocca niente i servizi si avvicendano da soli: la barra
 // sotto il nome segue la clip (si riempie mentre il video scorre) e quando
-// il video finisce si passa al servizio dopo. Al primo gesto
-// l'avvicendamento si ferma e le clip tornano a girare in loop.
+// il video finisce si passa al servizio dopo, in loop. Sul desktop al primo
+// gesto l'avvicendamento si ferma e le clip tornano a girare in loop; sul
+// telefono non si ferma mai (le frecce saltano avanti e il giro continua).
 //
 // Il cambio: le clip sono un mazzo di card. Andando avanti la card in cima
 // vola via di lato e torna in fondo al mazzo mentre la successiva sale al
@@ -55,7 +56,6 @@ const media: { video: string; poster: string; tint: string }[] = [
 const services = t.items.map((item, i) => ({ ...item, ...media[i] }));
 const prev = { it: "Servizio precedente", de: "Vorheriger Service", en: "Previous service" }[lang];
 const next = { it: "Servizio successivo", de: "Nächster Service", en: "Next service" }[lang];
-const swipe = { it: "Scorri per gli altri", de: "Wischen für mehr", en: "Swipe for more" }[lang];
 
 // Icona della notifica risolta, nello stesso ordine dei servizi: Google
 // (siti), messaggio (social), telefono (gestionali) — le stesse di "Il punto".
@@ -160,7 +160,6 @@ const fixIcons = [
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
       </button>
       <span class="step-count" aria-hidden="true"><b data-step-count>01</b> / {String(services.length).padStart(2, "0")}</span>
-      <span class="step-swipe" aria-hidden="true"><i></i>{swipe}</span>
       <button type="button" class="step-arrow" data-svt-next aria-label={next}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </button>
@@ -381,8 +380,11 @@ const fixIcons = [
     const tick = () => {
       if (auto && visible && !raf) raf = requestAnimationFrame(paint);
     };
+    // Sul telefono il giro non si ferma mai: frecce, menu e swipe saltano a
+    // un servizio e da lì l'avvicendamento riparte (siti → social →
+    // gestionali → siti…).
     const stopAuto = () => {
-      if (!auto) return;
+      if (!auto || narrow) return;
       auto = false;
       root.classList.remove("is-auto");
       cancelAnimationFrame(raf);

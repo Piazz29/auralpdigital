@@ -407,17 +407,18 @@
     height: 22px;
     width: auto;
   }
-  /* Una nuvola di carta sfocata dietro al logo: lo stacca da quello che
-     scorre sotto senza fare da barra. Bordi sciolti nella maschera. */
+  /* Dietro al logo solo una sfocatura leggera di quello che scorre sotto:
+     nessun velo bianco (sopra un bottone nero diventava un alone grigio),
+     i colori sotto restano i loro. Bordi sciolti nella maschera. */
   .pnav-corner::before {
     content: "";
     position: absolute;
-    inset: -2px -26px -2px -24px;
-    background: rgba(255, 255, 255, 0.55);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    -webkit-mask-image: radial-gradient(closest-side, #000 45%, transparent);
-    mask-image: radial-gradient(closest-side, #000 45%, transparent);
+    inset: -8px -22px;
+    background: transparent;
+    -webkit-backdrop-filter: blur(7px);
+    backdrop-filter: blur(7px);
+    -webkit-mask-image: radial-gradient(closest-side, #000 50%, transparent);
+    mask-image: radial-gradient(closest-side, #000 50%, transparent);
     pointer-events: none;
     transition: opacity 0.4s ease;
   }

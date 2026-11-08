@@ -164,7 +164,42 @@ function initHandoff(logo: HTMLElement) {
   const corner = { k: 0 };
   let settled = false;
 
+  // Telefono, home, a reveal finito: dal posto in hero all'angolo. Posto,
+  // angolo e box di partenza non cambiano con lo scroll: si misurano una
+  // volta (settle, resize) e ogni frame si scrive solo il transform. Niente
+  // letture di layout né variabili CSS durante lo scroll: era questo a far
+  // laggare il logo mentre si rimpiccioliva.
+  let geo: { base: Box; slot: Box; corner: Box } | null = null;
+  const measureCorner = () => {
+    if (!slot || !target) return;
+    gsap.set(logo, { x: 0, y: 0, scale: 1 });
+    const base = baseBox();
+    const slotBox = fromRect(slot.getBoundingClientRect());
+    slotBox.y += window.scrollY;
+    const tRect = target.getBoundingClientRect();
+    geo = { base, slot: slotBox, corner: tRect.width ? fromRect(tRect) : base };
+  };
+  const cornerEase = gsap.parseEase("power2.inOut");
+  let lastK = -1;
+  function renderCorner() {
+    if (!geo) measureCorner();
+    if (!geo) return;
+    const k = cornerEase(gsap.utils.clamp(0, 1, window.scrollY / cornerRun()));
+    if (k === lastK) return;
+    lastK = k;
+    corner.k = k;
+    const box = mix(geo.slot, geo.corner, k);
+    gsap.set(logo, { x: box.x - geo.base.x, y: box.y - geo.base.y, scale: box.w / geo.base.w, force3D: true });
+    const nowDocked = k >= 1;
+    if (nowDocked !== docked) {
+      docked = nowDocked;
+      root.classList.toggle("handoff-docked", docked);
+      logo.style.visibility = docked ? "hidden" : "visible";
+    }
+  }
+
   function render() {
+    if (phone && settled && home) return renderCorner();
     // Letture (tutte prima delle scritture).
     const base = baseBox();
     const tRect = target?.getBoundingClientRect();
@@ -210,8 +245,6 @@ function initHandoff(logo: HTMLElement) {
     // Sul telefono niente spessore: il vettoriale pieno, come nell'angolo.
     const depth = home && !phone && !reduce ? intro.k : 0;
     logo.style.setProperty("--logo-depth", depth.toFixed(3));
-    // La nuvola dietro al logo d'angolo cresce mentre ci vola.
-    if (settled) logo.style.setProperty("--logo-cloud", corner.k.toFixed(3));
     // "Digital" bianco nella hero (il grigio non stacca dalla luce), torna
     // grigio mentre vola nell'angolo, sulla nuvola chiara. Sul telefono la
     // hero è bianca: resta grigio.
@@ -238,7 +271,13 @@ function initHandoff(logo: HTMLElement) {
     menuUntil = performance.now() + 1600;
     gsap.to(logo, { opacity: open ? 0 : 1, duration: 0.2, overwrite: "auto" });
   });
-  window.addEventListener("resize", render);
+  window.addEventListener("resize", () => {
+    if (phone && settled) {
+      geo = null;
+      lastK = -1;
+    }
+    render();
+  });
   document.fonts?.ready.then(render).catch(() => undefined);
 
   // Telefono, home: posato nella hero, il logo segue lo scroll — nel primo
@@ -255,13 +294,17 @@ function initHandoff(logo: HTMLElement) {
     if (scrollRaf) return;
     scrollRaf = requestAnimationFrame(() => {
       scrollRaf = 0;
-      if (corner.k >= 1 && window.scrollY > cornerRun() && (!st || st.progress >= 1)) return;
       render();
     });
   };
   const settle = () => {
     if (!phone || !slot) return;
     settled = true;
+    // Il logo diventa un livello suo, disegnato alla taglia grande della
+    // hero: rimpicciolendo il compositore lo scala senza ridisegnarlo.
+    root.classList.add("handoff-corner-live");
+    geo = null;
+    lastK = -1;
     render();
     window.addEventListener("scroll", onScroll, { passive: true });
   };

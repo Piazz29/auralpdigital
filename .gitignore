@@ -26,3 +26,6 @@ pnpm-debug.log*
 
 # vercel
 .vercel
+
+# file di lavoro (preventivi ecc.), non vanno sul sito
+Claude outputs/

@@ -181,8 +181,8 @@ const faqItems = t.home.faq.pick.map(([c, i]) => t.faq.categories[c].items[i]);
 
   <!-- SECTION — DOMANDE FREQUENTI
        Le quattro domande che si fanno prima di scriverci (prezzi, tempi,
-       come si parte, dove lavoriamo), già aperte: si leggono senza click e
-       la pagina non cambia altezza. Il resto sta in /faq, che è l'unica
+       come si parte, dove lavoriamo), già aperte sui desktop; sul telefono
+       chiuse, si aprono toccando la domanda. Il resto sta in /faq, che è l'unica
        pagina con lo schema FAQPage (niente risposte doppie per Google). -->
   <section id="domande" class="hfaq" aria-labelledby="hfaq-title">
     <div class="works-screen">
@@ -199,13 +199,36 @@ const faqItems = t.home.faq.pick.map(([c, i]) => t.faq.categories[c].items[i]);
         {faqItems.map((item, i) => (
           <li class="hfaq-item">
             <span class="hfaq-num" aria-hidden="true">0{i + 1}</span>
-            <h3 class="hfaq-q font-display">{item.q}</h3>
-            <p class="hfaq-a">{item.a}</p>
+            <h3 class="hfaq-q font-display">
+              <button type="button" class="hfaq-toggle" id={`hfaq-q-${i}`} aria-controls={`hfaq-a-${i}`} aria-expanded="false" data-hfaq-toggle>
+                <span class="hfaq-q-text">{item.q}</span>
+                <span class="hfaq-plus" aria-hidden="true"></span>
+              </button>
+            </h3>
+            <div class="hfaq-a-wrap" id={`hfaq-a-${i}`} role="region" aria-labelledby={`hfaq-q-${i}`}>
+              <div class="hfaq-a-in"><p class="hfaq-a">{item.a}</p></div>
+            </div>
           </li>
         ))}
       </ol>
     </div>
   </section>
+
+  <script>
+    // Telefono: le risposte sono chiuse, si aprono toccando la domanda (il
+    // "+" diventa "−"). Su schermi larghi restano tutte aperte, come prima.
+    const mq = window.matchMedia("(max-width: 767px)");
+    const toggles = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-hfaq-toggle]"));
+    const sync = () => toggles.forEach((b) => b.setAttribute("aria-expanded", String(!mq.matches)));
+    sync();
+    mq.addEventListener("change", sync);
+    toggles.forEach((b) =>
+      b.addEventListener("click", () => {
+        if (!mq.matches) return;
+        b.setAttribute("aria-expanded", String(b.getAttribute("aria-expanded") !== "true"));
+      })
+    );
+  </script>
 
   <!-- FINALE — contatti e footer sono un blocco solo: un foglio navy che
        sale sulla carta. In alto l'invito + il form a passi, sotto il footer
