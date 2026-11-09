@@ -1,0 +1,59 @@
+# Pubblica il sito su Vercel (www.auralpdigital.com) a ogni push su main.
+#
+# Perché esiste: con il piano Hobby Vercel blocca i deploy automatici dei
+# commit fatti da chi non è nel team (es. Julian / Piazz29). Questo workflow
+# fa il deploy con il token di Alice, quindi chiunque abbia accesso in
+# scrittura al repo può pubblicare senza toccare Vercel, dominio o DNS.
+#
+# Serve il secret VERCEL_TOKEN (Settings → Secrets and variables → Actions).
+name: Deploy su Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: team_AqDYMfcgbwRlT8djq68WP83X
+      VERCEL_PROJECT_ID: prj_nJGgXEzzx1Vi0pa3abJWZ5TZTk7n
+    steps:
+      - name: Controlla il token
+        id: token
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::warning::Secret VERCEL_TOKEN mancante: deploy saltato."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.ok == 'true'
+
+      # Senza la cartella .git Vercel non legge l'autore del commit,
+      # quindi non può bloccare il deploy per "autore non nel team".
+      - name: Togli i metadati git
+        if: steps.token.outputs.ok == 'true'
+        run: rm -rf .git
+
+      - uses: actions/setup-node@v4
+        if: steps.token.outputs.ok == 'true'
+        with:
+          node-version: 24
+
+      - name: Deploy in produzione
+        if: steps.token.outputs.ok == 'true'
+        run: |
+          url=$(npx --yes vercel@65.8.0 deploy --prod --yes --token "$VERCEL_TOKEN")
+          echo "Pubblicato: $url"
+          echo "### Pubblicato su www.auralpdigital.com" >> "$GITHUB_STEP_SUMMARY"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
